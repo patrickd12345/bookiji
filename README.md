@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 Bookiji - Real-Time Booking Engine
 
-## Getting Started
+> **The Uber for availability slots** - A next-gen real-time booking engine and last-minute availability platform.
 
-First, run the development server:
+## 🧠 What is Bookiji?
+
+Bookiji is a revolutionary booking platform that transforms how people find and book last-minute availability slots. Instead of static calendars, we provide real-time, map-based discovery with booking guarantees.
+
+### Core Philosophy
+- **Real-time availability** over static calendars
+- **Map-based discovery** for instant proximity matching
+- **Booking guarantees** to prevent cancellations
+- **API-first integration** for seamless provider onboarding
+
+## 🔧 Core Features
+
+### 🗺️ Live Availability Map
+- Real-time bookable providers around you
+- Filter by category, service, availability window
+- Heatmaps for areas with more open spots
+- Dynamic pin colors based on service type
+
+### ⚡ Booking Guarantee Protocol
+- Ensures confirmed bookings aren't cancelled
+- Prioritizes providers with reliability history
+- Deposit logic and instant confirmation tiers
+- Cancellation protection with penalties
+
+### 🔄 API-First Provider Integration
+- Direct calendar integration (Google Calendar, Acuity, Zenoti)
+- Batch ingestion + real-time sync
+- Lightweight provider onboarding
+- Availability-as-a-Service (AaaS) platform
+
+### 📈 Urgency-Weighted Slot Ranking
+- Proximity-based matching
+- Service category optimization
+- Real-time demand heatmaps
+- AI-powered slot recommendations
+
+## 🥊 Bookiji vs The World
+
+| Feature | Bookiji | Typical Booking Apps |
+|---------|---------|---------------------|
+| Real-time availability map | ✅ Live & searchable | ❌ Static list view |
+| Booking guarantees | ✅ Enforced logic | ❌ Often up to provider |
+| Provider-side flexibility | ✅ Lightweight, API-based | ❌ Requires full portal |
+| Cancellation protection | ✅ Penalties & backups | ❌ Usually none |
+| Last-minute optimization | ✅ Core design principle | ❌ Afterthought or absent |
+
+## 🚀 Tech Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS, Framer Motion
+- **Maps**: Mapbox GL JS
+- **Real-time**: WebSocket/Socket.io
+- **Database**: PostgreSQL with real-time subscriptions
+- **API**: REST + GraphQL
+- **Authentication**: NextAuth.js
+- **Payments**: Stripe
+- **Deployment**: Vercel
+
+## 🎯 Getting Started
 
 ```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📱 Key User Flows
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Provider Discovery**: Map-based search with real-time availability
+2. **Instant Booking**: One-click booking with guarantee
+3. **Smart Matching**: AI-powered slot recommendations
+4. **Provider Dashboard**: Real-time availability management
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔮 Future Features
 
-## Learn More
+- AI-powered demand heatmaps
+- Real-time slot auctions
+- Chatbot interface
+- Smart availability injection
+- Bulk booking for power users
+- Concierge services
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Built with spontaneity, real-time smarts, and a sprinkle of scheduling vengeance against flaky providers everywhere.* 😤 
