@@ -1,5 +1,7 @@
 # 🚀 Bookiji - Real-Time Booking Engine
 
+> **Note:** Bookiji is an equal, independent project (tenant) in a monorepo alongside Ready2Race. See the root README for structure details.
+
 > **The Uber for availability slots** - A next-gen real-time booking engine and last-minute availability platform.
 
 ## 🧠 What is Bookiji?
@@ -11,6 +13,13 @@ Bookiji is a revolutionary booking platform that transforms how people find and 
 - **Map-based discovery** for instant proximity matching
 - **Booking guarantees** to prevent cancellations
 - **API-first integration** for seamless provider onboarding
+
+## 💸 Business Model
+- **Customers pay a $1 commitment fee** to lock in and guarantee their booking.
+- **Vendors pay a flat fee per booking, based on the most expensive service in the booking** (e.g., $1 for brushing, $3 for haircut, $10 for transformation).
+- **If multiple services are booked, the vendor pays only the highest service fee.**
+- **Booking is only guaranteed and contact info exchanged when the $1 is paid.**
+- **No extra cost for customers beyond the $1 commitment fee.**
 
 ## 🔧 Core Features
 
