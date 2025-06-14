@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookiji Vendor Onboarding Wireframe</title>
+  <style>
+    body { font-family: sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); padding: 32px; }
+    .step { margin-bottom: 40px; }
+    .step-title { font-size: 1.3em; font-weight: bold; color: #2563eb; margin-bottom: 10px; }
+    .step-desc { color: #374151; margin-bottom: 18px; }
+    .input, select { width: 100%; padding: 10px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #e5e7eb; font-size: 1em; }
+    .button { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 12px 24px; font-size: 1em; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    .calendar-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    .calendar-btn { flex: 1; background: #f3f4f6; color: #2563eb; border: 1px solid #2563eb; border-radius: 6px; padding: 10px; cursor: pointer; text-align: center; font-weight: 500; }
+    .calendar-btn.selected, .calendar-btn:hover { background: #2563eb; color: #fff; }
+    .service-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .service-row input { flex: 2; }
+    .service-row .input-short { flex: 1; }
+    .go-live { text-align: center; }
+    .success { color: #10b981; font-size: 1.2em; font-weight: bold; margin-bottom: 10px; }
+    .dashboard-link { color: #2563eb; text-decoration: underline; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Step 1: Landing -->
+    <div class="step">
+      <div class="step-title">Welcome to Bookiji Vendor Onboarding</div>
+      <div class="step-desc">Connect your calendar, set your services, and start getting booked instantly. No double entry. No hassle.</div>
+      <button class="button">Get Started</button>
+    </div>
+    <!-- Step 2: Business Info -->
+    <div class="step">
+      <div class="step-title">Step 1: Business Info</div>
+      <input class="input" type="text" placeholder="Business Name">
+      <input class="input" type="email" placeholder="Email">
+      <select class="input">
+        <option>Choose Service Type</option>
+        <option>Haircut</option>
+        <option>Brushing</option>
+        <option>Transformation</option>
+        <option>Massage</option>
+        <option>Other</option>
+      </select>
+      <button class="button">Next</button>
+    </div>
+    <!-- Step 3: Connect Calendar -->
+    <div class="step">
+      <div class="step-title">Step 2: Connect Your Calendar</div>
+      <div class="calendar-btns">
+        <div class="calendar-btn">Google Calendar</div>
+        <div class="calendar-btn">Outlook/Office 365</div>
+        <div class="calendar-btn">Yahoo Calendar</div>
+        <div class="calendar-btn">Bookiji Calendar</div>
+      </div>
+      <div class="step-desc">We support Google, Outlook, Yahoo, and our own Bookiji calendar. Connect in seconds—no tech skills needed.</div>
+      <button class="button">Next</button>
+    </div>
+    <!-- Step 4: Set Services & Prices -->
+    <div class="step">
+      <div class="step-title">Step 3: Set Your Services & Prices</div>
+      <div class="service-row">
+        <input class="input" type="text" placeholder="Service Name" value="Haircut">
+        <input class="input-short" type="number" placeholder="$" value="30">
+        <input class="input-short" type="number" placeholder="min" value="30">
+      </div>
+      <div class="service-row">
+        <input class="input" type="text" placeholder="Service Name" value="Brushing">
+        <input class="input-short" type="number" placeholder="$" value="10">
+        <input class="input-short" type="number" placeholder="min" value="15">
+      </div>
+      <div class="service-row">
+        <input class="input" type="text" placeholder="Service Name" value="Transformation">
+        <input class="input-short" type="number" placeholder="$" value="80">
+        <input class="input-short" type="number" placeholder="min" value="90">
+      </div>
+      <button class="button">Next</button>
+    </div>
+    <!-- Step 5: Go Live -->
+    <div class="step go-live">
+      <div class="success">You're Live on Bookiji!</div>
+      <div class="step-desc">Your real-time slots are now bookable. You only pay a flat fee per booking, based on the most expensive service in the booking. Customers pay a $1 commitment fee to lock in their slot. No extra cost for you or your customers.</div>
+      <a class="dashboard-link" href="#">Go to My Dashboard</a>
+    </div>
+  </div>
+</body>
+</html> 
