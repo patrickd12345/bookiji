@@ -54,84 +54,122 @@
 - [x] SEO strategy documentation
 - [x] Map integration placeholder (ready for Mapbox)
 
+### **Phase 3: Ideation & Strategy** ✅
+- [x] **Persona Strategy**: Customer-side only, professional vendor dashboard
+- [x] **Booking Guarantee Model**: Self-enforcing system with upfront vendor fees
+- [x] **No-Show System**: Simple flag + star ratings for completed appointments only
+- [x] **Map Abstraction**: AI-powered radius scaling to protect vendor identity
+- [x] **AI Conversational Interface**: Homepage AI input for natural discovery
+- [x] **Marketing Taglines**: Tentative pool of 8 customer-facing taglines
+- [x] **Power Agenda Integration**: Conceptual framework for future integration
+
 ---
 
 ## 🚧 **Current Sprint**
 
-### **Sprint: Backend API Development** 🔄
+### **Sprint: Core Feature Development** 🔄
 **Duration**: [Start Date] - [End Date]
-**Focus**: Booking engine logic and core functionality
+**Focus**: Implementing ideation session decisions
 
 #### **In Progress**
-- [ ] Database schema design
-- [ ] User authentication system (NextAuth.js)
-- [ ] Provider API integration framework
-- [ ] Real-time availability engine
-- [ ] Booking guarantee protocol implementation
+- [x] **AI Radius Scaling System**: Dynamic radius based on provider density ✅
+- [x] **Map Abstraction Layer**: Abstracted availability zones (no exact pins) ✅
+- [x] **Customer Persona System**: Customer-side personality layers ✅
+- [x] **No-Show Flag System**: Post-appointment feedback flow ✅
+- [x] **AI Conversational Interface**: Homepage AI input component ✅
+- [x] **Booking Guarantee Logic**: Self-enforcing payment system ✅
 
 #### **This Week's Goals**
-- [ ] Set up PostgreSQL database
-- [ ] Implement basic user registration/login
-- [ ] Create provider onboarding flow
-- [ ] Design booking confirmation system
+- [x] Design AI radius scaling algorithm ✅
+- [x] Create map abstraction UI components ✅
+- [x] Implement customer persona selection flow ✅
+- [x] Build post-appointment feedback system ✅
+- [x] Develop AI conversational input interface ✅
+
+---
+
+## 🚨 **URGENT ITEMS - IMMEDIATE ATTENTION REQUIRED**
+
+### **Critical Infrastructure**
+- [ ] **LLM Infrastructure Migration (Azure OpenAI → Self-hosted/Open Source)** - BLOCKING
+  - *Reason: Cost control, data privacy, and dependency reduction*
+  - *Impact: AI conversational interface, category analysis, radius scaling*
+  - *Options: Ollama, vLLM, Together AI, or similar*
+- [ ] **Database Schema Design & Implementation** - BLOCKING
+  - *Reason: Core data structure needed for all features*
+  - *Impact: User management, bookings, availability tracking*
+- [ ] **Authentication System Setup** - BLOCKING
+  - *Reason: Required for user registration and security*
+  - *Impact: Customer/vendor onboarding, session management*
+
+### **High-Risk Dependencies**
+- [ ] **Mapbox API Integration** - HIGH PRIORITY
+  - *Reason: Core map functionality dependency*
+  - *Impact: Location-based booking, map abstraction*
+- [ ] **Payment Gateway Integration (Stripe)** - HIGH PRIORITY
+  - *Reason: Revenue model dependency*
+  - *Impact: Booking guarantees, fee collection*
 
 ---
 
 ## 📅 **Upcoming Milestones**
 
-### **Phase 3: Core Features** ⏳
+### **Phase 4: Core Features** ⏳
 **Target**: [Date]
 - [ ] Live availability map integration (Mapbox GL JS)
 - [ ] Real-time booking engine
 - [ ] Provider dashboard
 - [ ] Customer booking interface
 - [ ] Payment integration (Stripe)
+- [ ] **AI-powered radius scaling implementation**
+- [ ] **Map abstraction and vendor identity protection**
+- [ ] **Customer persona system integration**
 
-### **Phase 4: Advanced Features** ⏳
+### **Phase 5: Advanced Features** ⏳
 **Target**: [Date]
 - [ ] AI-powered slot recommendations
 - [ ] Real-time demand heatmaps
 - [ ] Booking guarantee enforcement
 - [ ] Cancellation protection system
 - [ ] Mobile app optimization
+- [ ] **AI conversational interface enhancement**
+- [ ] **No-show tracking and provider reliability scoring**
 
-### **Phase 5: Launch Preparation** ⏳
+### **Phase 6: Launch Preparation** ⏳
 **Target**: [Date]
 - [ ] Beta testing with select providers
 - [ ] Performance optimization
 - [ ] Security audit
 - [ ] Marketing website
 - [ ] App store submissions
+- [ ] **Marketing tagline finalization and testing**
 
 ---
 
 ## 📋 **Backlog**
 
 ### **High Priority**
-- [ ] Mapbox API integration and map component
-- [ ] Real-time WebSocket implementation
-- [ ] Provider calendar sync (Google Calendar, Acuity, Zenoti)
-- [ ] Booking confirmation and notification system
-- [ ] User profile and preferences
-- [ ] Service category management
-- [ ] Location-based search and filtering
+- [ ] $1 Commitment Fee onboarding, education, and A/B testing
+- [ ] AI Conversational Interface for all booking flows (chat/voice)
+- [ ] Dynamic Map Abstraction for privacy in personal/home services
+- [ ] Universal Marketplace: cross-category onboarding, loyalty, and search
+- [ ] Automated no-show/cancellation handling (notifications, credits/refunds)
+- [ ] Provider dashboard: "no wasted leads" stats, testimonials, transparent fees
+- [ ] Global Beta feedback tools and "Founding User" perks
+- [ ] Beta feedback analytics and phased category expansion
 
 ### **Medium Priority**
-- [ ] Provider verification system
-- [ ] Review and rating system
-- [ ] Advanced search filters
-- [ ] Booking history and analytics
-- [ ] Email/SMS notifications
-- [ ] Multi-language support
-- [ ] Accessibility improvements
+- [ ] Bookiji Points: cross-category loyalty/rewards system
+- [ ] Personalized home, smart reminders, and "suggest next booking" features
+- [ ] Provider and user achievement/badge system (gamification)
+- [ ] Messaging app integration (WhatsApp, WeChat, etc.)
+- [ ] Multi-language support and local payment options
+- [ ] Patent outline for $1 commitment/AI booking system
 
 ### **Low Priority**
-- [ ] Chatbot interface
-- [ ] Bulk booking for power users
-- [ ] Concierge services
-- [ ] Real-time slot auctions
-- [ ] Advanced analytics dashboard
-- [ ] White-label solutions
+- [ ] Community features (follow providers, share recommendations)
+- [ ] Content/FAQ for education and SEO
+- [ ] Advanced analytics for habit formation and retention
 
 ---
 
@@ -143,6 +181,8 @@
 - [ ] Dynamic pricing based on demand
 - [ ] Customer behavior analysis
 - [ ] Automated provider recommendations
+- [ ] **AI-powered radius scaling for map abstraction**
+- [ ] **Conversational AI for natural booking discovery**
 
 ### **User Experience**
 - [ ] Voice-activated booking
@@ -150,6 +190,8 @@
 - [ ] Social booking features
 - [ ] Gamification elements
 - [ ] Personalized dashboards
+- [ ] **Customer persona system for personalized UX**
+- [ ] **AI conversational interface on homepage**
 
 ### **Business Model**
 - [ ] Subscription tiers for providers
@@ -157,6 +199,8 @@
 - [ ] Premium booking guarantees
 - [ ] Insurance partnerships
 - [ ] Enterprise solutions
+- [ ] **Self-enforcing booking guarantee system**
+- [ ] **No-show protection through upfront fees**
 
 ### **Technical Innovation**
 - [ ] Blockchain-based booking guarantees
@@ -164,6 +208,8 @@
 - [ ] Edge computing for faster response
 - [ ] Progressive Web App (PWA) features
 - [ ] Offline booking capabilities
+- [ ] **Map abstraction to protect vendor identity**
+- [ ] **Real-time radius scaling based on provider density**
 
 ---
 
@@ -176,11 +222,15 @@
 - [ ] Need to implement proper error handling
 - [ ] Database optimization required
 - [ ] Security vulnerabilities to address
+- [ ] **Map abstraction algorithm complexity**
+- [ ] **AI conversational interface performance**
 
 ### **Medium Priority**
 - [ ] Code refactoring needed
 - [ ] Performance optimization
 - [ ] Test coverage improvement
+- [ ] **Customer persona system scalability**
+- [ ] **No-show flag system edge cases**
 
 ---
 
@@ -198,6 +248,9 @@
 - **Booking Success Rate**: [target]
 - **Customer Satisfaction**: [target]
 - **Revenue Growth**: [target]
+- **No-Show Rate**: [target < 5%]
+- **Map Abstraction Effectiveness**: [vendor identity protection %]
+- **AI Conversational Interface Usage**: [% of bookings via AI]
 
 ---
 
@@ -209,6 +262,8 @@
 - [ ] 95% booking success rate
 - [ ] <3 second page load times
 - [ ] 4.5+ star app rating
+- [ ] **<2% no-show rate**
+- [ ] **100% vendor identity protection on map**
 
 ### **Phase 1 Success**
 - [ ] 1000 providers onboarded
@@ -216,6 +271,8 @@
 - [ ] 98% booking success rate
 - [ ] <2 second page load times
 - [ ] 4.8+ star app rating
+- [ ] **<1% no-show rate**
+- [ ] **50% of bookings via AI conversational interface**
 
 ---
 
@@ -226,18 +283,25 @@
 - **Maps**: Mapbox GL JS for performance and features
 - **Payments**: Stripe for reliability and global support
 - **Authentication**: NextAuth.js for security and ease
+- **AI Radius Scaling**: Dynamic algorithm based on provider density
+- **Map Abstraction**: No exact vendor pins, only availability zones
+- **LLM Infrastructure**: Migrating from Azure OpenAI to self-hosted/open source LLM for cost control and data privacy
 
 ### **Business Decisions**
-- **Pricing Model**: Commission-based with premium tiers
+- **Pricing Model**: Fixed $1 customer fee + flat vendor fees
 - **Target Market**: Universal service booking (agnostic platform)
 - **Geographic Focus**: Start with major cities, expand globally
 - **Provider Strategy**: API-first integration for scalability
+- **Persona System**: Customer-side only, professional vendor experience
+- **Booking Guarantee**: Self-enforcing through upfront payment model
 
 ### **Design Decisions**
 - **UI Framework**: Three-panel layout (map, list, booking)
 - **Mobile-First**: Responsive design with PWA capabilities
 - **Accessibility**: WCAG 2.1 AA compliance target
 - **Performance**: Core Web Vitals optimization
+- **Map Abstraction**: AI-powered radius scaling for vendor protection
+- **AI Interface**: Conversational discovery on homepage
 
 ---
 

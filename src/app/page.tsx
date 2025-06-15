@@ -1,379 +1,353 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MapPin, Clock, Star, Shield, Zap, Filter, Search, Calendar, User, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface Provider {
-  id: string;
-  name: string;
-  service: string;
-  category: string;
-  rating: number;
-  price: string;
-  distance: number;
-  availability: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
-  guarantee: boolean;
-  lastMinute: boolean;
-  image: string;
-}
+// Import types
+import { 
+  Provider, 
+  BookingSlot, 
+  Persona, 
+  AIResponse, 
+  Appointment, 
+  RadiusZone, 
+  AvailabilityZone, 
+  BookingGuarantee 
+} from '../types';
 
-interface BookingSlot {
-  id: string;
-  time: string;
-  duration: number;
-  price: number;
-  available: boolean;
-}
+// Import components
+import {
+  AIConversationalInterface,
+  CustomerPersonaSelector,
+  NoShowFeedbackModal,
+  MapAbstraction,
+  BookingGuaranteeModal,
+  FeatureSummary,
+  DemoControls
+} from '../components';
+
+// Import utilities and data
+import { 
+  calculateRadiusZone, 
+  generateAvailabilityDescription, 
+  generateAvailabilityZones 
+} from '../utils/helpers';
+import { providers, bookingSlots, personas } from '../data/mockData';
 
 export default function Home() {
+  // Core state
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<BookingSlot | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [userLocation, setUserLocation] = useState({ lat: 40.7128, lng: -74.0060 });
+  
+  // AI Conversational Interface State
+  const [aiResponses, setAiResponses] = useState<AIResponse[]>([]);
+  const [isAiActive, setIsAiActive] = useState(false);
+  
+  // Customer Persona System State
+  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
+  const [showPersonaSelector, setShowPersonaSelector] = useState(true);
+  
+  // No-Show Flag System State
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [currentAppointment, setCurrentAppointment] = useState<Appointment | null>(null);
+  const [feedbackStep, setFeedbackStep] = useState<'question' | 'rating' | 'complete'>('question');
+  
+  // AI Radius Scaling System State
+  const [currentRadiusZone, setCurrentRadiusZone] = useState<RadiusZone | null>(null);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  
+  // Map Abstraction Layer State
+  const [availabilityZones, setAvailabilityZones] = useState<AvailabilityZone[]>([]);
+  const [selectedZone, setSelectedZone] = useState<AvailabilityZone | null>(null);
+  const [showProviderDetails, setShowProviderDetails] = useState(false);
+  
+  // Booking Guarantee System State
+  const [bookingGuarantee, setBookingGuarantee] = useState<BookingGuarantee>({
+    customerCommitted: false,
+    vendorPaid: false,
+    slotLocked: false,
+    providerDetailsRevealed: false
+  });
+  const [showBookingModal, setShowBookingModal] = useState(false);
 
-  // Mock data - in real app this would come from API
-  const providers: Provider[] = [
-    {
-      id: '1',
-      name: 'Elite Hair Studio',
-      service: 'Haircut & Styling',
-      category: 'hair',
-      rating: 4.9,
-      price: '$$',
-      distance: 0.8,
-      availability: 'Available now',
-      location: { lat: 40.7128, lng: -74.0060 },
-      guarantee: true,
-      lastMinute: true,
-      image: '/api/placeholder/60/60'
-    },
-    {
-      id: '2',
-      name: 'Zen Massage Therapy',
-      service: 'Deep Tissue Massage',
-      category: 'wellness',
-      rating: 4.8,
-      price: '$$$',
-      distance: 1.2,
-      availability: 'Next slot: 2:30 PM',
-      location: { lat: 40.7150, lng: -74.0080 },
-      guarantee: true,
-      lastMinute: false,
-      image: '/api/placeholder/60/60'
-    },
-    {
-      id: '3',
-      name: 'Downtown Dental',
-      service: 'Teeth Cleaning',
-      category: 'health',
-      rating: 4.7,
-      price: '$$',
-      distance: 1.5,
-      availability: 'Available now',
-      location: { lat: 40.7100, lng: -74.0040 },
-      guarantee: false,
-      lastMinute: true,
-      image: '/api/placeholder/60/60'
-    }
-  ];
-
-  const bookingSlots: BookingSlot[] = [
-    { id: '1', time: '1:30 PM', duration: 30, price: 45, available: true },
-    { id: '2', time: '2:00 PM', duration: 45, price: 65, available: true },
-    { id: '3', time: '2:30 PM', duration: 60, price: 85, available: false },
-    { id: '4', time: '3:00 PM', duration: 30, price: 45, available: true },
-  ];
-
-  const categories = [
-    { id: 'all', name: 'All Services', icon: '🎯' },
-    { id: 'hair', name: 'Hair & Beauty', icon: '💇' },
-    { id: 'wellness', name: 'Wellness', icon: '💆' },
-    { id: 'health', name: 'Health', icon: '🦷' },
-    { id: 'fitness', name: 'Fitness', icon: '💪' },
-  ];
-
+  // Initialize location and radius calculations
   useEffect(() => {
-    // Get user location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation({
+          const newLocation = {
             lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
+            lng: position.coords.longitude
+          };
+          setUserLocation(newLocation);
+          
+          // Calculate AI radius zone based on provider density
+          const radiusZone = calculateRadiusZone(providers, newLocation.lat, newLocation.lng);
+          setCurrentRadiusZone(radiusZone);
+          
+          // Generate availability description
+          const description = generateAvailabilityDescription(radiusZone, providers, newLocation);
+          setAvailableSlots([description]);
+          
+          // Generate abstracted availability zones
+          const zones = generateAvailabilityZones(providers, radiusZone, newLocation);
+          setAvailabilityZones(zones);
         },
         () => {
           // Default to NYC if location access denied
           console.log('Location access denied, using default');
+          const radiusZone = calculateRadiusZone(providers, userLocation.lat, userLocation.lng);
+          setCurrentRadiusZone(radiusZone);
+          const description = generateAvailabilityDescription(radiusZone, providers, userLocation);
+          setAvailableSlots([description]);
+          
+          // Generate abstracted availability zones
+          const zones = generateAvailabilityZones(providers, radiusZone, userLocation);
+          setAvailabilityZones(zones);
         }
       );
+    } else {
+      // Fallback for browsers without geolocation
+      const radiusZone = calculateRadiusZone(providers, userLocation.lat, userLocation.lng);
+      setCurrentRadiusZone(radiusZone);
+      const description = generateAvailabilityDescription(radiusZone, providers, userLocation);
+      setAvailableSlots([description]);
+      
+      // Generate abstracted availability zones
+      const zones = generateAvailabilityZones(providers, radiusZone, userLocation);
+      setAvailabilityZones(zones);
     }
   }, []);
 
-  const filteredProviders = providers.filter(provider => {
-    const matchesSearch = provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         provider.service.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || provider.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const handleProviderSelect = (provider: Provider) => {
-    setSelectedProvider(provider);
-    setSelectedSlot(null);
+  // Booking Guarantee Logic Functions
+  const initiateBooking = () => {
+    if (!selectedZone || !selectedProvider) return;
+    setShowBookingModal(true);
   };
 
-  const handleSlotSelect = (slot: BookingSlot) => {
-    setSelectedSlot(slot);
+  const processCustomerCommitment = () => {
+    // Step 1: Customer pays $1 commitment fee
+    setBookingGuarantee(prev => ({ ...prev, customerCommitted: true }));
+    
+    // Step 2: Vendor pays upfront fee (automatic)
+    setTimeout(() => {
+      setBookingGuarantee(prev => ({ ...prev, vendorPaid: true }));
+      
+      // Step 3: Slot is locked (no second confirmation needed)
+      setTimeout(() => {
+        setBookingGuarantee(prev => ({ ...prev, slotLocked: true }));
+        
+        // Step 4: Provider details revealed
+        setTimeout(() => {
+          setBookingGuarantee(prev => ({ ...prev, providerDetailsRevealed: true }));
+        }, 1000);
+      }, 1000);
+    }, 1000);
   };
 
-  const handleBooking = () => {
-    if (selectedProvider && selectedSlot) {
-      // In real app, this would trigger booking flow
-      alert(`Booking confirmed! ${selectedProvider.name} at ${selectedSlot.time}`);
-    }
+  const completeBooking = () => {
+    setShowBookingModal(false);
+    setBookingGuarantee({
+      customerCommitted: false,
+      vendorPaid: false,
+      slotLocked: false,
+      providerDetailsRevealed: false
+    });
+    
+    // In real app, this would create the appointment
+    alert(`Booking confirmed! ${selectedProvider?.name} at ${selectedSlot?.time || 'selected time'}. Provider details and contact info now available.`);
+  };
+
+  const cancelBooking = () => {
+    setShowBookingModal(false);
+    setBookingGuarantee({
+      customerCommitted: false,
+      vendorPaid: false,
+      slotLocked: false,
+      providerDetailsRevealed: false
+    });
+  };
+
+  const handleShowFeedback = () => {
+    setCurrentAppointment({
+      id: 'demo-appointment',
+      providerId: '1',
+      customerId: 'user-1',
+      time: '2:00 PM',
+      status: 'scheduled'
+    });
+    setShowFeedbackModal(true);
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Left Panel - Map */}
-      <div className="w-1/2 bg-white border-r border-gray-200">
-        <div className="h-full flex flex-col">
-          {/* Map Header */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">B</span>
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900">Bookiji</h1>
-                  <p className="text-sm text-gray-500">Real-time availability</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
-                  <Filter size={20} />
-                </button>
-                <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
-                  <Zap size={20} />
-                </button>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Customer Persona Selector */}
+      <CustomerPersonaSelector
+        showPersonaSelector={showPersonaSelector}
+        setShowPersonaSelector={setShowPersonaSelector}
+        selectedPersona={selectedPersona}
+        setSelectedPersona={setSelectedPersona}
+      />
 
-          {/* Map Container */}
-          <div className="flex-1 p-4">
-            <div className="bg-gray-200 rounded-lg h-full flex items-center justify-center">
-              <div className="text-center">
-                <MapPin size={48} className="mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">Live Availability Map</h3>
-                <p className="text-gray-500 mb-4">Mapbox integration coming soon</p>
-                <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
-                  {providers.map(provider => (
-                    <div
-                      key={provider.id}
-                      onClick={() => handleProviderSelect(provider)}
-                      className={`p-2 rounded-lg cursor-pointer transition-colors ${
-                        selectedProvider?.id === provider.id
-                          ? 'bg-blue-100 border-2 border-blue-500'
-                          : 'bg-white hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="text-2xl mb-1">{provider.category === 'hair' ? '💇' : provider.category === 'wellness' ? '💆' : '🦷'}</div>
-                      <div className="text-xs font-medium">{provider.name}</div>
-                      <div className="text-xs text-gray-500">{provider.distance}km</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* No-Show Feedback Modal */}
+      <NoShowFeedbackModal
+        showFeedbackModal={showFeedbackModal}
+        setShowFeedbackModal={setShowFeedbackModal}
+        currentAppointment={currentAppointment}
+        setCurrentAppointment={setCurrentAppointment}
+        feedbackStep={feedbackStep}
+        setFeedbackStep={setFeedbackStep}
+      />
+
+      {/* Booking Guarantee Modal */}
+      <BookingGuaranteeModal
+        showBookingModal={showBookingModal}
+        setShowBookingModal={setShowBookingModal}
+        bookingGuarantee={bookingGuarantee}
+        setBookingGuarantee={setBookingGuarantee}
+        selectedProvider={selectedProvider}
+        selectedSlot={selectedSlot?.time || null}
+        onProcessCustomerCommitment={processCustomerCommitment}
+        onCompleteBooking={completeBooking}
+        onCancelBooking={cancelBooking}
+      />
+
+      {/* Main Layout */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">🎯 Bookiji</h1>
+          <p className="text-gray-600">Real-time booking engine with guaranteed appointments</p>
         </div>
-      </div>
 
-      {/* Center Panel - Availability List */}
-      <div className="w-1/3 bg-white border-r border-gray-200">
-        <div className="h-full flex flex-col">
-          {/* Search Header */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Search services or providers..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        {/* Three-Panel Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Left Panel - Map */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">🗺️ Map & Availability</h2>
+              
+              <MapAbstraction
+                availabilityZones={availabilityZones}
+                selectedZone={selectedZone}
+                setSelectedZone={setSelectedZone}
+                showProviderDetails={showProviderDetails}
+                setShowProviderDetails={setShowProviderDetails}
+                selectedProvider={selectedProvider}
+                setSelectedProvider={setSelectedProvider}
+                currentRadiusZone={currentRadiusZone}
+                availableSlots={availableSlots}
+                providers={providers}
+                userLocation={userLocation}
+                onBookZone={initiateBooking}
               />
-            </div>
-            
-            {/* Category Filters */}
-            <div className="flex space-x-2 mt-3 overflow-x-auto">
-              {categories.map(category => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors ${
-                    selectedCategory === category.id
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <span>{category.icon}</span>
-                  <span>{category.name}</span>
-                </button>
-              ))}
+
+              {/* Demo Controls */}
+              <DemoControls
+                availabilityZones={availabilityZones}
+                selectedZone={selectedZone}
+                setSelectedZone={setSelectedZone}
+                setShowProviderDetails={setShowProviderDetails}
+                setSelectedProvider={setSelectedProvider}
+                userLocation={userLocation}
+                setUserLocation={setUserLocation}
+                providers={providers}
+                currentRadiusZone={currentRadiusZone}
+                setCurrentRadiusZone={setCurrentRadiusZone}
+                availableSlots={availableSlots}
+                setAvailableSlots={setAvailableSlots}
+                setAvailabilityZones={setAvailabilityZones}
+                onInitiateBooking={initiateBooking}
+                onShowFeedback={handleShowFeedback}
+              />
+
+              {/* Feature Summary */}
+              <FeatureSummary />
             </div>
           </div>
 
-          {/* Providers List */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 space-y-3">
-              {filteredProviders.map(provider => (
-                <motion.div
-                  key={provider.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  onClick={() => handleProviderSelect(provider)}
-                  className={`p-4 rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                    selectedProvider?.id === provider.id
-                      ? 'bg-blue-50 border-2 border-blue-500'
-                      : 'bg-white border border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center text-2xl">
-                      {provider.category === 'hair' ? '💇' : provider.category === 'wellness' ? '💆' : '🦷'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-gray-900 truncate">{provider.name}</h3>
-                        <div className="flex items-center space-x-1">
-                          <Star size={16} className="text-yellow-400 fill-current" />
-                          <span className="text-sm font-medium">{provider.rating}</span>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-600">{provider.service}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
-                          <span>{provider.price}</span>
-                          <span>{provider.distance}km away</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          {provider.guarantee && (
-                            <Shield size={16} className="text-green-500" />
-                          )}
-                          {provider.lastMinute && (
-                            <Zap size={16} className="text-orange-500" />
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-1 mt-2 text-sm text-green-600">
-                        <Clock size={14} />
-                        <span>{provider.availability}</span>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+          {/* Center Panel - AI Interface */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">💬 AI Assistant</h2>
+              
+              <AIConversationalInterface
+                aiResponses={aiResponses}
+                setAiResponses={setAiResponses}
+                isAiActive={isAiActive}
+                setIsAiActive={setIsAiActive}
+              />
 
-      {/* Right Panel - Booking */}
-      <div className="w-1/6 bg-white">
-        <div className="h-full flex flex-col">
-          {/* Booking Header */}
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Book Now</h2>
-            <p className="text-sm text-gray-500">Select your preferred time</p>
-          </div>
-
-          {/* Booking Content */}
-          <div className="flex-1 p-4">
-            {selectedProvider ? (
-              <div className="space-y-4">
-                {/* Provider Info */}
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center text-lg">
-                      {selectedProvider.category === 'hair' ? '💇' : selectedProvider.category === 'wellness' ? '💆' : '🦷'}
-                    </div>
+              {/* Selected Persona Display */}
+              {selectedPersona && (
+                <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">{selectedPersona.icon}</span>
                     <div>
-                      <h3 className="font-medium text-gray-900">{selectedProvider.name}</h3>
-                      <p className="text-sm text-gray-500">{selectedProvider.service}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">{selectedProvider.price}</span>
-                    <div className="flex items-center space-x-1">
-                      <Star size={14} className="text-yellow-400 fill-current" />
-                      <span>{selectedProvider.rating}</span>
+                      <div className="font-semibold text-gray-900">{selectedPersona.name}</div>
+                      <div className="text-sm text-gray-600">{selectedPersona.description}</div>
                     </div>
                   </div>
                 </div>
+              )}
+            </div>
+          </div>
 
-                {/* Time Slots */}
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Available Times</h4>
+          {/* Right Panel - Booking */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">📅 Booking</h2>
+              
+              {selectedProvider ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h3 className="font-semibold text-gray-900 mb-2">Selected Provider</h3>
+                    <div className="text-sm text-gray-600">
+                      <div><strong>Name:</strong> {selectedProvider.name}</div>
+                      <div><strong>Service:</strong> {selectedProvider.service}</div>
+                      <div><strong>Rating:</strong> {selectedProvider.rating} ⭐</div>
+                      <div><strong>Price:</strong> {selectedProvider.price}</div>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    {bookingSlots.map(slot => (
-                      <button
-                        key={slot.id}
-                        onClick={() => handleSlotSelect(slot)}
-                        disabled={!slot.available}
-                        className={`w-full p-3 rounded-lg text-left transition-colors ${
-                          selectedSlot?.id === slot.id
-                            ? 'bg-blue-500 text-white'
-                            : slot.available
-                            ? 'bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium">{slot.time}</div>
-                            <div className="text-sm opacity-75">{slot.duration} min</div>
-                          </div>
-                          <div className="font-semibold">${slot.price}</div>
-                        </div>
-                      </button>
-                    ))}
+                    <h4 className="font-medium text-gray-900">Available Slots</h4>
+                    {bookingSlots
+                      .filter(slot => slot.providerId === selectedProvider.id)
+                      .map(slot => (
+                        <button
+                          key={slot.id}
+                          onClick={() => setSelectedSlot(slot)}
+                          className={`w-full p-3 rounded-lg border transition-colors ${
+                            selectedSlot?.id === slot.id
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          {slot.time}
+                        </button>
+                      ))}
                   </div>
+
+                  {selectedSlot && (
+                    <button
+                      onClick={initiateBooking}
+                      className="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                      Book {selectedProvider.service} at {selectedSlot.time} - $1 commitment
+                    </button>
+                  )}
                 </div>
-
-                {/* Booking Button */}
-                <button
-                  onClick={handleBooking}
-                  disabled={!selectedSlot}
-                  className="w-full bg-blue-500 text-white py-3 rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {selectedSlot ? `Book for $${selectedSlot.price}` : 'Select a time'}
-                </button>
-
-                {/* Guarantee Badge */}
-                {selectedProvider.guarantee && (
-                  <div className="flex items-center space-x-2 text-sm text-green-600 bg-green-50 p-2 rounded-lg">
-                    <Shield size={16} />
-                    <span>Booking Guaranteed</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center text-gray-500 mt-8">
-                <Calendar size={48} className="mx-auto mb-4 opacity-50" />
-                <p>Select a provider to see available times</p>
-              </div>
-            )}
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  <div className="text-4xl mb-4">🎯</div>
+                  <p>Select a provider from the map to start booking</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
