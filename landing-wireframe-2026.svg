@@ -1,0 +1,29 @@
+<svg width="1200" height="1800" viewBox="0 0 1200 1800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Nav -->
+  <rect x="0" y="0" width="1200" height="80" rx="0" fill="#fff" />
+  <text x="40" y="50" font-size="32" font-family="Inter, Arial" fill="#A259FF" font-weight="bold">Bookiji</text>
+  <rect x="1100" y="28" width="40" height="24" rx="12" fill="#F3F4F6" />
+  <circle cx="1120" cy="40" r="8" fill="#A259FF" />
+  <!-- Hero Section -->
+  <rect x="100" y="120" width="1000" height="400" rx="40" fill="#F8F9FB" />
+  <!-- Abstract Map (blobs) -->
+  <ellipse cx="600" cy="320" rx="350" ry="140" fill="#E9D5FF" opacity="0.6"/>
+  <ellipse cx="700" cy="320" rx="200" ry="80" fill="#A259FF" opacity="0.3"/>
+  <ellipse cx="500" cy="320" rx="120" ry="50" fill="#A259FF" opacity="0.2"/>
+  <!-- Conversational Input -->
+  <rect x="350" y="250" width="500" height="60" rx="30" fill="#fff" stroke="#A259FF" stroke-width="2"/>
+  <text x="370" y="290" font-size="24" font-family="Inter, Arial" fill="#A259FF">What do you want to book?</text>
+  <!-- Book Now Button -->
+  <rect x="500" y="340" width="200" height="60" rx="30" fill="#A259FF" />
+  <text x="570" y="380" font-size="24" font-family="Inter, Arial" fill="#fff" font-weight="bold">Book Now</text>
+  <!-- Collapsed Sections -->
+  <rect x="100" y="560" width="1000" height="60" rx="16" fill="#F3F4F6"/>
+  <text x="120" y="600" font-size="22" font-family="Inter, Arial" fill="#A259FF">How it Works</text>
+  <rect x="100" y="640" width="1000" height="60" rx="16" fill="#F3F4F6"/>
+  <text x="120" y="680" font-size="22" font-family="Inter, Arial" fill="#A259FF">Testimonials</text>
+  <rect x="100" y="720" width="1000" height="60" rx="16" fill="#F3F4F6"/>
+  <text x="120" y="760" font-size="22" font-family="Inter, Arial" fill="#A259FF">FAQ</text>
+  <!-- Footer -->
+  <rect x="0" y="1700" width="1200" height="100" rx="0" fill="#fff" />
+  <text x="40" y="1760" font-size="18" font-family="Inter, Arial" fill="#A259FF">© 2026 Bookiji. All rights reserved.</text>
+</svg> 
