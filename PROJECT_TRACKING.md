@@ -11,6 +11,43 @@
 - No extra cost for customers beyond the $1 commitment fee.
 - **Provider pays only the highest service fee in your booking.**
 
+## 🏗️ **Updated Tech Stack (Streamlined)**
+
+### **🧠 AI & Intelligence**
+- **Ollama (Mistral)**: Zero-cost local AI assistant + chat/voice logic
+- **Local Inference**: No API costs, full control over AI responses
+
+### **🖥 Frontend**
+- **Next.js 15 + React 19**: Latest features, smooth dev DX, full control
+- **TypeScript**: Type-safe development
+- **Tailwind CSS**: Rapid styling with custom animations
+- **Framer Motion**: Smooth transitions and animations
+
+### **🔌 Backend API**
+- **Next.js API Routes**: Co-located with frontend, simple for now
+- **No separate server needed**: Unified development experience
+
+### **🗄 Database**
+- **Supabase (Free Tier)**: Instant Postgres, built-in auth, and Realtime APIs
+- **Real-time subscriptions**: Live updates for booking status
+- **Row Level Security**: Built-in data protection
+
+### **🔐 Authentication**
+- **Supabase Auth**: Handles vendor/customer login with roles
+- **Social login**: Google, GitHub, email/password
+- **Role-based access**: Customer vs vendor permissions
+
+### **🌍 Deployment & Preview**
+- **Vercel (Free)**: Optional deploys for client demos or mobile testing
+- **Automatic deployments**: Git-based workflow
+- **Preview URLs**: Share demos with stakeholders
+
+### **🧪 Development Tools**
+- **Cursor (Copilot)**: Primary IDE with AI assistance
+- **Type-safe edits**: AI helps with refactors and file wiring
+- **pnpm**: Fast, efficient dependency management
+- **Environment**: `.env.local` for local configuration
+
 ## ⚠️ **IMPORTANT REMINDER**
 > **🐔 CHICKEN & EGG ALERT! 🥚** 
 > 
@@ -63,6 +100,13 @@
 - [x] **Marketing Taglines**: Tentative pool of 8 customer-facing taglines
 - [x] **Power Agenda Integration**: Conceptual framework for future integration
 
+### **Phase 4: Tech Stack Streamlining** ✅
+- [x] **Streamlined Tech Stack**: Focused on development efficiency
+- [x] **Ollama Integration**: Local AI for zero-cost inference
+- [x] **Supabase Setup**: Free tier database and auth
+- [x] **Vercel Deployment**: Simple demo deployments
+- [x] **Development Tools**: Cursor IDE + pnpm package manager
+
 ---
 
 ## 🚧 **Current Sprint**
@@ -91,16 +135,18 @@
 ## 🚨 **URGENT ITEMS - IMMEDIATE ATTENTION REQUIRED**
 
 ### **Critical Infrastructure**
-- [ ] **LLM Infrastructure Migration (Azure OpenAI → Self-hosted/Open Source)** - BLOCKING
-  - *Reason: Cost control, data privacy, and dependency reduction*
+- [ ] **Ollama Local AI Setup** - BLOCKING
+  - *Reason: Zero-cost AI for conversational interface and radius scaling*
   - *Impact: AI conversational interface, category analysis, radius scaling*
-  - *Options: Ollama, vLLM, Together AI, or similar*
-- [ ] **Database Schema Design & Implementation** - BLOCKING
+  - *Action: Install Ollama, pull Mistral model, configure local endpoint*
+- [ ] **Supabase Database Schema Design & Implementation** - BLOCKING
   - *Reason: Core data structure needed for all features*
   - *Impact: User management, bookings, availability tracking*
-- [ ] **Authentication System Setup** - BLOCKING
+  - *Action: Design schema, set up Supabase project, implement tables*
+- [ ] **Supabase Authentication System Setup** - BLOCKING
   - *Reason: Required for user registration and security*
   - *Impact: Customer/vendor onboarding, session management*
+  - *Action: Configure Supabase Auth, set up social logins*
 
 ### **High-Risk Dependencies**
 - [ ] **Mapbox API Integration** - HIGH PRIORITY
@@ -114,7 +160,7 @@
 
 ## 📅 **Upcoming Milestones**
 
-### **Phase 4: Core Features** ⏳
+### **Phase 5: Core Features** ⏳
 **Target**: [Date]
 - [ ] Live availability map integration (Mapbox GL JS)
 - [ ] Real-time booking engine
@@ -125,7 +171,7 @@
 - [ ] **Map abstraction and vendor identity protection**
 - [ ] **Customer persona system integration**
 
-### **Phase 5: Advanced Features** ⏳
+### **Phase 6: Advanced Features** ⏳
 **Target**: [Date]
 - [ ] AI-powered slot recommendations
 - [ ] Real-time demand heatmaps
@@ -135,7 +181,7 @@
 - [ ] **AI conversational interface enhancement**
 - [ ] **No-show tracking and provider reliability scoring**
 
-### **Phase 6: Launch Preparation** ⏳
+### **Phase 7: Launch Preparation** ⏳
 **Target**: [Date]
 - [ ] Beta testing with select providers
 - [ ] Performance optimization
