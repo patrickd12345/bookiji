@@ -1,6 +1,7 @@
 'use client';
 
 import { AvailabilityZone, Provider, RadiusZone } from '../types';
+import { useEffect, useState } from "react";
 
 interface DemoControlsProps {
   availabilityZones: AvailabilityZone[];

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AIResponse } from '../types';
 
@@ -19,6 +19,11 @@ export default function AIConversationalInterface({
 }: AIConversationalInterfaceProps) {
   const [aiInput, setAiInput] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [messageId, setMessageId] = useState<string>("");
+
+  useEffect(() => {
+    setMessageId(Date.now().toString());
+  }, []);
 
   const handleAISubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +31,7 @@ export default function AIConversationalInterface({
 
     // Add user message
     const userMessage: AIResponse = {
-      id: Date.now().toString(),
+      id: messageId,
       message: aiInput,
       timestamp: new Date(),
       type: 'user'
@@ -37,7 +42,7 @@ export default function AIConversationalInterface({
     // Simulate AI response
     setTimeout(() => {
       const aiMessage: AIResponse = {
-        id: (Date.now() + 1).toString(),
+        id: messageId,
         message: generateAIResponse(aiInput),
         timestamp: new Date(),
         type: 'ai'

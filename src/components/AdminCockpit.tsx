@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   AdminStats, 
@@ -25,6 +25,11 @@ export default function AdminCockpit({
   const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'vendors' | 'verifications' | 'actions' | 'notifications'>('dashboard');
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [selectedAction, setSelectedAction] = useState<AdminAction | null>(null);
+  const [formattedUsers, setFormattedUsers] = useState("");
+  const [formattedTotalVendors, setFormattedTotalVendors] = useState("");
+  const [formattedTotalBookings, setFormattedTotalBookings] = useState("");
+  const [formattedTotalRevenue, setFormattedTotalRevenue] = useState("");
+  const [formattedThisMonthRevenue, setFormattedThisMonthRevenue] = useState("");
 
   // Mock data - in real app, this would come from API
   const adminStats: AdminStats = {
@@ -104,6 +109,26 @@ export default function AdminCockpit({
     console.log(`Notification ${notificationId} marked as read`);
   };
 
+  useEffect(() => {
+    setFormattedUsers(adminStats.totalUsers.toLocaleString());
+  }, [adminStats.totalUsers]);
+
+  useEffect(() => {
+    setFormattedTotalVendors(adminStats.totalVendors.toLocaleString());
+  }, [adminStats.totalVendors]);
+
+  useEffect(() => {
+    setFormattedTotalBookings(adminStats.totalBookings.toLocaleString());
+  }, [adminStats.totalBookings]);
+
+  useEffect(() => {
+    setFormattedTotalRevenue(adminStats.totalRevenue.toLocaleString());
+  }, [adminStats.totalRevenue]);
+
+  useEffect(() => {
+    setFormattedThisMonthRevenue(adminStats.thisMonth.revenue.toLocaleString());
+  }, [adminStats.thisMonth.revenue]);
+
   return (
     <AnimatePresence>
       {showAdminCockpit && (
@@ -175,7 +200,7 @@ export default function AdminCockpit({
                         </div>
                         <div className="ml-4">
                           <p className="text-sm font-medium text-gray-600">Total Users</p>
-                          <p className="text-2xl font-bold text-gray-900">{adminStats.totalUsers.toLocaleString()}</p>
+                          <p className="text-2xl font-bold text-gray-900">{formattedUsers}</p>
                         </div>
                       </div>
                       <div className="mt-4">
@@ -190,7 +215,7 @@ export default function AdminCockpit({
                         </div>
                         <div className="ml-4">
                           <p className="text-sm font-medium text-gray-600">Total Vendors</p>
-                          <p className="text-2xl font-bold text-gray-900">{adminStats.totalVendors}</p>
+                          <p className="text-2xl font-bold text-gray-900">{formattedTotalVendors}</p>
                         </div>
                       </div>
                       <div className="mt-4">
@@ -205,7 +230,7 @@ export default function AdminCockpit({
                         </div>
                         <div className="ml-4">
                           <p className="text-sm font-medium text-gray-600">Total Bookings</p>
-                          <p className="text-2xl font-bold text-gray-900">{adminStats.totalBookings.toLocaleString()}</p>
+                          <p className="text-2xl font-bold text-gray-900">{formattedTotalBookings}</p>
                         </div>
                       </div>
                       <div className="mt-4">
@@ -220,11 +245,11 @@ export default function AdminCockpit({
                         </div>
                         <div className="ml-4">
                           <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                          <p className="text-2xl font-bold text-gray-900">${adminStats.totalRevenue.toLocaleString()}</p>
+                          <p className="text-2xl font-bold text-gray-900">${formattedTotalRevenue}</p>
                         </div>
                       </div>
                       <div className="mt-4">
-                        <span className="text-green-600 text-sm">+${adminStats.thisMonth.revenue.toLocaleString()} this month</span>
+                        <span className="text-green-600 text-sm">+${formattedThisMonthRevenue} this month</span>
                       </div>
                     </div>
                   </div>
