@@ -1,6 +1,15 @@
-import Image from 'next/image';
+'use client'
+
+import Image from 'next/image'
+import { useState } from 'react'
+import AIConversationalInterface from '../components/AIConversationalInterface'
+import FeatureSummary from '../components/FeatureSummary'
+import { AIResponse } from '../types'
 
 export default function Home() {
+  const [aiResponses, setAiResponses] = useState<AIResponse[]>([])
+  const [isAiActive, setIsAiActive] = useState(false)
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header */}
@@ -15,11 +24,25 @@ export default function Home() {
         </nav>
       </header>
 
-      {/* Hero Section */}
+      {/* Hero Section with AI Interface */}
       <section className="flex flex-col items-center justify-center flex-1 py-12">
         <h1 className="text-4xl font-extrabold mb-2 text-center">Book any service, anywhere. Guaranteed.</h1>
         <p className="text-lg text-gray-700 mb-6 text-center">The world's first AI-powered, commitment-based booking platform.</p>
-        <button className="px-8 py-3 bg-blue-600 text-white rounded-lg text-lg font-semibold hover:bg-blue-700 transition mb-8">Join the Beta</button>
+        
+        {/* AI Conversational Interface - Main Feature */}
+        <div className="w-full max-w-2xl mb-8">
+          <AIConversationalInterface 
+            aiResponses={aiResponses}
+            setAiResponses={setAiResponses}
+            isAiActive={isAiActive}
+            setIsAiActive={setIsAiActive}
+          />
+        </div>
+
+        {/* Feature Summary */}
+        <div className="w-full max-w-2xl mb-8">
+          <FeatureSummary />
+        </div>
 
         {/* How It Works */}
         <div className="w-full max-w-2xl bg-white rounded-xl shadow p-6 mb-8">
@@ -43,12 +66,61 @@ export default function Home() {
           </ul>
         </div>
 
+        {/* Platform Features Showcase */}
+        <div className="w-full max-w-4xl mb-8">
+          <h2 className="text-2xl font-bold mb-6 text-center">Platform Features</h2>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Customer Personas */}
+            <div className="bg-white rounded-xl shadow p-6">
+              <h3 className="text-lg font-semibold mb-3">🎭 Customer Personas</h3>
+              <p className="text-gray-600 mb-3">Personalized experience based on your preferences and booking history.</p>
+              <div className="flex gap-2">
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">Professional</span>
+                <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">Wellness</span>
+                <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-sm">Creative</span>
+              </div>
+            </div>
+
+            {/* Map Abstraction */}
+            <div className="bg-white rounded-xl shadow p-6">
+              <h3 className="text-lg font-semibold mb-3">🗺️ Map Abstraction</h3>
+              <p className="text-gray-600 mb-3">Vendor privacy protection with abstracted availability zones.</p>
+              <div className="flex gap-2">
+                <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-sm">Dense Area</span>
+                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm">Medium Area</span>
+                <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-sm">Sparse Area</span>
+              </div>
+            </div>
+
+            {/* Booking Guarantee */}
+            <div className="bg-white rounded-xl shadow p-6">
+              <h3 className="text-lg font-semibold mb-3">🔒 Booking Guarantee</h3>
+              <p className="text-gray-600 mb-3">$1 commitment fee ensures reliable bookings and reduces no-shows.</p>
+              <div className="flex gap-2">
+                <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">Instant Confirmation</span>
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">Provider Details</span>
+              </div>
+            </div>
+
+            {/* No-Show System */}
+            <div className="bg-white rounded-xl shadow p-6">
+              <h3 className="text-lg font-semibold mb-3">⭐ Reliability System</h3>
+              <p className="text-gray-600 mb-3">Post-appointment feedback and reliability scoring for both parties.</p>
+              <div className="flex gap-2">
+                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm">Star Ratings</span>
+                <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-sm">No-Show Tracking</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Beta Announcement */}
         <div className="w-full max-w-2xl bg-yellow-50 rounded-xl shadow p-4 mb-6 text-center">
           <span className="font-semibold text-yellow-800">Bookiji is now in global beta! Reduced fees, founding user perks, and your feedback shapes the future.</span>
         </div>
 
-        {/* Testimonials & FAQ (placeholders) */}
+        {/* Testimonials & FAQ */}
         <div className="w-full max-w-2xl flex flex-col md:flex-row gap-6 mb-8">
           <div className="flex-1 bg-white rounded-xl shadow p-4">
             <h3 className="font-bold mb-2">Testimonials</h3>
@@ -69,5 +141,5 @@ export default function Home() {
         About | Contact | Provider Onboarding | Beta Feedback | Legal
       </footer>
     </div>
-  );
+  )
 } 

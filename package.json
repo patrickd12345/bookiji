@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
-    "@prisma/client": "^5.13.0",
+    "@supabase/supabase-js": "^2.50.0",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "framer-motion": "^11.10.0",
@@ -39,7 +39,6 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "postcss": "^8.5.5",
-    "prisma": "^5.13.0",
     "tailwindcss": "^4.1.10",
     "typescript": "^5"
   }
