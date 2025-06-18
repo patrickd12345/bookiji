@@ -1,148 +1,89 @@
 'use client';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import { calculateRadiusZone } from '@/utils/helpers';
 
-import { motion } from 'framer-motion';
-import { AvailabilityZone, Provider, RadiusZone } from '../types';
-import { calculateDistance } from '../utils/helpers';
+const CENTER: [number, number] = [45.5017, -73.5673]; // Montreal
 
-interface MapAbstractionProps {
-  availabilityZones: AvailabilityZone[];
-  selectedZone: AvailabilityZone | null;
-  setSelectedZone: (zone: AvailabilityZone | null) => void;
-  showProviderDetails: boolean;
-  setShowProviderDetails: (show: boolean) => void;
-  selectedProvider: Provider | null;
-  setSelectedProvider: (provider: Provider | null) => void;
-  currentRadiusZone: RadiusZone | null;
-  availableSlots: string[];
-  providers: Provider[];
-  userLocation: { lat: number; lng: number };
-  onBookZone: () => void;
+// Marker type
+interface MarkerData {
+  id: string;
+  lat: number;
+  lng: number;
+  label: string;
 }
 
-export default function MapAbstraction({
-  availabilityZones,
-  selectedZone,
-  setSelectedZone,
-  showProviderDetails,
-  setShowProviderDetails,
-  selectedProvider,
-  setSelectedProvider,
-  currentRadiusZone,
-  availableSlots,
-  providers,
-  userLocation,
-  onBookZone
-}: MapAbstractionProps) {
+function SetView({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center);
+  }, [center, map]);
+  return null;
+}
 
-  const handleZoneSelect = (zone: AvailabilityZone) => {
-    setSelectedZone(zone);
-    setShowProviderDetails(true);
-    
-    // In real app, this would show available providers for this zone
-    // but still abstracted until booking
-    const nearbyProviders = providers.filter(provider => {
-      const distance = calculateDistance(userLocation.lat, userLocation.lng, provider.location.lat, provider.location.lng);
-      return distance <= (currentRadiusZone?.radius || 5);
-    });
+function randomizeWithinRadius(lat: number, lng: number, radiusKm: number) {
+  // Random angle and distance
+  const angle = Math.random() * 2 * Math.PI;
+  const distance = Math.random() * radiusKm;
+  // Approximate conversion: 1 degree lat ~ 111km, 1 degree lng ~ 111km * cos(lat)
+  const deltaLat = (distance / 111) * Math.cos(angle);
+  const deltaLng = (distance / (111 * Math.cos(lat * Math.PI / 180))) * Math.sin(angle);
+  return [lat + deltaLat, lng + deltaLng];
+}
 
-    if (zone.type === 'service') {
-      const categoryProviders = nearbyProviders.filter(p => p.category === zone.id.split('-')[1]);
-      setSelectedProvider(categoryProviders[0] || null);
-    } else {
-      setSelectedProvider(nearbyProviders[0] || null);
-    }
-  };
-
+export default function MapAbstraction({ markers = [], showExact = false }: { markers?: MarkerData[], showExact?: boolean }) {
+  // For density, treat all markers as providers
   return (
-    <div className="space-y-4">
-      {/* AI Radius Scaling Display */}
-      {currentRadiusZone && (
-        <div className="mb-4 p-3 bg-white rounded-lg border border-gray-300">
-          <div className="text-sm text-gray-700 mb-2">
-            <strong>AI Radius:</strong> {currentRadiusZone.radius}km ({currentRadiusZone.density} area)
-          </div>
-          <div className="text-xs text-gray-600 mb-2">
-            {currentRadiusZone.description}
-          </div>
-          <div className="text-sm font-medium text-blue-600">
-            {availableSlots[0]}
-          </div>
-        </div>
-      )}
-      
-      <p className="text-gray-500 mb-4">Mapbox integration coming soon</p>
-      
-      {/* Abstracted Availability Zones */}
-      <div className="space-y-3 mb-4">
-        <h4 className="text-sm font-semibold text-gray-700">Available Zones</h4>
-        {availabilityZones.map((zone) => (
-          <div
-            key={zone.id}
-            onClick={() => handleZoneSelect(zone)}
-            className={`p-3 rounded-lg cursor-pointer transition-colors border-2 ${
-              selectedZone?.id === zone.id
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 bg-white hover:border-gray-300'
-            }`}
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="font-medium text-gray-900">{zone.description}</div>
-                <div className="text-sm text-gray-600">
-                  {zone.count} {zone.type === 'service' ? 'providers' : 'slots'} available
-                </div>
-                <div className="text-xs text-gray-500">
-                  ~{zone.distance.toFixed(1)}km away
-                </div>
-              </div>
-              <div className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
-                {zone.type}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      {/* Booking Button for Selected Zone */}
-      {selectedZone && (
-        <div className="mb-4">
-          <button
-            onClick={onBookZone}
-            className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Book {selectedZone.description} - $1 commitment
-          </button>
-          <div className="text-xs text-gray-500 mt-1 text-center">
-            Provider details revealed after booking
-          </div>
-        </div>
-      )}
-      
-      {/* Provider Details (only shown after zone selection) */}
-      {showProviderDetails && selectedProvider && (
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-          <div className="text-sm font-medium text-gray-900 mb-2">
-            Selected Provider (Abstracted)
-          </div>
-          <div className="text-xs text-gray-600">
-            <div>Service: {selectedProvider.service}</div>
-            <div>Rating: {selectedProvider.rating} ⭐</div>
-            <div>Price: {selectedProvider.price}</div>
-            <div className="text-blue-600 font-medium">
-              Exact location and name revealed after $1 commitment
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Radius Zone Info */}
-      {currentRadiusZone && (
-        <div className="text-xs text-gray-500">
-          <div>Density: {currentRadiusZone.density}</div>
-          <div>Tone: {currentRadiusZone.tone}</div>
-          <div>Zones: {availabilityZones.length}</div>
-        </div>
-      )}
+    <div className="w-full h-[600px] rounded-xl overflow-hidden shadow">
+      <MapContainer center={CENTER} zoom={13} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
+        <SetView center={CENTER} />
+        <TileLayer
+          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {/* Render privacy circles and fuzzed markers */}
+        {markers.map((marker, idx) => {
+          // Calculate density-based radius (in km)
+          const providers = markers.map(m => ({
+            id: m.id,
+            name: m.label,
+            services: [],
+            category: 'wellness' as const,
+            rating: 0,
+            price: '',
+            location: { lat: m.lat, lng: m.lng },
+            availability: [],
+            isActive: true
+          }));
+          const radiusZone = calculateRadiusZone(providers, marker.lat, marker.lng);
+          const radiusMeters = radiusZone.radius * 1000;
+          // Fuzzed marker position
+          const [fuzzLat, fuzzLng] = randomizeWithinRadius(marker.lat, marker.lng, radiusZone.radius);
+          return (
+            <React.Fragment key={marker.id}>
+              {/* Privacy circle */}
+              <Circle
+                center={[marker.lat, marker.lng]}
+                radius={radiusMeters}
+                pathOptions={{ fillColor: 'blue', fillOpacity: 0.15, color: 'blue', weight: 1, dashArray: '4 4' }}
+              />
+              {/* Fuzzed marker (not exact) */}
+              {!showExact && (
+                <Marker position={[fuzzLat, fuzzLng]}>
+                  <Popup>{marker.label}<br/>(Approximate area)</Popup>
+                </Marker>
+              )}
+              {/* Optionally, show exact marker for admin/debug */}
+              {showExact && (
+                <Marker position={[marker.lat, marker.lng]}>
+                  <Popup>{marker.label}<br/>(Exact location)</Popup>
+                </Marker>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </MapContainer>
     </div>
   );
 } 

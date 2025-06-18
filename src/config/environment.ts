@@ -153,17 +153,21 @@ const stagingConfig: EnvironmentConfig = {
 
 // Determine which configuration to use
 const getEnvironmentConfig = (): EnvironmentConfig => {
-  const env = process.env.NODE_ENV || 'development';
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  const deployEnv = process.env.DEPLOY_ENV;
   
-  switch (env) {
-    case 'production':
-      return productionConfig;
-    case 'staging':
-      return stagingConfig;
-    case 'development':
-    default:
-      return developmentConfig;
+  // Check for staging first
+  if (deployEnv === 'staging') {
+    return stagingConfig;
   }
+  
+  // Then fall back to NODE_ENV
+  if (nodeEnv === 'production') {
+    return productionConfig;
+  }
+  
+  // Default to development
+  return developmentConfig;
 };
 
 // Export the configuration

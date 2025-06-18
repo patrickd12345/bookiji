@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -15,6 +16,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "framer-motion": "^11.10.0",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.460.0",
     "mapbox-gl": "^3.6.0",
     "next": "15.3.3",
@@ -22,6 +24,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.52.1",
+    "react-leaflet": "^5.0.0",
+    "react-map-gl": "^8.0.4",
     "socket.io-client": "^4.8.1",
     "stripe": "^16.7.0",
     "tailwind-merge": "^2.5.4",
@@ -31,15 +35,21 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4.1.10",
+    "@types/leaflet": "^1.9.18",
     "@types/mapbox-gl": "^3.1.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-map-gl": "^6.1.7",
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "postcss": "^8.5.5",
     "tailwindcss": "^4.1.10",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@tailwindcss/oxide-linux-x64-gnu": "^4.1.10",
+    "lightningcss-linux-x64-gnu": "^1.29.0"
   }
 }

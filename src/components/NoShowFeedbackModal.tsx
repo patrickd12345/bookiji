@@ -1,147 +1,93 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { Appointment } from '../types';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useUIStore } from '@/stores/uiStore';
 
-interface NoShowFeedbackModalProps {
-  showFeedbackModal: boolean;
-  setShowFeedbackModal: (show: boolean) => void;
-  currentAppointment: Appointment | null;
-  setCurrentAppointment: (appointment: Appointment | null) => void;
-  feedbackStep: 'question' | 'rating' | 'complete';
-  setFeedbackStep: (step: 'question' | 'rating' | 'complete') => void;
-}
+export default function NoShowFeedbackModal() {
+  const [feedback, setFeedback] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const {
+    showFeedbackModal,
+    currentAppointment,
+    setShowFeedbackModal,
+    setCurrentAppointment
+  } = useUIStore();
 
-export default function NoShowFeedbackModal({
-  showFeedbackModal,
-  setShowFeedbackModal,
-  currentAppointment,
-  setCurrentAppointment,
-  feedbackStep,
-  setFeedbackStep
-}: NoShowFeedbackModalProps) {
-  const handleNoShow = () => {
-    if (currentAppointment) {
-      const updatedAppointment = { ...currentAppointment, status: 'no-show' as const };
-      setCurrentAppointment(updatedAppointment);
-    }
-    setFeedbackStep('complete');
-  };
+  if (!showFeedbackModal || !currentAppointment) return null;
 
-  const handleShowUp = () => {
-    setFeedbackStep('rating');
-  };
-
-  const handleRating = (rating: number) => {
-    if (currentAppointment) {
-      const updatedAppointment = { 
-        ...currentAppointment, 
-        status: 'completed' as const,
-        rating 
-      };
-      setCurrentAppointment(updatedAppointment);
-    }
-    setFeedbackStep('complete');
-  };
-
-  const handleComplete = () => {
+  const handleSubmitFeedback = async () => {
+    setIsSubmitting(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Update appointment status and feedback
+    const updatedAppointment = {
+      ...currentAppointment,
+      status: 'cancelled' as const,
+      feedback
+    };
+    
+    setCurrentAppointment(updatedAppointment);
     setShowFeedbackModal(false);
-    setFeedbackStep('question');
-    setCurrentAppointment(null);
+    setIsSubmitting(false);
   };
 
   return (
-    <AnimatePresence>
-      {showFeedbackModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-2xl p-8 max-w-md w-full mx-4"
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-white rounded-2xl p-6 max-w-md w-full"
+      >
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-white text-xl">📝</span>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">No-Show Feedback</h2>
+          <p className="text-gray-600 mt-2">
+            Help us improve by sharing what happened
+          </p>
+        </div>
+
+        <div className="space-y-4 mb-6">
+          <div className="space-y-2">
+            <label htmlFor="feedback" className="block text-sm font-medium text-gray-700">
+              What went wrong?
+            </label>
+            <textarea
+              id="feedback"
+              rows={4}
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Please share your experience..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowFeedbackModal(false)}
+            className="flex-1 px-4 py-2 text-gray-600 hover:text-gray-800"
           >
-            <div className="text-center">
-              {feedbackStep === 'question' && (
-                <div>
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-white font-bold text-2xl">❓</span>
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-4">Did your appointment take place?</h2>
-                  <p className="text-gray-600 mb-6">Help us maintain quality by confirming your experience</p>
-                  
-                  <div className="space-y-3">
-                    <button
-                      onClick={handleShowUp}
-                      className="w-full py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                    >
-                      ✅ Yes, I attended
-                    </button>
-                    <button
-                      onClick={handleNoShow}
-                      className="w-full py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                    >
-                      ❌ No, I didn't show up
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {feedbackStep === 'rating' && (
-                <div>
-                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-white font-bold text-2xl">⭐</span>
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-4">Rate your experience</h2>
-                  <p className="text-gray-600 mb-6">How was your appointment with the provider?</p>
-                  
-                  <div className="flex justify-center space-x-2 mb-6">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onClick={() => handleRating(star)}
-                        className="text-3xl hover:scale-110 transition-transform"
-                      >
-                        ⭐
-                      </button>
-                    ))}
-                  </div>
-                  
-                  <div className="text-sm text-gray-500">
-                    Click a star to rate your experience
-                  </div>
-                </div>
-              )}
-
-              {feedbackStep === 'complete' && (
-                <div>
-                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-white font-bold text-2xl">✅</span>
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-4">Thank you!</h2>
-                  <p className="text-gray-600 mb-6">
-                    {currentAppointment?.status === 'no-show' 
-                      ? 'We\'ve noted the no-show. This helps us maintain quality for all users.'
-                      : 'Your feedback helps us maintain quality and helps other users make informed decisions.'
-                    }
-                  </p>
-                  
-                  <button
-                    onClick={handleComplete}
-                    className="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    Done
-                  </button>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmitFeedback}
+            disabled={isSubmitting || !feedback.trim()}
+            className={`flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl 
+              ${(isSubmitting || !feedback.trim()) ? 'opacity-70 cursor-not-allowed' : 'hover:opacity-90'} transition-opacity`}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 } 
