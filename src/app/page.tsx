@@ -1,315 +1,367 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import RealTimeBookingChat from '../components/RealTimeBookingChat'
+import AIRadiusScaling from '../components/AIRadiusScaling'
+import CustomerPersonaAI from '../components/CustomerPersonaAI'
+import MapAbstractionAI from '../components/MapAbstractionAI'
+import StripePayment from '../components/StripePayment'
+import LLMQuoteGenerator from '../components/LLMQuoteGenerator'
+
+interface UserCredits {
+  id: string
+  user_id: string
+  balance_cents: number
+  created_at: string
+  updated_at: string
+}
 
 export default function LandingPage() {
-  const [message, setMessage] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
+  const [, setRadius] = useState(5)
+  const [, setSelectedPersona] = useState('general')
+  const [, setPersonaMessage] = useState('')
+  const [userCredits, setUserCredits] = useState<UserCredits | null>(null)
+  const [loadingCredits, setLoadingCredits] = useState(true)
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return
-    setIsTyping(true)
-    // Simulate AI response
-    setTimeout(() => {
-      setIsTyping(false)
-    }, 1500)
+  // Mock user ID for demo purposes
+  const mockUserId = 'demo-user-123'
+
+  useEffect(() => {
+    fetchUserCredits()
+  }, [])
+
+  const fetchUserCredits = async () => {
+    try {
+      const response = await fetch(`/api/credits/balance?userId=${mockUserId}`)
+      const data = await response.json()
+
+      if (data.success) {
+        setUserCredits(data.credits)
+      }
+    } catch (error) {
+      console.error('Error fetching user credits:', error)
+    } finally {
+      setLoadingCredits(false)
+    }
   }
 
-  const steps = [
-    {
-      icon: '💬',
-      title: 'Tell Bookiji what you need',
-      description: 'Use chat, voice, or search to describe your needs',
-      color: 'bg-purple-500'
-    },
-    {
-      icon: '🔍',
-      title: 'See instant options',
-      description: 'Privacy-protected locations and real-time availability',
-      color: 'bg-blue-500'
-    },
-    {
-      icon: '💫',
-      title: 'Book instantly',
-      description: '$1 commitment fee guarantees your spot',
-      color: 'bg-green-500'
-    },
-    {
-      icon: '⭐',
-      title: 'Build reliability',
-      description: 'Earn rewards and improve your booking score',
-      color: 'bg-yellow-500'
-    }
-  ]
-
-  const features = [
-    {
-      icon: '📍',
-      title: 'AI Radius Scaling',
-      description: 'Smart location matching based on service density',
-      color: 'from-purple-500 to-pink-500'
-    },
-    {
-      icon: '🎭',
-      title: 'Customer Personas',
-      description: 'Personalized experience for your booking style',
-      color: 'from-blue-500 to-cyan-500'
-    },
-    {
-      icon: '🗺️',
-      title: 'Map Abstraction',
-      description: 'Provider privacy until booking confirmation',
-      color: 'from-green-500 to-emerald-500'
-    },
-    {
-      icon: '🚩',
-      title: 'No-Show Protection',
-      description: 'Reliable bookings with accountability',
-      color: 'from-yellow-500 to-orange-500'
-    }
-  ]
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Hero Section with AI Assistant */}
-      <div className="max-w-3xl mx-auto px-4 pt-24 pb-12 text-center">
-        {/* Logo (optional, for hero) */}
-        {/* <div className="flex justify-center mb-4">
-          <span className="font-extrabold text-2xl text-gray-900 flex items-center gap-2">
-            <span className="text-3xl">📅</span>
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Bookiji</span>
-          </span>
-        </div> */}
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-[clamp(2rem,5vw,3rem)] leading-tight font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 tracking-tight mb-2"
-        >
-          Book any service,<br />anywhere. Guaranteed.
-        </motion.h1>
-        <motion.p 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mt-2 text-lg sm:text-xl text-gray-700 font-medium max-w-2xl mx-auto"
-        >
-          The world's first AI-powered, commitment-based booking platform.
-        </motion.p>
-        <div className="mt-8">
-          <Link href="/register" className="inline-block px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg shadow-lg hover:opacity-90 transition-opacity">
-            Get Started
-          </Link>
-        </div>
-
-        {/* AI Assistant Interface */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="max-w-xl mx-auto mt-12"
-        >
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 scale-110 shadow-purple-400/30 animate-[pulseGlow_2s_infinite]">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                <span className="text-white text-xl">🧙‍♂️</span>
-              </div>
-              <div className="flex-1">
-                <h2 className="font-semibold text-gray-900">AI Booking Assistant</h2>
-                <p className="text-sm text-gray-500">I can help you find and book any service</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="p-2 hover:bg-gray-100 rounded-full">
-                  <span className="text-xl">🎤</span>
-                </button>
-                <button className="p-2 hover:bg-gray-100 rounded-full">
-                  <span className="text-xl">📷</span>
-                </button>
-              </div>
-            </div>
-            <div className="space-y-4 mb-6">
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  🧙‍♂️
-                </div>
-                <div className="bg-gray-100 rounded-2xl rounded-tl-none p-4 max-w-[80%]">
-                  <p className="text-gray-700">Hi! I can help you book any service. What are you looking for?</p>
-                </div>
-              </div>
-              {isTyping && (
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                    🧙‍♂️
-                  </div>
-                  <div className="bg-gray-100 rounded-2xl rounded-tl-none p-4">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Try: Hair appointment near me at 5 PM"
-                className="flex-1 px-4 py-3 bg-gray-100 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-              />
-              <button 
-                onClick={handleSendMessage}
-                className="px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:opacity-90 transition-opacity"
-              >
-                Send
-              </button>
-            </div>
-            <div className="mt-4 flex gap-2 flex-wrap">
-              <button className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-600 transition-colors">
-                Message near me
-              </button>
-              <button className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-600 transition-colors">
-                Hair appointment today
-              </button>
-              <button className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-600 transition-colors">
-                Wellness services
-              </button>
-              <button className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-600 transition-colors">
-                Available now
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* How It Works */}
-      <div className="py-20 bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-16">How It Works</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {steps.map((step, index) => (
-              <motion.div
-                key={step.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative"
-              >
-                <div className={`w-16 h-16 ${step.color} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform -rotate-6`}>
-                  <span className="text-2xl transform rotate-6">{step.icon}</span>
-                </div>
-                {index < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-8 left-[60%] w-[40%] h-[2px] bg-gray-200">
-                    <div className="absolute top-1/2 right-0 w-3 h-3 border-t-2 border-r-2 border-gray-200 transform rotate-45 -translate-y-1/2"></div>
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-xl">🚀</span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Bookiji
+                </h1>
+                <p className="text-sm text-gray-500">AI-Powered Booking Platform</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              {/* Credit Balance Display */}
+              <div className="flex items-center space-x-3">
+                {loadingCredits ? (
+                  <div className="flex items-center space-x-2 px-3 py-1 bg-gray-100 rounded-full">
+                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm text-gray-600">Loading...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full border border-green-200">
+                    <span className="text-lg">🪙</span>
+                    <span className="text-sm font-medium text-green-800">
+                      ${userCredits ? (userCredits.balance_cents / 100).toFixed(2) : '0.00'} Credits
+                    </span>
                   </div>
                 )}
-                <h3 className="text-xl font-semibold mb-2 text-center">{step.title}</h3>
-                <p className="text-gray-600 text-center">{step.description}</p>
-              </motion.div>
-            ))}
+                <Link
+                  href="/demo/credits"
+                  className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium hover:bg-purple-200 transition-colors"
+                >
+                  + Buy Credits
+                </Link>
+              </div>
+              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                Real-Time Booking Engine ✅
+              </span>
+              <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity">
+                Get Started
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Features */}
-      <div className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-16">Features Implemented</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="group"
-              >
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl transition-shadow">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                    <span className="text-2xl">{feature.icon}</span>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.description}</p>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <LLMQuoteGenerator className="mb-4" />
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Experience the future of booking with AI-powered real-time availability, 
+            instant payment processing, and seamless provider matching.
+          </p>
+        </div>
+
+        {/* Credit System Feature Section */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl shadow-xl p-8 border border-purple-100 mb-12">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl">💎</span>
+              </div>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Smart Credit System
+              </h2>
+            </div>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Buy credits in bulk and save big! The more you purchase, the better your value. 
+              Pay with credits or card for ultimate flexibility.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Volume Discounts */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-purple-100">
+              <div className="text-center mb-4">
+                <span className="text-3xl mb-2 block">📈</span>
+                <h3 className="font-semibold text-gray-900">Volume Discounts</h3>
+              </div>
+              <p className="text-sm text-gray-600 text-center">
+                Save up to <span className="font-bold text-purple-600">53%</span> when you buy credits in bulk. 
+                Ultimate Pack gives you $150 credits for just $70!
+              </p>
+            </div>
+
+            {/* Dual Payment */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-purple-100">
+              <div className="text-center mb-4">
+                <span className="text-3xl mb-2 block">🔄</span>
+                <h3 className="font-semibold text-gray-900">Dual Payment Options</h3>
+              </div>
+              <p className="text-sm text-gray-600 text-center">
+                Pay with credits for instant booking or use your card. 
+                Mix and match payment methods for maximum convenience.
+              </p>
+            </div>
+
+            {/* Real-time Balance */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-purple-100">
+              <div className="text-center mb-4">
+                <span className="text-3xl mb-2 block">⚡</span>
+                <h3 className="font-semibold text-gray-900">Real-time Balance</h3>
+              </div>
+              <p className="text-sm text-gray-600 text-center">
+                Your credit balance is always visible and instantly updated. 
+                Never worry about insufficient funds during booking.
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center mt-8">
+            <Link
+              href="/demo/credits"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:opacity-90 transition-opacity shadow-lg"
+            >
+              <span className="mr-2">🛒</span>
+              Explore Credit Packages
+            </Link>
+          </div>
+        </div>
+
+        {/* Feature Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Real-Time Booking Chat */}
+          <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">💬</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Real-Time Booking Chat</h3>
+            </div>
+            <p className="text-gray-600 mb-4">
+              AI-powered chat interface that extracts booking intent and creates real-time bookings with instant payment processing.
+            </p>
+            <RealTimeBookingChat />
+          </div>
+
+          {/* AI Radius Scaling */}
+          <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">🎯</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">AI Radius Scaling</h3>
+            </div>
+            <p className="text-gray-600 mb-4">
+              Intelligent radius adjustment based on service type and provider density.
+            </p>
+            <AIRadiusScaling 
+              service="haircut"
+              location="New York"
+              onRadiusChangeAction={setRadius}
+            />
+          </div>
+
+          {/* Customer Persona AI */}
+          <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">👤</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Customer Persona AI</h3>
+            </div>
+            <p className="text-gray-600 mb-4">
+              Personalized responses based on customer personas and preferences.
+            </p>
+            <CustomerPersonaAI 
+              onPersonaChangeAction={setSelectedPersona}
+              onMessageAction={setPersonaMessage}
+            />
+          </div>
+        </div>
+
+        {/* Map Integration */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm">🗺️</span>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">AI-Powered Map Integration</h3>
+          </div>
+          <p className="text-gray-600 mb-4">
+            Interactive map with AI radius scaling and real-time provider location.
+          </p>
+          <MapAbstractionAI 
+            service="haircut"
+            location="New York"
+          />
+        </div>
+
+        {/* Payment Integration */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 mb-12">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">💳</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Flexible Payment Options</h3>
+            </div>
+            <Link
+              href="/demo/credits"
+              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+            >
+              🪙 Buy Credits
+            </Link>
+          </div>
+          
+          {/* Payment Options Explanation */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-4">
+            <h4 className="font-semibold text-gray-900 mb-3">Two Ways to Pay for Bookings:</h4>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-white rounded-lg p-4 border border-blue-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xl">🪙</span>
+                  <h5 className="font-medium text-blue-900">Pay with Credits</h5>
                 </div>
-              </motion.div>
-            ))}
+                <p className="text-sm text-blue-700">
+                  Use your existing credit balance for instant booking. 
+                  <span className="font-medium"> No extra fees!</span>
+                </p>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-green-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xl">💳</span>
+                  <h5 className="font-medium text-green-900">Pay with Card</h5>
+                </div>
+                <p className="text-sm text-green-700">
+                  Direct credit card payment with secure Stripe processing.
+                  <span className="font-medium"> Always available!</span>
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 p-3 bg-purple-100 rounded-lg">
+              <p className="text-sm text-purple-800">
+                <span className="font-medium">💡 Smart Tip:</span> 
+                {" "}Don't have enough credits? 
+                <Link href="/demo/credits" className="text-purple-600 hover:text-purple-700 font-medium underline">
+                  Buy credits with volume discounts
+                </Link>
+                {" "}and save up to 53% on future bookings!
+              </p>
+            </div>
+          </div>
+
+          <p className="text-gray-600 mb-4">
+            Secure payment processing with commitment fees and webhook handling. 
+            Choose your preferred payment method at checkout - credits or card.
+          </p>
+          <StripePayment 
+            clientSecret="pi_test_secret"
+            bookingId="test-booking-123"
+            serviceDetails={{
+              service: "Haircut",
+              provider: "Test Provider",
+              date: "2024-01-15",
+              time: "14:00"
+            }}
+            onSuccess={(paymentIntentId) => console.log('Payment success:', paymentIntentId)}
+            onError={(error) => console.log('Payment error:', error)}
+            onCancel={() => console.log('Payment cancelled')}
+          />
+        </div>
+
+        {/* System Status */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm">⚡</span>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">System Status</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-2xl mb-2">✅</div>
+              <div className="font-medium text-green-800">AI Chat</div>
+              <div className="text-sm text-green-600">Operational</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-2xl mb-2">✅</div>
+              <div className="font-medium text-green-800">Booking Engine</div>
+              <div className="text-sm text-green-600">Operational</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-2xl mb-2">✅</div>
+              <div className="font-medium text-green-800">Payment System</div>
+              <div className="text-sm text-green-600">Operational</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-2xl mb-2">✅</div>
+              <div className="font-medium text-green-800">Database</div>
+              <div className="text-sm text-green-600">Operational</div>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* CTA */}
-      <div className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-8">Ready to transform your booking experience?</h2>
-          <div className="space-x-4">
-            <Link 
-              href="/register" 
-              className="inline-block px-6 py-3 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-colors"
-            >
-              Get Started
-            </Link>
-            <Link
-              href="/vendor/onboarding"
-              className="inline-block px-6 py-3 bg-transparent border-2 border-white text-white rounded-xl hover:bg-white/10 transition-colors"
-            >
-              Become a Provider
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Vendor Section */}
-      <div className="py-20 bg-gray-50">
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-8 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Are you a service provider?</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Join thousands of providers who trust Bookiji to bring them reliable customers and reduce no-shows.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <span className="text-white text-2xl">💰</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Earn More</h3>
-              <p className="text-gray-600">$1 commitment fee reduces no-shows and guarantees serious customers</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <span className="text-white text-2xl">🛡️</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Privacy Protected</h3>
-              <p className="text-gray-600">Your location stays private until booking is confirmed</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <span className="text-white text-2xl">📱</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Easy Management</h3>
-              <p className="text-gray-600">Simple dashboard to manage bookings and customer communication</p>
-            </div>
-          </div>
-          
           <div className="text-center">
-            <Link
-              href="/vendor/onboarding"
-              className="inline-block px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:opacity-90 transition-opacity font-semibold"
-            >
-              Start Earning with Bookiji
-            </Link>
-            <p className="mt-4 text-sm text-gray-500">
-              Free to join • No monthly fees • Keep 100% of your earnings
+            <p className="text-gray-400">
+              © 2024 Bookiji. Real-time AI-powered booking platform.
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Built with Next.js, Ollama AI, Stripe, and Supabase
             </p>
           </div>
         </div>
-      </div>
+      </footer>
     </div>
   )
 } 

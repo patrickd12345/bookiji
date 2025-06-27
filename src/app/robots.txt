@@ -1,0 +1,54 @@
+User-agent: *
+Allow: /
+
+# Main pages
+Allow: /
+Allow: /application
+Allow: /login
+Allow: /register
+Allow: /get-started
+Allow: /beta/signup
+
+# Public booking pages (but protect privacy)
+Allow: /book/*
+Disallow: /book/*/admin
+Disallow: /book/*/private
+
+# Protect sensitive areas
+Disallow: /api/
+Disallow: /vendor/dashboard*
+Disallow: /vendor/calendar*
+Disallow: /vendor/onboarding*
+Disallow: /pay/*
+Disallow: /confirm/*
+Disallow: /admin*
+Disallow: /auth/callback*
+Disallow: /verify-email*
+Disallow: /forgot-password*
+
+# Allow static assets
+Allow: /icons/*
+Allow: /screenshots/*
+Allow: /_next/static/*
+Allow: /public/*
+
+# Sitemaps
+Sitemap: https://bookiji.com/sitemap.xml
+Sitemap: https://bookiji.com/sitemap-providers.xml
+Sitemap: https://bookiji.com/sitemap-services.xml
+
+# Crawl delay for politeness
+Crawl-delay: 1
+
+# Specific bot rules
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 2 

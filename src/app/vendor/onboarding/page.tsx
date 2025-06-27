@@ -66,34 +66,41 @@ export default function VendorOnboardingPage() {
       const submissionData = {
         ...formData,
         serviceType: formData.serviceType === 'Other' ? formData.customServiceType : formData.serviceType,
-        isCustomServiceType: formData.serviceType === 'Other'
+        isCustomServiceType: formData.serviceType === 'Other',
+        password: 'temp_password_123' // TODO: Add proper password field
       };
 
-      // TODO: Implement vendor registration
-      console.log('Vendor registration:', submissionData);
-      
-      // If it's a custom service type, create approval proposal
-      if (formData.serviceType === 'Other') {
-        const proposal = createServiceTypeProposal();
-        console.log('New service type proposal:', proposal);
-        
-        // TODO: Send to admin notification system
-        // await sendServiceTypeProposal(proposal);
-        
-        // TODO: Send email notification to admin
-        // await sendAdminNotification({
-        //   type: 'service_type_proposal',
-        //   proposal,
-        //   action: 'review'
-        // });
-      }
+      // Call vendor registration API
+      const response = await fetch('/api/vendor/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submissionData),
+      });
 
-      // TODO: Redirect to success page or dashboard
-      // router.push('/vendor/success');
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('Vendor registered successfully:', data.vendor);
+        
+        // Show success message based on registration type
+        if (data.vendor.status === 'pending_approval') {
+          alert('Registration submitted! Your custom service type will be reviewed by our team. You\'ll receive an email within 24-48 hours.');
+        } else {
+          alert('Registration successful! Please check your email to verify your account before you can start accepting bookings.');
+        }
+
+        // TODO: Redirect to success page or dashboard
+        // router.push('/vendor/dashboard');
+        
+      } else {
+        throw new Error(data.error || 'Registration failed');
+      }
       
     } catch (error) {
       console.error('Registration error:', error);
-      // TODO: Show error message to user
+      alert('Registration failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsSubmitting(false);
     }

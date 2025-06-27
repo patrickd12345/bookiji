@@ -6,7 +6,11 @@ declare global {
       [elemName: string]: any;
     }
   }
+  var __DEV__: boolean;
 }
+
+/// <reference types="vitest" />
+/// <reference types="vitest/globals" />
 
 export interface AIResponse {
   id: string;
@@ -109,6 +113,7 @@ export interface Customer extends User {
   bookingHistory: string[];
   savedProviders: string[];
   paymentMethods: PaymentMethod[];
+  credits?: UserCredits;
 }
 
 export interface VendorService {
@@ -140,11 +145,41 @@ export interface CalendarIntegration {
 
 export interface PaymentMethod {
   id: string;
-  type: 'card' | 'bank_account' | 'paypal';
+  type: 'card' | 'bank' | 'digital_wallet';
   last4?: string;
   brand?: string;
   isDefault: boolean;
-  expiresAt?: Date;
+}
+
+export interface CreditTransaction {
+  id: string;
+  user_id: string;
+  amount_cents: number;
+  transaction_type: 'purchase' | 'usage' | 'refund' | 'bonus';
+  description: string;
+  booking_id?: string;
+  payment_intent_id?: string;
+  created_at: string;
+}
+
+export interface UserCredits {
+  user_id: string;
+  balance_cents: number;
+  total_purchased_cents: number;
+  total_used_cents: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreditPackage {
+  id: string;
+  name: string;
+  credits_cents: number;
+  price_cents: number;
+  bonus_credits_cents?: number;
+  description: string;
+  is_active: boolean;
+  created_at: string;
 }
 
 export interface Admin extends User {
@@ -221,4 +256,6 @@ export type AdminPermission =
   | 'manage_payments'
   | 'manage_content'
   | 'view_analytics'
-  | 'system_settings'; 
+  | 'system_settings';
+
+export {}; 
