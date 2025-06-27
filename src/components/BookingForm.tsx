@@ -6,6 +6,8 @@ import { Calendar, Clock, Coins, CreditCard, AlertCircle, CheckCircle, Loader2, 
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import TourButton from '@/components/TourButton'
+import { BookijiTour, startBookingTour } from '@/lib/guidedTour'
 
 interface BookingFormProps {
   vendorId: string
@@ -61,6 +63,17 @@ export default function BookingForm({
   // Load user credits on component mount
   useEffect(() => {
     loadUserCredits()
+  }, [])
+
+  // Auto-start tour for first-time users
+  useEffect(() => {
+    if (BookijiTour.shouldShowTour()) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        startBookingTour()
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
   }, [])
 
   // Load available slots when date changes
@@ -228,169 +241,179 @@ export default function BookingForm({
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-blue-600" />
-          Book {serviceName}
-        </CardTitle>
-        <CardDescription>
-          {vendorName}  {serviceDuration} minutes  ${priceDisplayDollars}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {error && (
-          <div role="alert" className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
-            <AlertCircle className="h-5 w-5" />
-            {error}
-          </div>
-        )}
-        {success && (
-          <div role="status" className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
-            <CheckCircle className="h-5 w-5" />
-            {success}
-          </div>
-        )}
-        <form role="form" className="space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <Label htmlFor="date">Select Date *</Label>
-            <input
-              type="date"
-              id="date"
-              min={new Date().toISOString().split("T")[0]}
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {selectedDate && (
-            <div className="space-y-2">
-              <Label>Available Time Slots *</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {loadingSlots ? (
-                  <div role="progressbar" className="col-span-full flex items-center justify-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                  </div>
-                ) : availableSlots?.length === 0 ? (
-                  <div className="col-span-full flex items-center justify-center py-4 text-gray-600">
-                    No available slots for this date
-                  </div>
-                ) : (
-                  availableSlots?.map((slot) => (
-                    <Button
-                      key={slot.id}
-                      type="button"
-                      variant={selectedTime === slot.start ? "default" : "outline"}
-                      className="p-3 h-auto flex flex-col items-center"
-                      onClick={() => setSelectedTime(slot.start)}
-                      disabled={!slot.available}
-                    >
-                      <Clock className="h-4 w-4 mb-1" />
-                      <span className="text-sm">{slot.start}</span>
-                    </Button>
-                  ))
-                )}
-              </div>
+    <div className="relative">
+      {/* Tour Button */}
+      <div className="absolute top-4 right-4 z-10">
+        <TourButton variant="help" />
+      </div>
+      
+      <Card className="w-full max-w-2xl mx-auto service-selector">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-blue-600" />
+            Book {serviceName}
+          </CardTitle>
+          <CardDescription>
+            {vendorName} • {serviceDuration} minutes • ${priceDisplayDollars}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {error && (
+            <div role="alert" className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+              <AlertCircle className="h-5 w-5" />
+              {error}
             </div>
           )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name *</Label>
-              <Input
-                id="name"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="John Doe"
+          {success && (
+            <div role="status" className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700">
+              <CheckCircle className="h-5 w-5" />
+              {success}
+            </div>
+          )}
+          <form role="form" className="space-y-6 booking-form" onSubmit={handleSubmit}>
+            <div className="space-y-2 date-picker">
+              <Label htmlFor="date">Select Date *</Label>
+              <input
+                type="date"
+                id="date"
+                min={new Date().toISOString().split("T")[0]}
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                placeholder="john@example.com"
-              />
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
-              placeholder="+1 (555) 123-4567"
-            />
-          </div>
-
-          <div className="space-y-3">
-            <Label>Payment Method *</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Button
-                type="button"
-                variant={paymentMethod === "credits" ? "default" : "outline"}
-                className="p-4 h-auto flex flex-col items-center gap-2"
-                onClick={() => setPaymentMethod("credits")}
-                disabled={!credits}
-              >
-                <Coins className="h-5 w-5" />
-                <div className="text-center">
-                  <div className="font-medium">Pay with Credits</div>
-                  <div className="text-sm text-gray-600">
-                    {credits ? `Balance: $${credits.balance_dollars}` : "Loading..."}
-                  </div>
+            {selectedDate && (
+              <div className="space-y-2 time-slots">
+                <Label>Available Time Slots *</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {loadingSlots ? (
+                    <div role="progressbar" className="col-span-full flex items-center justify-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                    </div>
+                  ) : availableSlots?.length === 0 ? (
+                    <div className="col-span-full flex items-center justify-center py-4 text-gray-600">
+                      No available slots for this date
+                    </div>
+                  ) : (
+                    availableSlots?.map((slot) => (
+                      <Button
+                        key={slot.id}
+                        type="button"
+                        variant={selectedTime === slot.start ? "default" : "outline"}
+                        className="p-3 h-auto flex flex-col items-center"
+                        onClick={() => setSelectedTime(slot.start)}
+                        disabled={!slot.available}
+                      >
+                        <Clock className="h-4 w-4 mb-1" />
+                        <span className="text-sm">{slot.start}</span>
+                      </Button>
+                    ))
+                  )}
                 </div>
-              </Button>
-              <Button
-                type="button"
-                variant={paymentMethod === "card" ? "default" : "outline"}
-                className="p-4 h-auto flex flex-col items-center gap-2"
-                onClick={() => setPaymentMethod("card")}
-              >
-                <CreditCard className="h-5 w-5" />
-                <div className="text-center">
-                  <div className="font-medium">Pay with Card</div>
-                  <div className="text-sm text-gray-600">${priceDisplayDollars}</div>
-                </div>
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">Additional Notes</Label>
-            <textarea
-              id="notes"
-              className="w-full min-h-[100px] p-3 border rounded-lg"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Any special requests or notes for the service provider..."
-            />
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full py-3 text-lg"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <Calendar className="mr-2 h-4 w-4" />
-                Confirm Booking - ${priceDisplayDollars}
-              </>
+              </div>
             )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name *</Label>
+                <Input
+                  id="name"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="John Doe"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  placeholder="john@example.com"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label>Payment Method *</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Button
+                  type="button"
+                  variant={paymentMethod === "credits" ? "default" : "outline"}
+                  className="p-4 h-auto flex flex-col items-center gap-2"
+                  onClick={() => setPaymentMethod("credits")}
+                  disabled={!credits}
+                >
+                  <Coins className="h-5 w-5" />
+                  <div className="text-center">
+                    <div className="font-medium">Pay with Credits</div>
+                    <div className="text-sm text-gray-600">
+                      {credits ? `Balance: $${credits.balance_dollars}` : "Loading..."}
+                    </div>
+                  </div>
+                </Button>
+                <Button
+                  type="button"
+                  variant={paymentMethod === "card" ? "default" : "outline"}
+                  className="p-4 h-auto flex flex-col items-center gap-2"
+                  onClick={() => setPaymentMethod("card")}
+                >
+                  <CreditCard className="h-5 w-5" />
+                  <div className="text-center">
+                    <div className="font-medium">Pay with Card</div>
+                    <div className="text-sm text-gray-600">${priceDisplayDollars}</div>
+                  </div>
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Additional Notes</Label>
+              <textarea
+                id="notes"
+                className="w-full min-h-[100px] p-3 border rounded-lg"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Any special requests or notes for the service provider..."
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full py-3 text-lg confirm-button"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Confirm Booking - ${priceDisplayDollars}
+                </>
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      
+      {/* Floating Tour Button for mobile */}
+      <TourButton variant="floating" className="md:hidden" />
+    </div>
   )
 }
