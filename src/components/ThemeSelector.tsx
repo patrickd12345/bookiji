@@ -21,7 +21,15 @@ export default function ThemeSelector() {
     setMounted(true)
   }, [])
 
+  // Keep the DOM attribute in sync with store value (handles rehydration as well)
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+  }, [theme])
+
   const handleThemeChange = async (newTheme: Theme) => {
+    console.log('Theme button clicked:', newTheme)
     try {
       await setTheme(newTheme)
     } catch (error) {

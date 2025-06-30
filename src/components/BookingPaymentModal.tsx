@@ -14,18 +14,18 @@ interface ServiceDetails {
 
 interface BookingPaymentModalProps {
   isOpen: boolean
-  onClose: () => void
-  onPaymentSuccess: (paymentId: string) => void
-  onPaymentError: (error: Error) => void
+  onCloseAction: () => void
+  onPaymentSuccessAction: (paymentId: string) => void
+  onPaymentErrorAction: (error: Error) => void
   serviceDetails: ServiceDetails
   bookingId: string
 }
 
 export function BookingPaymentModal({
   isOpen,
-  onClose,
-  onPaymentSuccess,
-  onPaymentError,
+  onCloseAction,
+  onPaymentSuccessAction,
+  onPaymentErrorAction,
   serviceDetails = {
     name: '',
     price: 0,
@@ -62,7 +62,7 @@ export function BookingPaymentModal({
       setClientSecret(data.clientSecret)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Payment setup failed')
-      onPaymentError(err instanceof Error ? err : new Error('Payment setup failed'))
+      onPaymentErrorAction(err instanceof Error ? err : new Error('Payment setup failed'))
     } finally {
       setLoading(false)
     }
@@ -75,22 +75,22 @@ export function BookingPaymentModal({
 
     try {
       // Payment processing logic here
-      onPaymentSuccess('dummy_payment_intent_id') // This will be replaced by actual payment intent ID
+      onPaymentSuccessAction('dummy_payment_intent_id') // This will be replaced by actual payment intent ID
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Payment failed')
-      onPaymentError(err instanceof Error ? err : new Error('Payment failed'))
+      onPaymentErrorAction(err instanceof Error ? err : new Error('Payment failed'))
     } finally {
       setLoading(false)
     }
   }
 
   const handlePaymentSuccess = (paymentId: string) => {
-    onPaymentSuccess(paymentId)
-    onClose()
+    onPaymentSuccessAction(paymentId)
+    onCloseAction()
   }
 
   const handlePaymentError = (error: string | Error) => {
-    onPaymentError(error instanceof Error ? error : new Error(error))
+    onPaymentErrorAction(error instanceof Error ? error : new Error(error))
   }
 
   if (!isOpen) return null
@@ -106,7 +106,7 @@ export function BookingPaymentModal({
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Payment</h2>
           <button
-            onClick={onClose}
+            onClick={onCloseAction}
             className="text-gray-500 hover:text-gray-700"
           >
             ✕
@@ -143,7 +143,7 @@ export function BookingPaymentModal({
                 }}
                 onSuccess={handlePaymentSuccess}
                 onError={handlePaymentError}
-                onCancel={onClose}
+                onCancel={onCloseAction}
               />
             </div>
           ) : (
@@ -161,7 +161,7 @@ export function BookingPaymentModal({
           <div className="mt-4 flex justify-end gap-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={onCloseAction}
               className="px-4 py-2 text-gray-600 hover:text-gray-800"
             >
               Cancel

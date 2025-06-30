@@ -365,10 +365,10 @@ export default function RealTimeBookingChat() {
       {/* Payment Modal */}
       <BookingPaymentModal
         isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
+        onCloseAction={() => setShowPaymentModal(false)}
         bookingId={currentBooking?.id}
-        onPaymentSuccess={handlePaymentSuccess}
-        onPaymentError={handlePaymentError}
+        onPaymentSuccessAction={handlePaymentSuccess}
+        onPaymentErrorAction={handlePaymentError}
         serviceDetails={{
           name: currentBooking?.service || '',
           price: 100, // Set your actual price

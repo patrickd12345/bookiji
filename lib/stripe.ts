@@ -22,6 +22,9 @@ const getStripePublishableKey = () => {
 
 // Server-side Stripe instance (with fallback for development)
 const initializeStripe = (): Stripe | null => {
+  // Never run on the browser – prevents noisy console errors during dev HMR.
+  if (typeof window !== 'undefined') return null
+
   try {
     const secretKey = getStripeSecretKey()
     if (secretKey && secretKey.startsWith('sk_')) {
@@ -31,7 +34,10 @@ const initializeStripe = (): Stripe | null => {
     }
     return null
   } catch (error) {
-    console.warn('Stripe server initialization failed - using mock mode:', error)
+    // Log once on the server; omit stack in production.
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('Stripe server initialization failed - using mock mode:', error)
+    }
     return null
   }
 }
