@@ -4,10 +4,45 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CreditBooklet, EnhancedPaymentModal } from '@/components'
 
+interface CreditPackage {
+  id: string
+  name: string
+  credits: number
+  price: number
+  description: string
+}
+
+const creditPackages: CreditPackage[] = [
+  {
+    id: 'basic',
+    name: 'Basic',
+    credits: 100,
+    price: 9.99,
+    description: 'Perfect for getting started'
+  },
+  {
+    id: 'pro',
+    name: 'Professional',
+    credits: 500,
+    price: 39.99,
+    description: 'Best value for active users'
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    credits: 2000,
+    price: 149.99,
+    description: 'For high-volume businesses'
+  }
+]
+
+const MotionButton = motion.button
+
 export default function CreditsDemoPage() {
   const [showCreditBooklet, setShowCreditBooklet] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [userCredits, setUserCredits] = useState(750) // $7.50 starting balance
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null)
 
   const mockBookingDetails = {
     id: 'booking_demo_123',
@@ -17,6 +52,10 @@ export default function CreditsDemoPage() {
     time: '2:30 PM',
     customerId: 'demo_customer_123',
     amountCents: 1200, // $12.00
+  }
+
+  const handlePackageSelect = (packageId: string) => {
+    setSelectedPackage(packageId)
   }
 
   return (
@@ -105,7 +144,7 @@ export default function CreditsDemoPage() {
 
         {/* Demo Actions */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <motion.button
+          <MotionButton
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowCreditBooklet(true)}
@@ -126,9 +165,9 @@ export default function CreditsDemoPage() {
                 • Custom amounts available
               </p>
             </div>
-          </motion.button>
+          </MotionButton>
 
-          <motion.button
+          <MotionButton
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowPaymentModal(true)}
@@ -149,7 +188,7 @@ export default function CreditsDemoPage() {
                 • {userCredits >= mockBookingDetails.amountCents ? '✅ Can pay with credits' : '❌ Need more credits'}
               </p>
             </div>
-          </motion.button>
+          </MotionButton>
         </div>
 
         {/* Price Comparison Table */}

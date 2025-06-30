@@ -32,14 +32,14 @@ export default function AuthEntry({ mode = "signup" }: { mode?: "signup" | "logi
           },
         });
         if (error) throw error;
-        router.push("/application");
+        router.push("/beta/signup");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
-        router.push("/application");
+        router.push("/dashboard");
       }
     } catch (err: any) {
       setError(err.message || `Failed to ${isSignUp ? "sign up" : "sign in"}`);

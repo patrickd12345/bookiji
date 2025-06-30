@@ -1,26 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, 
-  MapPin, 
-  Clock, 
-  DollarSign, 
   User, 
-  Mail, 
-  Phone, 
   CheckCircle, 
   AlertCircle,
-  Loader2,
-  Upload,
-  Camera,
-  Star,
-  Shield,
-  Calendar
+  Loader2
 } from 'lucide-react';
-import { useUIStore } from '@/stores/uiStore';
-import type { VendorRegistrationForm, VendorService, BusinessHours } from '@/types/global.d';
+import type { VendorService } from '@/types/global.d';
 
 interface VendorFormData {
   // Business Information

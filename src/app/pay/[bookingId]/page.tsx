@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '../../../../hooks/useAuth'
 import { useParams, useSearchParams } from 'next/navigation'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
@@ -114,29 +115,28 @@ export default function PaymentPage() {
   const searchParams = useSearchParams()
   const bookingId = params.bookingId as string
   const clientSecret = searchParams.get('client_secret')
-
+  const { user } = useAuth()
+  
   const [booking, setBooking] = useState<Booking | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchBooking()
-  }, [bookingId])
+    if (!user) return
 
-  const fetchBooking = async () => {
-    try {
-      const response = await fetch(`/api/bookings/user?userId=temp_customer`)
-      const data = await response.json()
-      
-      if (data.success) {
-        const foundBooking = data.bookings.find((b: Booking) => b.id === bookingId)
-        setBooking(foundBooking || null)
+    const fetchBooking = async () => {
+      try {
+        const response = await fetch(`/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`)
+        const data = await response.json()
+        setBooking(data.booking)
+      } catch (error) {
+        console.error('Error fetching booking:', error)
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('Error fetching booking:', error)
-    } finally {
-      setLoading(false)
     }
-  }
+
+    fetchBooking()
+  }, [bookingId, user])
 
   if (loading) {
     return (

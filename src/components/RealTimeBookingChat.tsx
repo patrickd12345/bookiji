@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import BookingPaymentModal from './BookingPaymentModal'
+import { BookingPaymentModal } from './BookingPaymentModal'
 
 interface Message {
   id: string
@@ -236,11 +236,11 @@ export default function RealTimeBookingChat() {
     setMessages(prev => [...prev, successMessage])
   }
 
-  const handlePaymentError = (error: string) => {
+  const handlePaymentError = (error: Error) => {
     const errorMessage: Message = {
       id: (Date.now() + 2).toString(),
       role: 'assistant',
-      content: `Payment failed: ${error}. Please try again or contact support.`,
+      content: `Payment failed: ${error.message}. Please try again or contact support.`,
       timestamp: new Date()
     }
     setMessages(prev => [...prev, errorMessage])
@@ -365,9 +365,16 @@ export default function RealTimeBookingChat() {
       {/* Payment Modal */}
       <BookingPaymentModal
         isOpen={showPaymentModal}
-        onCloseAction={() => setShowPaymentModal(false)}
-        bookingDetails={currentBooking}
+        onClose={() => setShowPaymentModal(false)}
+        bookingId={currentBooking?.id}
+        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentError={handlePaymentError}
+        serviceDetails={{
+          name: currentBooking?.service || '',
+          price: 100, // Set your actual price
+          duration: 60 // Set your actual duration
+        }}
       />
     </>
   )
-} 
+}

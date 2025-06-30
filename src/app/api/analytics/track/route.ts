@@ -1,272 +1,399 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
+import { createSupabaseClient } from '@/lib/supabaseClient'
 
-interface AnalyticsEvent {
-  event_type: string
-  user_id?: string
-  session_id: string
-  page_url: string
-  user_agent: string
-  timestamp: string
-  properties?: Record<string, any>
-  utm_source?: string
-  utm_medium?: string
-  utm_campaign?: string
-  utm_content?: string
-  utm_term?: string
+type SupabaseClient = ReturnType<typeof createSupabaseClient>
+
+interface EventProperties {
+  session_id?: string;
+  user_id?: string;
+  ip_address?: string;
+  user_agent?: string;
+  server_timestamp?: string;
+  device_type?: string;
+  browser?: string;
+  os?: string;
+  country?: string;
+  is_mobile?: boolean;
+  is_bot?: boolean;
+  completed_bookings?: number;
+  session_duration?: number;
+  help_clicks?: number;
+  signup_abandoned?: boolean;
+  payment_abandoned?: boolean;
+  pricing_page_visits?: number;
+  session_count?: number;
+  [key: string]: unknown;
 }
 
+interface EnhancedEvent {
+  event_name: string;
+  properties: EventProperties;
+  created_at: string;
+}
+
+interface AnalyticsResponse {
+  success: boolean;
+  event_id?: string;
+  error?: string;
+  data?: unknown;
+}
+
+// 📊 Analytics tracking endpoint for post-launch optimization
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const { event, properties } = await request.json()
     
-    const {
-      event_type,
-      user_id,
-      session_id,
-      page_url,
-      properties = {},
-      utm_source,
-      utm_medium,
-      utm_campaign,
-      utm_content,
-      utm_term
-    } = body
-
-    // Validate required fields
-    if (!event_type || !session_id || !page_url) {
-      return NextResponse.json(
-        { error: 'Missing required fields: event_type, session_id, page_url' },
-        { status: 400 }
-      )
+    if (!event) {
+      return NextResponse.json({ error: 'Event name is required' }, { status: 400 })
     }
 
-    // Get user agent and IP
-    const user_agent = request.headers.get('user-agent') || 'Unknown'
-    const ip_address = request.headers.get('x-forwarded-for') || 
-                      request.headers.get('x-real-ip') || 
-                      'Unknown'
-
-    // Create analytics event
-    const analyticsEvent: AnalyticsEvent = {
-      event_type,
-      user_id: user_id || null,
-      session_id,
-      page_url,
-      user_agent,
-      timestamp: new Date().toISOString(),
+    const supabase = createSupabaseClient()
+    const userAgent = request.headers.get('user-agent') || ''
+    const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    
+    // Enhanced event data with server-side enrichment
+    const enhancedEvent: EnhancedEvent = {
+      event_name: event,
       properties: {
         ...properties,
-        ip_address,
-        referrer: request.headers.get('referer') || null
+        ip_address: clientIp,
+        user_agent: userAgent,
+        server_timestamp: new Date().toISOString(),
+        session_id: properties.session_id || generateSessionId(),
+        device_type: getDeviceType(userAgent),
+        browser: getBrowser(userAgent),
+        os: getOperatingSystem(userAgent),
+        country: await getCountryFromIP(),
+        is_mobile: isMobileDevice(userAgent),
+        is_bot: isBotTraffic(userAgent)
       },
-      utm_source: utm_source || null,
-      utm_medium: utm_medium || null,
-      utm_campaign: utm_campaign || null,
-      utm_content: utm_content || null,
-      utm_term: utm_term || null
+      created_at: new Date().toISOString()
     }
 
-    // Store in database
-    const { error } = await supabase
+    // Store raw event data
+    const { error: eventError } = await supabase
       .from('analytics_events')
-      .insert([analyticsEvent])
+      .insert([enhancedEvent])
 
-    if (error) {
-      console.error('Analytics storage error:', error)
-      // Don't fail the request, just log the error
+    if (eventError) {
+      console.error('Failed to store analytics event:', eventError)
+      return NextResponse.json({ error: 'Failed to store event' }, { status: 500 })
     }
 
-    // Process specific event types for business intelligence
-    await processSpecialEvents(event_type, properties, user_id)
+    // Process conversion funnel events
+    if (event.startsWith('funnel_')) {
+      await processFunnelEvent(supabase, event, enhancedEvent.properties)
+    }
+
+    // Process user behavior for segmentation
+    if (shouldTriggerSegmentation(event)) {
+      await updateUserSegmentation(supabase, enhancedEvent.properties)
+    }
+
+    // Track geographic patterns
+    if (enhancedEvent.properties.country && enhancedEvent.properties.country !== 'unknown') {
+      await updateGeographicStats(supabase, enhancedEvent.properties.country, event)
+    }
+
+    // Real-time alerts for critical events
+    if (isCriticalEvent(event)) {
+      await sendRealTimeAlert(event, enhancedEvent.properties)
+    }
 
     return NextResponse.json({ 
-      success: true,
-      message: 'Event tracked successfully' 
+      success: true, 
+      event_id: enhancedEvent.properties.session_id 
     })
 
   } catch (error) {
     console.error('Analytics tracking error:', error)
-    return NextResponse.json(
-      { error: 'Failed to track event' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-async function processSpecialEvents(
-  event_type: string, 
-  properties: Record<string, any>, 
-  user_id?: string
-) {
+// Helper functions for advanced analytics processing
+
+function generateSessionId(): string {
+  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
+
+function getDeviceType(userAgent: string): string {
+  if (/tablet|ipad|playbook|silk/i.test(userAgent)) return 'tablet'
+  if (/mobile|iphone|ipod|android|blackberry|opera|mini|windows\sce|palm|smartphone|iemobile/i.test(userAgent)) return 'mobile'
+  return 'desktop'
+}
+
+function getBrowser(userAgent: string): string {
+  if (userAgent.includes('Chrome')) return 'Chrome'
+  if (userAgent.includes('Firefox')) return 'Firefox'
+  if (userAgent.includes('Safari')) return 'Safari'
+  if (userAgent.includes('Edge')) return 'Edge'
+  if (userAgent.includes('Opera')) return 'Opera'
+  return 'Unknown'
+}
+
+function getOperatingSystem(userAgent: string): string {
+  if (userAgent.includes('Windows')) return 'Windows'
+  if (userAgent.includes('Mac OS')) return 'macOS'
+  if (userAgent.includes('Linux')) return 'Linux'
+  if (userAgent.includes('Android')) return 'Android'
+  if (userAgent.includes('iOS')) return 'iOS'
+  return 'Unknown'
+}
+
+function isMobileDevice(userAgent: string): boolean {
+  return /mobile|iphone|ipod|android|blackberry|opera|mini|windows\sce|palm|smartphone|iemobile/i.test(userAgent)
+}
+
+function isBotTraffic(userAgent: string): boolean {
+  return /bot|crawler|spider|crawling/i.test(userAgent)
+}
+
+async function getCountryFromIP(): Promise<string> {
+  // In production, you'd use a service like MaxMind, IPinfo, or similar
+  // For now, return 'unknown' - this can be enhanced later
   try {
-    switch (event_type) {
-      case 'booking_started':
-        // Track booking funnel conversion
-        await supabase
-          .from('funnel_analytics')
-          .insert({
-            user_id,
-            funnel_step: 'booking_started',
-            vendor_id: properties.vendor_id,
-            service_id: properties.service_id,
-            timestamp: new Date().toISOString()
-          })
-        break
+    // Example with IPinfo (you'd need to sign up and get an API key)
+    // const response = await fetch(`https://ipinfo.io/${clientIp}?token=${process.env.IPINFO_TOKEN}`)
+    // const data = await response.json()
+    // return data.country || 'unknown'
+    return 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
 
-      case 'payment_initiated':
-        // Track payment funnel
-        await supabase
-          .from('funnel_analytics')
-          .insert({
-            user_id,
-            funnel_step: 'payment_initiated',
-            booking_id: properties.booking_id,
-            amount: properties.amount,
-            timestamp: new Date().toISOString()
-          })
-        break
+async function processFunnelEvent(supabase: SupabaseClient, event: string, properties: EventProperties) {
+  try {
+    const [, funnelName, step] = event.split('_')
+    
+    const { error } = await supabase
+      .from('conversion_funnels')
+      .upsert({
+        funnel_name: funnelName,
+        step_name: step,
+        user_id: properties.user_id || 'anonymous',
+        session_id: properties.session_id,
+        properties,
+        created_at: new Date().toISOString()
+      })
 
-      case 'booking_completed':
-        // Track successful conversions
-        await supabase
-          .from('conversion_analytics')
-          .insert({
-            user_id,
-            booking_id: properties.booking_id,
-            vendor_id: properties.vendor_id,
-            service_id: properties.service_id,
-            amount: properties.amount,
-            conversion_time: properties.time_to_convert,
-            timestamp: new Date().toISOString()
-          })
-        break
-
-      case 'page_view':
-        // Track popular pages
-        await supabase
-          .from('page_analytics')
-          .upsert({
-            page_url: properties.page_url,
-            view_count: 1,
-            last_viewed: new Date().toISOString()
-          }, {
-            onConflict: 'page_url',
-            ignoreDuplicates: false
-          })
-        break
-
-      case 'vendor_signup':
-        // Track vendor acquisition
-        await supabase
-          .from('vendor_analytics')
-          .insert({
-            vendor_id: properties.vendor_id,
-            signup_source: properties.source,
-            business_type: properties.business_type,
-            timestamp: new Date().toISOString()
-          })
-        break
-
-      case 'search_performed':
-        // Track search behavior
-        await supabase
-          .from('search_analytics')
-          .insert({
-            user_id,
-            search_query: properties.query,
-            search_location: properties.location,
-            results_count: properties.results_count,
-            clicked_result: properties.clicked_result || null,
-            timestamp: new Date().toISOString()
-          })
-        break
+    if (error) {
+      console.error('Failed to process funnel event:', error)
     }
   } catch (error) {
-    console.error('Special event processing error:', error)
-    // Don't throw, just log
+    console.error('Funnel processing error:', error)
   }
 }
 
-// GET endpoint for analytics data retrieval
-export async function GET(request: NextRequest) {
+function shouldTriggerSegmentation(event: string): boolean {
+  const segmentationTriggers = [
+    'signup_completed',
+    'booking_completed',
+    'payment_failed',
+    'help_accessed',
+    'confusion_detected',
+    'feature_discovered'
+  ]
+  return segmentationTriggers.includes(event)
+}
+
+async function updateUserSegmentation(supabase: SupabaseClient, properties: EventProperties) {
   try {
+    if (!properties.user_id) return
+
+    // Get user's current behavior data
+    const { data: userData } = await supabase
+      .from('user_analytics')
+      .select('*')
+      .eq('user_id', properties.user_id)
+      .single()
+
+    // Calculate user segments based on behavior
+    const segments = []
+    
+    if (userData?.completed_bookings >= 3 || userData?.session_duration > 600) {
+      segments.push('power_user')
+    }
+    
+    if (userData?.help_clicks > 2 || userData?.signup_abandoned) {
+      segments.push('confused_user')
+    }
+    
+    if (userData?.payment_abandoned || userData?.pricing_page_visits > 3) {
+      segments.push('price_sensitive')
+    }
+    
+    if (properties.country && !['US', 'GB', 'AU'].includes(properties.country)) {
+      segments.push('international_user')
+    }
+    
+    if (properties.is_mobile && userData?.session_count > 2) {
+      segments.push('mobile_user')
+    }
+
+    // Update user segments
+    await supabase
+      .from('user_segments')
+      .upsert({
+        user_id: properties.user_id,
+        segments,
+        last_updated: new Date().toISOString()
+      })
+
+  } catch (error) {
+    console.error('User segmentation error:', error)
+  }
+}
+
+async function updateGeographicStats(supabase: SupabaseClient, country: string, event: string) {
+  try {
+    const today = new Date().toISOString().split('T')[0]
+    
+    // Call the stored procedure we created
+    const { error } = await supabase
+      .rpc('increment_geographic_stats', {
+        p_country: country,
+        p_date: today,
+        p_event_name: event
+      })
+
+    if (error) {
+      console.error('Geographic stats update error:', error)
+    }
+  } catch (error) {
+    console.error('Geographic analytics error:', error)
+  }
+}
+
+function isCriticalEvent(event: string): boolean {
+  const criticalEvents = [
+    'payment_failed',
+    'booking_abandoned',
+    'error_encountered',
+    'confusion_detected'
+  ]
+  return criticalEvents.includes(event)
+}
+
+async function sendRealTimeAlert(event: string, properties: EventProperties): Promise<void> {
+  try {
+    // Example: Send to a webhook or notification service
+    const alertPayload = {
+      event,
+      properties,
+      timestamp: new Date().toISOString(),
+      priority: event.includes('error') ? 'high' : 'medium'
+    }
+
+    // In production, you'd send this to your alert system
+    console.log('🚨 Real-time alert:', alertPayload)
+  } catch (error) {
+    console.error('Failed to send real-time alert:', error)
+  }
+}
+
+// Analytics data retrieval endpoints
+export async function GET(request: NextRequest): Promise<NextResponse<AnalyticsResponse>> {
+  try {
+    const supabase = createSupabaseClient()
     const { searchParams } = new URL(request.url)
-    const metric = searchParams.get('metric')
-    const startDate = searchParams.get('start_date')
-    const endDate = searchParams.get('end_date')
-    const vendorId = searchParams.get('vendor_id')
+    const type = searchParams.get('type')
 
-    if (!metric) {
-      return NextResponse.json(
-        { error: 'Metric parameter required' },
-        { status: 400 }
-      )
-    }
+    let data: unknown
 
-    let query = supabase.from('analytics_events').select('*')
-
-    // Apply filters
-    if (startDate) {
-      query = query.gte('timestamp', startDate)
-    }
-    if (endDate) {
-      query = query.lte('timestamp', endDate)
-    }
-    if (vendorId) {
-      query = query.eq('properties->>vendor_id', vendorId)
-    }
-
-    // Specific metric queries
-    switch (metric) {
-      case 'conversion_rate':
-        const { data: conversionData } = await supabase.rpc('calculate_conversion_rate', {
-          start_date: startDate || '2025-01-01',
-          end_date: endDate || new Date().toISOString(),
-          vendor_id_param: vendorId
-        })
-        return NextResponse.json({ data: conversionData })
-
-      case 'popular_services':
-        const { data: servicesData } = await supabase
-          .from('analytics_events')
-          .select('properties')
-          .eq('event_type', 'booking_completed')
-          .gte('timestamp', startDate || '2025-01-01')
-          .lte('timestamp', endDate || new Date().toISOString())
-        
-        // Process service popularity
-        const serviceStats = servicesData?.reduce((acc: any, event: any) => {
-          const serviceId = event.properties?.service_id
-          if (serviceId) {
-            acc[serviceId] = (acc[serviceId] || 0) + 1
-          }
-          return acc
-        }, {})
-
-        return NextResponse.json({ data: serviceStats })
-
-      case 'traffic_sources':
-        const { data: trafficData } = await supabase
-          .from('analytics_events')
-          .select('utm_source, utm_medium, utm_campaign')
-          .eq('event_type', 'page_view')
-          .gte('timestamp', startDate || '2025-01-01')
-          .lte('timestamp', endDate || new Date().toISOString())
-
-        return NextResponse.json({ data: trafficData })
-
+    switch (type) {
+      case 'funnel':
+        data = await getFunnelAnalytics(supabase)
+        break
+      case 'geographic':
+        data = await getGeographicAnalytics(supabase)
+        break
+      case 'segments':
+        data = await getUserSegmentAnalytics(supabase)
+        break
+      case 'events':
+        data = await getEventAnalytics(supabase)
+        break
       default:
-        const { data, error } = await query
-        if (error) throw error
-        return NextResponse.json({ data })
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Invalid analytics type' 
+        }, { status: 400 })
     }
+
+    return NextResponse.json({ success: true, data })
 
   } catch (error) {
     console.error('Analytics retrieval error:', error)
-    return NextResponse.json(
-      { error: 'Failed to retrieve analytics' },
-      { status: 500 }
-    )
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Failed to retrieve analytics' 
+    }, { status: 500 })
   }
+}
+
+async function getFunnelAnalytics(supabase: SupabaseClient) {
+  const funnelName = 'booking'
+  const days = 7
+  
+  const { data, error } = await supabase
+    .from('conversion_funnels')
+    .select('*')
+    .eq('funnel_name', funnelName)
+    .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    return NextResponse.json({ error: 'Failed to get funnel data' }, { status: 500 })
+  }
+
+  return NextResponse.json({ data })
+}
+
+async function getGeographicAnalytics(supabase: SupabaseClient) {
+  const days = 7
+  
+  const { data, error } = await supabase
+    .from('geographic_analytics')
+    .select('*')
+    .gte('date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+    .order('event_count', { ascending: false })
+
+  if (error) {
+    return NextResponse.json({ error: 'Failed to get geographic data' }, { status: 500 })
+  }
+
+  return NextResponse.json({ data })
+}
+
+async function getUserSegmentAnalytics(supabase: SupabaseClient) {
+  const { data, error } = await supabase
+    .from('user_segments')
+    .select(`
+      segments,
+      count(*) as segment_count
+    `)
+    .order('segment_count', { ascending: false })
+
+  if (error) {
+    return NextResponse.json({ error: 'Failed to get segment data' }, { status: 500 })
+  }
+
+  return NextResponse.json({ data })
+}
+
+async function getEventAnalytics(supabase: SupabaseClient) {
+  const { data, error } = await supabase
+    .from('analytics_events')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  if (error) {
+    console.error('Failed to fetch event analytics:', error)
+    return { error: 'Failed to fetch event analytics' }
+  }
+
+  return { data }
 } 

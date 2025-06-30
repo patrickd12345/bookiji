@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Elements } from '@stripe/react-stripe-js'
 import { getStripe } from '../../lib/stripe'
 import StripePayment from './StripePayment'
+import type { FormEvent, ChangeEvent } from 'react'
 
 interface CreditPackage {
   id: string
@@ -31,6 +32,9 @@ interface CreditBookletProps {
   isOpen: boolean
   onCloseAction: () => void
   onCreditsUpdated?: (newBalance: number) => void
+  initialCredits?: number
+  onPurchase?: (amount: number) => Promise<void>
+  onUse?: (amount: number) => Promise<void>
 }
 
 interface PaymentOption {
@@ -40,16 +44,27 @@ interface PaymentOption {
   icon: string
 }
 
-export default function CreditBooklet({ userId, isOpen, onCloseAction, onCreditsUpdated }: CreditBookletProps) {
+export default function CreditBooklet({ 
+  userId,
+  isOpen,
+  onCloseAction,
+  onCreditsUpdated,
+  initialCredits = 0,
+  onPurchase,
+  onUse
+}: CreditBookletProps) {
   const [packages, setPackages] = useState<CreditPackage[]>([])
   const [userCredits, setUserCredits] = useState<UserCredits | null>(null)
   const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'credits' | null>(null)
   const [clientSecret, setClientSecret] = useState<string>('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
   const [showCustomAmount, setShowCustomAmount] = useState(false)
   const [customAmount, setCustomAmount] = useState<number>(10)
+  const [credits, setCredits] = useState(initialCredits)
+  const [purchaseAmount, setPurchaseAmount] = useState('')
+  const [useAmount, setUseAmount] = useState('')
 
   const paymentOptions: PaymentOption[] = [
     {
@@ -148,7 +163,7 @@ export default function CreditBooklet({ userId, isOpen, onCloseAction, onCredits
 
   const handlePaymentMethodSelect = async (method: 'stripe' | 'credits') => {
     setPaymentMethod(method)
-    setError('')
+    setError(null)
 
     if (method === 'stripe') {
       await createPaymentIntent()
@@ -274,6 +289,60 @@ export default function CreditBooklet({ userId, isOpen, onCloseAction, onCredits
 
   const bestValueId = getBestValueBadge()
 
+  const handlePurchaseSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+
+    try {
+      const amount = Number(purchaseAmount)
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error('Please enter a valid amount')
+      }
+
+      await onPurchase?.(amount)
+      setCredits(prev => prev + amount)
+      setPurchaseAmount('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to purchase credits')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUseSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      const amount = Number(useAmount)
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error('Please enter a valid amount')
+      }
+
+      if (amount > credits) {
+        throw new Error('Insufficient credits')
+      }
+
+      await onUse?.(amount)
+      setCredits(prev => prev - amount)
+      setUseAmount('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to use credits')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePurchaseChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPurchaseAmount(e.target.value)
+  }
+
+  const handleUseChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setUseAmount(e.target.value)
+  }
+
   if (!isOpen) return null
 
   return (
@@ -290,7 +359,7 @@ export default function CreditBooklet({ userId, isOpen, onCloseAction, onCredits
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50">

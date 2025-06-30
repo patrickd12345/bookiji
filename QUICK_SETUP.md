@@ -182,7 +182,6 @@ pnpm lint       # Linting
 ### **Testing Features**
 - **AI Radius Scaling**: Click "Test Radius" button
 - **Map Abstraction**: Use "Toggle Abstraction" 
-- **Customer Personas**: Select from persona overlay
 - **No-Show System**: Click "Demo Feedback"
 - **AI Conversational**: Try AI input field
 - **Booking Guarantee**: Use "Demo Booking"

@@ -21,7 +21,7 @@ export default function RegisterPage() {
         },
       });
       if (error) throw error;
-      router.push('/application');
+      router.push('/beta/signup');
     } catch (err: any) {
       setError(err.message);
     }

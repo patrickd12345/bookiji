@@ -251,16 +251,25 @@ export default function StripePayment(props: StripePaymentProps) {
   const [isStripeConfigured, setIsStripeConfigured] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Validate client secret format
+  const isValidClientSecret = (clientSecret: string) => {
+    // Stripe client secrets should match pattern: pi_xxx_secret_xxx or seti_xxx_secret_xxx
+    const clientSecretPattern = /^(pi|seti)_[a-zA-Z0-9]+_secret_[a-zA-Z0-9]+$/
+    return clientSecretPattern.test(clientSecret)
+  }
+
   useEffect(() => {
     const initializeStripe = async () => {
       const stripe = getStripe()
+      const hasValidClientSecret = isValidClientSecret(props.clientSecret)
+      
       setStripePromise(stripe)
-      setIsStripeConfigured(!!stripe)
+      setIsStripeConfigured(!!stripe && hasValidClientSecret)
       setIsLoading(false)
     }
     
     initializeStripe()
-  }, [])
+  }, [props.clientSecret])
 
   if (isLoading) {
     return (
@@ -271,8 +280,8 @@ export default function StripePayment(props: StripePaymentProps) {
     )
   }
 
-  // Show demo mode if Stripe is not configured
-  if (!isStripeConfigured || !stripePromise) {
+  // Show demo mode if Stripe is not configured or client secret is invalid
+  if (!isStripeConfigured || !stripePromise || !isValidClientSecret(props.clientSecret)) {
     return <DemoPaymentForm {...props} />
   }
 

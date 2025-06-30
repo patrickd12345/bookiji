@@ -12,7 +12,8 @@ vi.mock('../../lib/stripe', () => ({
       amount: 100,
       currency: 'usd'
     }
-  })
+  }),
+  getLiveBookingFee: async () => 100 // Mock the live booking fee function
 }))
 
 vi.mock('../../src/lib/supabaseClient', () => {

@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabaseClient'
 
+interface Review {
+  id: string
+  rating: number
+  comment: string
+  created_at: string
+  updated_at: string
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -169,13 +177,13 @@ async function updateVendorRatingStats(vendorId: string) {
 
     // Calculate statistics
     const totalReviews = reviews.length
-    const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
+    const averageRating = reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) / totalReviews
     const ratingDistribution = {
-      5: reviews.filter(r => r.rating === 5).length,
-      4: reviews.filter(r => r.rating === 4).length,
-      3: reviews.filter(r => r.rating === 3).length,
-      2: reviews.filter(r => r.rating === 2).length,
-      1: reviews.filter(r => r.rating === 1).length
+      5: reviews.filter((r: { rating: number }) => r.rating === 5).length,
+      4: reviews.filter((r: { rating: number }) => r.rating === 4).length,
+      3: reviews.filter((r: { rating: number }) => r.rating === 3).length,
+      2: reviews.filter((r: { rating: number }) => r.rating === 2).length,
+      1: reviews.filter((r: { rating: number }) => r.rating === 1).length
     }
 
     // Update vendor profile
@@ -264,4 +272,11 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+// Calculate average rating
+const calculateAverageRating = (reviews: Review[]): number => {
+  return reviews.reduce((sum: number, review: Review) => {
+    return sum + review.rating
+  }, 0) / reviews.length
 } 

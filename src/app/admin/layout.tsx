@@ -18,12 +18,21 @@ export default function AdminLayout({
 
   const checkAuthentication = async () => {
     try {
-      // TODO: Replace with actual admin authentication check
+      // SECURE: Real admin authentication check
       console.log('Checking admin authentication...')
       
-      // For demo purposes, allow access
-      // In production, this would verify JWT token and admin role
-      const isAdmin = true // await verifyAdminToken()
+      // Get current user from Supabase auth
+      const response = await fetch('/api/auth/check-admin', {
+        method: 'GET',
+        credentials: 'include'
+      })
+      
+      if (!response.ok) {
+        throw new Error('Admin check failed')
+      }
+      
+      const { isAdmin } = await response.json()
+      console.log('Admin check result:', isAdmin)
       
       if (!isAdmin) {
         router.push('/login?redirect=/admin/dashboard')

@@ -412,6 +412,7 @@ export default function UserDashboard() {
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     className="bg-white rounded-2xl p-6 shadow-sm"
+                    data-tour="credit-balance"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -445,7 +446,7 @@ export default function UserDashboard() {
                 {/* Recent Activity */}
                 <div className="grid lg:grid-cols-2 gap-8">
                   {/* Upcoming Bookings */}
-                  <div className="bg-white rounded-2xl shadow-sm p-6">
+                  <div className="bg-white rounded-2xl shadow-sm p-6" data-tour="upcoming-bookings">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-lg font-semibold text-gray-900">Upcoming Bookings</h3>
                       <button
@@ -478,7 +479,7 @@ export default function UserDashboard() {
                   </div>
 
                   {/* Favorite Providers */}
-                  <div className="bg-white rounded-2xl shadow-sm p-6">
+                  <div className="bg-white rounded-2xl shadow-sm p-6" data-tour="favorites">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-lg font-semibold text-gray-900">Favorite Providers</h3>
                       <button
@@ -519,7 +520,7 @@ export default function UserDashboard() {
 
             {/* Bookings Tab */}
             {activeTab === 'bookings' && (
-              <div className="space-y-6">
+              <div className="space-y-6" data-tour="booking-history">
                 {/* Search and Filter */}
                 <div className="bg-white rounded-2xl shadow-sm p-6">
                   <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
@@ -744,7 +745,7 @@ export default function UserDashboard() {
 
             {/* Profile Tab */}
             {activeTab === 'profile' && userProfile && (
-              <div className="space-y-6">
+              <div className="space-y-6" data-tour="profile-settings">
                 <div className="bg-white rounded-2xl shadow-sm p-6">
                   <div className="flex items-start space-x-6">
                     <div className="w-24 h-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center">

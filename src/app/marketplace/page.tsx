@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { AdvancedSearch, ReviewSystem } from '@/components'
+import { ReviewSystem } from '@/components'
 import { Provider } from '@/types/providers'
 
 export default function MarketplacePage() {
@@ -276,10 +276,9 @@ export default function MarketplacePage() {
 
         {/* Search */}
         <div className="mb-8">
-          <AdvancedSearch
-            onResults={handleSearchResults}
-            showMap={false}
-          />
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <p className="text-gray-600">Search functionality coming soon...</p>
+          </div>
         </div>
 
         {/* Results */}

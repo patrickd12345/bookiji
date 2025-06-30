@@ -1,4 +1,5 @@
 import React from 'react';
+import { HTMLMotionProps } from 'framer-motion'
 
 declare global {
   namespace JSX {
@@ -11,6 +12,15 @@ declare global {
 
 /// <reference types="vitest" />
 /// <reference types="vitest/globals" />
+
+declare module 'framer-motion' {
+  export interface MotionProps extends HTMLMotionProps<"div"> {
+    className?: string;
+    onClick?: (e: React.MouseEvent) => void;
+    disabled?: boolean;
+    'data-tour'?: string;
+  }
+}
 
 export interface AIResponse {
   id: string;
@@ -257,5 +267,23 @@ export type AdminPermission =
   | 'manage_content'
   | 'view_analytics'
   | 'system_settings';
+
+export interface UserBlock {
+  id: string;
+  blocker_id: string;
+  blocked_id: string;
+  reason?: string;
+  created_at: string;
+}
+
+export interface BlockUserRequest {
+  blocked_id: string;
+  reason?: string;
+}
+
+export interface BlockListResponse {
+  blocks: UserBlock[];
+  blocked_by: UserBlock[];
+}
 
 export {}; 

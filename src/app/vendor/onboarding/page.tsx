@@ -14,7 +14,8 @@ export default function VendorOnboardingPage() {
     email: '',
     phone: '',
     description: '',
-    agreeToTerms: false
+    agreeToTerms: false,
+    password: ''
   });
 
   const [showCustomServiceInput, setShowCustomServiceInput] = useState(false);
@@ -67,7 +68,7 @@ export default function VendorOnboardingPage() {
         ...formData,
         serviceType: formData.serviceType === 'Other' ? formData.customServiceType : formData.serviceType,
         isCustomServiceType: formData.serviceType === 'Other',
-        password: 'temp_password_123' // TODO: Add proper password field
+        password: formData.password // Real password from form
       };
 
       // Call vendor registration API

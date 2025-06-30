@@ -1,38 +1,44 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error'>('loading');
 
-  useEffect(() => {
-    const token = searchParams.get('token');
-    
-    // If there's a token, verify it
-    if (token) {
-      verifyEmail(token);
-    }
-  }, [searchParams]);
-
-  const verifyEmail = async (token: string) => {
+  const verifyEmail = async () => {
     try {
+      const token = searchParams.get('token');
+      if (!token) {
+        setVerificationStatus('error');
+        return;
+      }
+
       const { error } = await supabase.auth.verifyOtp({
         token_hash: token,
         type: 'email'
       });
 
-      if (error) throw error;
-
-      // Redirect to dashboard on success
-      router.push('/dashboard');
-    } catch (err) {
-      console.error('Verification error:', err);
-      // Handle error (you might want to show an error message)
+      if (error) {
+        console.error('Verification error:', error);
+        setVerificationStatus('error');
+      } else {
+        setVerificationStatus('success');
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      console.error('Verification error:', error);
+      setVerificationStatus('error');
     }
   };
+
+  useEffect(() => {
+    if (!searchParams) return;
+    verifyEmail();
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

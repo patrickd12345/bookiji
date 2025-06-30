@@ -1,20 +1,30 @@
 import Stripe from 'stripe'
 import { loadStripe } from '@stripe/stripe-js'
+import { getBookingFeeForCurrency, DEFAULT_BOOKING_FEE } from '@/config/bookingFeeMatrix'
+import { supabase } from '@/lib/supabaseClient'
 
-// Get Stripe keys with fallbacks for development
+// Get Stripe keys with strict validation (NO FALLBACKS FOR SECURITY)
 const getStripeSecretKey = () => {
-  return process.env.STRIPE_SECRET_KEY || 'sk_test_development_fallback_key'
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) {
+    throw new Error('STRIPE_SECRET_KEY environment variable is required for payment processing')
+  }
+  return key
 }
 
 const getStripePublishableKey = () => {
-  return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_development_fallback_key'
+  const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  if (!key) {
+    throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY environment variable is required for payment processing')
+  }
+  return key
 }
 
 // Server-side Stripe instance (with fallback for development)
 const initializeStripe = (): Stripe | null => {
   try {
     const secretKey = getStripeSecretKey()
-    if (secretKey && secretKey !== 'sk_test_development_fallback_key') {
+    if (secretKey && secretKey.startsWith('sk_')) {
       return new Stripe(secretKey, {
         apiVersion: '2024-06-20',
       })
@@ -41,7 +51,7 @@ export const getStripe = () => {
   const publishableKey = getStripePublishableKey()
   
   // Return null if we don't have a real publishable key
-  if (!publishableKey || publishableKey === 'pk_test_development_fallback_key') {
+  if (!publishableKey || !publishableKey.startsWith('pk_')) {
     console.warn('Stripe publishable key not configured - returning null')
     return null
   }
@@ -49,47 +59,77 @@ export const getStripe = () => {
   return loadStripe(publishableKey)
 }
 
-// Bookiji-specific payment configuration
+// Bookiji-specific payment configuration (static values)
 export const BOOKIJI_PAYMENT_CONFIG = {
-  // Commitment fee in cents ($1.00)
-  COMMITMENT_FEE_CENTS: 100,
-  
-  // Currency
-  CURRENCY: 'usd',
-  
   // Payment description
   COMMITMENT_FEE_DESCRIPTION: 'Bookiji Booking Commitment Fee',
-  
-  // Success and cancel URLs
-  SUCCESS_URL: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/booking/success`,
-  CANCEL_URL: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/booking/cancel`,
+
+  // Success and cancel URLs - production ready
+  SUCCESS_URL: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL || 'http://localhost:3000'}/booking/success`,
+  CANCEL_URL: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL || 'http://localhost:3000'}/booking/cancel`,
+}
+
+// In-memory cache so we don't hit Supabase on every request (simple TTL = 5 min)
+const feeCache = new Map<string, { amount: number; expires: number }>()
+
+async function getLiveBookingFee(currency: string): Promise<number> {
+  const key = currency.toLowerCase()
+
+  // 1. Check cache first
+  const cached = feeCache.get(key)
+  if (cached && cached.expires > Date.now()) {
+    return cached.amount
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('booking_fees')
+      .select('amount_cents')
+      .eq('currency_code', key)
+      .single()
+
+    if (error) throw error
+
+    if (data && typeof data.amount_cents === 'number') {
+      feeCache.set(key, { amount: data.amount_cents, expires: Date.now() + 5 * 60 * 1000 })
+      return data.amount_cents
+    }
+  } catch (err) {
+    console.warn('Supabase booking fee lookup failed:', err)
+  }
+
+  // Fallback to static matrix
+  return getBookingFeeForCurrency(currency)
 }
 
 // Payment intent creation for commitment fee
 export async function createCommitmentFeePaymentIntent(
   customerId: string,
   bookingId: string,
-  metadata: Record<string, string> = {}
+  metadata: Record<string, string> = {},
+  currency: string = DEFAULT_BOOKING_FEE.currency,
 ) {
   try {
+    const amountCents = await getLiveBookingFee(currency)
+
     // Return mock response if Stripe is not configured
     if (!stripe) {
       console.warn('Stripe not configured - returning mock payment intent')
       return {
         success: true,
         paymentIntent: {
-          id: `pi_mock_${Date.now()}`,
-          client_secret: `pi_mock_${Date.now()}_secret_mock`,
+              id: `pi_test_${Date.now()}`,
+    client_secret: `pi_test_${Date.now()}_secret_test`,
           status: 'requires_payment_method',
-          amount: BOOKIJI_PAYMENT_CONFIG.COMMITMENT_FEE_CENTS,
-          currency: BOOKIJI_PAYMENT_CONFIG.CURRENCY,
+          amount: amountCents,
+          currency,
         }
       }
     }
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: BOOKIJI_PAYMENT_CONFIG.COMMITMENT_FEE_CENTS,
-      currency: BOOKIJI_PAYMENT_CONFIG.CURRENCY,
+      amount: amountCents,
+      currency,
       customer: customerId,
       description: BOOKIJI_PAYMENT_CONFIG.COMMITMENT_FEE_DESCRIPTION,
       metadata: {
@@ -120,8 +160,8 @@ export async function verifyPaymentIntent(paymentIntentId: string) {
         paymentIntent: {
           id: paymentIntentId,
           status: 'succeeded',
-          amount: BOOKIJI_PAYMENT_CONFIG.COMMITMENT_FEE_CENTS,
-          currency: BOOKIJI_PAYMENT_CONFIG.CURRENCY,
+          amount: DEFAULT_BOOKING_FEE.amount,
+          currency: DEFAULT_BOOKING_FEE.currency,
         }
       }
     }
@@ -132,4 +172,6 @@ export async function verifyPaymentIntent(paymentIntentId: string) {
     console.error('Error verifying payment intent:', error)
     return { success: false, error }
   }
-} 
+}
+
+export { getLiveBookingFee } 

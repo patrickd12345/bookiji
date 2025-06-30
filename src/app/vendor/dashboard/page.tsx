@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { VendorCalendar } from '@/components'
+import { VendorCalendar, VendorAnalytics, GuidedTourManager } from '@/components'
 
 interface BookingStats {
   totalBookings: number
@@ -145,7 +145,7 @@ export default function VendorDashboard() {
               <p className="text-gray-600">Manage your bookings and track performance</p>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="text-right">
+              <div className="text-right" data-tour="revenue-overview">
                 <p className="text-sm text-gray-600">Total Revenue</p>
                 <p className="text-xl font-bold text-green-600">
                   ${(stats.totalRevenue / 100).toFixed(2)}
@@ -177,6 +177,7 @@ export default function VendorDashboard() {
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
+                data-tour={tab.id === 'calendar' ? 'calendar-tab' : tab.id === 'analytics' ? 'analytics-tab' : undefined}
               >
                 {tab.icon} {tab.name}
               </button>
@@ -222,7 +223,7 @@ export default function VendorDashboard() {
             </div>
 
             {/* No Wasted Leads Banner */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white" data-tour="no-show-guarantee">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">🎯 No Wasted Leads Guarantee</h3>
@@ -239,7 +240,7 @@ export default function VendorDashboard() {
             </div>
 
             {/* Recent Bookings */}
-            <div className="bg-white rounded-lg shadow-sm">
+            <div className="bg-white rounded-lg shadow-sm" data-tour="recent-bookings">
               <div className="p-6 border-b">
                 <h3 className="text-lg font-semibold">Recent Bookings</h3>
               </div>
@@ -319,16 +320,11 @@ export default function VendorDashboard() {
         )}
 
         {activeTab === 'analytics' && (
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold">Performance Analytics</h3>
-            </div>
-            <div className="p-6">
-              <p className="text-gray-600">Advanced analytics and insights coming soon...</p>
-            </div>
-          </div>
+          <VendorAnalytics />
         )}
       </div>
+      
+      <GuidedTourManager type="vendor" />
     </div>
   )
 } 

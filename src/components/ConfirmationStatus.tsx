@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '../../hooks/useAuth'
 
 interface BookingStatus {
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no-show'
@@ -65,6 +66,7 @@ export default function ConfirmationStatus({
   showActions = false,
   onStatusChange 
 }: ConfirmationStatusProps) {
+  const { user } = useAuth()
   const [status, setStatus] = useState<BookingStatus | null>(initialStatus || null)
   const [loading, setLoading] = useState(!initialStatus)
   const [error, setError] = useState<string | null>(null)
@@ -78,7 +80,10 @@ export default function ConfirmationStatus({
   const fetchBookingStatus = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/bookings/user?userId=temp_customer`)
+      if (!user?.id) {
+        throw new Error('User not authenticated')
+      }
+      const response = await fetch(`/api/bookings/user?userId=${user.id}`)
       const data = await response.json()
       
       if (data.success) {
@@ -120,7 +125,7 @@ export default function ConfirmationStatus({
         },
         body: JSON.stringify({
           bookingId,
-          userId: 'temp_customer', // TODO: get from auth
+                      userId: user?.id, // Get from authenticated user
           reason: 'Customer requested cancellation'
         }),
       })

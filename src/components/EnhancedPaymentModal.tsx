@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import type { FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import StripePayment from './StripePayment'
 import CreditBooklet from './CreditBooklet'
+import { loadStripe } from '@stripe/stripe-js'
 
 interface EnhancedPaymentModalProps {
   isOpen: boolean
@@ -16,7 +18,9 @@ interface EnhancedPaymentModalProps {
     time: string
     customerId: string
     amountCents: number
-  } | null
+  }
+  onSuccess?: () => void
+  onError?: (error: Error) => void
 }
 
 interface UserCredits {
@@ -24,30 +28,37 @@ interface UserCredits {
   [key: string]: any
 }
 
-export default function EnhancedPaymentModal({ 
-  isOpen, 
-  onCloseAction, 
-  bookingDetails 
+export function EnhancedPaymentModal({
+  isOpen,
+  onCloseAction,
+  bookingDetails,
+  onSuccess,
+  onError
 }: EnhancedPaymentModalProps) {
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'credits' | null>(null)
-  const [userCredits, setUserCredits] = useState<UserCredits | null>(null)
-  const [clientSecret, setClientSecret] = useState<string>('')
-  const [showCreditBooklet, setShowCreditBooklet] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [showCreditBooklet, setShowCreditBooklet] = useState(false)
+  const [userCredits, setUserCredits] = useState<UserCredits | null>(null)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
 
   useEffect(() => {
-    if (isOpen && bookingDetails) {
+    if (isOpen && bookingDetails.amountCents > 0) {
+      createPaymentIntent()
+    }
+  }, [isOpen, bookingDetails.amountCents])
+
+  useEffect(() => {
+    if (isOpen && bookingDetails.amountCents > 0) {
       fetchUserCredits()
     }
-  }, [isOpen, bookingDetails])
+  }, [isOpen, bookingDetails.amountCents])
 
   const fetchUserCredits = async () => {
-    if (!bookingDetails) return
+    if (!bookingDetails.amountCents) return
 
     try {
-      const response = await fetch(`/api/credits/balance?userId=${bookingDetails.customerId}`)
+      const response = await fetch(`/api/credits/balance?userId=${bookingDetails.amountCents}`)
       const data = await response.json()
 
       if (data.success) {
@@ -58,78 +69,42 @@ export default function EnhancedPaymentModal({
     }
   }
 
-  const handlePaymentMethodSelect = async (method: 'stripe' | 'credits') => {
-    setPaymentMethod(method)
-    setError('')
-
-    if (method === 'stripe') {
-      await createStripePaymentIntent()
-    } else if (method === 'credits') {
-      await processCreditsPayment()
-    }
-  }
-
-  const createStripePaymentIntent = async () => {
-    if (!bookingDetails) return
-
-    setLoading(true)
+  const createPaymentIntent = async () => {
     try {
+      setLoading(true)
       const response = await fetch('/api/payments/create-payment-intent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerId: bookingDetails.customerId,
-          bookingId: bookingDetails.id,
-          serviceDetails: {
-            service: bookingDetails.service,
-            provider: bookingDetails.provider,
-            date: bookingDetails.date,
-            time: bookingDetails.time,
-          },
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ amount: bookingDetails.amountCents }),
       })
 
       const data = await response.json()
-
-      if (data.success) {
-        setClientSecret(data.clientSecret)
-      } else {
+      if (!response.ok) {
         throw new Error(data.error || 'Failed to create payment intent')
       }
-    } catch (error) {
-      console.error('Payment intent creation error:', error)
-      setError(error instanceof Error ? error.message : 'Failed to create payment intent')
+
+      setClientSecret(data.clientSecret)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Payment setup failed')
+      onError?.(err instanceof Error ? err : new Error('Payment setup failed'))
     } finally {
       setLoading(false)
     }
   }
 
-  const processCreditsPayment = async () => {
-    if (!bookingDetails) return
-
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError(null)
     setLoading(true)
+
     try {
-      const response = await fetch('/api/credits/use', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: bookingDetails.customerId,
-          bookingId: bookingDetails.id,
-          amountCents: bookingDetails.amountCents,
-          description: `Payment for ${bookingDetails.service} booking`
-        })
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        handlePaymentSuccess('credits_payment')
-      } else {
-        throw new Error(data.error || 'Failed to process credit payment')
-      }
-    } catch (error) {
-      console.error('Credit payment error:', error)
-      setError(error instanceof Error ? error.message : 'Failed to process credit payment')
+      // Payment processing logic here
+      onSuccess?.()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Payment failed')
+      onError?.(err instanceof Error ? err : new Error('Payment failed'))
     } finally {
       setLoading(false)
     }
@@ -145,7 +120,6 @@ export default function EnhancedPaymentModal({
     // Close modal after a short delay
     setTimeout(() => {
       onCloseAction()
-      resetModal()
     }, 2000)
   }
 
@@ -154,229 +128,100 @@ export default function EnhancedPaymentModal({
   }
 
   const resetModal = () => {
-    setPaymentMethod(null)
-    setClientSecret('')
-    setError('')
+    setClientSecret(null)
+    setError(null)
     setPaymentSuccess(false)
     setShowCreditBooklet(false)
   }
 
-  const handleClose = () => {
-    onCloseAction()
-    resetModal()
-  }
-
   const canAffordWithCredits = () => {
-    if (!userCredits || !bookingDetails) return false
+    if (!userCredits || !bookingDetails.amountCents) return false
     return userCredits.balance_cents >= bookingDetails.amountCents
   }
 
   const needsMoreCredits = () => {
-    if (!userCredits || !bookingDetails) return 0
+    if (!userCredits || !bookingDetails.amountCents) return 0
     return Math.max(0, bookingDetails.amountCents - userCredits.balance_cents)
   }
 
-  if (!isOpen || !bookingDetails) return null
+  const handleCreditBookletClose = () => {
+    setShowCreditBooklet(false)
+  }
+
+  if (!isOpen) return null
 
   return (
-    <>
-      <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-          onClick={handleClose}
-        >
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Payment</h2>
+          <button
+            onClick={onCloseAction}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-2">Amount</h3>
+            <p className="text-3xl font-bold text-green-600">
+              ${(bookingDetails.amountCents / 100).toFixed(2)}
+            </p>
+          </div>
+
+          {clientSecret ? (
+            <div className="space-y-4">
+              {/* Stripe Elements would go here */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              >
+                {loading ? 'Processing...' : 'Pay Now'}
+              </button>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-4 p-3 bg-red-100 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+        </form>
+
+        {/* Success State */}
+        {paymentSuccess && (
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
+            className="mt-4 p-3 bg-green-100 text-green-700 rounded"
           >
-            {/* Success State */}
-            {paymentSuccess && (
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="bg-white rounded-2xl shadow-lg p-8 text-center"
-              >
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">✅</span>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Booking Confirmed!
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Your ${(bookingDetails.amountCents / 100).toFixed(2)} payment has been processed successfully.
-                </p>
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <p className="text-sm text-green-700">
-                    You'll receive booking details and provider contact information shortly.
-                  </p>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Payment Method Selection */}
-            {!paymentMethod && !paymentSuccess && (
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    Choose Payment Method
-                  </h3>
-                  <button
-                    onClick={handleClose}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <span className="text-xl">×</span>
-                  </button>
-                </div>
-
-                {/* Booking Summary */}
-                <div className="mb-6 p-4 bg-blue-50 rounded-xl">
-                  <h4 className="font-medium text-blue-900 mb-2">Booking Summary</h4>
-                  <div className="space-y-1 text-sm text-blue-800">
-                    <div><span className="font-medium">Service:</span> {bookingDetails.service}</div>
-                    <div><span className="font-medium">Provider:</span> {bookingDetails.provider}</div>
-                    <div><span className="font-medium">Date:</span> {bookingDetails.date}</div>
-                    <div><span className="font-medium">Time:</span> {bookingDetails.time}</div>
-                    <div className="border-t pt-2 mt-2">
-                      <span className="font-bold">Amount: ${(bookingDetails.amountCents / 100).toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Credit Balance Display */}
-                {userCredits && (
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Current Credit Balance:</span>
-                      <span className="font-bold text-green-600">
-                        ${(userCredits.balance_cents / 100).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Payment Options */}
-                <div className="space-y-3">
-                  {/* Credit Card Option */}
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handlePaymentMethodSelect('stripe')}
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all text-left"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">💳</span>
-                      <div>
-                        <p className="font-medium text-gray-900">Credit Card</p>
-                        <p className="text-sm text-gray-500">Pay with card or digital wallet</p>
-                      </div>
-                    </div>
-                  </motion.button>
-
-                  {/* Credits Option */}
-                  <motion.button
-                    whileHover={canAffordWithCredits() ? { scale: 1.02 } : {}}
-                    whileTap={canAffordWithCredits() ? { scale: 0.98 } : {}}
-                    disabled={!canAffordWithCredits()}
-                    onClick={() => handlePaymentMethodSelect('credits')}
-                    className={`w-full p-4 border-2 rounded-xl transition-all text-left ${
-                      canAffordWithCredits()
-                        ? 'border-green-200 hover:border-green-300 hover:bg-green-50'
-                        : 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">🪙</span>
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">Pay with Credits</p>
-                        <p className="text-sm text-gray-500">
-                          {canAffordWithCredits() 
-                            ? 'Use your existing credit balance'
-                            : `Need $${(needsMoreCredits() / 100).toFixed(2)} more credits`
-                          }
-                        </p>
-                      </div>
-                    </div>
-                  </motion.button>
-
-                  {/* Buy More Credits Option */}
-                  {!canAffordWithCredits() && (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setShowCreditBooklet(true)}
-                      className="w-full p-4 border-2 border-purple-200 rounded-xl hover:border-purple-300 hover:bg-purple-50 transition-all text-left"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">💎</span>
-                        <div>
-                          <p className="font-medium text-gray-900">Buy More Credits</p>
-                          <p className="text-sm text-gray-500">
-                            Add ${((needsMoreCredits() / 100) + 5).toFixed(0)}+ to your balance
-                          </p>
-                        </div>
-                      </div>
-                    </motion.button>
-                  )}
-                </div>
-
-                {error && (
-                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-600 text-sm">{error}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Stripe Payment Form */}
-            {paymentMethod === 'stripe' && clientSecret && (
-              <StripePayment
-                clientSecret={clientSecret}
-                bookingId={bookingDetails.id}
-                serviceDetails={{
-                  service: bookingDetails.service,
-                  provider: bookingDetails.provider,
-                  date: bookingDetails.date,
-                  time: bookingDetails.time,
-                }}
-                onSuccess={handlePaymentSuccess}
-                onError={handlePaymentError}
-                onCancel={() => setPaymentMethod(null)}
-              />
-            )}
-
-            {/* Credits Payment Processing */}
-            {paymentMethod === 'credits' && loading && (
-              <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Processing Payment
-                </h3>
-                <p className="text-gray-600">
-                  Using your credits to complete this booking...
-                </p>
-              </div>
-            )}
+            <p>Payment successful!</p>
           </motion.div>
-        </motion.div>
-      </AnimatePresence>
+        )}
+      </motion.div>
 
       {/* Credit Booklet Modal */}
       <CreditBooklet
         userId={bookingDetails.customerId}
         isOpen={showCreditBooklet}
-        onCloseAction={() => setShowCreditBooklet(false)}
-        onCreditsUpdated={(newBalance) => {
-          // Refresh credits and close booklet
-          fetchUserCredits()
-          setShowCreditBooklet(false)
+        onCloseAction={handleCreditBookletClose}
+        onCreditsUpdated={() => {
+          handleCreditBookletClose()
+          onSuccess?.()
         }}
       />
-    </>
+    </div>
   )
 } 

@@ -1,7 +1,22 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
 
-@theme {
+/* Leaflet Map Fixes */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  z-index: 1;
+}
+
+.leaflet-control-container {
+  z-index: 1000;
+}
+
+/* Base theme variables */
+:root {
+  /* Theme colors */
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;
@@ -22,15 +37,153 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 221.2 83.2% 53.3%;
   --radius: 0.5rem;
+
+  /* RGB values for gradients */
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+
+  /* Shepherd.js overlay */
+  --shepherd-modal-overlay-background: rgba(0, 0, 0, 0.4);
+}
+
+/* Dark mode preferences */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
 }
 
 @layer base {
   * {
-    @reference border-neutral-200;
+    @apply border-neutral-200;
   }
+  
   body {
-    @reference bg-background text-foreground;
+    @apply bg-background text-foreground;
   }
+}
+
+/* Custom Selection */
+::selection {
+  background-color: #dbeafe;
+  color: #1e3a8a;
+}
+
+/* Custom Typography */
+.prose {
+  max-width: none;
+}
+
+.prose a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+}
+
+/* Custom Form Elements */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+textarea {
+  display: block;
+  width: 100%;
+  border-radius: 0.5rem;
+  border-color: #d1d5db;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Custom Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  text-transform: none;
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(59, 130, 246, 0.5);
+}
+
+.btn-primary {
+  background-color: #2563eb;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-secondary {
+  background-color: white;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.btn-secondary:hover {
+  background-color: #f9fafb;
+}
+
+/* Custom Card */
+.card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid #f3f4f6;
+}
+
+/* Custom Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-blue {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-green {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.badge-yellow {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-red {
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
 /* Mapbox GL JS styles */
@@ -49,6 +202,19 @@
   100% {
     transform: translateY(0px);
   }
+}
+
+@keyframes vibrate {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-2px); }
+  20% { transform: translateX(2px); }
+  30% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  50% { transform: translateX(-1px); }
+  60% { transform: translateX(1px); }
+  70% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+  90% { transform: translateX(0); }
 }
 
 @keyframes pulse {
@@ -152,11 +318,6 @@
   background: #a1a1a1;
 }
 
-/* Custom Selection */
-::selection {
-  @reference bg-blue-100 text-blue-900;
-}
-
 /* Custom Focus Styles */
 *:focus-visible {
   outline: 2px solid rgb(var(--ring));
@@ -165,11 +326,16 @@
 
 /* Custom Typography */
 .prose {
-  @reference max-w-none;
+  max-width: none;
 }
 
 .prose a {
-  @reference text-blue-600 no-underline hover:underline;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.prose a:hover {
+  text-decoration: underline;
 }
 
 /* Custom Form Elements */
@@ -179,46 +345,97 @@ input[type="password"],
 input[type="number"],
 input[type="tel"],
 textarea {
-  @reference block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500;
+  display: block;
+  width: 100%;
+  border-radius: 0.5rem;
+  border-color: #d1d5db;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
 }
 
 /* Custom Buttons */
 .btn {
-  @reference inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  text-transform: none;
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(59, 130, 246, 0.5);
 }
 
 .btn-primary {
-  @reference bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+  background-color: #2563eb;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8;
 }
 
 .btn-secondary {
-  @reference bg-white text-gray-700 border-gray-300 hover:bg-gray-50 focus:ring-blue-500;
+  background-color: white;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.btn-secondary:hover {
+  background-color: #f9fafb;
 }
 
 /* Custom Card */
 .card {
-  @reference bg-white rounded-xl shadow-sm border border-gray-100;
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid #f3f4f6;
 }
 
 /* Custom Badge */
 .badge {
-  @reference inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .badge-blue {
-  @reference bg-blue-100 text-blue-800;
+  background-color: #dbeafe;
+  color: #1e40af;
 }
 
 .badge-green {
-  @reference bg-green-100 text-green-800;
+  background-color: #dcfce7;
+  color: #166534;
 }
 
 .badge-yellow {
-  @reference bg-yellow-100 text-yellow-800;
+  background-color: #fef3c7;
+  color: #92400e;
 }
 
 .badge-red {
-  @reference bg-red-100 text-red-800;
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
 /* Button Hover Effects */
@@ -270,7 +487,7 @@ input::placeholder {
 
 /* Gradient Text */
 .gradient-text {
-  @reference bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600;
 }
 
 body {
@@ -281,4 +498,130 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+}
+
+/* Shepherd.js Custom Styles */
+/* .shepherd-modal-overlay-container {
+  background: rgba(0, 0, 0, 0.4);
+} */
+.shepherd-element {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e7eb;
+  max-width: 400px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.shepherd-header {
+  padding: 20px 20px 0 20px;
+  border-bottom: none;
+}
+
+.shepherd-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.shepherd-text {
+  padding: 16px 20px 20px 20px;
+  color: #374151;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.shepherd-footer {
+  padding: 0 20px 20px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: none;
+}
+
+.shepherd-button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shepherd-button-primary {
+  background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+  color: white;
+}
+
+.shepherd-button-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.shepherd-button-secondary {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.shepherd-button-secondary:hover {
+  background: #f9fafb;
+  color: #374151;
+}
+
+.shepherd-cancel-icon {
+  color: #6b7280;
+  width: 20px;
+  height: 20px;
+}
+
+.shepherd-cancel-icon:hover {
+  color: #374151;
+}
+
+.shepherd-modal-overlay-container .shepherd-modal {
+  border-radius: 8px;
+  border: 3px solid #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Persistent footer for Shepherd tour so user cursor stays over Next */
+.bookiji-tour-step .shepherd-footer {
+  position: fixed;
+  bottom: 32px; /* space from bottom */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000; /* above overlays */
+}
+
+.bookiji-tour-step .shepherd-button-primary,
+.bookiji-tour-step .shepherd-button-secondary,
+.bookiji-tour-step .shepherd-button-skip {
+  margin: 0 6px;
+}
+
+/* DaisyUI theme overrides */
+[data-theme] {
+  background-color: hsl(var(--b1));
+  color: hsl(var(--bc));
+}
+
+/* Theme transitions */
+* {
+  transition: background-color 0.2s ease-in-out,
+              border-color 0.2s ease-in-out,
+              color 0.2s ease-in-out;
+}
+
+/* Remove transitions where needed */
+.no-theme-transition,
+.no-theme-transition * {
+  transition: none !important;
+}
+
+/* Custom button styles */
+.btn {
+  text-transform: none;
 } 

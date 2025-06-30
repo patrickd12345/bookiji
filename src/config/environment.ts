@@ -54,13 +54,13 @@ export interface EnvironmentConfig {
 // Development configuration (local)
 const developmentConfig: EnvironmentConfig = {
   llm: {
-    baseURL: process.env.LOCAL_LLM_URL || 'http://localhost:11434',
+    baseURL: process.env.LOCAL_LLM_URL || process.env.NEXT_PUBLIC_LLM_URL || 'http://localhost:11434',
     model: process.env.LOCAL_LLM_MODEL || 'llama3.2:8b',
     timeout: 30000, // 30 seconds for local
   },
   
   database: {
-    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/bookiji_dev',
+    url: process.env.DATABASE_URL || process.env.SUPABASE_URL || 'postgresql://localhost:5432/bookiji_dev',
     type: 'postgresql',
   },
   
@@ -90,7 +90,7 @@ const developmentConfig: EnvironmentConfig = {
   },
   
   app: {
-    url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    url: process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000',
     environment: 'development',
     debug: true,
   },

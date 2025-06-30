@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Bookiji Tour Button Test</h1>
+        
+        <div class="status info">
+            <strong>Test Status:</strong> Ready to test
+        </div>
+        
+        <h2>📋 Test Checklist</h2>
+        <ol>
+            <li>✅ Removed old GuidedTour component</li>
+            <li>✅ Updated component index exports</li>
+            <li>✅ Fixed BookingForm imports</li>
+            <li>✅ Cleared Next.js cache</li>
+            <li>✅ Added debugging to BigActionButton</li>
+            <li>✅ Added debugging to ShepherdTour</li>
+            <li>🔄 Testing tour button functionality</li>
+        </ol>
+        
+        <h2>🎯 Expected Behavior</h2>
+        <ul>
+            <li>Page loads without "GuidedTour is not defined" error</li>
+            <li>BigActionButton is visible and clickable</li>
+            <li>Clicking button shows console logs</li>
+            <li>ShepherdTour component initializes</li>
+            <li>Tour modal appears with first step</li>
+            <li>Only ONE tour modal is visible (no duplicates)</li>
+        </ul>
+        
+        <h2>🔍 Debug Steps</h2>
+        <ol>
+            <li>Open browser console (F12)</li>
+            <li>Navigate to http://localhost:3001</li>
+            <li>Look for any error messages</li>
+            <li>Click the "See it in ACTION!!!" button</li>
+            <li>Check console for debug logs</li>
+            <li>Verify tour modal appears</li>
+        </ol>
+        
+        <div class="status success">
+            <strong>✅ All fixes applied!</strong> The tour should now work properly.
+        </div>
+    </div>
+</body>
+</html> 

@@ -9,11 +9,12 @@ src/components/
 ├── index.ts                    # Component exports
 ├── README.md                   # This file
 ├── AIConversationalInterface.tsx
-├── CustomerPersonaSelector.tsx
 ├── NoShowFeedbackModal.tsx
 ├── MapAbstraction.tsx
 ├── BookingGuaranteeModal.tsx
 ├── FeatureSummary.tsx
+├── ShepherdTour.tsx
+├── BigActionButton.tsx
 └── DemoControls.tsx
 ```
 
@@ -24,12 +25,6 @@ src/components/
 - **Features**: Voice input, AI responses, quick suggestions
 - **Props**: `aiResponses`, `setAiResponses`, `isAiActive`, `setIsAiActive`
 - **State**: Local input state, listening state
-
-### **CustomerPersonaSelector.tsx**
-- **Purpose**: Customer-side personality selection overlay
-- **Features**: 4 personas, smooth animations, skip option
-- **Props**: `showPersonaSelector`, `setShowPersonaSelector`, `selectedPersona`, `setSelectedPersona`
-- **Data**: Hardcoded personas (could be moved to data file)
 
 ### **NoShowFeedbackModal.tsx**
 - **Purpose**: Post-appointment feedback with no-show detection
@@ -54,6 +49,18 @@ src/components/
 - **Features**: Visual feature list, status indicators
 - **Props**: None (static component)
 - **Data**: Hardcoded feature list
+
+### **ShepherdTour.tsx**
+- **Purpose**: Guided tour using Shepherd.js library
+- **Features**: Step-by-step tour with highlighting and positioning
+- **Props**: `steps`, `run`, `onComplete`, `onSkip`
+- **Logic**: Dynamic import for client-side rendering, custom styling
+
+### **BigActionButton.tsx**
+- **Purpose**: Main call-to-action button for starting guided tour
+- **Features**: Gradient styling, tour trigger functionality
+- **Props**: `onStartTour` callback function
+- **Logic**: Handles tour initialization
 
 ### **DemoControls.tsx**
 - **Purpose**: Demo buttons for testing all features
@@ -85,6 +92,24 @@ function MyPage() {
 }
 ```
 
+### Tour Component Usage
+```tsx
+import { ShepherdTour } from '../components';
+
+function MyPage() {
+  const [showTour, setShowTour] = useState(false);
+
+  return (
+    <ShepherdTour
+      steps={TOUR_STEPS}
+      run={showTour}
+      onComplete={() => setShowTour(false)}
+      onSkip={() => setShowTour(false)}
+    />
+  );
+}
+```
+
 ## 🎨 Design Patterns
 
 ### **Props Pattern**
@@ -113,11 +138,13 @@ function MyPage() {
 - Components are lightweight and focused
 - Minimal re-renders through proper state management
 - Efficient state updates with hooks
+- Dynamic imports for client-side only components (ShepherdTour)
 
 ### **Bundle Size**
 - Each component is independently importable
 - No unnecessary dependencies
 - Removed unused imports
+- Optimized for Next.js 15 and React 19
 
 ## 🔄 Maintenance Guidelines
 
@@ -142,15 +169,16 @@ function MyPage() {
 ## 📊 Component Metrics
 
 ### **Complexity Levels**
-- **Simple**: DemoControls (button only)
+- **Simple**: BigActionButton (button only)
 - **Medium**: AIConversationalInterface (messages only)
-- **Complex**: BookingGuaranteeModal (full flow)
+- **Complex**: BookingGuaranteeModal (full flow), ShepherdTour (dynamic imports)
 
 ### **Dependencies**
 - **TypeScript**: All components
 - **Tailwind CSS**: All styling
 - **React Hooks**: State management
 - **useUIStore**: Centralized state
+- **Shepherd.js**: Tour functionality
 
 ## 🎯 Recent Improvements
 
@@ -159,6 +187,7 @@ function MyPage() {
 - ✅ Optimized imports
 - ✅ Simplified component logic
 - ✅ Enhanced type safety
+- ✅ Removed Customer Persona components (simplified AI features)
 
 ### **State Management**
 - ✅ Centralized through useUIStore
@@ -171,13 +200,15 @@ function MyPage() {
 - ✅ Simplified BookingGuaranteeModal
 - ✅ Cleaned up DemoControls
 - ✅ Enhanced AdminCockpit
+- ✅ Migrated to Shepherd.js for guided tours
 
 ### **Documentation**
 - ✅ Updated usage examples
 - ✅ Improved type documentation
 - ✅ Added recent changes
 - ✅ Clearer component purposes
+- ✅ Reflected component removals and additions
 
 ---
 
-**Note**: This component architecture has been optimized for the Bookiji MVP, with a focus on clean code, type safety, and efficient state management. 
+**Note**: This component architecture has been optimized for the Bookiji MVP, with a focus on clean code, type safety, and efficient state management. Customer Persona components were removed to simplify the AI feature set. 

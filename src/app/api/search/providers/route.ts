@@ -1,6 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabaseClient'
 
+interface Provider {
+  id: string
+  name: string
+  location: {
+    lat: number
+    lng: number
+  }
+  services: Service[]
+  availability: AvailabilitySlot[]
+  rating?: number
+  total_bookings?: number
+  provider_locations?: Array<{
+    id: string
+    name: string
+    address: string
+    latitude: number
+    longitude: number
+    is_primary: boolean
+  }>
+}
+
+interface Service {
+  id: string
+  name: string
+  price: number
+  duration: number
+}
+
+interface AvailabilitySlot {
+  id: string
+  start_time: string
+  end_time: string
+  is_booked: boolean
+}
+
 interface SearchFilters {
   query?: string
   location?: string
@@ -15,6 +50,20 @@ interface SearchFilters {
   sort_by?: 'distance' | 'rating' | 'price' | 'availability' | 'popularity'
   limit?: number
   offset?: number
+}
+
+interface ProviderWithDistance extends Provider {
+  distance?: number
+  within_radius?: boolean
+}
+
+interface UserPreferences {
+  preferred_categories?: string[]
+  preferred_price_range?: {
+    min: number
+    max: number
+  }
+  preferred_locations?: string[]
 }
 
 export async function GET(request: NextRequest) {
@@ -142,9 +191,9 @@ async function performAdvancedSearch(filters: SearchFilters) {
   // Apply geo-location filtering and distance calculation
   let filteredProviders = providers
   if (filters.latitude && filters.longitude) {
-    filteredProviders = providers.map(provider => {
+    filteredProviders = providers.map((provider: Provider) => {
       // Calculate distance to each provider location
-      const distances = provider.provider_locations?.map((location: any) => {
+      const distances = provider.provider_locations?.map((location: { latitude: number; longitude: number }) => {
         if (location.latitude && location.longitude) {
           return calculateDistance(
             filters.latitude!,
@@ -162,13 +211,13 @@ async function performAdvancedSearch(filters: SearchFilters) {
         distance: minDistance,
         within_radius: minDistance <= (filters.radius || 10)
       }
-    }).filter(provider => provider.within_radius)
+    }).filter((provider: ProviderWithDistance) => provider.within_radius)
   }
 
   // Apply price filtering
   if (filters.max_price) {
-    filteredProviders = filteredProviders.filter(provider => {
-      const hasAffordableService = provider.services?.some((service: any) => 
+    filteredProviders = filteredProviders.filter((provider: Provider) => {
+      const hasAffordableService = provider.services?.some((service: Service) => 
         service.price <= filters.max_price!
       )
       return hasAffordableService
@@ -223,39 +272,36 @@ function toRadians(degrees: number): number {
 }
 
 async function filterByAvailability(
-  providers: any[],
+  providers: Provider[],
   date: string,
   time?: string
-): Promise<any[]> {
-  const availableProviders = []
+): Promise<Provider[]> {
+  const availableProviders: Provider[] = []
 
   for (const provider of providers) {
-    // Check if provider has availability on the requested date
+    // Get provider's availability for the date
     const { data: slots } = await supabase
-      .from('availability_slots')
+      .from('availability')
       .select('*')
       .eq('provider_id', provider.id)
       .eq('date', date)
-      .eq('is_available', true)
+      .eq('is_booked', false)
 
     if (slots && slots.length > 0) {
-      // If specific time requested, check if that time slot is available
+      // If time is specified, check for specific time slot
       if (time) {
-        const timeSlotAvailable = slots.some(slot => 
-          slot.start_time <= time && slot.end_time > time
-        )
-        if (timeSlotAvailable) {
-          availableProviders.push({
-            ...provider,
-            available_slots: slots
-          })
+        const hasTimeSlot = slots.some((slot: AvailabilitySlot) => {
+          const slotStart = new Date(`${date}T${slot.start_time}`)
+          const slotEnd = new Date(`${date}T${slot.end_time}`)
+          const requestedTime = new Date(`${date}T${time}`)
+          return slotStart <= requestedTime && requestedTime < slotEnd
+        })
+        if (hasTimeSlot) {
+          availableProviders.push(provider)
         }
       } else {
-        // If no specific time, include provider if they have any availability
-        availableProviders.push({
-          ...provider,
-          available_slots: slots
-        })
+        // If no time specified, provider is available if they have any slots
+        availableProviders.push(provider)
       }
     }
   }
@@ -263,31 +309,22 @@ async function filterByAvailability(
   return availableProviders
 }
 
-function sortProviders(providers: any[], sortBy: string): any[] {
+function sortProviders(providers: ProviderWithDistance[], sortBy: 'distance' | 'rating' | 'price' | 'availability' | 'popularity'): ProviderWithDistance[] {
   switch (sortBy) {
     case 'distance':
-      return providers.sort((a, b) => (a.distance || 0) - (b.distance || 0))
-    
+      return providers.sort((a, b) => (a.distance || Infinity) - (b.distance || Infinity))
     case 'rating':
-      return providers.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0))
-    
+      return providers.sort((a, b) => (b.rating || 0) - (a.rating || 0))
     case 'price':
       return providers.sort((a, b) => {
-        const aMinPrice = Math.min(...(a.services?.map((s: any) => s.price) || [Infinity]))
-        const bMinPrice = Math.min(...(b.services?.map((s: any) => s.price) || [Infinity]))
+        const aMinPrice = Math.min(...(a.services?.map(s => s.price) || [Infinity]))
+        const bMinPrice = Math.min(...(b.services?.map(s => s.price) || [Infinity]))
         return aMinPrice - bMinPrice
       })
-    
-    case 'popularity':
-      return providers.sort((a, b) => (b.total_reviews || 0) - (a.total_reviews || 0))
-    
     case 'availability':
-      return providers.sort((a, b) => {
-        const aSlots = a.available_slots?.length || 0
-        const bSlots = b.available_slots?.length || 0
-        return bSlots - aSlots
-      })
-    
+      return providers.sort((a, b) => (b.availability?.length || 0) - (a.availability?.length || 0))
+    case 'popularity':
+      return providers.sort((a, b) => (b.total_bookings || 0) - (a.total_bookings || 0))
     default:
       return providers
   }
@@ -319,47 +356,72 @@ export async function POST(request: NextRequest) {
 async function generateSearchSuggestions(
   query: string,
   location?: string,
-  userPreferences?: any
+  userPreferences?: UserPreferences
 ): Promise<string[]> {
   // Get popular searches
   const { data: popularSearches } = await supabase
-    .from('search_analytics')
-    .select('search_query')
-    .ilike('search_query', `%${query}%`)
+    .from('search_history')
+    .select('query, count')
+    .ilike('query', `%${query}%`)
+    .order('count', { ascending: false })
     .limit(5)
 
-  // Get service categories that match
-  const { data: services } = await supabase
-    .from('services')
-    .select('name, category')
-    .or(`name.ilike.%${query}%, category.ilike.%${query}%`)
-    .limit(10)
+  // Get matching service categories
+  const { data: categories } = await supabase
+    .from('service_categories')
+    .select('name')
+    .ilike('name', `%${query}%`)
+    .limit(3)
 
-  const suggestions = [
-    // Popular searches
-    ...(popularSearches?.map(s => s.search_query) || []),
-    
-    // Service names and categories
-    ...(services?.map(s => s.name) || []),
-    ...(services?.map(s => s.category) || []),
-    
-    // Location-based suggestions
-    ...(location ? [
-      `${query} near ${location}`,
-      `${query} in ${location}`,
-      `best ${query} ${location}`
-    ] : []),
-    
-    // Common service combinations
-    `${query} consultation`,
-    `${query} appointment`,
-    `${query} booking`,
-    `affordable ${query}`,
-    `premium ${query}`
-  ]
+  // Get matching provider names
+  const { data: providers } = await supabase
+    .from('profiles')
+    .select('business_name')
+    .eq('user_type', 'provider')
+    .ilike('business_name', `%${query}%`)
+    .limit(3)
 
-  // Remove duplicates and return top 10
-  return [...new Set(suggestions)]
-    .filter(s => s.toLowerCase().includes(query.toLowerCase()))
-    .slice(0, 10)
+  // Combine and deduplicate suggestions
+  const suggestions = new Set<string>()
+
+  popularSearches?.forEach((search: { query: string }) => suggestions.add(search.query))
+  categories?.forEach((category: { name: string }) => suggestions.add(category.name))
+  providers?.forEach((provider: { business_name: string }) => suggestions.add(provider.business_name))
+
+  // Add location-based suggestions if location provided
+  if (location) {
+    const { data: locationProviders } = await supabase
+      .from('profiles')
+      .select('business_name')
+      .eq('user_type', 'provider')
+      .ilike('service_area', `%${location}%`)
+      .limit(2)
+
+    locationProviders?.forEach((provider: { business_name: string }) => {
+      suggestions.add(`${provider.business_name} in ${location}`)
+    })
+  }
+
+  // Add personalized suggestions based on user preferences
+  if (userPreferences?.preferred_categories) {
+    userPreferences.preferred_categories.forEach(category => {
+      if (category.toLowerCase().includes(query.toLowerCase())) {
+        suggestions.add(category)
+      }
+    })
+  }
+
+  return Array.from(suggestions)
+}
+
+// Filter providers by availability
+const filterProvidersByAvailability = (providers: Provider[], slot: AvailabilitySlot): Provider[] => {
+  return providers.filter((provider: Provider) => {
+    return provider.availability.some((availableSlot: AvailabilitySlot) => {
+      const slotStart = new Date(availableSlot.start_time)
+      const slotEnd = new Date(availableSlot.end_time)
+      const requestedStart = new Date(slot.start_time)
+      return !availableSlot.is_booked && slotStart <= requestedStart && requestedStart < slotEnd
+    })
+  })
 } 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useI18n } from '@/lib/i18n/useI18n'
 
 interface CalendarEvent {
   id: string
@@ -28,6 +29,7 @@ export default function VendorCalendar() {
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([])
   const [view, setView] = useState<'month' | 'week' | 'day'>('week')
   const [isLoading, setIsLoading] = useState(true)
+  const { formatDate, formatTime, formatCurrency } = useI18n()
 
   useEffect(() => {
     loadCalendarData()
@@ -36,51 +38,25 @@ export default function VendorCalendar() {
   const loadCalendarData = async () => {
     setIsLoading(true)
     try {
-      // TODO: Replace with actual API calls
-      const mockEvents: CalendarEvent[] = [
-        {
-          id: '1',
-          title: 'Hair Cut',
-          date: '2024-01-15',
-          time: '10:00',
-          duration: 60,
-          customer: 'Sarah Johnson',
-          service: 'Premium Cut & Style',
-          status: 'confirmed',
-          price: 85
-        },
-        {
-          id: '2',
-          title: 'Color Treatment',
-          date: '2024-01-15',
-          time: '14:30',
-          duration: 120,
-          customer: 'Mike Chen',
-          service: 'Full Color & Highlights',
-          status: 'pending',
-          price: 165
-        },
-        {
-          id: '3',
-          title: 'Wash & Blow Dry',
-          date: '2024-01-16',
-          time: '09:00',
-          duration: 45,
-          customer: 'Emma Davis',
-          service: 'Wash & Style',
-          status: 'confirmed',
-          price: 45
+      // Fetch vendor schedule and bookings from API
+      const [scheduleResponse, bookingsResponse] = await Promise.all([
+        fetch('/api/vendor/schedule'),
+        fetch('/api/bookings/vendor')
+      ])
+      
+      if (scheduleResponse.ok) {
+        const scheduleData = await scheduleResponse.json()
+        if (scheduleData.success) {
+          setAvailability(scheduleData.schedule || [])
         }
-      ]
-
-      const mockAvailability: AvailabilitySlot[] = [
-        { date: '2024-01-15', startTime: '09:00', endTime: '17:00', isAvailable: true },
-        { date: '2024-01-16', startTime: '09:00', endTime: '17:00', isAvailable: true },
-        { date: '2024-01-17', startTime: '10:00', endTime: '16:00', isAvailable: true }
-      ]
-
-      setEvents(mockEvents)
-      setAvailability(mockAvailability)
+      }
+      
+      if (bookingsResponse.ok) {
+        const bookingsData = await bookingsResponse.json()
+        if (bookingsData.success) {
+          setEvents(bookingsData.bookings || [])
+        }
+      }
     } catch (error) {
       console.error('Error loading calendar data:', error)
     } finally {
@@ -88,18 +64,41 @@ export default function VendorCalendar() {
     }
   }
 
-  const handleEventStatusChange = async (eventId: string, newStatus: CalendarEvent['status']) => {
+  const handleBookingStatusChange = async (bookingId: string, newStatus: CalendarEvent['status']) => {
     try {
-      // TODO: Call API to update booking status
-      console.log('Updating event status:', eventId, newStatus)
+      // Update booking status via API
+      const response = await fetch('/api/bookings/update-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookingId,
+          status: newStatus
+        })
+      })
       
-      setEvents(prev => prev.map(event => 
-        event.id === eventId 
-          ? { ...event, status: newStatus }
-          : event
-      ))
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          // Update local booking state
+          setEvents((prev: CalendarEvent[]) => prev.map((booking: CalendarEvent) => 
+            booking.id === bookingId 
+              ? { ...booking, status: newStatus }
+              : booking
+          ))
+          
+          // Show success notification
+          alert(`Booking status updated to ${newStatus}`)
+        } else {
+          throw new Error(data.error || 'Failed to update booking status')
+        }
+      } else {
+        throw new Error('Network error updating booking status')
+      }
     } catch (error) {
-      console.error('Error updating event status:', error)
+      console.error('Error updating booking status:', error)
+      alert('Failed to update booking status. Please try again.')
     }
   }
 
@@ -113,9 +112,7 @@ export default function VendorCalendar() {
     }
   }
 
-  const formatCurrency = (cents: number) => {
-    return `$${(cents / 100).toFixed(2)}`
-  }
+  // Remove hardcoded currency formatting - using i18n instead
 
   if (isLoading) {
     return (
@@ -162,10 +159,7 @@ export default function VendorCalendar() {
               ←
             </button>
             <span className="text-lg font-medium">
-              {currentDate.toLocaleDateString('en-US', { 
-                month: 'long', 
-                year: 'numeric' 
-              })}
+              {formatDate(currentDate)}
             </span>
             <button
               onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 7)))}
@@ -217,13 +211,13 @@ export default function VendorCalendar() {
                       {event.status === 'pending' && (
                         <>
                           <button
-                            onClick={() => handleEventStatusChange(event.id, 'confirmed')}
+                            onClick={() => handleBookingStatusChange(event.id, 'confirmed')}
                             className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
                           >
                             Confirm
                           </button>
                           <button
-                            onClick={() => handleEventStatusChange(event.id, 'cancelled')}
+                            onClick={() => handleBookingStatusChange(event.id, 'cancelled')}
                             className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                           >
                             Decline
@@ -233,7 +227,7 @@ export default function VendorCalendar() {
                       
                       {event.status === 'confirmed' && (
                         <button
-                          onClick={() => handleEventStatusChange(event.id, 'completed')}
+                          onClick={() => handleBookingStatusChange(event.id, 'completed')}
                           className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
                         >
                           Mark Complete

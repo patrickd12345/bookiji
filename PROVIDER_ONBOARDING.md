@@ -25,6 +25,7 @@ Thank you for joining the world's first universal, AI-powered booking platform. 
 2. **Set Your Availability**
    - Sync your calendar or manually set open slots
    - Update your schedule anytime
+   - **Pro Tip for Calendar Users:** Set your general working hours in Bookiji, then use your connected calendar (Google, Outlook, etc.) for exceptions. When you have a holiday, doctor's appointment, or any time you're unavailable, simply create a "busy" event in your calendar—Bookiji will automatically block those times from booking. No need to manage your schedule in two places!
 3. **Go Live!**
    - Your services are now discoverable by Bookiji users
    - Bookings are auto-confirmed and guaranteed

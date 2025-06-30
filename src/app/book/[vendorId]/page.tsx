@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '../../../../hooks/useAuth'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -22,6 +23,7 @@ interface Vendor {
 export default function BookVendorPage() {
   const params = useParams()
   const vendorId = params.vendorId as string
+  const { user } = useAuth()
   
   const [vendor, setVendor] = useState<Vendor | null>(null)
   const [services, setServices] = useState<Service[]>([])
@@ -29,10 +31,6 @@ export default function BookVendorPage() {
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchVendorAndServices()
-  }, [vendorId])
 
   const fetchVendorAndServices = async () => {
     try {
@@ -60,9 +58,19 @@ export default function BookVendorPage() {
     }
   }
 
+  useEffect(() => {
+    if (!vendorId) return
+    fetchVendorAndServices()
+  }, [vendorId])
+
   const handleBooking = async () => {
     if (!selectedService || !selectedDate || !selectedTime) {
       alert('Please select service, date and time')
+      return
+    }
+
+    if (!user) {
+      alert('Please log in to book an appointment')
       return
     }
 
@@ -71,7 +79,7 @@ export default function BookVendorPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerId: 'temp_customer', // TODO: get from auth
+          customerId: user.id,
           service: selectedService.name,
           providerId: vendorId,
           location: 'TBD',

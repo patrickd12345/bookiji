@@ -1,0 +1,211 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { I18nHook } from './types'
+import { 
+  SUPPORTED_LOCALES, 
+  DEFAULT_LOCALE, 
+  getCurrencyInfo, 
+  getCountryInfo, 
+  getLocaleInfo,
+  detectLocaleFromHeaders 
+} from './config'
+
+// 🌍 GLOBAL I18N STATE (simple client-side state management)
+let globalLocale = DEFAULT_LOCALE
+let localeChangeListeners: ((locale: string) => void)[] = []
+
+// 🔄 LOCALE PERSISTENCE
+function saveLocaleToStorage(locale: string) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('bookiji-locale', locale)
+  }
+}
+
+function loadLocaleFromStorage(): string {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('bookiji-locale') || DEFAULT_LOCALE
+  }
+  return DEFAULT_LOCALE
+}
+
+// 🌐 AUTO-DETECT LOCALE ON FIRST VISIT
+function detectInitialLocale(): string {
+  // 1. Check localStorage first
+  const stored = loadLocaleFromStorage()
+  if (stored && SUPPORTED_LOCALES[stored]) {
+    return stored
+  }
+  
+  // 2. Detect from browser language
+  if (typeof navigator !== 'undefined') {
+    const detected = detectLocaleFromHeaders(navigator.language)
+    return detected.code
+  }
+  
+  return DEFAULT_LOCALE
+}
+
+// 🔢 FORMATTING UTILITIES
+function createCurrencyFormatter(locale: string, currency: string) {
+  const currencyInfo = getCurrencyInfo(currency)
+  
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    minimumFractionDigits: currencyInfo.decimals,
+    maximumFractionDigits: currencyInfo.decimals,
+  })
+}
+
+function createDateFormatter(locale: string, options: Intl.DateTimeFormatOptions) {
+  return new Intl.DateTimeFormat(locale, options)
+}
+
+function createTimeFormatter(locale: string, timeFormat: '12h' | '24h') {
+  return new Intl.DateTimeFormat(locale, {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: timeFormat === '12h'
+  })
+}
+
+// 🗣️ TRANSLATION FUNCTION (basic implementation)
+// TODO: Load actual translations from JSON files
+function translate(key: string, params?: Record<string, string>): string {
+  // For now, return the key as English fallback
+  // In production, you'd load translation files
+  let text = key
+  
+  if (params) {
+    Object.entries(params).forEach(([param, value]) => {
+      text = text.replace(`{${param}}`, value)
+    })
+  }
+  
+  return text
+}
+
+// 🪝 MAIN I18N HOOK
+export function useI18n(): I18nHook {
+  const [currentLocale, setCurrentLocale] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return detectInitialLocale()
+    }
+    return DEFAULT_LOCALE
+  })
+
+  // 📡 SUBSCRIBE TO GLOBAL LOCALE CHANGES
+  useEffect(() => {
+    const listener = (newLocale: string) => {
+      setCurrentLocale(newLocale)
+    }
+    localeChangeListeners.push(listener)
+    
+    return () => {
+      localeChangeListeners = localeChangeListeners.filter(l => l !== listener)
+    }
+  }, [])
+
+  // 🔄 UPDATE GLOBAL LOCALE
+  const setLocale = useCallback((newLocale: string) => {
+    if (!SUPPORTED_LOCALES[newLocale]) {
+      console.warn(`Locale ${newLocale} not supported, falling back to ${DEFAULT_LOCALE}`)
+      newLocale = DEFAULT_LOCALE
+    }
+    
+    globalLocale = newLocale
+    saveLocaleToStorage(newLocale)
+    
+    // Notify all components
+    localeChangeListeners.forEach(listener => listener(newLocale))
+  }, [])
+
+  // 📊 GET CURRENT LOCALE INFO
+  const localeInfo = getLocaleInfo(currentLocale)
+  const currencyInfo = getCurrencyInfo(localeInfo.currency)
+  const countryInfo = getCountryInfo(localeInfo.country)
+
+  // 💰 FORMAT CURRENCY
+  const formatCurrency = useCallback((amount: number) => {
+    const formatter = createCurrencyFormatter(currentLocale, localeInfo.currency)
+    // Convert from cents to main unit if needed
+    const displayAmount = currencyInfo.decimals > 0 
+      ? amount / Math.pow(10, currencyInfo.decimals)
+      : amount
+    return formatter.format(displayAmount)
+  }, [currentLocale, localeInfo.currency, currencyInfo.decimals])
+
+  // 📅 FORMAT DATE
+  const formatDate = useCallback((date: Date) => {
+    const formatter = createDateFormatter(currentLocale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+    return formatter.format(date)
+  }, [currentLocale])
+
+  // 🕐 FORMAT TIME
+  const formatTime = useCallback((date: Date) => {
+    const formatter = createTimeFormatter(currentLocale, localeInfo.timeFormat)
+    return formatter.format(date)
+  }, [currentLocale, localeInfo.timeFormat])
+
+  // 🗣️ TRANSLATE FUNCTION
+  const t = useCallback((key: string, variables?: Record<string, string>): string => {
+    // Load translations from JSON files based on locale
+    const translations = getTranslations(currentLocale)
+    let text = translations[key] || key
+    
+    // Replace variables in the format {{variable}}
+    if (variables) {
+      Object.entries(variables).forEach(([key, value]) => {
+        text = text.replace(new RegExp(`{{${key}}}`, 'g'), value)
+      })
+    }
+    
+    return text
+  }, [currentLocale])
+
+  return {
+    locale: currentLocale,
+    currency: localeInfo.currency,
+    country: localeInfo.country,
+    t,
+    formatCurrency,
+    formatDate,
+    formatTime,
+    setLocale
+  }
+}
+
+// 🌐 SERVER-SIDE LOCALE DETECTION
+export function detectServerLocale(headers: Headers): string {
+  const acceptLanguage = headers.get('accept-language')
+  const detected = detectLocaleFromHeaders(acceptLanguage || undefined)
+  return detected.code
+}
+
+// 🔧 UTILITY EXPORTS
+export { SUPPORTED_LOCALES, getCurrencyInfo, getCountryInfo, getLocaleInfo } from './config'
+
+// Basic translation loader (expandable with JSON files)
+function getTranslations(locale: string): Record<string, string> {
+  const baseTranslations = {
+    'welcome': 'Welcome',
+    'booking.title': 'Book a Service',
+    'booking.commitment_fee': 'Commitment Fee: {{amount}}',
+    'error.payment_failed': 'Payment failed. Please try again.',
+    'success.booking_confirmed': 'Your booking has been confirmed!',
+    'button.cancel': 'Cancel',
+    'button.confirm': 'Confirm',
+    'help.customer_guide': 'Customer Guide',
+    'help.provider_guide': 'Provider Guide'
+  }
+
+  // In production, this would load from JSON files:
+  // return import(`../../../locales/${locale}.json`)
+  
+  return baseTranslations
+} 

@@ -1,7 +1,9 @@
 // 🧠 Ollama Integration Service
 // Handles local AI interactions for Bookiji
 
-const OLLAMA_ENDPOINT = process.env.OLLAMA_ENDPOINT || 'http://localhost:11434'
+import fetch from 'node-fetch'
+
+const OLLAMA_ENDPOINT = process.env.OLLAMA_ENDPOINT || process.env.NEXT_PUBLIC_LLM_URL || 'http://localhost:11434'
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'codellama'
 
 export interface OllamaResponse {
@@ -20,6 +22,16 @@ export interface OllamaRequest {
     top_p?: number
     max_tokens?: number
   }
+}
+
+interface OllamaTag {
+  name: string
+  size: number
+  modified_at: string
+}
+
+interface OllamaTagsResponse {
+  models: OllamaTag[]
 }
 
 export class OllamaService {
@@ -55,7 +67,7 @@ export class OllamaService {
         throw new Error(`Ollama request failed: ${response.statusText}`)
       }
 
-      const data: OllamaResponse = await response.json()
+      const data = await response.json() as OllamaResponse
       return data.response
     } catch (error) {
       console.error('Ollama service error:', error)
@@ -85,8 +97,8 @@ export class OllamaService {
       const response = await fetch(`${this.endpoint}/api/tags`)
       if (!response.ok) return []
       
-      const data = await response.json()
-      return data.models?.map((model: { name: string }) => model.name) || []
+      const data = await response.json() as OllamaTagsResponse
+      return data.models.map(model => model.name)
     } catch {
       return []
     }

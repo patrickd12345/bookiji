@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import MapAbstraction from './MapAbstraction'
+import dynamic from 'next/dynamic'
 import AIRadiusScaling from './AIRadiusScaling'
 
 interface MarkerData {
@@ -17,19 +17,37 @@ interface MapAbstractionAIProps {
   location: string
   markers?: MarkerData[]
   showExact?: boolean
+  radius?: number
+  onRadiusChange?: (radius: number) => void
 }
+
+// Load SimpleMap only on the client to avoid Leaflet SSR errors
+const SimpleMap = dynamic(() => import('./SimpleMap'), { ssr: false })
 
 export default function MapAbstractionAI({ 
   service, 
   location, 
   markers = [], 
-  showExact = false 
+  showExact = false,
+  radius: controlledRadius,
+  onRadiusChange
 }: MapAbstractionAIProps) {
-  const [aiRadius, setAIRadius] = useState<number>(5)
+  const [aiRadius, setAIRadius] = useState<number>(controlledRadius ?? 5)
   const [isAIRadiusLoaded, setIsAIRadiusLoaded] = useState(false)
 
+  // Sync with controlled prop
+  useEffect(() => {
+    if (typeof controlledRadius === 'number') {
+      setAIRadius(controlledRadius)
+    }
+  }, [controlledRadius])
+
   const handleRadiusChange = (radius: number) => {
-    setAIRadius(radius)
+    if (onRadiusChange) {
+      onRadiusChange(radius)
+    } else {
+      setAIRadius(radius)
+    }
     setIsAIRadiusLoaded(true)
   }
 
@@ -66,16 +84,19 @@ export default function MapAbstractionAI({
             <div className="flex items-center gap-2 px-3 py-1 bg-green-50 rounded-full">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               <span className="text-sm text-green-700 font-medium">
-                AI Radius: {aiRadius} km
+                AI Radius: {typeof controlledRadius === 'number' ? controlledRadius : aiRadius} km
               </span>
             </div>
           )}
         </div>
 
-        <MapAbstraction 
-          markers={markers}
-          showExact={showExact}
-          radius={aiRadius}
+        <SimpleMap 
+          center={{ lat: 0, lng: 0 }}
+          zoom={12}
+          markers={markers.map(m => ({
+            position: { lat: m.lat, lng: m.lng },
+            title: m.label
+          }))}
         />
 
         {/* Privacy Protection Notice */}
@@ -115,7 +136,7 @@ export default function MapAbstractionAI({
           </div>
           <div>
             <span className="text-xs text-gray-500 uppercase tracking-wide">Search Radius</span>
-            <p className="text-sm font-medium text-gray-900">{aiRadius} km</p>
+            <p className="text-sm font-medium text-gray-900">{typeof controlledRadius === 'number' ? controlledRadius : aiRadius} km</p>
           </div>
         </div>
       </div>

@@ -1,5 +1,8 @@
-import { supabase } from '../src/lib/supabaseClient'
 import { createCommitmentFeePaymentIntent } from './stripe'
+import { supabase } from '../src/lib/supabaseClient'
+import { getCurrencyInfo, detectLocaleFromHeaders } from '../src/lib/i18n/config'
+import { getBookingFeeForCurrency } from '@/config/bookingFeeMatrix'
+import { getLiveBookingFee } from './stripe'
 
 export interface BookingRequest {
   customerId: string
@@ -9,6 +12,8 @@ export interface BookingRequest {
   date: string
   time: string
   notes?: string
+  /** Optional ISO currency code if client already knows preferred currency */
+  currency?: string
 }
 
 export interface BookingSlot {
@@ -35,6 +40,9 @@ export class BookingEngine {
     try {
       console.log('🚀 Creating booking for:', request)
 
+      const currency = request.currency ?? detectLocaleFromHeaders().currency
+      const commitmentFeeCents = await this.getLiveFee(currency)
+
       // 1. Find available slot
       const slot = await this.findAvailableSlot(request)
       if (!slot) {
@@ -45,7 +53,7 @@ export class BookingEngine {
       }
 
       // 2. Create booking record
-      const bookingId = await this.createBookingRecord(request, slot)
+      const bookingId = await this.createBookingRecord(request, slot, commitmentFeeCents)
       if (!bookingId) {
         return {
           success: false,
@@ -63,7 +71,8 @@ export class BookingEngine {
           slot_id: slot.id,
           date: request.date,
           time: request.time,
-        }
+        },
+        currency
       )
 
       if (!paymentResult.success || !paymentResult.paymentIntent) {
@@ -136,7 +145,7 @@ export class BookingEngine {
   }
 
   // Create booking record in database
-  private static async createBookingRecord(request: BookingRequest, slot: BookingSlot): Promise<string | null> {
+  private static async createBookingRecord(request: BookingRequest, slot: BookingSlot, feeCents: number): Promise<string | null> {
     try {
       const { data, error } = await supabase
         .from('bookings')
@@ -150,7 +159,7 @@ export class BookingEngine {
           status: 'pending',
           commitment_fee_paid: false,
           vendor_fee_paid: false,
-          total_amount_cents: 100, // $1.00 commitment fee
+          total_amount_cents: feeCents,
           notes: request.notes,
         })
         .select('id')
@@ -243,5 +252,9 @@ export class BookingEngine {
   // Helper method to generate proper UUIDs for testing
   static generateTestUUID(): string {
     return '00000000-0000-0000-0000-000000000000'
+  }
+
+  private static async getLiveFee(currency: string): Promise<number> {
+    return getLiveBookingFee(currency)
   }
 } 

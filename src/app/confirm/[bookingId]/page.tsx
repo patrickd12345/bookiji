@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '../../../../hooks/useAuth'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -23,29 +24,32 @@ interface Booking {
 export default function ConfirmationPage() {
   const params = useParams()
   const bookingId = params.bookingId as string
+  const { user } = useAuth()
   
   const [booking, setBooking] = useState<Booking | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchBooking()
-  }, [bookingId])
+    if (!user) return
 
-  const fetchBooking = async () => {
-    try {
-      const response = await fetch(`/api/bookings/user?userId=temp_customer`)
-      const data = await response.json()
-      
-      if (data.success) {
-        const foundBooking = data.bookings.find((b: Booking) => b.id === bookingId)
-        setBooking(foundBooking || null)
+    const fetchBooking = async () => {
+      try {
+        const response = await fetch(`/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`)
+        const data = await response.json()
+        
+        if (data.success) {
+          const foundBooking = data.bookings.find((b: Booking) => b.id === bookingId)
+          setBooking(foundBooking || null)
+        }
+      } catch (error) {
+        console.error('Error fetching booking:', error)
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('Error fetching booking:', error)
-    } finally {
-      setLoading(false)
     }
-  }
+
+    fetchBooking()
+  }, [bookingId, user])
 
   if (loading) {
     return (

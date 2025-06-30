@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import TourButton from '@/components/TourButton'
-import { BookijiTour, startBookingTour } from '@/lib/guidedTour'
 
 interface BookingFormProps {
   vendorId: string
@@ -55,6 +54,9 @@ export default function BookingForm({
   const [credits, setCredits] = useState<UserCredits | null>(null)
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
+  
+  // Tour state
+  const [runTour, setRunTour] = useState(false)
 
   // Format price for display
   const priceDisplayDollars = (servicePriceCents / 100).toFixed(2)
@@ -65,15 +67,22 @@ export default function BookingForm({
     loadUserCredits()
   }, [])
 
-  // Auto-start tour for first-time users
+  // Auto-start tour for first-time users (disabled for now)
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setRunTour(true)
+  //   }, 1000)
+  //   return () => clearTimeout(timer)
+  // }, [])
+
+  // Listen for tour start events
   useEffect(() => {
-    if (BookijiTour.shouldShowTour()) {
-      // Small delay to ensure DOM is ready
-      const timer = setTimeout(() => {
-        startBookingTour()
-      }, 1000)
-      return () => clearTimeout(timer)
+    const handleStartTour = () => {
+      setRunTour(true)
     }
+    
+    window.addEventListener('start-bookiji-tour', handleStartTour)
+    return () => window.removeEventListener('start-bookiji-tour', handleStartTour)
   }, [])
 
   // Load available slots when date changes
@@ -241,10 +250,22 @@ export default function BookingForm({
   }
 
   return (
-    <div className="relative">
+    <div className="relative booking-form-container">
+      {/* Guided Tour Component - Disabled for now */}
+      {/* <GuidedTour 
+        steps={BOOKING_TOUR_STEPS}
+        run={runTour}
+        onComplete={() => setRunTour(false)}
+        onSkip={() => setRunTour(false)}
+        autoStart={true}
+      /> */}
+      
       {/* Tour Button */}
       <div className="absolute top-4 right-4 z-10">
-        <TourButton variant="help" />
+        <TourButton 
+          variant="help" 
+          onStartTour={() => setRunTour(true)}
+        />
       </div>
       
       <Card className="w-full max-w-2xl mx-auto service-selector">
@@ -271,7 +292,7 @@ export default function BookingForm({
             </div>
           )}
           <form role="form" className="space-y-6 booking-form" onSubmit={handleSubmit}>
-            <div className="space-y-2 date-picker">
+            <div className="space-y-2 date-picker-container">
               <Label htmlFor="date">Select Date *</Label>
               <input
                 type="date"
@@ -284,7 +305,7 @@ export default function BookingForm({
             </div>
 
             {selectedDate && (
-              <div className="space-y-2 time-slots">
+              <div className="space-y-2 time-slots-container">
                 <Label>Available Time Slots *</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {loadingSlots ? (
@@ -314,7 +335,7 @@ export default function BookingForm({
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 customer-info-form">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name *</Label>
                 <Input
@@ -347,7 +368,7 @@ export default function BookingForm({
               />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 commitment-fee-info">
               <Label>Payment Method *</Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Button
@@ -393,7 +414,7 @@ export default function BookingForm({
 
             <Button
               type="submit"
-              className="w-full py-3 text-lg confirm-button"
+              className="w-full py-3 text-lg book-now-button"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -413,7 +434,11 @@ export default function BookingForm({
       </Card>
       
       {/* Floating Tour Button for mobile */}
-      <TourButton variant="floating" className="md:hidden" />
+      <TourButton 
+        variant="floating" 
+        className="md:hidden" 
+        onStartTour={() => setRunTour(true)}
+      />
     </div>
   )
 }
