@@ -49,6 +49,14 @@ const SmartFAQ: React.FC = () => {
       const res = await fetch(`/api/support/faq?${params.toString()}`)
       const json = await res.json()
       if (json.ok) setArticles(json.data)
+      if (json.ok && json.data.length === 0 && debouncedSearch.length > 3) {
+        // Log unanswered query
+        fetch('/api/support/unanswered', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query_text: debouncedSearch, source: 'faq' })
+        })
+      }
       setLoading(false)
     }
     fetchArticles()
