@@ -7,7 +7,7 @@ project_id = "bookiji"
 port = 54321
 # Schemas to expose in your API. Tables, views and stored procedures in this schema will get API endpoints.
 # public and storage are always included.
-schemas = ["public", "storage", "graphql_public"]
+schemas = ["public", "graphql_public"]
 # Extra schemas to add to the search_path of every request. public is always included.
 extra_search_path = ["public", "extensions"]
 # The maximum number of rows returned from a table or view. Limits payload size for accidental or malicious requests.
@@ -20,7 +20,7 @@ port = 54322
 shadow_port = 54320
 # The database major version to use. This has to be the same as your remote database's. Run `SHOW server_version;`
 # on the remote database to check.
-major_version = 15
+major_version = 17
 
 [db.pooler]
 # Port to use for the local connection pooler.
@@ -61,7 +61,7 @@ file_size_limit = "50MiB"
 # in emails.
 site_url = "http://localhost:3000"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://localhost:3000"]
+additional_redirect_urls = []
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604800 (1 week).
 jwt_expiry = 3600
 # If disabled, the refresh token will never expire.
@@ -79,7 +79,13 @@ enable_signup = true
 # If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+enable_confirmations = true
+# Max frequency for email confirmations
+max_frequency = "1m0s"
+# OTP length
+otp_length = 6
+# OTP expiry
+otp_expiry = 86400
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
@@ -92,7 +98,7 @@ enable_signup = true
 # If enabled, users need to confirm their phone number before signing in.
 enable_confirmations = false
 # Template for sending a confirmation message. Use {{ .Code }} to insert the confirmation code.
-template = "Your confirmation code is {{ .Code }}"
+template = "Your code is {{ .Code }}"
 
 # Use pre-defined map of phone number to OTP for testing.
 # [auth.sms.test_otp]
@@ -118,4 +124,11 @@ client_id = ""
 redirect_uri = ""
 # Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure,
 # or any other third-party OIDC providers.
-url = "" 
+url = ""
+
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true 
