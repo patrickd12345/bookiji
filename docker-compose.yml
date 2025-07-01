@@ -35,7 +35,7 @@ services:
       - ./kong.yml:/var/lib/kong/kong.yml:ro
 
   meta:
-    image: supabase/postgres-meta:latest
+    image: supabase/postgres-meta:v0.75.0
     restart: always
     environment:
       PG_META_PORT: 8080
