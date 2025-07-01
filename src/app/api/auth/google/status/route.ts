@@ -14,9 +14,10 @@ export async function GET(request: NextRequest) {
 
     // Check if Google Calendar is connected
     const { data: connection, error } = await supabase
-      .from('provider_google_calendar')
-      .select('id, created_at, expiry_date')
+      .from('provider_calendars')
+      .select('id, created_at, expiry_date, google_email, system_type')
       .eq('profile_id', profileId)
+      .eq('system_type', 'google')
       .single()
 
     if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
@@ -28,7 +29,8 @@ export async function GET(request: NextRequest) {
     const connectionInfo = connection ? {
       connectedAt: connection.created_at,
       expiresAt: connection.expiry_date,
-      isExpired: new Date() > new Date(connection.expiry_date)
+      isExpired: new Date() > new Date(connection.expiry_date),
+      googleEmail: connection.google_email
     } : null
 
     return NextResponse.json({ 

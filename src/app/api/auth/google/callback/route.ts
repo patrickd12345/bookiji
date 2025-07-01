@@ -1,73 +1,59 @@
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
 import { google } from 'googleapis'
-import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseClient } from '@/lib/supabaseClient'
+import { CalendarProvider } from '@/lib/calendar-adapters/types'
 
-export async function GET(request: NextRequest) {
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`
+)
+
+export async function POST(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const code = searchParams.get('code')
-    const error = searchParams.get('error')
-    const state = searchParams.get('state') // Optional: for CSRF protection
-
-    if (error) {
-      console.error('OAuth error:', error)
-      return NextResponse.redirect(new URL('/vendor/schedule?error=oauth_error', request.url))
-    }
-
-    if (!code) {
-      return NextResponse.redirect(new URL('/vendor/schedule?error=no_code', request.url))
-    }
-
-    // Create OAuth2 client
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
-    )
-
-    // Exchange authorization code for tokens
+    const { code, email } = await request.json()
+    
+    // Exchange code for tokens
     const { tokens } = await oauth2Client.getToken(code)
-    
-    if (!tokens.access_token) {
-      throw new Error('No access token received')
-    }
+    const { access_token, refresh_token, expiry_date } = tokens
 
-    // TODO: Get the actual user profile ID from the session
-    // For now, using the hardcoded email approach like in the schedule page
-    const supabase = createSupabaseClient()
-    
-    // Get the provider profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', 'pilotmontreal@gmail.com') // Replace with actual session logic
+    // Get user info from Google
+    oauth2Client.setCredentials({ access_token })
+    const oauth2 = google.oauth2('v2')
+    const { data: userInfo } = await oauth2.userinfo.get({ auth: oauth2Client })
+
+    const cookieStore = cookies()
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+
+    // Store in external_calendar_connections
+    const { data: connection, error } = await supabase
+      .from('external_calendar_connections')
+      .insert({
+        provider: CalendarProvider.GOOGLE,
+        provider_user_id: userInfo.id,
+        provider_email: email || userInfo.email,
+        provider_calendar_id: 'primary', // We'll update this after getting calendar list
+        access_token,
+        refresh_token,
+        token_expiry: new Date(expiry_date!),
+        sync_enabled: true
+      })
+      .select()
       .single()
 
-    if (profileError || !profile) {
-      console.error('Error fetching provider profile:', profileError)
-      return NextResponse.redirect(new URL('/vendor/schedule?error=profile_not_found', request.url))
-    }
+    if (error) throw error
 
-    // Store the tokens in the database
-    const { error: insertError } = await supabase
-      .from('provider_google_calendar')
-      .upsert({
-        profile_id: profile.id,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        expiry_date: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : new Date(Date.now() + 3600000).toISOString() // Default to 1 hour if no expiry
-      })
-
-    if (insertError) {
-      console.error('Error storing Google Calendar tokens:', insertError)
-      return NextResponse.redirect(new URL('/vendor/schedule?error=storage_error', request.url))
-    }
-
-    // Redirect back to the schedule page with success
-    return NextResponse.redirect(new URL('/vendor/schedule?success=calendar_connected', request.url))
-
+    return NextResponse.json({
+      success: true,
+      connection_id: connection.id,
+      provider_email: email || userInfo.email
+    })
   } catch (error) {
-    console.error('Google Calendar callback error:', error)
-    return NextResponse.redirect(new URL('/vendor/schedule?error=callback_error', request.url))
+    console.error('Error in Google Calendar callback:', error)
+    return NextResponse.json(
+      { error: 'Failed to complete Google Calendar connection' },
+      { status: 500 }
+    )
   }
 } 
