@@ -146,19 +146,30 @@ ALTER TABLE analytics_alerts ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for analytics access
 -- Allow service role to do everything
-CREATE POLICY "Service role can access all analytics" ON analytics_events FOR ALL USING (auth.role() = 'service_role');
-CREATE POLICY "Service role can access all funnels" ON conversion_funnels FOR ALL USING (auth.role() = 'service_role');
-CREATE POLICY "Service role can access all segments" ON user_segments FOR ALL USING (auth.role() = 'service_role');
-CREATE POLICY "Service role can access all geographic" ON geographic_analytics FOR ALL USING (auth.role() = 'service_role');
-CREATE POLICY "Service role can access all user analytics" ON user_analytics FOR ALL USING (auth.role() = 'service_role');
-CREATE POLICY "Service role can access all page analytics" ON page_analytics FOR ALL USING (auth.role() = 'service_role');
-CREATE POLICY "Service role can access all feature usage" ON feature_usage FOR ALL USING (auth.role() = 'service_role');
-CREATE POLICY "Service role can access all alerts" ON analytics_alerts FOR ALL USING (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "Service role can access all analytics" ON analytics_events;
+CREATE POLICY  "Service role can access all analytics" ON analytics_events FOR ALL USING (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "Service role can access all funnels" ON conversion_funnels;
+CREATE POLICY  "Service role can access all funnels" ON conversion_funnels FOR ALL USING (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "Service role can access all segments" ON user_segments;
+CREATE POLICY  "Service role can access all segments" ON user_segments FOR ALL USING (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "Service role can access all geographic" ON geographic_analytics;
+CREATE POLICY  "Service role can access all geographic" ON geographic_analytics FOR ALL USING (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "Service role can access all user analytics" ON user_analytics;
+CREATE POLICY  "Service role can access all user analytics" ON user_analytics FOR ALL USING (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "Service role can access all page analytics" ON page_analytics;
+CREATE POLICY  "Service role can access all page analytics" ON page_analytics FOR ALL USING (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "Service role can access all feature usage" ON feature_usage;
+CREATE POLICY  "Service role can access all feature usage" ON feature_usage FOR ALL USING (auth.role() = 'service_role');
+DROP POLICY IF EXISTS "Service role can access all alerts" ON analytics_alerts;
+CREATE POLICY  "Service role can access all alerts" ON analytics_alerts FOR ALL USING (auth.role() = 'service_role');
 
 -- Allow authenticated users to read aggregated analytics (for dashboards)
-CREATE POLICY "Users can read analytics summaries" ON analytics_events FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Users can read geographic summaries" ON geographic_analytics FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Users can read page summaries" ON page_analytics FOR SELECT USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Users can read analytics summaries" ON analytics_events;
+CREATE POLICY  "Users can read analytics summaries" ON analytics_events FOR SELECT USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Users can read geographic summaries" ON geographic_analytics;
+CREATE POLICY  "Users can read geographic summaries" ON geographic_analytics FOR SELECT USING (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "Users can read page summaries" ON page_analytics;
+CREATE POLICY  "Users can read page summaries" ON page_analytics FOR SELECT USING (auth.role() = 'authenticated');
 
 -- Functions for analytics aggregation
 CREATE OR REPLACE FUNCTION calculate_conversion_rate(

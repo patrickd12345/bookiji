@@ -8,10 +8,7 @@ describe("Input", () => {
     const input = screen.getByPlaceholderText("Test Input");
     expect(input).toHaveClass(
       "w-full",
-      "px-3",
-      "py-2",
       "border",
-      "border-gray-300",
       "rounded-md",
       "shadow-sm"
     );

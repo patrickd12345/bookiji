@@ -1,6 +1,6 @@
 -- Description: Create a table to store provider's general weekly availability.
 
-CREATE TABLE provider_schedules (
+CREATE TABLE IF NOT EXISTS provider_schedules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
     
@@ -19,6 +19,10 @@ CREATE TABLE provider_schedules (
     CONSTRAINT uq_profile_day_time UNIQUE (profile_id, day_of_week, start_time, end_time)
 );
 
+-- Ensure columns exist when table already present
+ALTER TABLE provider_schedules ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE provider_schedules ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
 -- Function to update the updated_at timestamp
 CREATE OR REPLACE FUNCTION trigger_set_timestamp()
 RETURNS TRIGGER AS $$
@@ -28,7 +32,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger to automatically update updated_at on row modification
+-- Drop existing trigger and recreate
+DROP TRIGGER IF EXISTS set_timestamp_provider_schedules ON provider_schedules;
 CREATE TRIGGER set_timestamp_provider_schedules
 BEFORE UPDATE ON provider_schedules
 FOR EACH ROW

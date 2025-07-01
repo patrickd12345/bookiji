@@ -1,4 +1,4 @@
-CREATE TABLE provider_google_calendar (
+CREATE TABLE IF NOT EXISTS provider_google_calendar (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
     google_email TEXT NOT NULL,
@@ -18,6 +18,17 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Drop existing trigger if present to avoid duplicate error
+DROP TRIGGER IF EXISTS set_timestamp ON provider_google_calendar;
+
+-- Ensure required columns exist when table already present
+ALTER TABLE provider_google_calendar ADD COLUMN IF NOT EXISTS google_email TEXT;
+ALTER TABLE provider_google_calendar ADD COLUMN IF NOT EXISTS access_token TEXT;
+ALTER TABLE provider_google_calendar ADD COLUMN IF NOT EXISTS refresh_token TEXT;
+ALTER TABLE provider_google_calendar ADD COLUMN IF NOT EXISTS expiry_date TIMESTAMPTZ;
+ALTER TABLE provider_google_calendar ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE provider_google_calendar ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
 -- Trigger to automatically update updated_at on row modification
 CREATE TRIGGER set_timestamp
