@@ -3,6 +3,12 @@
 @tailwind utilities;
 @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
 
+/* Essential variables only */
+:root {
+  --radius: 0.5rem;
+  --shepherd-modal-overlay-background: rgba(0, 0, 0, 0.4);
+}
+
 /* Leaflet Map Fixes */
 .leaflet-container {
   height: 100% !important;
@@ -14,390 +20,259 @@
   z-index: 1000;
 }
 
-/* Minimal CSS variables - DaisyUI handles themes */
-:root {
-  /* Keep essential variables only */
-  --radius: 0.5rem;
-  
-  /* RGB values for gradients */
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-
-  /* Shepherd.js overlay */
-  --shepherd-modal-overlay-background: rgba(0, 0, 0, 0.4);
-}
-
-/* Dark mode preferences */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
-
-@layer base {
-  body {
-    background-color: hsl(var(--b1)); /* base background colour */
-    color: hsl(var(--bc));            /* base content colour */
-  }
-}
-
-/* Custom Selection */
-::selection {
-  background-color: #dbeafe;
-  color: #1e3a8a;
-}
-
-/* Custom Typography */
-.prose {
-  max-width: none;
-}
-
-.prose a {
-  color: #2563eb;
-  text-decoration: none;
-}
-
-.prose a:hover {
-  text-decoration: underline;
-}
-
-/* Custom Form Elements */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="tel"],
-textarea {
-  display: block;
-  width: 100%;
-  border-radius: 0.5rem;
-  border-color: #d1d5db;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus,
-input[type="number"]:focus,
-input[type="tel"]:focus,
-textarea:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-}
-
-/* Custom overrides removed - using DaisyUI component classes instead */
-
-/* Custom Badge */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.125rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.badge-blue {
-  background-color: #dbeafe;
-  color: #1e40af;
-}
-
-.badge-green {
-  background-color: #dcfce7;
-  color: #166534;
-}
-
-.badge-yellow {
-  background-color: #fef3c7;
-  color: #92400e;
-}
-
-.badge-red {
-  background-color: #fee2e2;
-  color: #991b1b;
-}
-
 /* Mapbox GL JS styles */
 .mapboxgl-map {
   border-radius: 0.5rem;
 }
 
-/* Custom Animations */
+/* Shadcn/UI theme support */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 20 14.3% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 14.3% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14.3% 4.1%;
+    --primary: 24 9.8% 10%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --secondary: 60 4.8% 95.9%;
+    --secondary-foreground: 24 9.8% 10%;
+    --muted: 60 4.8% 95.9%;
+    --muted-foreground: 25 5.3% 44.7%;
+    --accent: 60 4.8% 95.9%;
+    --accent-foreground: 24 9.8% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --border: 20 5.9% 90%;
+    --input: 20 5.9% 90%;
+    --ring: 20 14.3% 4.1%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  
+  .dark {
+    --background: 20 14.3% 4.1%;
+    --foreground: 60 9.1% 97.8%;
+    --card: 20 14.3% 4.1%;
+    --card-foreground: 60 9.1% 97.8%;
+    --popover: 20 14.3% 4.1%;
+    --popover-foreground: 60 9.1% 97.8%;
+    --primary: 60 9.1% 97.8%;
+    --primary-foreground: 24 9.8% 10%;
+    --secondary: 12 6.5% 15.1%;
+    --secondary-foreground: 60 9.1% 97.8%;
+    --muted: 12 6.5% 15.1%;
+    --muted-foreground: 24 5.4% 63.9%;
+    --accent: 12 6.5% 15.1%;
+    --accent-foreground: 60 9.1% 97.8%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --border: 12 6.5% 15.1%;
+    --input: 12 6.5% 15.1%;
+    --ring: 24 5.7% 82.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+
+  /* 🌸 Pastel Theme */
+  .pastel {
+    --background: 350 100% 98%;
+    --foreground: 315 15% 25%;
+    --card: 350 100% 96%;
+    --card-foreground: 315 15% 25%;
+    --popover: 350 100% 96%;
+    --popover-foreground: 315 15% 25%;
+    --primary: 315 75% 65%;
+    --primary-foreground: 350 100% 98%;
+    --secondary: 320 50% 90%;
+    --secondary-foreground: 315 15% 25%;
+    --muted: 320 50% 90%;
+    --muted-foreground: 315 15% 45%;
+    --accent: 300 60% 85%;
+    --accent-foreground: 315 15% 25%;
+    --destructive: 0 75% 70%;
+    --destructive-foreground: 350 100% 98%;
+    --border: 320 40% 85%;
+    --input: 320 40% 85%;
+    --ring: 315 75% 65%;
+  }
+
+  /* 🌊 Ocean Theme */
+  .ocean {
+    --background: 200 100% 97%;
+    --foreground: 210 40% 15%;
+    --card: 200 100% 95%;
+    --card-foreground: 210 40% 15%;
+    --popover: 200 100% 95%;
+    --popover-foreground: 210 40% 15%;
+    --primary: 195 85% 45%;
+    --primary-foreground: 200 100% 97%;
+    --secondary: 200 60% 85%;
+    --secondary-foreground: 210 40% 15%;
+    --muted: 200 60% 85%;
+    --muted-foreground: 210 30% 40%;
+    --accent: 180 70% 75%;
+    --accent-foreground: 210 40% 15%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 200 100% 97%;
+    --border: 200 50% 80%;
+    --input: 200 50% 80%;
+    --ring: 195 85% 45%;
+  }
+
+  /* 🌅 Sunset Theme */
+  .sunset {
+    --background: 30 100% 97%;
+    --foreground: 15 30% 20%;
+    --card: 30 100% 95%;
+    --card-foreground: 15 30% 20%;
+    --popover: 30 100% 95%;
+    --popover-foreground: 15 30% 20%;
+    --primary: 15 85% 60%;
+    --primary-foreground: 30 100% 97%;
+    --secondary: 25 60% 85%;
+    --secondary-foreground: 15 30% 20%;
+    --muted: 25 60% 85%;
+    --muted-foreground: 15 20% 40%;
+    --accent: 35 80% 75%;
+    --accent-foreground: 15 30% 20%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 30 100% 97%;
+    --border: 25 50% 80%;
+    --input: 25 50% 80%;
+    --ring: 15 85% 60%;
+  }
+
+  /* 🌲 Forest Theme */
+  .forest {
+    --background: 120 25% 96%;
+    --foreground: 140 30% 15%;
+    --card: 120 25% 94%;
+    --card-foreground: 140 30% 15%;
+    --popover: 120 25% 94%;
+    --popover-foreground: 140 30% 15%;
+    --primary: 140 65% 35%;
+    --primary-foreground: 120 25% 96%;
+    --secondary: 130 40% 80%;
+    --secondary-foreground: 140 30% 15%;
+    --muted: 130 40% 80%;
+    --muted-foreground: 140 20% 40%;
+    --accent: 110 50% 70%;
+    --accent-foreground: 140 30% 15%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 120 25% 96%;
+    --border: 130 30% 75%;
+    --input: 130 30% 75%;
+    --ring: 140 65% 35%;
+  }
+
+  /* 🌆 Cyberpunk Theme */
+  .cyberpunk {
+    --background: 280 15% 8%;
+    --foreground: 300 100% 85%;
+    --card: 280 15% 10%;
+    --card-foreground: 300 100% 85%;
+    --popover: 280 15% 10%;
+    --popover-foreground: 300 100% 85%;
+    --primary: 300 100% 70%;
+    --primary-foreground: 280 15% 8%;
+    --secondary: 290 30% 20%;
+    --secondary-foreground: 300 100% 85%;
+    --muted: 290 30% 20%;
+    --muted-foreground: 300 50% 60%;
+    --accent: 180 100% 60%;
+    --accent-foreground: 280 15% 8%;
+    --destructive: 0 100% 60%;
+    --destructive-foreground: 280 15% 8%;
+    --border: 290 30% 25%;
+    --input: 290 30% 25%;
+    --ring: 300 100% 70%;
+  }
+
+  /* 🍭 Cupcake Theme */
+  .cupcake {
+    --background: 45 100% 97%;
+    --foreground: 330 20% 25%;
+    --card: 45 100% 95%;
+    --card-foreground: 330 20% 25%;
+    --popover: 45 100% 95%;
+    --popover-foreground: 330 20% 25%;
+    --primary: 330 75% 70%;
+    --primary-foreground: 45 100% 97%;
+    --secondary: 40 70% 85%;
+    --secondary-foreground: 330 20% 25%;
+    --muted: 40 70% 85%;
+    --muted-foreground: 330 15% 45%;
+    --accent: 60 80% 80%;
+    --accent-foreground: 330 20% 25%;
+    --destructive: 0 70% 65%;
+    --destructive-foreground: 45 100% 97%;
+    --border: 40 60% 80%;
+    --input: 40 60% 80%;
+    --ring: 330 75% 70%;
+  }
+
+  /* 🌙 Midnight Theme */
+  .midnight {
+    --background: 240 20% 6%;
+    --foreground: 60 30% 85%;
+    --card: 240 20% 8%;
+    --card-foreground: 60 30% 85%;
+    --popover: 240 20% 8%;
+    --popover-foreground: 60 30% 85%;
+    --primary: 210 90% 60%;
+    --primary-foreground: 240 20% 6%;
+    --secondary: 240 10% 15%;
+    --secondary-foreground: 60 30% 85%;
+    --muted: 240 10% 15%;
+    --muted-foreground: 60 20% 60%;
+    --accent: 270 70% 65%;
+    --accent-foreground: 240 20% 6%;
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 240 20% 6%;
+    --border: 240 10% 20%;
+    --input: 240 10% 20%;
+    --ring: 210 90% 60%;
+  }
+}
+
+/* Theme transitions */
+* {
+  transition: background-color 0.2s ease-in-out,
+              border-color 0.2s ease-in-out,
+              color 0.2s ease-in-out;
+}
+
+/* Essential animations only */
 @keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }
 
-@keyframes vibrate {
-  0%, 100% { transform: translateX(0); }
-  10% { transform: translateX(-2px); }
-  20% { transform: translateX(2px); }
-  30% { transform: translateX(-2px); }
-  40% { transform: translateX(2px); }
-  50% { transform: translateX(-1px); }
-  60% { transform: translateX(1px); }
-  70% { transform: translateX(-1px); }
-  80% { transform: translateX(1px); }
-  90% { transform: translateX(0); }
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-  }
-}
-
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes glow5s {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(100, 61, 255, 0.3), 0 0 0 0 rgba(59, 130, 246, 0.2);
-  }
-  10% {
-    box-shadow: 0 0 16px 8px rgba(100, 61, 255, 0.5), 0 0 8px 4px rgba(59, 130, 246, 0.3);
-  }
-  20% {
-    box-shadow: 0 0 32px 16px rgba(100, 61, 255, 0.7), 0 0 16px 8px rgba(59, 130, 246, 0.5);
-  }
-  30% {
-    box-shadow: 0 0 40px 24px rgba(100, 61, 255, 0.8), 0 0 24px 12px rgba(59, 130, 246, 0.6);
-  }
-  40% {
-    box-shadow: 0 0 32px 16px rgba(100, 61, 255, 0.7), 0 0 16px 8px rgba(59, 130, 246, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 16px 8px rgba(100, 61, 255, 0.5), 0 0 8px 4px rgba(59, 130, 246, 0.3);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(100, 61, 255, 0.3), 0 0 0 0 rgba(59, 130, 246, 0.2);
-  }
-}
-
-/* Custom Classes */
 .animate-float {
-  animation: float 6s ease-in-out infinite;
+  animation: float 3s ease-in-out infinite;
 }
 
-.animate-pulse-blue {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.bg-gradient-animate {
-  background-size: 200% 200%;
-  animation: gradient 15s ease infinite;
-}
-
-.animate-glow-5s {
-  animation: glow5s 5s infinite;
-}
-
-/* Smooth Transitions */
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
-/* Glass Effect */
-.glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
-}
-
-/* Custom Focus Styles */
-*:focus-visible {
-  outline: 2px solid rgb(var(--ring));
-  outline-offset: 2px;
-}
-
-/* Custom Typography */
-.prose {
-  max-width: none;
-}
-
-.prose a {
-  color: #2563eb;
-  text-decoration: none;
-}
-
-.prose a:hover {
-  text-decoration: underline;
-}
-
-/* Custom Form Elements */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="tel"],
-textarea {
-  display: block;
-  width: 100%;
-  border-radius: 0.5rem;
-  border-color: #d1d5db;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus,
-input[type="number"]:focus,
-input[type="tel"]:focus,
-textarea:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-}
-
-/* DaisyUI components - no custom overrides */
-
-/* Custom Badge */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.125rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.badge-blue {
-  background-color: #dbeafe;
-  color: #1e40af;
-}
-
-.badge-green {
-  background-color: #dcfce7;
-  color: #166534;
-}
-
-.badge-yellow {
-  background-color: #fef3c7;
-  color: #92400e;
-}
-
-.badge-red {
-  background-color: #fee2e2;
-  color: #991b1b;
-}
-
-/* Button Hover Effects */
-.hover-lift {
-  transition: transform 0.2s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-2px);
-}
-
-/* Input Styles */
-input::placeholder {
-  color: #9CA3AF;
-  opacity: 0.8;
-}
-
-/* Loading Dots */
-.loading-dots div {
-  animation: bounce 0.5s infinite;
-}
-
-.loading-dots div:nth-child(2) {
-  animation-delay: 0.1s;
-}
-
-.loading-dots div:nth-child(3) {
-  animation-delay: 0.2s;
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
-/* Card Hover Effects */
-.card-hover {
-  transition: all 0.3s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.1);
-}
-
-/* Gradient Text */
-.gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600;
-}
-
-/* Removed fixed gradient so DaisyUI themes can fully control body colours */
-
-/* Shepherd.js Custom Styles */
-/* .shepherd-modal-overlay-container {
-  background: rgba(0, 0, 0, 0.4);
-} */
+/* Shepherd.js tour styles */
 .shepherd-element {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
   max-width: 400px;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .shepherd-header {
   padding: 20px 20px 0 20px;
-  border-bottom: none;
 }
 
 .shepherd-title {
@@ -419,7 +294,6 @@ input::placeholder {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: none;
 }
 
 .shepherd-button {
@@ -448,63 +322,11 @@ input::placeholder {
   border: 1px solid #d1d5db;
 }
 
-.shepherd-button-secondary:hover {
-  background: #f9fafb;
-  color: #374151;
-}
-
-.shepherd-cancel-icon {
-  color: #6b7280;
-  width: 20px;
-  height: 20px;
-}
-
-.shepherd-cancel-icon:hover {
-  color: #374151;
-}
-
-.shepherd-modal-overlay-container .shepherd-modal {
-  border-radius: 8px;
-  border: 3px solid #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
-}
-
-/* Persistent footer for Shepherd tour so user cursor stays over Next */
-.bookiji-tour-step .shepherd-footer {
-  position: fixed;
-  bottom: 32px; /* space from bottom */
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10000; /* above overlays */
-}
-
-.bookiji-tour-step .shepherd-button-primary,
-.bookiji-tour-step .shepherd-button-secondary,
-.bookiji-tour-step .shepherd-button-skip {
-  margin: 0 6px;
-}
-
-/* DaisyUI theme overrides */
-[data-theme] {
-  background-color: hsl(var(--b1));
-  color: hsl(var(--bc));
-}
-
-/* Theme transitions */
-* {
-  transition: background-color 0.2s ease-in-out,
-              border-color 0.2s ease-in-out,
-              color 0.2s ease-in-out;
-}
-
-/* Remove transitions where needed */
-.no-theme-transition,
-.no-theme-transition * {
-  transition: none !important;
-}
-
-/* Custom button styles */
-/* DaisyUI btn text-transform override */
-.btn {
-  text-transform: none;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 } 
