@@ -5,9 +5,11 @@ import { motion } from 'framer-motion';
 import { useUIStore } from '@/stores/uiStore';
 import { theme, combineClasses } from '@/config/theme';
 import type { RegistrationForm } from '@/types/global.d';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function CustomerRegistration() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<RegistrationForm>({
     email: '',
     password: '',
@@ -37,11 +39,51 @@ export default function CustomerRegistration() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSubmitting(false);
-    // Redirect to get-started instead of just closing
-    window.location.href = '/get-started';
+    setError(null);
+
+    try {
+      // Validate passwords match
+      if (form.password !== form.confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+
+      // Register with Supabase
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: {
+            full_name: form.name,
+            role: 'customer'
+          }
+        }
+      });
+
+      if (signUpError) throw signUpError;
+
+      // Create profile in database
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: data.user?.id,
+          full_name: form.name,
+          email: form.email,
+          phone: form.phone,
+          role: 'customer',
+          marketing_consent: form.marketingConsent,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (profileError) throw profileError;
+
+      // Redirect to dashboard
+      window.location.href = '/dashboard';
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const inputClasses = combineClasses(

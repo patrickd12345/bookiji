@@ -303,8 +303,57 @@ export default function VendorDashboard() {
         )}
 
         {activeTab === 'calendar' && (
+          <div className="space-y-6">
+            {/* Calendar Choice Banner */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <div className="flex items-start space-x-4">
+                <div className="text-2xl">📅</div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-blue-900 mb-2">Choose Your Calendar System</h3>
+                  <div className="grid md:grid-cols-2 gap-4 mb-4">
+                    <div className="bg-white rounded-lg p-4 border-2 border-blue-200">
+                      <h4 className="font-semibold text-blue-800 mb-2">🏠 Native Bookiji Calendar</h4>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Built-in calendar system. Perfect for getting started quickly.
+                      </p>
+                      <ul className="text-xs text-gray-500 space-y-1">
+                        <li>✓ Simple setup</li>
+                        <li>✓ No external dependencies</li>
+                        <li>✓ Integrated with booking system</li>
+                      </ul>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 border-2 border-green-200">
+                      <h4 className="font-semibold text-green-800 mb-2">🔗 Google Calendar Sync</h4>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Sync with your existing Google Calendar for unified scheduling.
+                      </p>
+                      <ul className="text-xs text-gray-500 space-y-1">
+                        <li>✓ Uses your existing calendar</li>
+                        <li>✓ Real-time sync</li>
+                        <li>✓ Works with mobile apps</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-blue-700">
+                      <strong>Choose one:</strong> Either use the native calendar below OR set up Google Calendar sync.
+                    </p>
+                    <a href="/vendor/schedule" className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                      🔗 Set Up Google Calendar
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Native Calendar */}
           <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Native Bookiji Calendar</h3>
+                <span className="text-sm text-gray-500">Use this OR Google Calendar sync (not both)</span>
+              </div>
             <VendorCalendar />
+            </div>
           </div>
         )}
 

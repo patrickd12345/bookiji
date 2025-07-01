@@ -1,14 +1,16 @@
 ﻿import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import ThemeSelector from '@/components/ThemeSelector'
-import ThemeProvider from '@/components/providers/ThemeProvider'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { ThemeSwitcher } from '@/components/ThemeSwitcher'
+import MainNavigation from '@/components/MainNavigation'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Bookiji - Universal Booking Platform',
   description: 'Book any service, anywhere, with guaranteed bookings and $1 commitment fees.',
+  manifest: '/manifest.json',
 }
 
 export const viewport: Viewport = {
@@ -26,12 +28,19 @@ export default function RootLayout({
       <head>
         <meta name="color-scheme" content="light dark" />
       </head>
-      <body className={`${inter.className} min-h-screen bg-base-100`}>
-        <ThemeProvider>
+      <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+          themes={["light", "dark", "system", "pastel", "ocean", "sunset", "forest", "cyberpunk", "cupcake", "midnight"]}
+        >
           <div className="fixed top-4 right-4 z-50">
-            <ThemeSelector />
+            <ThemeSwitcher />
           </div>
-          <main className="min-h-screen">
+          <MainNavigation />
+          <main className="min-h-screen pt-16">
             {children}
           </main>
         </ThemeProvider>

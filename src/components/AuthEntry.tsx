@@ -32,7 +32,7 @@ export default function AuthEntry({ mode = "signup" }: { mode?: "signup" | "logi
           },
         });
         if (error) throw error;
-        router.push("/beta/signup");
+        router.push("/dashboard");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,

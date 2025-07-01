@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useI18n } from '@/lib/i18n/useI18n'
+import { useAuth } from '../../hooks/useAuth'
 import { 
   LocaleSelector, 
   RealTimeBookingChat, 
@@ -10,15 +11,24 @@ import {
   GuidedTourManager,
   SimpleTourButton
 } from '@/components'
+import { SimpleThemeToggle } from '@/components/ThemeSwitcher'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function HomePage() {
   const { t, formatCurrency, locale } = useI18n()
+  const { 
+    isAuthenticated, 
+    canBookServices, 
+    canOfferServices, 
+    loading 
+  } = useAuth()
   const [showTour, setShowTour] = useState(false)
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       {/* Language Selector */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 left-4">
         <LocaleSelector variant="icon-only" />
       </div>
       
@@ -39,23 +49,66 @@ export default function HomePage() {
             Universal Booking Platform
           </h1>
           
-          <p className="text-xl md:text-2xl text-base-content/70 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
             Book any service, anywhere, instantly. One-click booking with AI assistance and {formatCurrency(100)} commitment fee guarantee.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <a 
-              href="/get-started" 
-              className="btn btn-primary btn-lg text-lg"
-            >
-              🚀 Start Booking
-            </a>
-            <a 
-              href="/vendor/onboarding" 
-              className="btn btn-outline btn-primary btn-lg text-lg"
-            >
-              List Your Business
-            </a>
+            {loading ? (
+              // Loading state - show skeleton buttons
+              <>
+                <div className="h-10 w-32 bg-muted animate-pulse rounded-md"></div>
+                <div className="h-10 w-32 bg-muted animate-pulse rounded-md"></div>
+              </>
+            ) : !isAuthenticated ? (
+              // Not logged in - show onboarding buttons
+              <>
+                <a href="/get-started">
+                  <Button className="h-10 px-8 text-lg">
+                    🚀 Start Booking
+                  </Button>
+                </a>
+                <a href="/vendor/onboarding">
+                  <Button variant="outline" className="h-10 px-8 text-lg">
+                    List Your Business
+                  </Button>
+                </a>
+              </>
+            ) : (
+              // Logged in - show appropriate dashboard buttons based on capabilities
+              <>
+                {canBookServices && (
+                  <a href="/dashboard">
+                    <Button variant="outline" className="h-10 px-8 text-lg">
+                      📊 Customer Dashboard
+                    </Button>
+                  </a>
+                )}
+                {canOfferServices && (
+                  <a href="/vendor/dashboard">
+                    <Button variant="outline" className="h-10 px-8 text-lg">
+                      🏪 Vendor Dashboard
+                    </Button>
+                  </a>
+                )}
+                {/* Show onboarding options if user doesn't have those capabilities yet */}
+                {!canBookServices && (
+                  <a href="/get-started">
+                    <Button className="h-10 px-8 text-lg">
+                      🚀 Start Booking
+                    </Button>
+                  </a>
+                )}
+                {!canOfferServices && (
+                  <a href="/vendor/onboarding">
+                    <Button variant="outline" className="h-10 px-8 text-lg">
+                      List Your Business
+                    </Button>
+                  </a>
+                )}
+              </>
+            )}
+            <SimpleThemeToggle />
           </div>
         </div>
       </section>
@@ -63,38 +116,38 @@ export default function HomePage() {
       {/* Feature Grid */}
       <section id="feature-grid" className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-base-content">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">
             Experience the Future of Booking
           </h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             {/* Real-Time Booking Chat */}
-            <div id="booking-chat-section" className="card bg-base-200 shadow-xl border border-base-300">
-              <div className="card-body">
+            <Card className="shadow-xl">
+              <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-r from-success to-primary rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-primary rounded-lg flex items-center justify-center">
                     <span className="text-white text-sm">💬</span>
                   </div>
-                  <h3 className="card-title text-base-content">Real-Time Booking Chat</h3>
+                  <CardTitle className="text-foreground">Real-Time Booking Chat</CardTitle>
                 </div>
-                <p className="text-base-content/70 mb-4">
+                <p className="text-muted-foreground mb-4">
                   AI-powered chat interface that extracts booking intent and creates real-time bookings with instant payment processing.
                 </p>
                 <BigActionButton onStartTour={() => setShowTour(true)} />
                 <RealTimeBookingChat />
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* AI Radius Scaling */}
-            <div className="card bg-base-200 shadow-xl border border-base-300">
-              <div className="card-body">
+            <Card className="shadow-xl">
+              <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 bg-gradient-to-r from-secondary to-accent rounded-lg flex items-center justify-center">
                     <span className="text-white text-sm">🗺️</span>
                   </div>
-                  <h3 className="card-title text-base-content">AI Radius Scaling</h3>
+                  <CardTitle className="text-foreground">AI Radius Scaling</CardTitle>
                 </div>
-                <p className="text-base-content/70 mb-4">
+                <p className="text-muted-foreground mb-4">
                   Intelligent location-based search that adapts to service density and user preferences for optimal provider matching.
                 </p>
                 <AIRadiusScaling 
@@ -102,8 +155,8 @@ export default function HomePage() {
                   location="Current Location"
                   onRadiusChangeAction={(radius: number) => console.log('Radius changed:', radius)}
                 />
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Core Features Grid */}
@@ -112,54 +165,54 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">💸</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-base-content">{formatCurrency(100)} Commitment</h3>
-              <p className="text-base-content/70">Revolutionary micro-deposit system ensures serious bookings</p>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">{formatCurrency(100)} Commitment</h3>
+              <p className="text-muted-foreground">Revolutionary micro-deposit system ensures serious bookings</p>
             </div>
             
             <div className="text-center p-6">
               <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🤖</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-base-content">AI Booking Assistant</h3>
-              <p className="text-base-content/70">Conversational AI handles complex booking requirements</p>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">AI Booking Assistant</h3>
+              <p className="text-muted-foreground">Conversational AI handles complex booking requirements</p>
             </div>
             
             <div className="text-center p-6">
-              <div className="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🗺️</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-base-content">Map Abstraction</h3>
-              <p className="text-base-content/70">Privacy-first location system with smart radius zones</p>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">Map Abstraction</h3>
+              <p className="text-muted-foreground">Privacy-first location system with smart radius zones</p>
             </div>
             
             <div className="text-center p-6">
-              <div className="w-16 h-16 bg-warning/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🛡️</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-base-content">Booking Guarantees</h3>
-              <p className="text-base-content/70">Self-enforcing contracts with automatic dispute resolution</p>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">Booking Guarantees</h3>
+              <p className="text-muted-foreground">Self-enforcing contracts with automatic dispute resolution</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Global Launch Stats */}
-      <section className="py-16 px-4 bg-base-200">
+      <section className="py-16 px-4 bg-muted/50">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-8 text-base-content">Global Scale, Local Feel</h2>
+          <h2 className="text-3xl font-bold mb-8 text-foreground">Global Scale, Local Feel</h2>
           
           <div className="grid sm:grid-cols-3 gap-8">
             <div>
               <div className="text-3xl font-bold text-primary mb-2">37</div>
-              <div className="text-base-content/70">Countries Supported</div>
+              <div className="text-muted-foreground">Countries Supported</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-secondary mb-2">27</div>
-              <div className="text-base-content/70">Currencies Available</div>
+              <div className="text-muted-foreground">Currencies Available</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-success mb-2">17</div>
-              <div className="text-base-content/70">Languages & Locales</div>
+              <div className="text-3xl font-bold text-green-500 mb-2">17</div>
+              <div className="text-muted-foreground">Languages & Locales</div>
             </div>
           </div>
         </div>
@@ -168,26 +221,61 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-base-content">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
             Ready to Transform Booking?
           </h2>
-          <p className="text-xl text-base-content/70 mb-8">
+          <p className="text-xl text-muted-foreground mb-8">
             Join thousands of businesses already using Bookiji to streamline their booking process.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a 
-              href="/get-started" 
-              className="btn btn-primary btn-lg text-lg"
-            >
-              Start Booking Now
-            </a>
-            <a 
-              href="/vendor/onboarding" 
-              className="btn btn-outline btn-primary btn-lg text-lg"
-            >
-              List Your Business
-            </a>
+            {loading ? (
+              // Loading state
+              <>
+                <div className="h-10 w-40 bg-muted animate-pulse rounded-md"></div>
+                <div className="h-10 w-40 bg-muted animate-pulse rounded-md"></div>
+              </>
+            ) : !isAuthenticated ? (
+              // Not logged in - show onboarding CTAs
+              <>
+                <a href="/get-started">
+                  <Button className="h-10 px-8 text-lg">
+                    Start Booking Now
+                  </Button>
+                </a>
+                <a href="/vendor/onboarding">
+                  <Button variant="outline" className="h-10 px-8 text-lg">
+                    List Your Business
+                  </Button>
+                </a>
+              </>
+            ) : (
+              // Logged in - show dashboard CTAs based on capabilities
+              <>
+                {canBookServices && (
+                  <a href="/dashboard">
+                    <Button className="h-10 px-8 text-lg">
+                      Open Customer Dashboard
+                    </Button>
+                  </a>
+                )}
+                {canOfferServices && (
+                  <a href="/vendor/dashboard">
+                    <Button variant="outline" className="h-10 px-8 text-lg">
+                      Open Vendor Dashboard
+                    </Button>
+                  </a>
+                )}
+                {/* Fallback CTAs if user lacks capabilities */}
+                {!canBookServices && !canOfferServices && (
+                  <a href="/get-started">
+                    <Button className="h-10 px-8 text-lg">
+                      Get Started
+                    </Button>
+                  </a>
+                )}
+              </>
+            )}
           </div>
         </div>
       </section>

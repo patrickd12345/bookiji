@@ -135,11 +135,11 @@ export default function SchedulePage() {
   const [isSaving, setIsSaving] = useState<boolean>(false)
   const [isGenerating, setIsGenerating] = useState<boolean>(false)
   const [isSavingMode, setIsSavingMode] = useState<boolean>(false)
-  const [saveStatus, setSaveStatus] = useState<'success' | 'error' | null>(null)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle')
   const [modeStatus, setModeStatus] = useState<'success' | 'error' | null>(null)
   const [generationStatus, setGenerationStatus] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
-  const [urlMessage, setUrlMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null)
+  const [urlMessage, setUrlMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const hasErrors = useMemo(() => Object.values(errors).some(e => e !== null), [errors]);
 
@@ -191,23 +191,33 @@ export default function SchedulePage() {
   // Fetch the provider's profile to get their ID and availability mode
   useEffect(() => {
     const fetchProviderProfile = async () => {
-      setIsLoading(true)
-      // Hardcoded email for now, replace with actual user session logic
-      const userEmail = 'pilotmontreal@gmail.com';
+      setIsLoading(true);
+      
+      // Get the current user session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session?.user?.email) {
+        console.error('Error getting user session:', sessionError);
+        setSaveStatus('error');
+        setIsLoading(false);
+        return;
+      }
+
+      // Get the provider profile using the session email
       const { data, error } = await supabase
         .from('profiles')
         .select('id, availability_mode')
-        .eq('email', userEmail)
+        .eq('email', session.user.email)
         .single();
 
       if (error || !data) {
         console.error('Error fetching provider profile:', error);
-        setSaveStatus('error'); // Use saveStatus to show an error message
+        setSaveStatus('error');
       } else {
         setProviderId(data.id);
         setAvailabilityMode(data.availability_mode || 'subtractive');
       }
-      setIsLoading(false)
+      setIsLoading(false);
     };
 
     fetchProviderProfile();
@@ -287,7 +297,7 @@ export default function SchedulePage() {
 
     // Step 1: Save the schedule
     setIsSaving(true);
-    setSaveStatus(null);
+    setSaveStatus('saving');
     let saveSuccess = false;
     try {
         const response = await fetch('/api/vendor/schedule', {
@@ -303,7 +313,7 @@ export default function SchedulePage() {
         setSaveStatus('error');
     } finally {
         setIsSaving(false);
-        setTimeout(() => setSaveStatus(null), 3000);
+        setTimeout(() => setSaveStatus('idle'), 3000);
     }
 
     if (!saveSuccess) return;
