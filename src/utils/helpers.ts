@@ -1,62 +1,11 @@
 import type { Provider, Zone, RadiusZone } from '../types/global.d';
+import { calculateDistance, calculateRadiusZone, generateAvailabilityDescription, fetchAvailabilityZones } from './dataFetchers';
 
-export const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
-  const R = 6371; // Earth's radius in km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLng/2) * Math.sin(dLng/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-};
-
-export const calculateRadiusZone = (providers: Provider[], lat: number, lng: number): RadiusZone => {
-  const nearbyProviders = providers.filter(provider => {
-    const distance = calculateDistance(lat, lng, provider.location.lat, provider.location.lng);
-    return distance <= 10; // Check within 10km
-  });
-
-  if (nearbyProviders.length >= 8) {
-    return {
-      radius: 2,
-      density: 'dense',
-      description: 'High provider density - small radius for precision',
-      tone: 'specific'
-    };
-  } else if (nearbyProviders.length >= 4) {
-    return {
-      radius: 5,
-      density: 'medium',
-      description: 'Moderate provider density - balanced radius',
-      tone: 'balanced'
-    };
-  } else {
-    return {
-      radius: 10,
-      density: 'sparse',
-      description: 'Low provider density - expanded radius for options',
-      tone: 'vague'
-    };
-  }
-};
-
-export const generateAvailabilityDescription = (zone: RadiusZone, providers: Provider[], userLocation: { lat: number; lng: number }): string => {
-  const nearbyProviders = providers.filter(provider => {
-    const distance = calculateDistance(userLocation.lat, userLocation.lng, provider.location.lat, provider.location.lng);
-    return distance <= zone.radius;
-  });
-  
-  switch (zone.tone) {
-    case 'specific':
-      return `${nearbyProviders.length} open slots within ${zone.radius}km`;
-    case 'balanced':
-      return `Providers near you with live availability`;
-    case 'vague':
-      return `An opening is available nearby — lock it in to see details`;
-    default:
-      return `Availability in your area`;
-  }
+export {
+  calculateDistance,
+  calculateRadiusZone,
+  generateAvailabilityDescription,
+  fetchAvailabilityZones
 };
 
 export function generateAvailabilityZones(userLocation: { lat: number; lng: number }): Zone[] {

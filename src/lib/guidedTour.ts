@@ -1,26 +1,5 @@
-// Lightweight stub of BookijiTour to unblock build without Shepherd.js dependency.
+// Clean re-export to maintain backward compatibility
+// This file re-exports everything from guidedTourSimple to avoid import errors
 
-export interface TourStep {
-  id: string
-  title: string
-  text: string
-}
-
-export class BookijiTour {
-  /* eslint-disable @typescript-eslint/no-empty-function */
-  start(): void {}
-  complete(): void {}
-  addSteps(_steps: TourStep[]): void {}
-
-  // Static helpers for UI
-  static hasCompletedTour(): boolean { return false }
-  static shouldShowTour(): boolean { return false }
-  static resetTour(): void {}
-}
-
-export const BOOKING_TOUR_STEPS: TourStep[] = []
-
-export function startBookingTour(): BookijiTour {
-  const tour = new BookijiTour()
-  return tour
-} 
+export * from './guidedTourSimple';
+export { default } from './guidedTourSimple'; 

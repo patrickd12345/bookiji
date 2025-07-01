@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { BookijiTour } from '@/lib/guidedTour';
+import { Tour, BookijiTour } from '@/lib/guidedTourSimple';
 
 interface TourButtonProps {
   variant?: 'help' | 'start' | 'floating';
@@ -11,8 +11,9 @@ interface TourButtonProps {
 
 export default function TourButton({ variant = 'help', className = '', onStartTour }: TourButtonProps) {
   const handleStartTour = () => {
-    // Reset tour completion status so it can be shown again
+    // Start the tour using BookijiTour for backward compatibility
     BookijiTour.resetTour();
+    BookijiTour.start();
     
     // Call the parent's tour start handler if provided
     if (onStartTour) {

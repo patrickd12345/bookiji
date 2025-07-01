@@ -8,7 +8,5 @@ self.addEventListener('activate', function(event) {
   console.log('Service worker activating...');
 });
 
-self.addEventListener('fetch', function(event) {
-  // Let network handle all requests for now
-  return;
-});
+// Removed no-op fetch handler to prevent overhead warnings
+// If you need caching, implement proper fetch handling here

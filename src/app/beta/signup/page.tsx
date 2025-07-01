@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { useRouter } from 'next/navigation'
 
 interface BetaSignupForm {
   business_name: string
@@ -19,6 +20,7 @@ interface BetaSignupForm {
 }
 
 export default function BetaSignup() {
+  const router = useRouter()
   const [formData, setFormData] = useState<BetaSignupForm>({
     business_name: '',
     contact_name: '',
@@ -33,7 +35,7 @@ export default function BetaSignup() {
     hear_about_us: '',
     additional_notes: ''
   })
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -70,6 +72,31 @@ export default function BetaSignup() {
     'Walk-ins only',
     'Email'
   ]
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        router.push('/login')
+        return
+      }
+
+      // Check if user came from vendor flow
+      const referrer = document.referrer
+      const isVendorFlow = referrer.includes('vendor') || referrer.includes('business')
+      
+      if (!isVendorFlow) {
+        console.log('Redirecting non-vendor user to dashboard')
+        router.push('/dashboard')
+        return
+      }
+
+      setLoading(false)
+    }
+
+    checkAccess()
+  }, [router])
 
   const handleInputChange = (field: keyof BetaSignupForm, value: any) => {
     setFormData(prev => ({
@@ -156,6 +183,17 @@ export default function BetaSignup() {
           >
             Return to Home
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     )
