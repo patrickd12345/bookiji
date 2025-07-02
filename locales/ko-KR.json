@@ -1,0 +1,11 @@
+{
+  "welcome": "환영합니다",
+  "booking.title": "서비스 예약",
+  "booking.commitment_fee": "예약 수수료: {{amount}}",
+  "error.payment_failed": "결제 실패. 다시 시도하세요.",
+  "success.booking_confirmed": "예약이 확정되었습니다!",
+  "button.cancel": "취소",
+  "button.confirm": "확인",
+  "help.customer_guide": "고객 가이드",
+  "help.provider_guide": "제공자 가이드"
+}

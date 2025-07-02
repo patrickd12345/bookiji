@@ -1,0 +1,11 @@
+{
+  "welcome": "ยินดีต้อนรับ",
+  "booking.title": "จองบริการ",
+  "booking.commitment_fee": "ค่ามัดจำ: {{amount}}",
+  "error.payment_failed": "การชำระเงินล้มเหลว กรุณาลองใหม่",
+  "success.booking_confirmed": "การจองของคุณยืนยันแล้ว!",
+  "button.cancel": "ยกเลิก",
+  "button.confirm": "ยืนยัน",
+  "help.customer_guide": "คู่มือผู้ใช้",
+  "help.provider_guide": "คู่มือผู้ให้บริการ"
+}

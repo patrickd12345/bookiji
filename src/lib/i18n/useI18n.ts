@@ -15,6 +15,22 @@ import {
 let globalLocale = DEFAULT_LOCALE
 let localeChangeListeners: ((locale: string) => void)[] = []
 
+// 📚 Loaded translations cache
+const translationCache: Record<string, Record<string, string>> = {}
+
+async function loadTranslations(locale: string): Promise<Record<string, string>> {
+  if (translationCache[locale]) return translationCache[locale]
+  try {
+    const translations = (await import(`../../../locales/${locale}.json`)).default
+    translationCache[locale] = translations
+    return translations
+  } catch (err) {
+    const fallback = (await import(`../../../locales/en-US.json`)).default
+    translationCache[locale] = fallback
+    return fallback
+  }
+}
+
 // 🔄 LOCALE PERSISTENCE
 function saveLocaleToStorage(locale: string) {
   if (typeof window !== 'undefined') {
@@ -94,6 +110,12 @@ export function useI18n(): I18nHook {
     }
     return DEFAULT_LOCALE
   })
+  const [translations, setTranslations] = useState<Record<string, string>>({})
+
+  // Load translations when locale changes
+  useEffect(() => {
+    loadTranslations(currentLocale).then(setTranslations)
+  }, [currentLocale])
 
   // 📡 SUBSCRIBE TO GLOBAL LOCALE CHANGES
   useEffect(() => {
@@ -154,9 +176,7 @@ export function useI18n(): I18nHook {
 
   // 🗣️ TRANSLATE FUNCTION
   const t = useCallback((key: string, variables?: Record<string, string>): string => {
-    // Load translations from JSON files based on locale
-    const translations = getTranslations(currentLocale)
-    let text = translations[key] || key
+    let text = translations[key] || baseTranslations[key] || key
     
     // Replace variables in the format {{variable}}
     if (variables) {
@@ -166,7 +186,7 @@ export function useI18n(): I18nHook {
     }
     
     return text
-  }, [currentLocale])
+  }, [currentLocale, translations])
 
   return {
     locale: currentLocale,
@@ -190,22 +210,14 @@ export function detectServerLocale(headers: Headers): string {
 // 🔧 UTILITY EXPORTS
 export { SUPPORTED_LOCALES, getCurrencyInfo, getCountryInfo, getLocaleInfo } from './config'
 
-// Basic translation loader (expandable with JSON files)
-function getTranslations(locale: string): Record<string, string> {
-  const baseTranslations = {
-    'welcome': 'Welcome',
-    'booking.title': 'Book a Service',
-    'booking.commitment_fee': 'Commitment Fee: {{amount}}',
-    'error.payment_failed': 'Payment failed. Please try again.',
-    'success.booking_confirmed': 'Your booking has been confirmed!',
-    'button.cancel': 'Cancel',
-    'button.confirm': 'Confirm',
-    'help.customer_guide': 'Customer Guide',
-    'help.provider_guide': 'Provider Guide'
-  }
-
-  // In production, this would load from JSON files:
-  // return import(`../../../locales/${locale}.json`)
-  
-  return baseTranslations
-} 
+const baseTranslations = {
+  'welcome': 'Welcome',
+  'booking.title': 'Book a Service',
+  'booking.commitment_fee': 'Commitment Fee: {{amount}}',
+  'error.payment_failed': 'Payment failed. Please try again.',
+  'success.booking_confirmed': 'Your booking has been confirmed!',
+  'button.cancel': 'Cancel',
+  'button.confirm': 'Confirm',
+  'help.customer_guide': 'Customer Guide',
+  'help.provider_guide': 'Provider Guide'
+}
