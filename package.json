@@ -11,8 +11,7 @@
     "type-check:watch": "tsc --noEmit --watch",
     "context": "node startup-context.js",
     "test": "vitest run",
-    "ai:test": "node scripts/ai-test-loop.mjs",
-    "prepare": "husky"
+    "ai:test": "node scripts/ai-test-loop.mjs"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.17",
@@ -88,7 +87,6 @@
     "supertest": "^6.3.3",
     "tailwindcss": "^3.3.0",
     "typescript": "^5",
-    "husky": "^9.0.7",
     "vitest": "^3.2.4"
   },
   "optionalDependencies": {
