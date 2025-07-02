@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { VendorCalendar, VendorAnalytics, GuidedTourManager } from '@/components'
+import { registerTour } from '@/lib/guidedTourRegistry'
+import { useAutoTour } from '@/lib/useAutoTour'
+import { TrendingUp } from 'lucide-react'
 
 interface BookingStats {
   totalBookings: number
@@ -37,13 +40,25 @@ export default function VendorDashboard() {
   const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'calendar' | 'analytics'>('overview')
+  const [pendingServiceTypes, setPendingServiceTypes] = useState<number>(0)
 
   // Mock vendor ID - in real app, get from auth
   const vendorId = 'vendor_1'
 
   useEffect(() => {
     fetchDashboardData()
+    loadPendingProposals()
+    registerTour({
+      id: 'vendor-pending-service-type',
+      route: '/vendor/dashboard',
+      title: 'Pending Service Type Approval',
+      steps: [
+        { target: '[data-tour="pending-service-badge"]', content: 'This badge shows how many of your custom service type proposals are awaiting approval.' }
+      ]
+    })
   }, [])
+
+  useAutoTour()
 
   const fetchDashboardData = async () => {
     try {
@@ -107,6 +122,20 @@ export default function VendorDashboard() {
     }
   }
 
+  const loadPendingProposals = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('service_type_proposals')
+        .select('id')
+        .eq('vendor_id', vendorId)
+        .eq('status', 'pending')
+
+      if (!error) setPendingServiceTypes(data.length)
+    } catch (e) {
+      console.error('Pending proposals fetch error', e)
+    }
+  }
+
   const StatCard = ({ title, value, subtitle, icon, color = 'blue' }: {
     title: string
     value: string | number
@@ -151,8 +180,15 @@ export default function VendorDashboard() {
                   ${(stats.totalRevenue / 100).toFixed(2)}
                 </p>
               </div>
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                P
+              <div className="relative">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                  P
+                </div>
+                {pendingServiceTypes > 0 && (
+                  <span data-tour="pending-service-badge" className="absolute -top-1 -right-1 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-yellow-500 px-1.5 text-[10px] font-semibold leading-none text-white">
+                    {pendingServiceTypes}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -235,7 +271,7 @@ export default function VendorDashboard() {
                     <strong> {((stats.confirmedBookings / Math.max(stats.totalBookings, 1)) * 100).toFixed(1)}%</strong> success rate
                   </p>
                 </div>
-                <div className="text-4xl opacity-80">🚀</div>
+                <TrendingUp className="w-7 h-7 opacity-80" />
               </div>
             </div>
 

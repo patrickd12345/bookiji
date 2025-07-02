@@ -44,6 +44,9 @@ export function ThemeSwitcher() {
         <DropdownMenuLabel>🎨 Choose Theme</DropdownMenuLabel>
         <DropdownMenuSeparator />
         
+        <DropdownMenuItem onClick={() => setTheme("corporate")} className="cursor-pointer">
+          🏢 Default
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer">
           ☀️ Light
         </DropdownMenuItem>
@@ -92,7 +95,7 @@ export function SimpleThemeToggle() {
     setMounted(true)
   }, [])
 
-  const themes = ["light", "dark", "pastel", "ocean", "sunset", "forest", "cyberpunk", "cupcake", "midnight"]
+  const themes = ["corporate", "light", "dark", "pastel", "ocean", "sunset", "forest", "cyberpunk", "cupcake", "midnight"]
   
   const cycleTheme = () => {
     const currentIndex = themes.indexOf(theme || "light")
@@ -118,7 +121,8 @@ export function SimpleThemeToggle() {
       forest: "🌲",
       cyberpunk: "🌆",
       cupcake: "🍭",
-      midnight: "🌙"
+      midnight: "🌙",
+      corporate: "🏢"
     }
     return emojiMap[currentTheme] || "🎨"
   }
@@ -130,7 +134,7 @@ export function SimpleThemeToggle() {
       className="px-4 gap-2"
     >
       <span>{getThemeEmoji(theme || "light")}</span>
-      <span className="capitalize">{theme || "light"}</span>
+      <span className="capitalize">{theme === "corporate" ? "Default" : theme || "light"}</span>
     </Button>
   )
 } 

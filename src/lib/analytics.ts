@@ -134,8 +134,12 @@ export const initAnalytics = () => {
     // Dynamic import to avoid build issues
     import('posthog-js').then(({ default: posthog }) => {
       posthog.init(ANALYTICS_CONFIG.POSTHOG_KEY!, {
-        api_host: ANALYTICS_CONFIG.POSTHOG_HOST
+        api_host: ANALYTICS_CONFIG.POSTHOG_HOST,
+        capture_pageview: true,
+        disable_session_recording: false,
+        enable_recording_console_log: false
       })
+      posthog.startSessionRecording()
     }).catch(() => {
       console.warn('PostHog not available')
     })

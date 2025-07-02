@@ -1,6 +1,10 @@
 'use client'
 
 import { useState, type MouseEvent } from 'react'
+import dynamic from 'next/dynamic'
+import { Rocket } from 'lucide-react'
+
+const RealAIChat = dynamic(() => import('./RealAIChat'), { ssr: false })
 
 interface SimpleHelpCenterProps {
   type: 'customer' | 'vendor'
@@ -9,6 +13,13 @@ interface SimpleHelpCenterProps {
 
 export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleHelpCenterProps) {
   const [activeTab, setActiveTab] = useState(defaultTab)
+  const [showChat, setShowChat] = useState(false)
+  const [faqSearch, setFaqSearch] = useState('')
+  const [faqResults, setFaqResults] = useState<any[]>([])
+  const [faqLoading, setFaqLoading] = useState(false)
+  const [showTicket, setShowTicket] = useState(false)
+  const [ticketForm, setTicketForm] = useState({ title: '', description: '' })
+  const [ticketSubmitting, setTicketSubmitting] = useState(false)
 
   const tabs = [
     {
@@ -30,6 +41,44 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
       description: 'Take a guided tour of your dashboard'
     }
   ]
+
+  const searchFaq = async () => {
+    if (!faqSearch.trim()) return
+    setFaqLoading(true)
+    try {
+      const res = await fetch(`/api/support/faq?search=${encodeURIComponent(faqSearch)}&limit=10`)
+      const data = await res.json()
+      if (data.ok) setFaqResults(data.data)
+    } catch (e) {
+      console.error('FAQ search error', e)
+    } finally {
+      setFaqLoading(false)
+    }
+  }
+
+  const submitTicket = async () => {
+    if (!ticketForm.title || !ticketForm.description) return
+    setTicketSubmitting(true)
+    try {
+      const res = await fetch('/api/support/tickets/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...ticketForm, userId: 'anonymous' })
+      })
+      const data = await res.json()
+      if (data.ok) {
+        alert('Ticket created! ID: ' + data.ticketId)
+        setShowTicket(false)
+        setTicketForm({ title: '', description: '' })
+      } else {
+        alert(data.error)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setTicketSubmitting(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -108,7 +157,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                 {type === 'customer' ? (
                   <div className="space-y-6">
                     <div className="bg-blue-50 p-6 rounded-lg">
-                      <h3 className="text-lg font-semibold text-blue-900 mb-3">🚀 Getting Started</h3>
+                      <h3 className="flex items-center gap-1 text-lg font-semibold text-blue-900 mb-3"><Rocket className="w-4 h-4" /> Getting Started</h3>
                       <ul className="space-y-2 text-blue-800">
                         <li>• Create your account and complete your profile</li>
                         <li>• Search for services in your area using the map</li>
@@ -140,7 +189,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                 ) : (
                   <div className="space-y-6">
                     <div className="bg-blue-50 p-6 rounded-lg">
-                      <h3 className="text-lg font-semibold text-blue-900 mb-3">🚀 Getting Started</h3>
+                      <h3 className="flex items-center gap-1 text-lg font-semibold text-blue-900 mb-3"><Rocket className="w-4 h-4" /> Getting Started</h3>
                       <ul className="space-y-2 text-blue-800">
                         <li>• Register your business and verify your identity</li>
                         <li>• Set up your services, pricing, and availability</li>
@@ -179,6 +228,31 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
               <div className="max-w-4xl mx-auto">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">❓ Frequently Asked Questions</h2>
                 
+                {/* Search box */}
+                <div className="flex gap-2 mb-6">
+                  <input
+                    type="text"
+                    placeholder="Search the knowledge base…"
+                    value={faqSearch}
+                    onChange={(e) => setFaqSearch(e.target.value)}
+                    className="flex-1 px-4 py-2 border rounded"
+                  />
+                  <button onClick={searchFaq} className="px-4 py-2 bg-blue-600 text-white rounded">Search</button>
+                </div>
+
+                {faqLoading && <p className="text-gray-500 mb-4">Searching…</p>}
+
+                {faqResults.length > 0 && (
+                  <div className="space-y-4 mb-8">
+                    {faqResults.map((item) => (
+                      <div key={item.id} className="bg-white border rounded-lg p-6 shadow-sm">
+                        <h3 className="font-semibold text-gray-900 mb-2">{item.title}</h3>
+                        <p className="text-gray-600" dangerouslySetInnerHTML={{ __html: item.content }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   {type === 'customer' ? (
                     <>
@@ -237,12 +311,14 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                       📧 Email Support
                     </a>
                     <button
-                      onClick={(evt: MouseEvent<HTMLButtonElement>) => {
-                        evt.preventDefault();
-                        alert('💬 Live chat coming soon!');
-                      }}
+                      onClick={() => setShowChat(true)}
                       className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
                       💬 Live Chat
+                    </button>
+                    <button
+                      onClick={() => setShowTicket(true)}
+                      className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                      📝 Open Ticket
                     </button>
                   </div>
                 </div>
@@ -279,7 +355,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                       }}
                       className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 hover:scale-105"
                     >
-                      🚀 Go to Dashboard
+                      <Rocket className="inline w-4 h-4 mr-1" /> Go to Dashboard
                     </button>
                   </div>
                 </div>
@@ -303,6 +379,45 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
           )}
         </div>
       </div>
+
+      {showChat && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-xl max-w-full w-full sm:w-[600px] shadow-lg">
+            <div className="flex justify-end mb-2">
+              <button className="text-gray-500 hover:text-gray-700" onClick={() => setShowChat(false)}>
+                Close
+              </button>
+            </div>
+            <RealAIChat />
+          </div>
+        </div>
+      )}
+
+      {showTicket && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md">
+            <h3 className="text-xl font-semibold mb-4">Create Support Ticket</h3>
+            <input
+              type="text"
+              placeholder="Short Title"
+              value={ticketForm.title}
+              onChange={(e)=>setTicketForm({...ticketForm,title:e.target.value})}
+              className="w-full mb-3 px-3 py-2 border rounded"
+            />
+            <textarea
+              rows={4}
+              placeholder="Describe your issue"
+              value={ticketForm.description}
+              onChange={(e)=>setTicketForm({...ticketForm,description:e.target.value})}
+              className="w-full mb-3 px-3 py-2 border rounded"
+            />
+            <div className="flex justify-end gap-2">
+              <button onClick={()=>setShowTicket(false)} className="px-4 py-2 bg-gray-200 rounded">Cancel</button>
+              <button disabled={ticketSubmitting} onClick={submitTicket} className="px-4 py-2 bg-purple-600 text-white rounded disabled:opacity-50">{ticketSubmitting?'Submitting…':'Submit'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 

@@ -87,7 +87,7 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
           <span className="text-white text-sm">🗺️</span>
         </div>
         <div>
@@ -100,10 +100,10 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl"
+          className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl"
         >
-          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm text-blue-700">Analyzing optimal search radius...</span>
+          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-sm text-primary">Analyzing optimal search radius...</span>
         </motion.div>
       )}
 
@@ -129,31 +129,31 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+          <div className="p-4 bg-accent/10 rounded-xl border border-accent/20">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-green-800">Recommended Radius</span>
-              <span className="text-lg font-bold text-green-700">{radiusRecommendation.recommendedRadius} km</span>
+              <span className="text-sm font-medium text-foreground">Recommended Radius</span>
+              <span className="text-lg font-bold text-accent">{radiusRecommendation.recommendedRadius} km</span>
             </div>
-            <p className="text-sm text-green-700">{radiusRecommendation.explanation}</p>
+            <p className="text-sm text-muted-foreground">{radiusRecommendation.explanation}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-gray-50 rounded-lg">
+            <div className="p-3 bg-muted/50 rounded-lg">
               <span className="text-xs text-gray-500 uppercase tracking-wide">Service</span>
               <p className="text-sm font-medium text-gray-900">{service}</p>
             </div>
-            <div className="p-3 bg-gray-50 rounded-lg">
+            <div className="p-3 bg-muted/50 rounded-lg">
               <span className="text-xs text-gray-500 uppercase tracking-wide">Provider Density</span>
               <p className="text-sm font-medium text-gray-900 capitalize">{radiusRecommendation.providerDensity}</p>
             </div>
           </div>
 
-          <div className="p-3 bg-blue-50 rounded-lg">
+          <div className="p-3 bg-primary/10 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-blue-600">🔒</span>
-              <span className="text-sm font-medium text-blue-800">Privacy Protection Active</span>
+              <span className="text-primary">🔒</span>
+              <span className="text-sm font-medium text-primary">Privacy Protection Active</span>
             </div>
-            <p className="text-xs text-blue-700">
+            <p className="text-xs text-muted-foreground">
               Vendors are shown as availability zones, not exact locations. 
               This protects their privacy while helping you find nearby services.
             </p>
@@ -165,7 +165,7 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
         <button
           onClick={fetchRadiusRecommendation}
           disabled={isLoading}
-          className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          className="w-full px-4 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed text-sm"
         >
           {isLoading ? 'Analyzing...' : 'Refresh Radius Analysis'}
         </button>

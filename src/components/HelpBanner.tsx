@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Rocket } from 'lucide-react'
 
 export default function HelpBanner() {
   return (
@@ -29,7 +30,7 @@ export default function HelpBanner() {
         {/* Quick Start Guides */}
         <div className="bg-white rounded-lg p-4 border border-emerald-200">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">🚀</span>
+            <Rocket className="w-4 h-4 text-emerald-600" />
             <h4 className="font-semibold text-emerald-900">Quick Start Guides</h4>
           </div>
           <p className="text-sm text-emerald-700">

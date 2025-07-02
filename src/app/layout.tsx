@@ -31,10 +31,10 @@ export default function RootLayout({
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="corporate"
           enableSystem
           disableTransitionOnChange
-          themes={["light", "dark", "system", "pastel", "ocean", "sunset", "forest", "cyberpunk", "cupcake", "midnight"]}
+          themes={["corporate", "light", "dark", "system", "pastel", "ocean", "sunset", "forest", "cyberpunk", "cupcake", "midnight"]}
         >
           <div className="fixed top-4 right-4 z-50">
             <ThemeSwitcher />

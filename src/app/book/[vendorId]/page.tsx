@@ -30,6 +30,7 @@ export default function BookVendorPage() {
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('')
+  const [availabilitySlots, setAvailabilitySlots] = useState<{ date: string; time: string }[]>([])
   const [loading, setLoading] = useState(true)
 
   const fetchVendorAndServices = async () => {
@@ -58,9 +59,36 @@ export default function BookVendorPage() {
     }
   }
 
+  // Fetch availability slots from the server
+  const fetchAvailability = async () => {
+    try {
+      const res = await fetch('/api/availability/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ providerId: vendorId })
+      })
+
+      const data = await res.json()
+
+      if (Array.isArray(data.finalSlots)) {
+        const slots = data.finalSlots.map((slot: any) => {
+          const start = new Date(slot.start_time)
+          return {
+            date: start.toISOString().split('T')[0],
+            time: start.toTimeString().slice(0, 5)
+          }
+        })
+        setAvailabilitySlots(slots)
+      }
+    } catch (error) {
+      console.error('Error fetching availability:', error)
+    }
+  }
+
   useEffect(() => {
     if (!vendorId) return
     fetchVendorAndServices()
+    fetchAvailability()
   }, [vendorId])
 
   const handleBooking = async () => {
@@ -180,12 +208,13 @@ export default function BookVendorPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Choose time</option>
-                <option value="09:00">9:00 AM</option>
-                <option value="10:00">10:00 AM</option>
-                <option value="11:00">11:00 AM</option>
-                <option value="14:00">2:00 PM</option>
-                <option value="15:00">3:00 PM</option>
-                <option value="16:00">4:00 PM</option>
+                {availabilitySlots
+                  .filter((s) => s.date === selectedDate)
+                  .map((s) => (
+                    <option key={s.time} value={s.time}>
+                      {s.time}
+                    </option>
+                  ))}
               </select>
             </div>
           </div>

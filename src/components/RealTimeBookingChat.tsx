@@ -1,8 +1,10 @@
 'use client'
 
-import React, { useState, useEffect, type MouseEvent, type KeyboardEvent } from 'react'
+import React, { useState, useEffect, useRef, type MouseEvent, type KeyboardEvent } from 'react'
 import { motion } from 'framer-motion'
 import { BookingPaymentModal } from './BookingPaymentModal'
+import { supabase } from '@/lib/supabaseClient'
+import { Zap } from 'lucide-react'
 
 interface Message {
   id: string
@@ -254,14 +256,14 @@ export default function RealTimeBookingChat() {
 
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 scale-110 shadow-purple-400/30 animate-[pulseGlow_2s_infinite]">
+      <div className="bg-card rounded-2xl shadow-xl p-8 border scale-110 shadow-purple-400/30 animate-[pulseGlow_2s_infinite]">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-            <span className="text-white text-xl">🚀</span>
+          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+            <Zap className="w-4 h-4 text-primary-foreground" />
           </div>
           <div className="flex-1">
-            <h2 className="font-semibold text-gray-900">Real-Time Booking Assistant</h2>
-            <p className="text-sm text-gray-500">AI-powered booking with instant payment</p>
+            <h2 className="font-semibold text-foreground">Real-Time Booking Assistant</h2>
+            <p className="text-sm text-muted-foreground">AI-powered booking with instant payment</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -269,7 +271,7 @@ export default function RealTimeBookingChat() {
                 evt.preventDefault();
                 alert('🎤 Voice input coming soon!');
               }}
-              className="p-2 hover:bg-gray-100 rounded-full">
+              className="p-2 hover:bg-muted rounded-full">
               <span className="text-xl">🎤</span>
             </button>
             <button
@@ -277,7 +279,7 @@ export default function RealTimeBookingChat() {
                 evt.preventDefault();
                 alert('📷 Image attachment coming soon!');
               }}
-              className="p-2 hover:bg-gray-100 rounded-full">
+              className="p-2 hover:bg-muted rounded-full">
               <span className="text-xl">📷</span>
             </button>
           </div>
@@ -292,20 +294,20 @@ export default function RealTimeBookingChat() {
               className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}
             >
               {message.role === 'assistant' && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  🚀
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Zap className="w-3 h-3 text-primary" />
                 </div>
               )}
               <div className={`rounded-2xl p-4 max-w-[80%] ${
                 message.role === 'user' 
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-br-none' 
-                  : 'bg-gray-100 text-gray-700 rounded-tl-none'
+                  ? 'bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-br-none' 
+                  : 'bg-muted text-foreground rounded-tl-none'
               }`}>
                 <p className="whitespace-pre-wrap">{message.content}</p>
               </div>
               {message.role === 'user' && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                  <span className="text-white text-sm">👤</span>
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary-foreground text-sm">👤</span>
                 </div>
               )}
             </motion.div>
@@ -317,14 +319,14 @@ export default function RealTimeBookingChat() {
               animate={{ opacity: 1, y: 0 }}
               className="flex gap-3"
             >
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                🚀
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <Zap className="w-3 h-3 text-primary" />
               </div>
-              <div className="bg-gray-100 rounded-2xl rounded-tl-none p-4">
+              <div className="bg-muted rounded-2xl rounded-tl-none p-4">
                 <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce delay-100"></div>
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce delay-200"></div>
                 </div>
               </div>
             </motion.div>
@@ -338,13 +340,13 @@ export default function RealTimeBookingChat() {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Try: Book a haircut for tomorrow at 2 PM"
-            className="flex-1 px-4 py-3 bg-gray-100 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+            className="flex-1 px-4 py-3 bg-muted border-0 rounded-xl focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
             disabled={isTyping}
           />
           <button 
             onClick={handleSendMessage}
             disabled={isTyping || !inputMessage.trim()}
-            className="px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-3 bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Send
           </button>
@@ -353,25 +355,25 @@ export default function RealTimeBookingChat() {
         <div className="mt-4 flex gap-2 flex-wrap">
           <button 
             onClick={() => handleQuickPrompt('Book a haircut for today')}
-            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-600 transition-colors"
+            className="px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-full text-sm text-muted-foreground transition-colors"
           >
             Book a haircut for today
           </button>
           <button 
             onClick={() => handleQuickPrompt('I need a massage tomorrow')}
-            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-600 transition-colors"
+            className="px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-full text-sm text-muted-foreground transition-colors"
           >
             I need a massage tomorrow
           </button>
           <button 
             onClick={() => handleQuickPrompt('Book a cleaning service')}
-            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-600 transition-colors"
+            className="px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-full text-sm text-muted-foreground transition-colors"
           >
             Book a cleaning service
           </button>
           <button 
             onClick={() => handleQuickPrompt('What services are available?')}
-            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-600 transition-colors"
+            className="px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-full text-sm text-muted-foreground transition-colors"
           >
             What services are available?
           </button>

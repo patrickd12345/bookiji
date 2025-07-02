@@ -14,6 +14,7 @@ import {
 import { SimpleThemeToggle } from '@/components/ThemeSwitcher'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PlayCircle, Briefcase } from 'lucide-react'
 
 export default function HomePage() {
   const { t, formatCurrency, locale } = useI18n()
@@ -64,12 +65,14 @@ export default function HomePage() {
               // Not logged in - show onboarding buttons
               <>
                 <a href="/get-started">
-                  <Button className="h-10 px-8 text-lg">
-                    🚀 Start Booking
+                  <Button className="h-10 px-8 text-lg flex items-center gap-2">
+                    <PlayCircle className="w-4 h-4" />
+                    Start Booking
                   </Button>
                 </a>
                 <a href="/vendor/onboarding">
-                  <Button variant="outline" className="h-10 px-8 text-lg">
+                  <Button variant="outline" className="h-10 px-8 text-lg flex items-center gap-2">
+                    <Briefcase className="w-4 h-4" />
                     List Your Business
                   </Button>
                 </a>
@@ -94,14 +97,16 @@ export default function HomePage() {
                 {/* Show onboarding options if user doesn't have those capabilities yet */}
                 {!canBookServices && (
                   <a href="/get-started">
-                    <Button className="h-10 px-8 text-lg">
-                      🚀 Start Booking
+                    <Button className="h-10 px-8 text-lg flex items-center gap-2">
+                      <PlayCircle className="w-4 h-4" />
+                      Start Booking
                     </Button>
                   </a>
                 )}
                 {!canOfferServices && (
                   <a href="/vendor/onboarding">
-                    <Button variant="outline" className="h-10 px-8 text-lg">
+                    <Button variant="outline" className="h-10 px-8 text-lg flex items-center gap-2">
+                      <Briefcase className="w-4 h-4" />
                       List Your Business
                     </Button>
                   </a>
@@ -125,7 +130,7 @@ export default function HomePage() {
             <Card className="shadow-xl">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-primary rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
                     <span className="text-white text-sm">💬</span>
                   </div>
                   <CardTitle className="text-foreground">Real-Time Booking Chat</CardTitle>
@@ -142,7 +147,7 @@ export default function HomePage() {
             <Card className="shadow-xl">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-r from-secondary to-accent rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
                     <span className="text-white text-sm">🗺️</span>
                   </div>
                   <CardTitle className="text-foreground">AI Radius Scaling</CardTitle>
@@ -178,7 +183,7 @@ export default function HomePage() {
             </div>
             
             <div className="text-center p-6">
-              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🗺️</span>
               </div>
               <h3 className="text-xl font-semibold mb-2 text-foreground">Map Abstraction</h3>
@@ -186,7 +191,7 @@ export default function HomePage() {
             </div>
             
             <div className="text-center p-6">
-              <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🛡️</span>
               </div>
               <h3 className="text-xl font-semibold mb-2 text-foreground">Booking Guarantees</h3>
@@ -239,12 +244,14 @@ export default function HomePage() {
               // Not logged in - show onboarding CTAs
               <>
                 <a href="/get-started">
-                  <Button className="h-10 px-8 text-lg">
+                  <Button className="h-10 px-8 text-lg flex items-center gap-2">
+                    <PlayCircle className="w-4 h-4" />
                     Start Booking Now
                   </Button>
                 </a>
                 <a href="/vendor/onboarding">
-                  <Button variant="outline" className="h-10 px-8 text-lg">
+                  <Button variant="outline" className="h-10 px-8 text-lg flex items-center gap-2">
+                    <Briefcase className="w-4 h-4" />
                     List Your Business
                   </Button>
                 </a>
@@ -269,7 +276,8 @@ export default function HomePage() {
                 {/* Fallback CTAs if user lacks capabilities */}
                 {!canBookServices && !canOfferServices && (
                   <a href="/get-started">
-                    <Button className="h-10 px-8 text-lg">
+                    <Button className="h-10 px-8 text-lg flex items-center gap-2">
+                      <PlayCircle className="w-4 h-4" />
                       Get Started
                     </Button>
                   </a>

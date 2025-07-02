@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useI18n } from '@/lib/i18n/useI18n'
+import { useAuth } from '../../hooks/useAuth'
 
 interface CalendarEvent {
   id: string
@@ -23,6 +24,104 @@ interface AvailabilitySlot {
   isAvailable: boolean
 }
 
+interface QuickActionModalProps {
+  type: 'availability' | 'block' | 'service';
+  providerId: string;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+function QuickActionModal({ type, providerId, onClose, onSuccess }: QuickActionModalProps) {
+  const { user } = useAuth();
+  const [form, setForm] = useState({
+    date: '',
+    start: '',
+    end: '',
+    name: '',
+    duration: 60,
+    price: 0,
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      if (type === 'availability') {
+        await fetch('/api/availability/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ providerId }),
+        });
+      } else if (type === 'block') {
+        await fetch('/api/blocks/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            providerId,
+            date: form.date,
+            start: form.start,
+            end: form.end,
+            reason: 'Vendor block via dashboard',
+          }),
+        });
+      } else if (type === 'service') {
+        await fetch('/api/vendor/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vendorId: providerId,
+            service: {
+              name: form.name,
+              duration_minutes: Number(form.duration),
+              price_cents: Number(form.price) * 100,
+              description: '',
+            },
+          }),
+        });
+      }
+      onSuccess();
+    } catch (error) {
+      console.error('Quick action error:', error);
+      alert('Action failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6">
+        <h3 className="text-lg font-semibold mb-4 capitalize">{type === 'availability' ? 'Generate Availability' : type === 'block' ? 'Block Time' : 'Add Service'}</h3>
+
+        {type === 'block' && (
+          <div className="space-y-3">
+            <input type="date" className="w-full border px-3 py-2 rounded" value={form.date} onChange={(e)=>setForm({...form,date:e.target.value})} />
+            <input type="time" className="w-full border px-3 py-2 rounded" value={form.start} onChange={(e)=>setForm({...form,start:e.target.value})} />
+            <input type="time" className="w-full border px-3 py-2 rounded" value={form.end} onChange={(e)=>setForm({...form,end:e.target.value})} />
+          </div>
+        )}
+
+        {type === 'service' && (
+          <div className="space-y-3">
+            <input type="text" placeholder="Service Name" className="w-full border px-3 py-2 rounded" value={form.name} onChange={(e)=>setForm({...form,name:e.target.value})} />
+            <input type="number" placeholder="Duration (min)" className="w-full border px-3 py-2 rounded" value={form.duration} onChange={(e)=>setForm({...form,duration:Number(e.target.value)})} />
+            <input type="number" placeholder="Price ($)" className="w-full border px-3 py-2 rounded" value={form.price} onChange={(e)=>setForm({...form,price:Number(e.target.value)})} />
+          </div>
+        )}
+
+        {type === 'availability' && (
+          <p className="text-sm text-gray-600 mb-4">Generate 30 days of availability based on your schedule and connected calendar.</p>
+        )}
+
+        <div className="mt-6 flex justify-end gap-2">
+          <button className="px-4 py-2 bg-gray-200 rounded" onClick={onClose} disabled={loading}>Cancel</button>
+          <button className="px-4 py-2 bg-blue-600 text-white rounded" disabled={loading} onClick={handleSubmit}>{loading ? 'Processing...' : 'Confirm'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function VendorCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -30,6 +129,9 @@ export default function VendorCalendar() {
   const [view, setView] = useState<'month' | 'week' | 'day'>('week')
   const [isLoading, setIsLoading] = useState(true)
   const { formatDate, formatTime, formatCurrency } = useI18n()
+  const [action, setAction] = useState<null | 'availability' | 'block' | 'service'>(null)
+  const { user } = useAuth()
+  const vendorId = user?.id || ''
 
   useEffect(() => {
     loadCalendarData()
@@ -247,20 +349,23 @@ export default function VendorCalendar() {
           
           <div className="bg-white border rounded-lg p-4 space-y-4">
             <button
-              onClick={() => alert('🗓️ Set Availability feature coming soon!')}
-              className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              onClick={() => setAction('availability')}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
               Set Availability
             </button>
             
             <button
-              onClick={() => alert('⏰ Block Time feature coming soon!')}
-              className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+              onClick={() => setAction('block')}
+              className="w-full px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
+            >
               Block Time
             </button>
             
             <button
-              onClick={() => alert('➕ Add Service feature coming soon!')}
-              className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+              onClick={() => setAction('service')}
+              className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+            >
               Add Service
             </button>
           </div>
@@ -295,6 +400,19 @@ export default function VendorCalendar() {
           </div>
         </div>
       </div>
+
+      {/* Quick Action Modal */}
+      {action && (
+        <QuickActionModal
+          type={action}
+          providerId={vendorId}
+          onClose={() => setAction(null)}
+          onSuccess={() => {
+            // Trigger calendar refresh if needed
+            setAction(null)
+          }}
+        />
+      )}
     </div>
   )
 } 

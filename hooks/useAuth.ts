@@ -65,7 +65,13 @@ export function useAuth() {
       }
     )
 
-    return () => subscription.unsubscribe()
+    // Fallback: ensure loading doesn't hang indefinitely
+    const fallback = setTimeout(() => setLoading(false), 1000)
+
+    return () => {
+      clearTimeout(fallback)
+      subscription.unsubscribe()
+    }
   }, [])
 
   // Helper functions for role checking

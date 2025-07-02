@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, type MouseEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '../../hooks/useAuth'
 
 interface BookingStatus {
@@ -67,6 +68,7 @@ export default function ConfirmationStatus({
   onStatusChange 
 }: ConfirmationStatusProps) {
   const { user } = useAuth()
+  const router = useRouter()
   const [status, setStatus] = useState<BookingStatus | null>(initialStatus || null)
   const [loading, setLoading] = useState(!initialStatus)
   const [error, setError] = useState<string | null>(null)
@@ -274,7 +276,7 @@ export default function ConfirmationStatus({
                 <button
                   onClick={(evt: MouseEvent<HTMLButtonElement>) => {
                     evt.preventDefault();
-                    alert('🔍 Detailed booking view coming soon!');
+                    router.push(`/confirm/${bookingId}`);
                   }}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
                   View Details

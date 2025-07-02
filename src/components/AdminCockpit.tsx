@@ -5,6 +5,38 @@ import { motion } from 'framer-motion';
 import { useUIStore } from '@/stores/uiStore';
 import type { AdminStats, AdminAction, AdminNotification } from '@/types/global.d';
 
+// Simple slide-over component for taking admin actions
+function ActionModal({ action, onClose }: { action: AdminAction; onClose: () => void }) {
+  const [processing, setProcessing] = useState(false)
+
+  const handleResolve = async () => {
+    setProcessing(true)
+    // For demo, just wait
+    await new Promise(r=>setTimeout(r,800))
+    setProcessing(false)
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex">
+      <div className="flex-1 bg-black bg-opacity-40" onClick={onClose}></div>
+      <div className="w-96 bg-white shadow-xl p-6 overflow-y-auto">
+        <h3 className="text-xl font-semibold mb-4">Resolve Action</h3>
+        <p className="font-medium mb-2">{action.title}</p>
+        <p className="text-sm text-gray-600 mb-6">{action.description}</p>
+        <button
+          onClick={handleResolve}
+          disabled={processing}
+          className="w-full bg-blue-600 text-white rounded py-2 hover:bg-blue-700 disabled:opacity-50"
+        >
+          {processing ? 'Processing…' : 'Mark Resolved'}
+        </button>
+        <button onClick={onClose} className="w-full mt-2 text-sm text-gray-500">Cancel</button>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminCockpit() {
   const { showAdminCockpit, setShowAdminCockpit } = useUIStore();
 
@@ -24,7 +56,7 @@ export default function AdminCockpit() {
     }
   });
 
-  const [notifications] = useState<AdminNotification[]>([
+  const [notifications, setNotifications] = useState<AdminNotification[]>([
     {
       id: 'notif1',
       type: 'verification_request',
@@ -37,7 +69,7 @@ export default function AdminCockpit() {
     }
   ]);
 
-  const [actions] = useState<AdminAction[]>([
+  const [actions, setActions] = useState<AdminAction[]>([
     {
       id: 'action1',
       type: 'approve_vendor',
@@ -48,6 +80,8 @@ export default function AdminCockpit() {
       dueDate: new Date(Date.now() + 86400000)
     }
   ]);
+
+  const [selectedAction, setSelectedAction] = useState<AdminAction | null>(null);
 
   if (!showAdminCockpit) return null;
 
@@ -180,10 +214,7 @@ export default function AdminCockpit() {
                       </div>
                     </div>
                     <button
-                      onClick={(evt: MouseEvent<HTMLButtonElement>) => {
-                        evt.preventDefault();
-                        alert('🛠️ Admin action workflow coming soon!');
-                      }}
+                      onClick={() => setSelectedAction(action)}
                       className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700 font-medium">
                       Take Action
                     </button>
@@ -226,9 +257,10 @@ export default function AdminCockpit() {
                       </div>
                     </div>
                     <button
-                      onClick={(evt: MouseEvent<HTMLButtonElement>) => {
-                        evt.preventDefault();
-                        alert('✅ Marked as read (placeholder)');
+                      onClick={async () => {
+                        // call API
+                        await fetch(`/api/notifications/${notification.id}/read`, { method: 'POST' })
+                        setNotifications((prev: AdminNotification[]) => prev.map((n: AdminNotification) => n.id === notification.id ? { ...n, isRead: true } : n))
                       }}
                       className="px-3 py-1 text-sm text-gray-600 hover:text-gray-700 font-medium">
                       Mark as Read
@@ -240,6 +272,17 @@ export default function AdminCockpit() {
           )}
         </div>
       </div>
+
+      {selectedAction && (
+        <ActionModal
+          action={selectedAction}
+          onClose={() => {
+            // update status to resolved
+            setActions((prev)=>prev.map(a=>a.id===selectedAction.id?{...a,status:'completed'}:a))
+            setSelectedAction(null)
+          }}
+        />
+      )}
     </div>
   );
 } 

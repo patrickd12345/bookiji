@@ -85,6 +85,27 @@ export default function VendorOnboardingPage() {
       if (data.success) {
         console.log('Vendor registered successfully:', data.vendor);
         
+        // If custom service type proposed, call proposal endpoint
+        if (submissionData.isCustomServiceType) {
+          try {
+            const proposeRes = await fetch('/api/vendor/service-types/propose', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                proposedServiceType: submissionData.customServiceType,
+                vendorId: data.vendor.id,
+                businessName: submissionData.businessName,
+                email: submissionData.email,
+                phone: submissionData.phone
+              })
+            })
+            const proposeData = await proposeRes.json()
+            console.log('Service type proposal result', proposeData)
+          } catch (e) {
+            console.error('Proposal error', e)
+          }
+        }
+
         // Show success message based on registration type
         if (data.vendor.status === 'pending_approval') {
           alert('Registration submitted! Your custom service type will be reviewed by our team. You\'ll receive an email within 24-48 hours.');

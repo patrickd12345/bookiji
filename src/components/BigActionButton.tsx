@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { theme } from '../config/theme';
+import { Zap } from 'lucide-react';
 
 interface BigActionButtonProps {
   onStartTour?: () => void;
@@ -37,15 +37,15 @@ export default function BigActionButton({ onStartTour }: BigActionButtonProps) {
       `}</style>
       <button 
         onClick={handleClick}
-        className="relative inline-flex items-center px-8 py-4 text-white text-xl font-bold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 vibrate-periodic hover:opacity-90 bg-gradient-to-r from-primary to-accent"
+        className="relative inline-flex items-center gap-3 px-8 py-4 text-white text-xl font-bold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 vibrate-periodic hover:opacity-90 bg-gradient-to-r from-primary to-accent"
         style={{
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
         }}
-        title="Click to see Bookiji's amazing features!"
+        title="Explore Bookiji features"
       >
-        <span className="mr-3 text-2xl">🚀</span>
+        <Zap className="w-6 h-6" />
         <span className="font-extrabold">See it in ACTION!</span>
-        <span className="ml-3 text-2xl">⚡</span>
+        <Zap className="w-6 h-6" />
       </button>
     </div>
   );

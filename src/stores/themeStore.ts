@@ -8,6 +8,7 @@ interface ThemeState {
 }
 
 const THEMES = [
+  'corporate',
   'light',
   'dark',
   'pastel',
@@ -16,8 +17,8 @@ const THEMES = [
 ] as const
 
 const getInitialTheme = (): Theme => {
-  if (typeof window === 'undefined') return 'light'
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  if (typeof window === 'undefined') return 'corporate'
+  return 'corporate'
 }
 
 export const useThemeStore = create<ThemeState>()(

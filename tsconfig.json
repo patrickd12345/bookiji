@@ -21,7 +21,8 @@
     "types": ["vitest/globals", "jest", "node", "react", "react-dom"],
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "baseUrl": "."
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "tests/**/*.ts"],
   "exclude": ["node_modules"]

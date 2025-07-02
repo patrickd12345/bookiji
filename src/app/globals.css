@@ -270,6 +270,41 @@
     --chart-4: 30 100% 65%;
     --chart-5: 0 100% 65%;
   }
+
+  /* 🏢 Corporate Sapphire Theme */
+  .corporate {
+    --background: 0 0% 100%;
+    --foreground: 220 9% 20%;
+    --card: 220 14% 97%;
+    --card-foreground: 220 9% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 9% 20%;
+
+    --primary: 226 71% 55%; /* Sapphire */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 90%;
+    --secondary-foreground: 220 9% 30%;
+
+    --muted: 220 16% 93%;
+    --muted-foreground: 220 5% 46%;
+
+    --accent: 170 66% 44%; /* Teal accent */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 14% 90%;
+    --input: 220 14% 90%;
+    --ring: 226 71% 55%;
+
+    --chart-1: 226 71% 55%;
+    --chart-2: 254 92% 62%;
+    --chart-3: 170 66% 44%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
 }
 
 /* Theme transitions */

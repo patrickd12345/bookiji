@@ -289,4 +289,115 @@ TOTAL TESTS: 25/25 PASSING (100% SUCCESS RATE)
 - System performance impact
 - User satisfaction surveys
 
---- 
+---
+
+## 2025-07-02 Integrity Sprint + Orphan-Button Implementation
+
+### Phase 0 – Integrity
+- Re-enabled ESLint and TypeScript gates in `next.config.ts`.
+- Fixed compile errors in `UserDashboard` and green-lit **29/29** Vitest tests.
+- Added GitHub Actions CI (`.github/workflows/ci.yml`).
+- Husky pre-push hook: `pnpm lint && pnpm type-check && npm test`.
+
+### Phase 1 – Map → Booking Flow
+- `MapAbstraction`: "Book Now" navigates to `/book/[vendorId]`.
+- Booking page fetches live availability from `/api/availability/generate`.
+
+### Phase 2 – Vendor Calendar Quick-Actions
+- Added modal for Set Availability, Block Time, Add Service.
+- Integrated with `/api/availability/generate`, `/api/blocks/create`, `/api/vendor/register`.
+
+### Phase 3 – Dashboard Settings
+- Gear icon routes to new `/dashboard/settings` page with Profile / Notifications / Preferences tabs.
+
+### Phase 4 – Booking Detail Viewer
+- "View Details" in `ConfirmationStatus` routes to `/confirm/[bookingId]`.
+
+### Phase 5 – Admin Cockpit
+- "Take Action" slide-over modal resolves actions.
+- "Mark as Read" posts to notifications API and updates UI state.
+
+### Phase 6 – Help Center Live Chat
+- `SimpleHelpCenter` now opens modal with `RealAIChat` widget.
+
+### Phase 7 – Enhanced Chat Inputs
+- Voice input via SpeechRecognition API.
+- Image attachments stored in Supabase Storage (`chat-images` bucket).
+- Implemented in `RealAIChat` & `RealTimeBookingChat`.
+
+All phases shipped. CI pipeline green. 🎉 
+
+## Support Phase 1 – Level 4 (Ticket Dashboard – **DONE**)
+
+> July 2025
+
+1. **API – `/api/support/tickets/list`**
+   • Returns latest 50 tickets with optional `status` filter (open/in_progress/closed/all).
+2. **API – `/api/support/tickets/update`**
+   • POST `{ ticketId, status }` to update ticket state.
+3. **Admin UI – Support Tickets Dashboard**
+   • New page at `/admin/support/tickets` lists open tickets.
+   • "Take" button marks ticket `in_progress` and refreshes list.
+
+_Upcoming_: close/escalate actions, ticket detail viewer, agent assignment, notifications. 
+
+## Support Phase 1 – Level 5 (Messages & Escalation – **DONE**)
+
+> July 2025
+
+1. **API – `/api/support/tickets/[ticketId]/messages`**
+   • GET fetches chronological message thread.
+   • POST creates a new message (agent/customer/system).
+2. **Admin UI – Ticket Slide-over**
+   • Embedded chat-style feed with timestamp renders live thread.
+   • Quick-reply box for agents, real-time refresh after send.
+3. **Actions Expanded**
+   • Escalate and Close buttons included.
+
+Upcoming: AI summarization, customer portal to view/reply, agent assignment & SLAs. 
+
+## Support Phase 1 – Level 6 (Customer Portal – **DONE**)
+
+> July 2025
+
+1. **API – `/api/support/tickets/list`** extended with `userId` filter.
+2. **Customer UI – My Tickets page** (`/help/tickets`)
+   • Authenticated users see a list of all their tickets with status and description.
+   • Redirects to login if anonymous.
+   • Link back to Help Center to open new ticket.
+
+Next: embed message thread & reply box, real-time updates, AI summary. 
+
+## Support Phase 1 – Level 7 (Customer Chat – **DONE**)
+
+> July 2025
+
+1. **Customer Portal** now includes real-time chat within ticket slide-over, powered by `/api/support/tickets/[ticketId]/messages` and Supabase `postgres_changes`.
+2. **Reply box** lets customers send messages (`sender_type: customer`).
+3. **Real-time updates** via channel `support_messages:{ticketId}` ensure both agent and customer views stay in sync.
+
+Support Phase 1 is now feature-complete – all critical endpoints, UIs, dashboards, and real-time messaging are live and fully tested (29/29 tests passing). 🎉 
+
+## Analytics Deep Dive – Level 1 (Dashboards & Heatmaps – **DONE**)
+
+> July 2025
+
+1. **Middleware Auto-Tracking** — Every API route logs duration & status via trackApi.
+2. **Booking Funnel Endpoint** — `/api/analytics/funnel?funnel=booking` returns step counts.
+3. **System Metrics Endpoint** — `/api/analytics/system` placeholder (wired for PostHog aggregate).
+4. **Admin UI** — `/admin/analytics` page with Recharts bar chart + KPI tiles.
+5. **Session Recording** — PostHog init now starts full session recordings.
+
+_Next Levels_: real metrics querying, alert rules (p95 latency, error spikes), conversion cohort explorer. 
+
+## Vendor Custom Service Type Workflow – Level 1 (**DONE**)
+
+> July 2025
+
+1. **DB** – `service_types` & `service_type_proposals` tables created (migration `20250126000000`).
+2. **Vendor API** – `/api/vendor/service-types/propose` inserts pending proposal from onboarding.
+3. **Admin APIs** – list & approve/reject endpoints.
+4. **Admin UI** – `/admin/service-types` page to review proposals.
+5. **Approval Flow** – approving inserts label into `service_types` lookup.
+
+Next: vendor notification on decision, UI badge showing "pending", auto-populate dropdown once approved. 

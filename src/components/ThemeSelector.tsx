@@ -5,10 +5,10 @@ import { useThemeStore } from '@/stores/themeStore'
 import type { Theme } from '@/types'
 
 const THEMES = [
+  { id: 'corporate', label: 'Default', icon: '🏢' },
   { id: 'light', label: 'Light', icon: '🌞' },
   { id: 'dark', label: 'Dark', icon: '🌙' },
   { id: 'pastel', label: 'Pastel', icon: '🎨' },
-  { id: 'nord', label: 'Nord', icon: '❄️' },
   { id: 'cyberpunk', label: 'Cyberpunk', icon: '🤖' },
   { id: 'candycrush', label: 'Candy Crush', icon: '🍬' }
 ] as const

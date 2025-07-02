@@ -1,4 +1,4 @@
-// @ts-nocheck - TODO: Fix notification type inference issues
+// TODO: Fix notification type inference issues
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
@@ -34,6 +34,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { NotificationList } from './NotificationList'
+import { useRouter } from 'next/navigation'
 
 interface UserProfile {
   id: string
@@ -140,7 +141,7 @@ interface NotificationState {
   error: string | null;
 }
 
-// @ts-nocheck - TODO: Fix notification type inference issues
+// TODO: Fix notification type inference issues
 export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'credits' | 'favorites' | 'profile'>('overview')
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
@@ -155,6 +156,7 @@ export default function UserDashboard() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('all')
+  const router = useRouter()
 
   useEffect(() => {
     loadUserData()
@@ -214,29 +216,46 @@ export default function UserDashboard() {
     loadNotifications()
   }, [])
 
-  // Set up real-time notifications using Supabase
+  // Set up real-time notifications for the current user
   useEffect(() => {
-    const channel = supabase
-      .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${supabase.auth.user()?.id}`
-        },
-        (payload) => {
-          setNotificationState(prev => ({
-            ...prev,
-            data: [payload.new as Notification, ...prev.data]
-          }))
-        }
-      )
-      .subscribe()
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const init = async () => {
+      const {
+        data: { user }
+      } = await supabase.auth.getUser()
+
+      const userId = user?.id
+
+      // If we don't have a user (e.g., not logged in) we can early-return
+      if (!userId) return
+
+      channel = supabase
+        .channel('notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${userId}`
+          },
+          (payload) => {
+            setNotificationState((prev) => ({
+              ...prev,
+              data: [payload.new as Notification, ...prev.data]
+            }))
+          }
+        )
+        .subscribe()
+    }
+
+    init()
 
     return () => {
-      supabase.removeChannel(channel)
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
     }
   }, [])
 
@@ -377,8 +396,12 @@ export default function UserDashboard() {
       setBookings(bookings.map(booking => ({
         id: booking.id,
         service_name: booking.service_name,
-        provider_name: booking.provider?.name || 'Unknown Provider',
-        provider_avatar: booking.provider?.avatar_url,
+        provider_name: Array.isArray(booking.provider)
+          ? (booking.provider[0] as any)?.name || 'Unknown Provider'
+          : (booking.provider as any)?.name || 'Unknown Provider',
+        provider_avatar: Array.isArray(booking.provider)
+          ? (booking.provider[0] as any)?.avatar_url
+          : (booking.provider as any)?.avatar_url,
         date: new Date(booking.scheduled_for).toISOString().split('T')[0],
         time: new Date(booking.scheduled_for).toTimeString().slice(0, 5),
         duration_minutes: booking.duration_minutes,
@@ -564,9 +587,10 @@ export default function UserDashboard() {
                 </div>
               </div>
               <button
-                onClick={() => alert('⚙️ Settings panel coming soon!')}
-                className="p-2 text-gray-400 hover:text-gray-600">
-                <Settings className="w-5 h-5" />
+                onClick={() => router.push('/dashboard/settings')}
+                className="p-2 rounded-full hover:bg-gray-100"
+              >
+                <Settings className="w-5 h-5 text-gray-600" />
               </button>
             </div>
           </div>

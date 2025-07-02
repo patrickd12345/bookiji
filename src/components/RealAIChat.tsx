@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, type MouseEvent } from 'react'
+import React, { useState, useRef, useEffect, type MouseEvent } from 'react'
 import { motion } from 'framer-motion'
+import { supabase } from '@/lib/supabaseClient'
 
 interface Message {
   id: string
@@ -21,6 +22,34 @@ export default function RealAIChat() {
   ])
   const [inputMessage, setInputMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Speech recognition setup
+  useEffect(() => {
+    let recognition: any = null
+    if (isRecording) {
+      const SpeechRecognition: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      if (!SpeechRecognition) {
+        alert('Speech recognition not supported in this browser.')
+        setIsRecording(false)
+        return
+      }
+      recognition = new SpeechRecognition()
+      recognition.lang = 'en-US'
+      recognition.continuous = false
+      recognition.interimResults = false
+      recognition.onresult = (e: any) => {
+        const transcript = e.results[0][0].transcript
+        setInputMessage((prev) => (prev ? prev + ' ' + transcript : transcript))
+      }
+      recognition.onend = () => setIsRecording(false)
+      recognition.start()
+    }
+    return () => {
+      if (recognition && isRecording) recognition.stop()
+    }
+  }, [isRecording])
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isTyping) return
@@ -98,21 +127,34 @@ export default function RealAIChat() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={(evt: MouseEvent<HTMLButtonElement>) => {
-              evt.preventDefault();
-              alert('🎤 Voice input coming soon!');
-            }}
+            onClick={() => setIsRecording((prev) => !prev)}
             className="p-2 hover:bg-gray-100 rounded-full">
-            <span className="text-xl">🎤</span>
+            <span className="text-xl">{isRecording ? '◼️' : '🎤'}</span>
           </button>
           <button
-            onClick={(evt: MouseEvent<HTMLButtonElement>) => {
-              evt.preventDefault();
-              alert('📷 Image attachment coming soon!');
-            }}
+            onClick={() => fileInputRef.current?.click()}
             className="p-2 hover:bg-gray-100 rounded-full">
             <span className="text-xl">📷</span>
           </button>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              if (!file) return
+              // upload
+              const filePath = `${Date.now()}_${file.name}`
+              const { error } = await supabase.storage.from('chat-images').upload(filePath, file)
+              if (!error) {
+                const { data } = supabase.storage.from('chat-images').getPublicUrl(filePath)
+                setInputMessage((prev) => (prev ? prev + ' ' + data.publicUrl : data.publicUrl))
+              } else {
+                alert('Image upload failed')
+              }
+            }}
+          />
         </div>
       </div>
 

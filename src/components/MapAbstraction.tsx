@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface MarkerData {
   id: string;
@@ -34,6 +35,7 @@ export default function MapAbstraction({
   const [mapView, setMapView] = useState<'road' | 'satellite' | 'hybrid'>('road');
   const [showTraffic, setShowTraffic] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(12);
+  const router = useRouter();
 
   useEffect(() => {
     setIsClient(true);
@@ -572,7 +574,7 @@ export default function MapAbstraction({
               <button
                 onClick={(evt: React.MouseEvent<HTMLButtonElement>) => {
                   evt.preventDefault();
-                  alert(`🚀 Booking flow for ${zone.name} coming soon!`);
+                  router.push(`/book/${zone.id}`);
                 }}
                 className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors">
                 Book Now
