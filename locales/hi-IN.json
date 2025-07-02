@@ -1,0 +1,11 @@
+{
+  "welcome": "स्वागत है",
+  "booking.title": "सेवा बुक करें",
+  "booking.commitment_fee": "प्रतिबद्धता शुल्क: {{amount}}",
+  "error.payment_failed": "भुगतान विफल। पुन: प्रयास करें।",
+  "success.booking_confirmed": "आपकी बुकिंग पुष्टि हो गई है!",
+  "button.cancel": "रद्द करें",
+  "button.confirm": "पुष्टि करें",
+  "help.customer_guide": "ग्राहक मार्गदर्शिका",
+  "help.provider_guide": "प्रदाता मार्गदर्शिका"
+}

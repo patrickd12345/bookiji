@@ -1,0 +1,11 @@
+{
+  "welcome": "ようこそ",
+  "booking.title": "サービスを予約",
+  "booking.commitment_fee": "予約手数料: {{amount}}",
+  "error.payment_failed": "支払いに失敗しました。もう一度お試しください。",
+  "success.booking_confirmed": "予約が確定しました！",
+  "button.cancel": "キャンセル",
+  "button.confirm": "確認",
+  "help.customer_guide": "カスタマーガイド",
+  "help.provider_guide": "プロバイダーガイド"
+}

@@ -1,0 +1,11 @@
+{
+  "welcome": "Willkommen",
+  "booking.title": "Service buchen",
+  "booking.commitment_fee": "Reservierungsgebühr: {{amount}}",
+  "error.payment_failed": "Zahlung fehlgeschlagen. Bitte erneut versuchen.",
+  "success.booking_confirmed": "Ihre Buchung wurde bestätigt!",
+  "button.cancel": "Abbrechen",
+  "button.confirm": "Bestätigen",
+  "help.customer_guide": "Kundenleitfaden",
+  "help.provider_guide": "Anbieterleitfaden"
+}
