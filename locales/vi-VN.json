@@ -1,0 +1,11 @@
+{
+  "welcome": "Chào mừng",
+  "booking.title": "Đặt dịch vụ",
+  "booking.commitment_fee": "Phí cam kết: {{amount}}",
+  "error.payment_failed": "Thanh toán thất bại. Vui lòng thử lại.",
+  "success.booking_confirmed": "Đặt chỗ của bạn đã được xác nhận!",
+  "button.cancel": "Hủy",
+  "button.confirm": "Xác nhận",
+  "help.customer_guide": "Hướng dẫn khách hàng",
+  "help.provider_guide": "Hướng dẫn nhà cung cấp"
+}
