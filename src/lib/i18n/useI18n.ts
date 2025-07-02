@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { I18nHook } from './types'
+import enUS from '@/locales/en-US.json'
 import { 
   SUPPORTED_LOCALES, 
   DEFAULT_LOCALE, 
@@ -70,21 +71,6 @@ function createTimeFormatter(locale: string, timeFormat: '12h' | '24h') {
   })
 }
 
-// 🗣️ TRANSLATION FUNCTION (basic implementation)
-// TODO: Load actual translations from JSON files
-function translate(key: string, params?: Record<string, string>): string {
-  // For now, return the key as English fallback
-  // In production, you'd load translation files
-  let text = key
-  
-  if (params) {
-    Object.entries(params).forEach(([param, value]) => {
-      text = text.replace(`{${param}}`, value)
-    })
-  }
-  
-  return text
-}
 
 // 🪝 MAIN I18N HOOK
 export function useI18n(): I18nHook {
@@ -191,21 +177,10 @@ export function detectServerLocale(headers: Headers): string {
 export { SUPPORTED_LOCALES, getCurrencyInfo, getCountryInfo, getLocaleInfo } from './config'
 
 // Basic translation loader (expandable with JSON files)
-function getTranslations(locale: string): Record<string, string> {
-  const baseTranslations = {
-    'welcome': 'Welcome',
-    'booking.title': 'Book a Service',
-    'booking.commitment_fee': 'Commitment Fee: {{amount}}',
-    'error.payment_failed': 'Payment failed. Please try again.',
-    'success.booking_confirmed': 'Your booking has been confirmed!',
-    'button.cancel': 'Cancel',
-    'button.confirm': 'Confirm',
-    'help.customer_guide': 'Customer Guide',
-    'help.provider_guide': 'Provider Guide'
-  }
+const TRANSLATIONS: Record<string, Record<string, string>> = {
+  'en-US': enUS
+}
 
-  // In production, this would load from JSON files:
-  // return import(`../../../locales/${locale}.json`)
-  
-  return baseTranslations
-} 
+function getTranslations(locale: string): Record<string, string> {
+  return TRANSLATIONS[locale] || TRANSLATIONS['en-US']
+}

@@ -64,14 +64,26 @@ export async function POST(request: Request) {
 // Email notification handler
 async function sendEmail(recipient: string, template: string, data: Record<string, any>) {
   try {
-    // TODO: Integrate with actual email service (SendGrid, AWS SES, etc.)
-    console.log('📧 Sending email:', { recipient, template, data })
-    
-    const emailContent = generateEmailContent(template, data)
-    
-    // For now, just log the email content
-    console.log('Email content:', emailContent)
-    
+    const { subject, html } = generateEmailContent(template, data)
+
+    if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM) {
+      await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`
+        },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email: recipient }] }],
+          from: { email: process.env.SENDGRID_FROM },
+          subject,
+          content: [{ type: 'text/html', value: html }]
+        })
+      })
+    } else {
+      console.log('📧 [mock] sending email:', { recipient, subject })
+    }
+
     return {
       success: true,
       id: `email_${Date.now()}`,
@@ -89,14 +101,25 @@ async function sendEmail(recipient: string, template: string, data: Record<strin
 // SMS notification handler
 async function sendSMS(recipient: string, template: string, data: Record<string, any>) {
   try {
-    // TODO: Integrate with SMS service (Twilio, AWS SNS, etc.)
-    console.log('📱 Sending SMS:', { recipient, template, data })
-    
-    const smsContent = generateSMSContent(template, data)
-    
-    // For now, just log the SMS content
-    console.log('SMS content:', smsContent)
-    
+    const message = generateSMSContent(template, data)
+
+    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM) {
+      await fetch(`https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`, {
+        method: 'POST',
+        headers: {
+          Authorization: 'Basic ' + Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64'),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          From: process.env.TWILIO_FROM,
+          To: recipient,
+          Body: message
+        })
+      })
+    } else {
+      console.log('📱 [mock] sending SMS:', { recipient, message })
+    }
+
     return {
       success: true,
       id: `sms_${Date.now()}`,
@@ -114,14 +137,28 @@ async function sendSMS(recipient: string, template: string, data: Record<string,
 // Push notification handler
 async function sendPushNotification(recipient: string, template: string, data: Record<string, any>) {
   try {
-    // TODO: Integrate with push notification service (Firebase, etc.)
-    console.log('🔔 Sending push notification:', { recipient, template, data })
-    
     const pushContent = generatePushContent(template, data)
-    
-    // For now, just log the push content
-    console.log('Push content:', pushContent)
-    
+
+    if (process.env.FCM_SERVER_KEY) {
+      await fetch('https://fcm.googleapis.com/fcm/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `key=${process.env.FCM_SERVER_KEY}`
+        },
+        body: JSON.stringify({
+          to: recipient,
+          notification: {
+            title: pushContent.title,
+            body: pushContent.body,
+            icon: pushContent.icon
+          }
+        })
+      })
+    } else {
+      console.log('🔔 [mock] sending push notification:', { recipient, pushContent })
+    }
+
     return {
       success: true,
       id: `push_${Date.now()}`,

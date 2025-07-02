@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { bookingService } from '../../../../lib/database'
+import { refundPayment } from '../../../../lib/stripe'
 
 export async function POST(request: Request) {
   try {
@@ -69,10 +70,7 @@ export async function POST(request: Request) {
     let refundResult = null
     if (booking.commitment_fee_paid && booking.payment_intent_id) {
       try {
-        // TODO: Implement Stripe refund
-        console.log('Processing refund for payment:', booking.payment_intent_id)
-        
-        // For now, just mark as refunded
+        const refund = await refundPayment(booking.payment_intent_id)
         await bookingService.updateBooking(bookingId, {
           payment_status: 'refunded',
           refunded_at: new Date().toISOString()
@@ -80,8 +78,8 @@ export async function POST(request: Request) {
 
         refundResult = {
           success: true,
-          amount: 100, // $1.00 in cents
-          refund_id: `ref_${Date.now()}`
+          amount: refund.amount || 0,
+          refund_id: refund.id
         }
       } catch (refundError) {
         console.error('Refund processing error:', refundError)

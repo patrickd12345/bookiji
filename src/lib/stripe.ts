@@ -31,4 +31,11 @@ export async function createBookingPaymentIntent(amount: number, bookingId: stri
       enabled: true,
     },
   })
-} 
+}
+
+export async function refundPayment(paymentIntentId: string, amount?: number) {
+  return stripe.refunds.create({
+    payment_intent: paymentIntentId,
+    amount
+  })
+}

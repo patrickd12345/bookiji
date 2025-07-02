@@ -95,7 +95,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       }
     }
 
-    // TODO: if approved, insert into service_types lookup table & notify vendor
 
     return NextResponse.json({ ok: true })
   } catch (err: any) {
