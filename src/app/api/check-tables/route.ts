@@ -7,25 +7,30 @@ export async function GET() {
     
     // Try to query each table individually to see what exists
     const tableChecks = [
-      { name: 'profiles', query: 'SELECT 1 FROM profiles LIMIT 1' },
-      { name: 'users', query: 'SELECT 1 FROM users LIMIT 1' },
-      { name: 'services', query: 'SELECT 1 FROM services LIMIT 1' },
-      { name: 'availability_slots', query: 'SELECT 1 FROM availability_slots LIMIT 1' },
-      { name: 'bookings', query: 'SELECT 1 FROM bookings LIMIT 1' },
-      { name: 'reviews', query: 'SELECT 1 FROM reviews LIMIT 1' },
-      { name: 'provider_locations', query: 'SELECT 1 FROM provider_locations LIMIT 1' }
+      'profiles',
+      'users',
+      'services',
+      'availability_slots',
+      'bookings',
+      'reviews',
+      'provider_locations'
     ]
     
     const results: Record<string, boolean> = {}
     
-    for (const table of tableChecks) {
+    for (const tableName of tableChecks) {
       try {
-        const { error } = await supabase.rpc('exec_sql', { sql: table.query })
-        results[table.name] = !error
-        console.log(`${table.name}: ${!error ? '✅' : '❌'}`)
-      } catch {
-        results[table.name] = false
-        console.log(`${table.name}: ❌`)
+        // Use from() to check if table exists and is accessible
+        const { error } = await supabase
+          .from(tableName)
+          .select('*')
+          .limit(1)
+        
+        results[tableName] = !error
+        console.log(`${tableName}: ${!error ? '✅' : '❌'} ${error?.message || ''}`)
+      } catch (err) {
+        results[tableName] = false
+        console.log(`${tableName}: ❌ ${err}`)
       }
     }
     

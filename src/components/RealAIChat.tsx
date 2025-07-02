@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState, type MouseEvent } from 'react'
 import { motion } from 'framer-motion'
 
 interface Message {
@@ -97,10 +97,20 @@ export default function RealAIChat() {
           <p className="text-sm text-gray-500">I can help you find and book any service</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded-full">
+          <button
+            onClick={(evt: MouseEvent<HTMLButtonElement>) => {
+              evt.preventDefault();
+              alert('🎤 Voice input coming soon!');
+            }}
+            className="p-2 hover:bg-gray-100 rounded-full">
             <span className="text-xl">🎤</span>
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded-full">
+          <button
+            onClick={(evt: MouseEvent<HTMLButtonElement>) => {
+              evt.preventDefault();
+              alert('📷 Image attachment coming soon!');
+            }}
+            className="p-2 hover:bg-gray-100 rounded-full">
             <span className="text-xl">📷</span>
           </button>
         </div>

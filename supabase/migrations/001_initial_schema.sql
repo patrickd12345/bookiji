@@ -2,20 +2,108 @@
 -- Migration: 001_initial_schema.sql
 -- Description: Core tables for users, bookings, and services
 
--- Enable UUID extension
+-- Enable UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Users table (extends Supabase Auth)
+-- Drop existing policies to avoid conflicts
+DO $$ 
+BEGIN
+    -- Drop policies if they exist
+    DROP POLICY IF EXISTS "Users can read all profiles" ON public.users;
+    DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
+    DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
+    DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+    DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+    
+    -- Add more policy drops here as needed
+EXCEPTION
+    WHEN undefined_table THEN
+        -- Handle case where tables don't exist yet
+        NULL;
+END $$;
+
+-- Create tables if they don't exist
 CREATE TABLE IF NOT EXISTS public.users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email TEXT UNIQUE NOT NULL,
-  role TEXT CHECK (role IN ('customer', 'vendor')) DEFAULT 'customer',
-  full_name TEXT,
-  phone TEXT,
-  avatar_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT UNIQUE NOT NULL,
+    role TEXT CHECK (role IN ('customer', 'vendor')) DEFAULT 'customer',
+    full_name TEXT,
+    phone TEXT,
+    avatar_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS public.services (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    vendor_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    description TEXT,
+    price DECIMAL(10,2) NOT NULL,
+    duration INTEGER NOT NULL, -- in minutes
+    category TEXT NOT NULL DEFAULT 'general',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Ensure `is_active` column exists (older installations lacked it)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name   = 'services'
+          AND column_name  = 'is_active'
+    ) THEN
+        ALTER TABLE public.services ADD COLUMN is_active BOOLEAN DEFAULT true;
+    END IF;
+END $$;
+
+-- Create indices if they don't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE schemaname = 'public' 
+        AND tablename = 'services' 
+        AND indexname = 'idx_services_vendor_id'
+    ) THEN
+        CREATE INDEX idx_services_vendor_id ON public.services(vendor_id);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE schemaname = 'public' 
+        AND tablename = 'services' 
+        AND indexname = 'idx_services_category'
+    ) THEN
+        CREATE INDEX idx_services_category ON public.services(category);
+    END IF;
+END $$;
+
+-- Create RLS policies
+DO $$
+BEGIN
+    -- Enable RLS
+    ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+    
+    -- Create policies (dropping and recreating ensures they are up to date)
+    DROP POLICY IF EXISTS "Users can read all profiles" ON public.users;
+    CREATE POLICY "Users can read all profiles"
+        ON public.users FOR SELECT
+        USING (true);
+
+    DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
+    CREATE POLICY "Users can update own profile"
+        ON public.users FOR UPDATE
+        USING (auth.uid() = id);
+EXCEPTION
+    WHEN undefined_table THEN
+        NULL; -- Handle case where tables don't exist yet
+    WHEN undefined_column THEN
+        NULL; -- Handle case where auth.uid() is not available
+END $$;
 
 -- Services table (what vendors offer)
 CREATE TABLE IF NOT EXISTS public.services (
@@ -107,6 +195,21 @@ ALTER TABLE public.provider_locations ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
 
+-- Drop existing policies first
+DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
+DROP POLICY IF EXISTS "Vendors can manage own services" ON public.services;
+DROP POLICY IF EXISTS "Customers can view active services" ON public.services;
+DROP POLICY IF EXISTS "Vendors can manage own availability" ON public.availability_slots;
+DROP POLICY IF EXISTS "Customers can view available slots" ON public.availability_slots;
+DROP POLICY IF EXISTS "Users can view own bookings" ON public.bookings;
+DROP POLICY IF EXISTS "Customers can create bookings" ON public.bookings;
+DROP POLICY IF EXISTS "Users can update own bookings" ON public.bookings;
+DROP POLICY IF EXISTS "Users can view relevant reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Customers can create reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Vendors can manage own locations" ON public.provider_locations;
+DROP POLICY IF EXISTS "Customers can view active locations" ON public.provider_locations;
+
 -- Users: Users can only see their own profile
 CREATE POLICY "Users can view own profile" ON public.users
   FOR SELECT USING (auth.uid() = id);
@@ -162,6 +265,11 @@ END;
 $$ language 'plpgsql';
 
 -- Add updated_at triggers
+DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
+DROP TRIGGER IF EXISTS update_services_updated_at ON public.services;
+DROP TRIGGER IF EXISTS update_bookings_updated_at ON public.bookings;
+DROP TRIGGER IF EXISTS update_provider_locations_updated_at ON public.provider_locations;
+
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -172,4 +280,4 @@ CREATE TRIGGER update_bookings_updated_at BEFORE UPDATE ON public.bookings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_provider_locations_updated_at BEFORE UPDATE ON public.provider_locations
- 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column(); 

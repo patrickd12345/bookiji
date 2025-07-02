@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, type MouseEvent, type KeyboardEvent } from 'react'
 import { motion } from 'framer-motion'
 import { BookingPaymentModal } from './BookingPaymentModal'
 
@@ -20,6 +20,12 @@ interface BookingData {
   notes?: string
 }
 
+interface BookingResult {
+  success: boolean
+  bookingId?: string
+  error?: string
+}
+
 export default function RealTimeBookingChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -31,7 +37,7 @@ export default function RealTimeBookingChat() {
   ])
   const [inputMessage, setInputMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  const [currentBooking, setCurrentBooking] = useState<any>(null)
+  const [currentBooking, setCurrentBooking] = useState<{ id: string; service: string; provider: string; date: string; time: string; customerId: string } | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [customerId, setCustomerId] = useState('550e8400-e29b-41d4-a716-446655440000') // Proper UUID format
 
@@ -60,7 +66,7 @@ export default function RealTimeBookingChat() {
         if (bookingResult.success) {
           // Show payment modal
           setCurrentBooking({
-            id: bookingResult.bookingId,
+            id: bookingResult.bookingId || '',
             service: bookingData.service,
             provider: 'Available Provider',
             date: bookingData.date || 'Today',
@@ -186,7 +192,7 @@ export default function RealTimeBookingChat() {
     }
   }
 
-  const createBooking = async (bookingData: BookingData) => {
+  const createBooking = async (bookingData: BookingData): Promise<BookingResult> => {
     try {
       const response = await fetch('/api/bookings/create', {
         method: 'POST',
@@ -207,7 +213,7 @@ export default function RealTimeBookingChat() {
         throw new Error('Failed to create booking')
       }
 
-      const data = await response.json()
+      const data: BookingResult = await response.json()
       return data
     } catch (error) {
       console.error('Error creating booking:', error)
@@ -219,7 +225,7 @@ export default function RealTimeBookingChat() {
     setInputMessage(prompt)
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSendMessage()
@@ -258,17 +264,27 @@ export default function RealTimeBookingChat() {
             <p className="text-sm text-gray-500">AI-powered booking with instant payment</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-gray-100 rounded-full">
+            <button
+              onClick={(evt: MouseEvent<HTMLButtonElement>) => {
+                evt.preventDefault();
+                alert('🎤 Voice input coming soon!');
+              }}
+              className="p-2 hover:bg-gray-100 rounded-full">
               <span className="text-xl">🎤</span>
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-full">
+            <button
+              onClick={(evt: MouseEvent<HTMLButtonElement>) => {
+                evt.preventDefault();
+                alert('📷 Image attachment coming soon!');
+              }}
+              className="p-2 hover:bg-gray-100 rounded-full">
               <span className="text-xl">📷</span>
             </button>
           </div>
         </div>
 
         <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
-          {messages.map((message) => (
+          {messages.map((message: Message) => (
             <motion.div
               key={message.id}
               initial={{ opacity: 0, y: 10 }}
@@ -319,7 +335,7 @@ export default function RealTimeBookingChat() {
           <input
             type="text"
             value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Try: Book a haircut for tomorrow at 2 PM"
             className="flex-1 px-4 py-3 bg-gray-100 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
@@ -366,7 +382,7 @@ export default function RealTimeBookingChat() {
       <BookingPaymentModal
         isOpen={showPaymentModal}
         onCloseAction={() => setShowPaymentModal(false)}
-        bookingId={currentBooking?.id}
+        bookingId={currentBooking?.id ?? ''}
         onPaymentSuccessAction={handlePaymentSuccess}
         onPaymentErrorAction={handlePaymentError}
         serviceDetails={{

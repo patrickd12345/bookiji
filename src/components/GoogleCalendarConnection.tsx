@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, CheckCircle, XCircle, AlertTriangle, ExternalLink } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { GoogleCalendarAdapter } from '@/lib/calendar-adapters/google'
-import { CalendarProvider, CalendarSystemConfig } from '@/lib/calendar-adapters/types'
 
 interface GoogleCalendarConnectionProps {
   profileId: string
@@ -17,19 +15,6 @@ interface ConnectionInfo {
   expiresAt: string
   isExpired: boolean
   googleEmail: string
-}
-
-const calendarConfig: CalendarSystemConfig = {
-  id: 'google-calendar',
-  name: 'Google Calendar',
-  type: 'google',
-  authType: 'oauth2'
-}
-
-const oauthConfig = {
-  clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  redirectUri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`
 }
 
 export default function GoogleCalendarConnection({ 
@@ -44,7 +29,6 @@ export default function GoogleCalendarConnection({
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [email, setEmail] = useState('')
-  const [connectionId, setConnectionId] = useState<string | null>(null)
 
   useEffect(() => {
     checkConnectionStatus()
@@ -77,9 +61,7 @@ export default function GoogleCalendarConnection({
     setIsConnecting(true)
     setError(null)
     try {
-      const adapter = new GoogleCalendarAdapter(calendarConfig, oauthConfig)
-      
-      // Redirect to Google OAuth
+      // Initiate Google OAuth flow via server route
       const response = await fetch('/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -87,7 +69,8 @@ export default function GoogleCalendarConnection({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to initiate Google Calendar connection')
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to initiate Google Calendar connection')
       }
 
       const { url } = await response.json()
@@ -101,15 +84,21 @@ export default function GoogleCalendarConnection({
   }
 
   const handleDisconnect = async () => {
-    if (!connectionId) return
-    
     setIsDisconnecting(true)
     setError(null)
     try {
-      const adapter = new GoogleCalendarAdapter(calendarConfig, oauthConfig)
-      await adapter.disconnect(connectionId)
-      setConnectionId(null)
-      setEmail('')
+      const response = await fetch('/api/auth/google/disconnect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileId })
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to disconnect Google Calendar')
+      }
+
+      await checkConnectionStatus()
     } catch (err) {
       console.error('Error disconnecting from Google Calendar:', err)
       setError(err instanceof Error ? err.message : 'Failed to disconnect from Google Calendar')
@@ -185,7 +174,7 @@ export default function GoogleCalendarConnection({
       )}
 
       <div className="flex space-x-2">
-        {!connectionId ? (
+        {!isConnected ? (
           <Button
             onClick={handleConnect}
             disabled={isConnecting}

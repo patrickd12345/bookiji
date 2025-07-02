@@ -1,13 +1,10 @@
 export * from './global.d';
 
-export type Theme = 'light' | 'dark' | 'pastel' | 'nord' | 'cyberpunk'
+export type Theme = 'light' | 'dark' | 'pastel' | 'cyberpunk' | 'candycrush';
 
 export interface ThemeConfig {
-  name: Theme
-  label: string
-  preview: {
-    background: string
-    text: string
-    accent: string
-  }
+  name: Theme;
+  label: string;
+  icon: string;
+  class: string;
 }

@@ -45,9 +45,10 @@ export const NotificationList = () => {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center p-4">
-        <h2 className="text-lg font-semibold">
+    <div className="flex flex-col max-h-96 sm:max-h-[32rem]">
+      {/* Header */}
+      <div className="flex justify-between items-center p-4 border-b">
+        <h2 className="text-base font-semibold">
           Notifications {unreadCount > 0 && `(${unreadCount})`}
         </h2>
         {unreadCount > 0 && (
@@ -60,44 +61,55 @@ export const NotificationList = () => {
           </Button>
         )}
       </div>
-      
-      <div className="space-y-2">
+
+      {/* List */}
+      <div className="flex-1 overflow-y-auto divide-y">
         {notifications.map((notification) => (
           <Card
             key={notification.id}
-            className={`p-4 ${!notification.read ? 'bg-blue-50' : ''}`}
+            className={`flex items-start gap-3 p-4 transition-colors ${
+              !notification.read ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-100'
+            }`}
           >
-            <div className="flex justify-between items-start">
-              <div className="flex gap-3">
-                <span className="text-2xl">
-                  {getNotificationIcon(notification.type)}
-                </span>
-                <div>
-                  <p className="font-medium">{notification.title}</p>
-                  <p className="text-sm text-gray-600">{notification.message}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                {!notification.read && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => markAsRead(notification.id)}
-                  >
-                    Mark as read
-                  </Button>
-                )}
+            <span
+              className={`text-2xl ${notification.read ? 'opacity-50 grayscale' : ''}`}
+            >
+              {getNotificationIcon(notification.type)}
+            </span>
+
+            <div className="flex-1">
+              <p className="font-medium text-sm sm:text-base">
+                {notification.title}
+              </p>
+              <p className="text-xs sm:text-sm text-gray-600 leading-snug">
+                {notification.message}
+              </p>
+              <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
+                {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+              </p>
+            </div>
+
+            <div className="flex-shrink-0 ml-2 space-x-1">
+              {!notification.read && (
                 <Button
                   variant="ghost"
-                  size="sm"
-                  onClick={() => deleteNotification(notification.id)}
+                  size="icon"
+                  className="h-6 w-6"
+                  aria-label="Mark as read"
+                  onClick={() => markAsRead(notification.id)}
                 >
-                  Delete
+                  ✓
                 </Button>
-              </div>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                aria-label="Delete notification"
+                onClick={() => deleteNotification(notification.id)}
+              >
+                🗑️
+              </Button>
             </div>
           </Card>
         ))}

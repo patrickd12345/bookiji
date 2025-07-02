@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { useState } from 'react';
+import React, { useState, type MouseEvent } from 'react';
 import { motion } from 'framer-motion';
 import { useUIStore } from '@/stores/uiStore';
 import type { AdminStats, AdminAction, AdminNotification } from '@/types/global.d';
@@ -146,7 +145,7 @@ export default function AdminCockpit() {
 
           {activeTab === 'actions' && (
             <div className="space-y-4">
-              {actions.map((action) => (
+              {actions.map((action: AdminAction) => (
                 <div
                   key={action.id}
                   className="bg-white p-4 rounded-lg shadow border border-gray-200"
@@ -180,7 +179,12 @@ export default function AdminCockpit() {
                         </span>
                       </div>
                     </div>
-                    <button className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    <button
+                      onClick={(evt: MouseEvent<HTMLButtonElement>) => {
+                        evt.preventDefault();
+                        alert('🛠️ Admin action workflow coming soon!');
+                      }}
+                      className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700 font-medium">
                       Take Action
                     </button>
                   </div>
@@ -191,7 +195,7 @@ export default function AdminCockpit() {
 
           {activeTab === 'notifications' && (
             <div className="space-y-4">
-              {notifications.map((notification) => (
+              {notifications.map((notification: AdminNotification) => (
                 <div
                   key={notification.id}
                   className={`bg-white p-4 rounded-lg shadow border ${
@@ -221,7 +225,12 @@ export default function AdminCockpit() {
                         )}
                       </div>
                     </div>
-                    <button className="px-3 py-1 text-sm text-gray-600 hover:text-gray-700 font-medium">
+                    <button
+                      onClick={(evt: MouseEvent<HTMLButtonElement>) => {
+                        evt.preventDefault();
+                        alert('✅ Marked as read (placeholder)');
+                      }}
+                      className="px-3 py-1 text-sm text-gray-600 hover:text-gray-700 font-medium">
                       Mark as Read
                     </button>
                   </div>

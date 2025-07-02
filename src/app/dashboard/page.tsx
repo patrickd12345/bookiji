@@ -1,5 +1,8 @@
 import UserDashboard from '../../components/UserDashboard'
-import { GuidedTourManager } from '../../components'
+import dynamic from 'next/dynamic'
+
+// GuidedTourManager is a client component; dynamic import keeps the server bundle lean
+const GuidedTourManager = dynamic(() => import('../../components/GuidedTourManager'))
 
 export default function CustomerDashboardPage() {
   return (

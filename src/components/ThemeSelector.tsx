@@ -9,7 +9,8 @@ const THEMES = [
   { id: 'dark', label: 'Dark', icon: '🌙' },
   { id: 'pastel', label: 'Pastel', icon: '🎨' },
   { id: 'nord', label: 'Nord', icon: '❄️' },
-  { id: 'cyberpunk', label: 'Cyberpunk', icon: '🤖' }
+  { id: 'cyberpunk', label: 'Cyberpunk', icon: '🤖' },
+  { id: 'candycrush', label: 'Candy Crush', icon: '🍬' }
 ] as const
 
 export default function ThemeSelector() {
@@ -29,7 +30,6 @@ export default function ThemeSelector() {
   }, [theme])
 
   const handleThemeChange = async (newTheme: Theme) => {
-    console.log('Theme button clicked:', newTheme)
     try {
       await setTheme(newTheme)
     } catch (error) {

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { theme } from '../config/theme';
 
 interface BigActionButtonProps {
   onStartTour?: () => void;
@@ -8,37 +9,43 @@ interface BigActionButtonProps {
 
 export default function BigActionButton({ onStartTour }: BigActionButtonProps) {
   const handleClick = () => {
-    console.log('🚀 ACTION BUTTON CLICKED - Starting Guided Tour!');
-    console.log('🔍 Button props:', { onStartTour: !!onStartTour });
-    console.log('🔍 onStartTour type:', typeof onStartTour);
-    
-    // Start the actual tour
     if (onStartTour) {
-      console.log('🎯 Calling onStartTour function');
       try {
         onStartTour();
-        console.log('✅ onStartTour called successfully');
       } catch (error) {
         console.error('❌ Error calling onStartTour:', error);
       }
-    } else {
-      console.log('❌ No onStartTour function provided');
     }
   };
 
   return (
     <div className="text-center mb-6">
+      <style jsx>{`
+        @keyframes vibrate {
+          0%, 100% { transform: translate(0); }
+          25% { transform: translate(-2px, 2px); }
+          50% { transform: translate(2px, -2px); }
+          75% { transform: translate(-2px, -2px); }
+        }
+        .vibrate-periodic {
+          animation: vibrate 0.3s ease-in-out;
+          animation-iteration-count: infinite;
+          animation-play-state: running;
+          animation-delay: 0s;
+          animation-duration: 3s;
+        }
+      `}</style>
       <button 
         onClick={handleClick}
-        className="relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-red-500 via-pink-500 to-purple-600 text-white text-xl font-bold rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-4 border-yellow-400 animate-bounce"
+        className="relative inline-flex items-center px-8 py-4 text-white text-xl font-bold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 vibrate-periodic hover:opacity-90 bg-gradient-to-r from-primary to-accent"
         style={{
-          boxShadow: '0 0 30px rgba(255, 0, 150, 0.6)'
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
         }}
         title="Click to see Bookiji's amazing features!"
       >
-        <span className="mr-3 text-2xl animate-pulse">🚀</span>
-        <span className="animate-pulse font-extrabold">See it in ACTION!!!</span>
-        <span className="ml-3 text-2xl animate-pulse">⚡</span>
+        <span className="mr-3 text-2xl">🚀</span>
+        <span className="font-extrabold">See it in ACTION!</span>
+        <span className="ml-3 text-2xl">⚡</span>
       </button>
     </div>
   );

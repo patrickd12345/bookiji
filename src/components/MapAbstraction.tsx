@@ -569,7 +569,12 @@ export default function MapAbstraction({
                   </div>
                 </div>
               </div>
-              <button className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors">
+              <button
+                onClick={(evt: React.MouseEvent<HTMLButtonElement>) => {
+                  evt.preventDefault();
+                  alert(`🚀 Booking flow for ${zone.name} coming soon!`);
+                }}
+                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 transition-colors">
                 Book Now
               </button>
             </div>

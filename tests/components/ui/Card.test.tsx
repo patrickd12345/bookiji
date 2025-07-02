@@ -7,7 +7,13 @@ describe("Card Components", () => {
     it("renders with default classes", () => {
       render(<Card>Card Content</Card>);
       const card = screen.getByText("Card Content");
-      expect(card).toHaveClass("bg-white", "border", "border-gray-200", "rounded-lg", "shadow-sm");
+      expect(card).toHaveClass(
+        "bg-white",
+        "border",
+        "border-gray-100",
+        "rounded-2xl",
+        "shadow-sm"
+      );
     });
 
     it("merges custom className", () => {

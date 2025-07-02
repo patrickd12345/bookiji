@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type MouseEvent } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 
 interface BookingStatus {
@@ -271,7 +271,12 @@ export default function ConfirmationStatus({
               </button>
               
               {status.status === 'confirmed' && (
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                <button
+                  onClick={(evt: MouseEvent<HTMLButtonElement>) => {
+                    evt.preventDefault();
+                    alert('🔍 Detailed booking view coming soon!');
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
                   View Details
                 </button>
               )}

@@ -246,15 +246,21 @@ export default function VendorCalendar() {
           <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
           
           <div className="bg-white border rounded-lg p-4 space-y-4">
-            <button className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <button
+              onClick={() => alert('🗓️ Set Availability feature coming soon!')}
+              className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
               Set Availability
             </button>
             
-            <button className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => alert('⏰ Block Time feature coming soon!')}
+              className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
               Block Time
             </button>
             
-            <button className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => alert('➕ Add Service feature coming soon!')}
+              className="w-full py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
               Add Service
             </button>
           </div>

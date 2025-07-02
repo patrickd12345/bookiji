@@ -563,7 +563,9 @@ export default function UserDashboard() {
                   )}
                 </div>
               </div>
-              <button className="p-2 text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => alert('⚙️ Settings panel coming soon!')}
+                className="p-2 text-gray-400 hover:text-gray-600">
                 <Settings className="w-5 h-5" />
               </button>
             </div>

@@ -242,6 +242,34 @@
     --input: 240 10% 20%;
     --ring: 210 90% 60%;
   }
+
+  /* 🍬 Candy Crush Theme */
+  .candycrush {
+    --background: 330 100% 98%;
+    --foreground: 280 80% 25%;
+    --card: 330 100% 96%;
+    --card-foreground: 280 80% 25%;
+    --popover: 330 100% 96%;
+    --popover-foreground: 280 80% 25%;
+    --primary: 280 90% 50%;
+    --primary-foreground: 330 100% 98%;
+    --secondary: 320 100% 85%;
+    --secondary-foreground: 280 80% 25%;
+    --muted: 320 100% 85%;
+    --muted-foreground: 280 40% 45%;
+    --accent: 200 100% 65%;
+    --accent-foreground: 280 80% 25%;
+    --destructive: 0 100% 65%;
+    --destructive-foreground: 330 100% 98%;
+    --border: 320 90% 80%;
+    --input: 320 90% 80%;
+    --ring: 280 90% 50%;
+    --chart-1: 320 90% 60%;
+    --chart-2: 280 90% 50%;
+    --chart-3: 200 100% 65%;
+    --chart-4: 30 100% 65%;
+    --chart-5: 0 100% 65%;
+  }
 }
 
 /* Theme transitions */

@@ -18,7 +18,7 @@
         "name": "next"
       }
     ],
-    "types": ["vitest/globals", "jest", "node"],
+    "types": ["vitest/globals", "jest", "node", "react", "react-dom"],
     "paths": {
       "@/*": ["./src/*"]
     }

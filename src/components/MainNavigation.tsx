@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import NotificationBell from '@/components/NotificationBell';
 
 export default function MainNavigation() {
   const pathname = usePathname();
@@ -70,6 +71,8 @@ export default function MainNavigation() {
                     Vendor Portal
                   </Link>
                 )}
+
+                <NotificationBell />
 
                 <Link 
                   href="/settings"

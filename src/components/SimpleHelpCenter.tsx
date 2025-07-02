@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type MouseEvent } from 'react'
 
 interface SimpleHelpCenterProps {
   type: 'customer' | 'vendor'
@@ -236,7 +236,12 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                     <a href="mailto:support@bookiji.com" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                       📧 Email Support
                     </a>
-                    <button className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                    <button
+                      onClick={(evt: MouseEvent<HTMLButtonElement>) => {
+                        evt.preventDefault();
+                        alert('💬 Live chat coming soon!');
+                      }}
+                      className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
                       💬 Live Chat
                     </button>
                   </div>

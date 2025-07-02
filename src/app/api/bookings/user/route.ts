@@ -15,7 +15,10 @@ export async function GET(request: Request) {
     console.log('📋 Fetching bookings for user:', userId)
 
     // Get user bookings using the booking engine
-    const bookings = await BookingEngine.getUserBookings(userId)
+    const rawBookings = await BookingEngine.getUserBookings(userId)
+
+    // Ensure we always work with an array to avoid runtime errors
+    const bookings = Array.isArray(rawBookings) ? rawBookings : []
 
     console.log('✅ Found bookings:', bookings.length)
 
