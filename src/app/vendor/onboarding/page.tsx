@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { theme, combineClasses } from '@/config/theme';
 import type { ServiceTypeProposal } from '@/types/serviceTypes';
 
 export default function VendorOnboardingPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     businessName: '',
     serviceType: '',
@@ -113,8 +115,8 @@ export default function VendorOnboardingPage() {
           alert('Registration successful! Please check your email to verify your account before you can start accepting bookings.');
         }
 
-        // TODO: Redirect to success page or dashboard
-        // router.push('/vendor/dashboard');
+        // Redirect to vendor dashboard after successful registration
+        router.push('/vendor/dashboard');
         
       } else {
         throw new Error(data.error || 'Registration failed');
