@@ -25,7 +25,7 @@ export function useAuth() {
         .from('user_role_summary')
         .select('*')
         .eq('user_id', userId)
-        .single()
+        .maybeSingle()
 
       if (error) {
         console.error('Error fetching user profile:', error)
