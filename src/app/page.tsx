@@ -170,7 +170,7 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">💸</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">{formatCurrency(100)} Commitment</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground">{formatCurrency(100)} only Commitment</h3>
               <p className="text-muted-foreground">Revolutionary micro-deposit system ensures serious bookings</p>
             </div>
             
