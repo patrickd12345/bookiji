@@ -12,7 +12,10 @@ describe('GET /api/analytics/system', () => {
 
     expect(res.status).toBe(200)
     expect(data.ok).toBe(true)
-    expect(Array.isArray(data.data)).toBe(true)
-    expect(data.data.length).toBeGreaterThan(0)
+    expect(typeof data.data).toBe('object')
+    expect(data.data).toHaveProperty('requestsPerMinute')
+    expect(data.data).toHaveProperty('p95SessionDuration')
+    expect(data.data).toHaveProperty('errorRate')
+    expect(data.data).toHaveProperty('activeUsers')
   })
 })
