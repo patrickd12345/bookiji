@@ -177,6 +177,12 @@ export interface UserCredits {
   balance_cents: number;
   total_purchased_cents: number;
   total_used_cents: number;
+  /** Lifetime earnings tracked for loyalty progression */
+  lifetime_earned_cents?: number;
+  /** Current loyalty tier */
+  tier?: 'bronze' | 'silver' | 'gold' | 'platinum';
+  /** Points accumulated through credit transactions */
+  points?: number;
   created_at: string;
   updated_at: string;
 }
