@@ -125,7 +125,7 @@ export default function MyTicketsPage() {
             setMessages((prev) => [...prev, payload.new as SupportMessage])
           }
         )
-        .on('channel_error', () => {
+        .on('error', () => {
           console.error('Support chat channel error')
           alert('Chat connection lost. Reconnecting...')
           attemptReconnect()
