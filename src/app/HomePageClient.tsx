@@ -13,7 +13,7 @@ import {
 } from '@/components'
 import { SimpleThemeToggle } from '@/components/ThemeSwitcher'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { PlayCircle, Briefcase } from 'lucide-react'
 
 interface HomePageClientProps {
