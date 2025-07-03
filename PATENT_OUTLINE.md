@@ -14,7 +14,7 @@ A system and method for booking services across multiple categories using a univ
 - AI conversational interface for natural language booking, matching, and confirmation
 - Dynamic map abstraction to protect provider location until booking is confirmed
 - Self-enforcing guarantee: instant confirmation, automated compensation/rematching if provider cancels
-- Cross-category loyalty and gamification system integrated with booking flow
+- Cross-category loyalty and gamification system integrated with booking flow (see [docs/LOYALTY_FEATURES_PLAN.md](docs/LOYALTY_FEATURES_PLAN.md))
 - Automated notifications, reminders, and habit-forming engagement features
 
 ## 4. Technical Architecture
