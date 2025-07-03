@@ -20,6 +20,17 @@ export function useNotifications() {
 
   const fetchNotifications = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'User is not authenticated'
+      }))
+      return
+    }
+
     try {
       const notifications = await notificationService.fetchNotifications()
       setState({
@@ -41,9 +52,11 @@ export function useNotifications() {
       await notificationService.markAsRead(notificationId)
       setState(prev => ({
         ...prev,
-        data: prev.data.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, read: true }
+        data: prev.data.map(notification =>
+          notification.id === notificationId
+
+            ? { ...notification, read: true, read_at: new Date().toISOString() }
+
             : notification
         )
       }))
@@ -55,9 +68,12 @@ export function useNotifications() {
   const markAllAsRead = useCallback(async () => {
     try {
       await notificationService.markAllAsRead()
+      const timestamp = new Date().toISOString()
       setState(prev => ({
         ...prev,
-        data: prev.data.map(notification => ({ ...notification, read: true }))
+
+        data: prev.data.map(notification => ({ ...notification, read: true, read_at: timestamp }))
+
       }))
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error)

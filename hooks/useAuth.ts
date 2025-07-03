@@ -6,6 +6,7 @@ interface UserProfile {
   user_id: string
   email?: string
   full_name?: string
+  beta_status?: any
   roles: string[]
   can_book_services: boolean
   can_offer_services: boolean
@@ -40,7 +41,7 @@ export function useAuth() {
     try {
       const { data, error } = await supabase
         .from('user_role_summary')
-        .select('*')
+        .select('*, beta_status')
         .eq('user_id', userId)
         .maybeSingle()
 

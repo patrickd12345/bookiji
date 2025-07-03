@@ -8,6 +8,7 @@ export default function AdBanner() {
 
   // Hide ads for premium users
   const isPremium = isAuthenticated && roles.includes('premium')
+
   const adClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID
   const adSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID
 
@@ -15,6 +16,7 @@ export default function AdBanner() {
     if (isPremium) return
     if (!adClient || !adSlot) {
       console.warn('AdSense config missing: NEXT_PUBLIC_ADSENSE_CLIENT_ID or NEXT_PUBLIC_ADSENSE_SLOT_ID')
+
       return
     }
     // Load the Google AdSense script once on mount
@@ -34,9 +36,11 @@ export default function AdBanner() {
     } catch (e) {
       console.error(e)
     }
-  }, [isPremium])
+  }, [isPremium, hasAdsenseConfig])
+
 
   if (isPremium || !adClient || !adSlot) return null
+
 
   return (
     <div className="fixed bottom-0 left-0 w-full z-40">
