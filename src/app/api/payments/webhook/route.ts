@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripeOrThrow } from '../../../../../lib/stripe'
 import { supabase } from '@/lib/supabaseClient'
+import { trackPaymentSuccess, trackPaymentFailure } from '@/lib/analytics'
 
 export async function POST(req: NextRequest) {
   const body = await req.text()
@@ -72,6 +73,14 @@ async function handlePaymentSucceeded(paymentIntent: any) {
     return
   }
 
+  trackPaymentSuccess({
+    amount: paymentIntent.amount,
+    currency: paymentIntent.currency,
+    country: paymentIntent.charges?.data?.[0]?.billing_details?.address?.country,
+    paymentMethod: paymentIntent.charges?.data?.[0]?.payment_method_details?.type || paymentIntent.payment_method_types?.[0],
+    bookingId
+  })
+
   // Send notifications
   try {
     // Send payment success notification to customer
@@ -123,7 +132,7 @@ async function handlePaymentFailed(paymentIntent: any) {
   // Update booking status to cancelled
   const { error } = await supabase
     .from('bookings')
-    .update({ 
+    .update({
       status: 'cancelled',
       commitment_fee_paid: false,
       updated_at: new Date().toISOString()
@@ -133,6 +142,14 @@ async function handlePaymentFailed(paymentIntent: any) {
   if (error) {
     console.error('Error updating booking status after payment failure:', error)
   }
+
+  trackPaymentFailure({
+    amount: paymentIntent.amount,
+    currency: paymentIntent.currency,
+    country: paymentIntent.charges?.data?.[0]?.billing_details?.address?.country,
+    paymentMethod: paymentIntent.charges?.data?.[0]?.payment_method_details?.type || paymentIntent.payment_method_types?.[0],
+    bookingId
+  })
 }
 
 async function handlePaymentCanceled(paymentIntent: any) {

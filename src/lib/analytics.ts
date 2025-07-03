@@ -352,6 +352,22 @@ export const collectUserFeedback = (trigger: string, feedback: any) => {
   })
 }
 
+export interface PaymentMetadata {
+  amount: number
+  currency: string
+  country?: string
+  paymentMethod?: string
+  bookingId?: string
+}
+
+export const trackPaymentSuccess = (metadata: PaymentMetadata) => {
+  trackEvent('payment_success', metadata)
+}
+
+export const trackPaymentFailure = (metadata: PaymentMetadata) => {
+  trackEvent(TRACKING_EVENTS.PAYMENT_FAILED, metadata)
+}
+
 const determineUserSegment = (): string => {
   // Logic to determine which segment the user belongs to
   // This would integrate with user data and behavior history
@@ -378,6 +394,8 @@ export default {
   trackABTest,
   trackConversionEvent,
   collectUserFeedback,
+  trackPaymentSuccess,
+  trackPaymentFailure,
   TRACKING_EVENTS,
   USER_SEGMENTS
-} 
+}
