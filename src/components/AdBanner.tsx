@@ -11,14 +11,10 @@ export default function AdBanner() {
 
   const adClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID
   const adSlot = process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID
+  const hasAdsenseConfig = !!adClient && !!adSlot
 
   useEffect(() => {
-    if (isPremium) return
-    if (!adClient || !adSlot) {
-      console.warn('AdSense config missing: NEXT_PUBLIC_ADSENSE_CLIENT_ID or NEXT_PUBLIC_ADSENSE_SLOT_ID')
-
-      return
-    }
+    if (isPremium || !hasAdsenseConfig) return
     // Load the Google AdSense script once on mount
     const scriptId = 'adsbygoogle-js'
     if (!document.getElementById(scriptId)) {
@@ -39,7 +35,7 @@ export default function AdBanner() {
   }, [isPremium, hasAdsenseConfig])
 
 
-  if (isPremium || !adClient || !adSlot) return null
+  if (isPremium || !hasAdsenseConfig) return null
 
 
   return (
