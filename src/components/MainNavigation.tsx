@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { useI18n } from '@/lib/i18n/useI18n';
 import NotificationBell from '@/components/NotificationBell';
 
 export default function MainNavigation() {
@@ -11,6 +12,7 @@ export default function MainNavigation() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isBetaUser, setIsBetaUser] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     checkAuth();
@@ -48,7 +50,7 @@ export default function MainNavigation() {
           <div className="flex items-center space-x-4">
             {isLoggedIn ? (
               <>
-                <Link 
+                <Link
                   href="/dashboard"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${
                     pathname === '/dashboard'
@@ -56,11 +58,11 @@ export default function MainNavigation() {
                       : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  Dashboard
+                  {t('nav.dashboard')}
                 </Link>
 
                 {userRole === 'vendor' && (
-                  <Link 
+                  <Link
                     href="/vendor/calendar"
                     className={`px-3 py-2 rounded-md text-sm font-medium ${
                       pathname.startsWith('/vendor')
@@ -68,7 +70,7 @@ export default function MainNavigation() {
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    Vendor Portal
+                    {t('nav.vendor_portal')}
                   </Link>
                 )}
 
@@ -82,28 +84,28 @@ export default function MainNavigation() {
                       : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  Settings {isBetaUser && <span className="ml-1">⚡</span>}
+                  {t('nav.settings')} {isBetaUser && <span className="ml-1">⚡</span>}
                 </Link>
               </>
             ) : (
               <>
-                <Link 
+                <Link
                   href="/get-started"
                   className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
-                  Start Booking
+                  {t('nav.start_booking')}
                 </Link>
-                <Link 
+                <Link
                   href="/vendor/onboarding"
                   className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
-                  List Your Business
+                  {t('nav.list_business')}
                 </Link>
-                <Link 
+                <Link
                   href="/login"
                   className="px-3 py-2 rounded-md text-sm font-medium text-blue-600 hover:text-blue-500"
                 >
-                  Log In
+                  {t('nav.log_in')}
                 </Link>
               </>
             )}
