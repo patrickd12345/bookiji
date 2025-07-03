@@ -76,13 +76,16 @@ export function useNotifications() {
     }
   }, [])
 
-  // Set up real-time notifications
+  // Set up real-time notifications with reconnection logic
   useEffect(() => {
-    const setupSubscription = async () => {
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
+
+    const subscribe = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.user?.id) return
 
-      const channel = supabase
+      channel = supabase
         .channel('notifications')
         .on(
           'postgres_changes',
@@ -133,16 +136,36 @@ export function useNotifications() {
             }))
           }
         )
+        .on('channel_error', () => {
+          console.error('Notifications channel error')
+          alert('Real-time connection lost. Reconnecting...')
+          attemptReconnect()
+        })
+        .on('close', () => {
+          console.warn('Notifications channel closed')
+          alert('Real-time connection closed. Reconnecting...')
+          attemptReconnect()
+        })
         .subscribe()
-
-      return () => {
-        supabase.removeChannel(channel)
-      }
     }
 
-    const cleanup = setupSubscription()
+    const attemptReconnect = () => {
+      if (reconnectTimeout) return
+      reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null
+        if (channel) {
+          supabase.removeChannel(channel)
+          channel = null
+        }
+        subscribe()
+      }, 5000)
+    }
+
+    subscribe()
+
     return () => {
-      cleanup.then(cleanupFn => cleanupFn?.())
+      if (channel) supabase.removeChannel(channel)
+      if (reconnectTimeout) clearTimeout(reconnectTimeout)
     }
   }, [])
 
