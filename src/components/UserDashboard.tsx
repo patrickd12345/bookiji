@@ -248,17 +248,17 @@ export default function UserDashboard() {
             }))
           }
         )
-        .on('error', () => {
-          console.error('Notifications channel error')
-          alert('Real-time connection lost. Reconnecting...')
-          attemptReconnect()
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Notifications channel error')
+            alert('Real-time connection lost. Reconnecting...')
+            attemptReconnect()
+          } else if (status === 'CLOSED') {
+            console.warn('Notifications channel closed')
+            alert('Real-time connection closed. Reconnecting...')
+            attemptReconnect()
+          }
         })
-        .on('close', () => {
-          console.warn('Notifications channel closed')
-          alert('Real-time connection closed. Reconnecting...')
-          attemptReconnect()
-        })
-        .subscribe()
     }
 
     const attemptReconnect = () => {
