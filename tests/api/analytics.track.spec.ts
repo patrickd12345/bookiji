@@ -28,8 +28,8 @@ vi.mock('@/lib/supabaseClient', () => {
 
 const BASE_URL = 'http://localhost:3000'
 
-describe('POST /api/analytics/track', () => {
-  it('stores analytics event', async () => {
+  describe('POST /api/analytics/track', () => {
+    it('stores analytics event', async () => {
     const body = { event: 'test_event', properties: { user_id: 'u1' } }
     const req = new NextRequest(
       new Request(`${BASE_URL}/api/analytics/track`, {
@@ -45,6 +45,24 @@ describe('POST /api/analytics/track', () => {
     expect(res.status).toBe(200)
     expect(data.success).toBe(true)
     expect(sbMocks.from).toHaveBeenCalledWith('analytics_events')
-    expect(sbMocks.insert).toHaveBeenCalled()
+      expect(sbMocks.insert).toHaveBeenCalled()
+    })
+
+    it('processes funnel events', async () => {
+      const body = { event: 'funnel_booking_start', properties: { user_id: 'u1' } }
+      const req = new NextRequest(
+        new Request(`${BASE_URL}/api/analytics/track`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'user-agent': 'jest' },
+          body: JSON.stringify(body)
+        })
+      )
+
+      const res = await POST(req)
+      const data = await res.json()
+
+      expect(res.status).toBe(200)
+      expect(data.success).toBe(true)
+      expect(sbMocks.upsert).toHaveBeenCalled()
+    })
   })
-})
