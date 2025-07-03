@@ -15,7 +15,7 @@ export default function LocaleSelector({
   showFlag = true, 
   variant = 'full' 
 }: LocaleSelectorProps) {
-  const { locale, setLocale } = useI18n()
+  const { locale, setLocale, t } = useI18n()
   const [isOpen, setIsOpen] = useState(false)
   
   const currentLocaleInfo = SUPPORTED_LOCALES[locale]
@@ -146,7 +146,7 @@ export default function LocaleSelector({
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
           <div className="p-2 max-h-96 overflow-y-auto">
             <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 mb-2">
-              Select Language & Region
+              {t('locale.select_language_region')}
             </div>
             {Object.values(SUPPORTED_LOCALES).map((localeInfo) => (
               <button

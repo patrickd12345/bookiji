@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { I18nHook } from './types'
-import enUS from '@/locales/en-US.json'
+import baseTranslations from '@/locales/en-US.json'
 import { 
   SUPPORTED_LOCALES, 
   DEFAULT_LOCALE, 
@@ -195,25 +195,4 @@ export function detectServerLocale(headers: Headers): string {
 
 // 🔧 UTILITY EXPORTS
 export { SUPPORTED_LOCALES, getCurrencyInfo, getCountryInfo, getLocaleInfo } from './config'
-
-// Basic translation loader (expandable with JSON files)
-const enUS = {
-  'welcome': 'Welcome',
-  'booking.title': 'Book a Service',
-  'booking.commitment_fee': 'Commitment Fee: {{amount}}',
-  'error.payment_failed': 'Payment failed. Please try again.',
-  'success.booking_confirmed': 'Your booking has been confirmed!',
-  'button.cancel': 'Cancel',
-  'button.confirm': 'Confirm',
-  'help.customer_guide': 'Customer Guide',
-  'help.provider_guide': 'Provider Guide'
-};
-
-const TRANSLATIONS: Record<string, Record<string, string>> = {
-  'en-US': enUS
-};
-
-function getTranslations(locale: string): Record<string, string> {
-  return TRANSLATIONS[locale] || TRANSLATIONS['en-US'];
-}
 }
