@@ -54,11 +54,9 @@ export function useNotifications() {
         ...prev,
         data: prev.data.map(notification =>
           notification.id === notificationId
-            ? {
-                ...notification,
-                read: true,
-                read_at: new Date().toISOString(),
-              }
+
+            ? { ...notification, read: true, read_at: new Date().toISOString() }
+
             : notification
         )
       }))
@@ -73,11 +71,9 @@ export function useNotifications() {
       const timestamp = new Date().toISOString()
       setState(prev => ({
         ...prev,
-        data: prev.data.map(notification => ({
-          ...notification,
-          read: true,
-          read_at: timestamp,
-        }))
+
+        data: prev.data.map(notification => ({ ...notification, read: true, read_at: timestamp }))
+
       }))
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error)
