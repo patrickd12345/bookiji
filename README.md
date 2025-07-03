@@ -181,6 +181,7 @@ pnpm dev
 ### **For Developers**
 - **Open source** core (coming soon)
 - **API access** for integrations
+- [**API Guide**](./docs/API_GUIDE.md) for endpoints and authentication
 - **White-label** opportunities
 - **Partnership program**
 
