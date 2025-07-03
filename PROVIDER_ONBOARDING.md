@@ -42,7 +42,7 @@ Thank you for joining the world's first universal, AI-powered booking platform. 
 - Keep your availability up to date for more bookings
 - Respond promptly to client messages (if needed)
 - Deliver great service to earn positive reviews and more visibility
-- Use Bookiji's loyalty and referral programs to grow your business
+- Use Bookiji's loyalty and referral programs to grow your business (see [docs/LOYALTY_FEATURES_PLAN.md](docs/LOYALTY_FEATURES_PLAN.md))
 
 ---
 

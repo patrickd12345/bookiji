@@ -416,3 +416,20 @@ _Next Levels_: real metrics querying, alert rules (p95 latency, error spikes), c
 5. **Approval Flow** – approving inserts label into `service_types` lookup.
 
 Next: vendor notification on decision, UI badge showing "pending", auto-populate dropdown once approved.
+
+## Interactive Dashboard Tours – Level 1 (**DONE**)
+
+> July 2025
+
+1. **Custom guidedTourSimple wrapper** (powered by Shepherd.js) highlights key dashboard elements.
+2. **Route config** in `guidedTourRequiredRoutes.json` ensures first-time tours.
+3. **data-tour attributes** across pages like vendor dashboard and help tickets.
+
+## Bookiji Native Calendar – Level 1 (**DONE**)
+
+> July 2025
+
+1. In-app calendar for vendors without external calendars.
+2. Add/edit/delete slots and set recurring availability.
+3. Block out times and view upcoming bookings.
+4. Shareable booking link for customers.

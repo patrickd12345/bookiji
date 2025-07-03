@@ -83,6 +83,15 @@ Bookiji is the world's first **AI-powered, privacy-first, real-time booking plat
 - Real-time chat with providers
 - Dynamic pricing optimization
 
+-## 🌟 **Additional Features**
+-**Interactive Dashboard Tours** guide new users step-by-step via our custom `guidedTourSimple` wrapper (powered by Shepherd.js). See [GUIDED_TOURS.md](docs/GUIDED_TOURS.md) for details.
+- **Real-Time Support Portal** with ticket dashboard and live chat
+- **Voice & Image Chat Inputs** in our AI assistants
+- **Advanced Analytics Dashboard** with funnels, heatmaps and session recording
+- **Vendor Custom Service Types** workflow with admin approval
+- **Bookiji Native Calendar** for vendors without external calendars
+- **Conditional Dashboard Buttons** based on user roles
+
 ---
 
 ## 🏗️ **ARCHITECTURE OVERVIEW**
@@ -92,6 +101,7 @@ Bookiji is the world's first **AI-powered, privacy-first, real-time booking plat
 - **TypeScript** for type safety
 - **Tailwind CSS** for rapid styling
 - **React 18** with modern hooks
+- **Service Worker PWA** for offline usage (see `docs/OFFLINE_SUPPORT_AND_MOBILE_APPS.md`)
 
 ### **Backend**
 - **Supabase** (PostgreSQL) for data
@@ -183,6 +193,7 @@ pnpm dev
 ### **For Developers**
 - **Open source** core (coming soon)
 - **API access** for integrations
+- [**API Guide**](./docs/API_GUIDE.md) for endpoints and authentication
 - **White-label** opportunities
 - **Partnership program**
 
