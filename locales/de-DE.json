@@ -8,4 +8,19 @@
   "button.confirm": "Bestätigen",
   "help.customer_guide": "Kundenleitfaden",
   "help.provider_guide": "Anbieterleitfaden"
+  ,"home.beta_banner": "\ud83c\udf0d Globaler Beta-Start - Verfügbar in {{count}} Ländern"
+  ,"home.headline": "Universelle Buchungsplattform"
+  ,"home.tagline": "Buche jeden Service überall sofort. Ein-Klick-Buchung mit KI-Unterstützung und {{fee}} Sicherheitsgebühr."
+  ,"home.launch_stats.title": "Globale Reichweite, lokales Gefühl"
+  ,"home.launch_stats.countries": "Unterstützte Länder"
+  ,"home.launch_stats.currencies": "Verfügbare Währungen"
+  ,"home.launch_stats.languages": "Sprachen und Regionen"
+  ,"home.cta.title": "Bereit, Buchungen zu revolutionieren?"
+  ,"home.cta.subtitle": "Schließe dich tausenden Unternehmen an, die Bookiji bereits zur Vereinfachung ihrer Buchungen nutzen."
+  ,"cta.start_booking": "Jetzt buchen"
+  ,"cta.list_business": "Unternehmen eintragen"
+  ,"cta.start_booking_now": "Jetzt buchen"
+  ,"cta.open_customer_dashboard": "Kunden-Dashboard öffnen"
+  ,"cta.open_vendor_dashboard": "Anbieter-Dashboard öffnen"
+  ,"cta.get_started": "Loslegen"
 }

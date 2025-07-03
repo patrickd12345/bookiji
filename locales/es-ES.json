@@ -8,4 +8,19 @@
   "button.confirm": "Confirmar",
   "help.customer_guide": "Guía del cliente",
   "help.provider_guide": "Guía del proveedor"
+  ,"home.beta_banner": "\ud83c\udf0d Lanzamiento beta global - Disponible en {{count}} países"
+  ,"home.headline": "Plataforma de reservas universal"
+  ,"home.tagline": "Reserva cualquier servicio, en cualquier lugar, al instante. Reserva con un clic con asistencia de IA y garantía de cuota de compromiso de {{fee}}."
+  ,"home.launch_stats.title": "Escala global, enfoque local"
+  ,"home.launch_stats.countries": "Países compatibles"
+  ,"home.launch_stats.currencies": "Monedas disponibles"
+  ,"home.launch_stats.languages": "Idiomas y regiones"
+  ,"home.cta.title": "¿Listo para transformar tus reservas?"
+  ,"home.cta.subtitle": "Únete a miles de empresas que ya usan Bookiji para simplificar su proceso de reservas."
+  ,"cta.start_booking": "Comenzar a reservar"
+  ,"cta.list_business": "Listar tu negocio"
+  ,"cta.start_booking_now": "Reservar ahora"
+  ,"cta.open_customer_dashboard": "Abrir panel de cliente"
+  ,"cta.open_vendor_dashboard": "Abrir panel de proveedor"
+  ,"cta.get_started": "Comenzar"
 }
