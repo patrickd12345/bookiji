@@ -43,7 +43,7 @@ describe('POST /api/auth/register with referral', () => {
       body: JSON.stringify(body)
     })
 
-    const res = await POST(req as any)
+    const res = await POST(req)
     const data = await res.json()
 
     expect(res.status).toBe(200)

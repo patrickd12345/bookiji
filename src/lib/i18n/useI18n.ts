@@ -176,7 +176,7 @@ export function useI18n(initialLocale?: string): I18nHook {
     }
     
     return text
-  }, [currentLocale, translations])
+  }, [translations])
 
   return {
     locale: currentLocale,
