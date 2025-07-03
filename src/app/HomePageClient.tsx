@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useI18n } from '@/lib/i18n/useI18n'
 import { useAuth } from '../../hooks/useAuth'
 import { 
@@ -21,7 +21,7 @@ interface HomePageClientProps {
 }
 
 export default function HomePageClient({ initialLocale }: HomePageClientProps) {
-  const { t, formatCurrency, locale } = useI18n(initialLocale)
+  const { t, formatCurrency, setLocale } = useI18n()
   const { 
     isAuthenticated, 
     canBookServices, 
@@ -29,6 +29,13 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
     loading 
   } = useAuth()
   const [showTour, setShowTour] = useState(false)
+
+  // Sync initial server locale on mount
+  useEffect(() => {
+    if (initialLocale) {
+      setLocale(initialLocale)
+    }
+  }, [initialLocale, setLocale])
 
   return (
     <div className="min-h-screen bg-background">

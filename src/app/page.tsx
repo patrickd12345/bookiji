@@ -1,8 +1,11 @@
 import HomePageClient from './HomePageClient'
-import { detectServerLocale } from '@/lib/i18n/useI18n'
+import { detectLocaleFromHeaders, DEFAULT_LOCALE } from '@/lib/i18n/config'
 import { headers } from 'next/headers'
 
-export default function HomePage() {
-  const locale = detectServerLocale(headers() as unknown as Headers)
+export default async function HomePage() {
+  const hdrs = await headers()
+  const acceptLanguage = hdrs.get('accept-language') || undefined
+  const detected = detectLocaleFromHeaders(acceptLanguage)
+  const locale = detected?.code || DEFAULT_LOCALE
   return <HomePageClient initialLocale={locale} />
 } 
