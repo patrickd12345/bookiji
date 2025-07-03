@@ -248,7 +248,7 @@ export default function UserDashboard() {
             }))
           }
         )
-        .on('channel_error', () => {
+        .on('error', () => {
           console.error('Notifications channel error')
           alert('Real-time connection lost. Reconnecting...')
           attemptReconnect()
