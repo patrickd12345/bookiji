@@ -14,6 +14,23 @@ interface UserProfile {
   updated_at?: string
 }
 
+interface UserCapabilities {
+  canBookServices: boolean
+  canOfferServices: boolean
+  isAdmin: boolean
+}
+
+export function getUserCapabilities(profile: UserProfile | null): UserCapabilities {
+  const roles = profile?.roles || []
+  const isAdmin = roles.includes('admin')
+
+  return {
+    canBookServices: roles.includes('customer') || isAdmin,
+    canOfferServices: roles.includes('vendor') || isAdmin,
+    isAdmin
+  }
+}
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -131,9 +148,7 @@ export function useAuth() {
     loading,
     // Convenience flags
     isAuthenticated: !!user,
-    canBookServices: profile?.can_book_services ?? false,
-    canOfferServices: profile?.can_offer_services ?? false,
-    isAdmin: profile?.is_admin ?? false,
+    ...getUserCapabilities(profile),
     // Role checking functions
     hasRole,
     addRole,
