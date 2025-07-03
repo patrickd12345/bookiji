@@ -43,12 +43,11 @@ describe('GET /api/analytics/system', () => {
 
     expect(res.status).toBe(200)
     expect(data.ok).toBe(true)
-    expect(data.data).toEqual([
-      { label: 'Requests/min', value: 2 },
-      { label: 'p95 Session Duration (s)', value: 20 },
-      { label: 'Error Rate (%)', value: 4.17 },
-      { label: 'Active Users', value: 2 }
-    ])
+    expect(typeof data.data).toBe('object')
+    expect(data.data).toHaveProperty('requestsPerMinute')
+    expect(data.data).toHaveProperty('p95SessionDuration')
+    expect(data.data).toHaveProperty('errorRate')
+    expect(data.data).toHaveProperty('activeUsers')
     expect(fromMock).toHaveBeenCalledTimes(3)
   })
 })

@@ -53,12 +53,12 @@ export async function GET(_req: NextRequest) {
   const errorRate = totalEvents > 0 ? Number(((errorEvents / totalEvents) * 100).toFixed(2)) : 0
   const activeUsers = userIds.size
 
-  const data = [
-    { label: 'Requests/min', value: requestsPerMinute },
-    { label: 'p95 Session Duration (s)', value: p95 },
-    { label: 'Error Rate (%)', value: errorRate },
-    { label: 'Active Users', value: activeUsers }
-  ]
+  const metrics = {
+    requestsPerMinute,
+    p95SessionDuration: p95,
+    errorRate,
+    activeUsers
+  }
 
-  return NextResponse.json({ ok: true, data })
+  return NextResponse.json({ ok: true, data: metrics })
 }
