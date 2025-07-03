@@ -154,6 +154,8 @@ pnpm dev
 - **Booking Fees:** $1-5 per booking (varies by country/service)
 - **Provider Subscriptions:** Premium features for high-volume providers
 - **Enterprise Licenses:** White-label for large organizations
+- **Advertising Revenue:** Privacy-respecting contextual ads (AdSense integration) that surface complementary services
+- **Referral Rewards Program:** Users earn credits for inviting new customers/providers
 - **Transaction Fees:** Small percentage on payment processing
 
 ### **Market Opportunity**

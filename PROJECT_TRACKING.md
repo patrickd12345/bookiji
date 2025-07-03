@@ -1,8 +1,14 @@
 # 📊 Bookiji Project Tracking
 
-## 🎯 Current Status: **PRODUCTION LAUNCH MODE** 🚀
-**Last Updated:** January 16, 2025, 6:12 PM (UTC)  
-**EXECUTIVE DECISION:** Deploy immediately - platform exceeds enterprise standards
+## �� Current Status: **PRE-LAUNCH PREPARATION** 🚧
+- **Target Launch Window:** **October 2025**
+- **Last Updated:** January 16, 2025, 6:12 PM (UTC)  
+
+**NOTE:** Previous statements about "going live today" have been rescinded. The production go-live will **not occur before October 2025**. All timelines below have been adjusted accordingly.
+
+---
+
+
 
 ---
 
@@ -115,7 +121,9 @@ TOTAL TESTS: 25/25 PASSING (100% SUCCESS RATE)
 1. **Booking Fees:** $1-5 per booking (varies by country PPP)
 2. **Provider Subscriptions:** Premium features and visibility  
 3. **Enterprise Licenses:** White-label opportunities
-4. **Transaction Fees:** Small percentage on payments
+4. **Advertising Revenue:** Contextual ads via AdSense/privacy-friendly network
+5. **Referral Rewards Program:** Incentivized user referrals (credit or cash)
+6. **Transaction Fees:** Small percentage on payments
 
 ### **🎯 Market Positioning**
 - **Zero direct competitors** with our feature combination
@@ -125,7 +133,13 @@ TOTAL TESTS: 25/25 PASSING (100% SUCCESS RATE)
 
 ---
 
-## 🚀 **IMMEDIATE NEXT ACTIONS**
+## 🔜 **IMMEDIATE ACTIONS**
+1. **🧪  Full Automated Test Expansion** — 20-ish tests are insufficient; target **300+ comprehensive unit & integration tests** with end-to-end coverage.
+2. **👤  Patrick Comprehensive Manual QA** — Patrick to perform a full walkthrough and sign-off on core flows.
+3. **🗺️  Guided Tour Verification** — Ensure **all guided tours** are present, translated, and functioning end-to-end.
+
+
+## 🚀 **CUT-OVER PLAN ACTIONS**
 
 ### **TODAY (Within 24 Hours)**
 1. **🌐 Deploy to bookiji.com** - Production deployment
@@ -401,4 +415,4 @@ _Next Levels_: real metrics querying, alert rules (p95 latency, error spikes), c
 4. **Admin UI** – `/admin/service-types` page to review proposals.
 5. **Approval Flow** – approving inserts label into `service_types` lookup.
 
-Next: vendor notification on decision, UI badge showing "pending", auto-populate dropdown once approved. 
+Next: vendor notification on decision, UI badge showing "pending", auto-populate dropdown once approved.
