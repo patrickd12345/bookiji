@@ -89,8 +89,12 @@ function createTimeFormatter(locale: string, timeFormat: '12h' | '24h') {
 
 
 // 🪝 MAIN I18N HOOK
-export function useI18n(): I18nHook {
+export function useI18n(initialLocale?: string): I18nHook {
   const [currentLocale, setCurrentLocale] = useState<string>(() => {
+    if (initialLocale && SUPPORTED_LOCALES[initialLocale]) {
+      globalLocale = initialLocale
+      return initialLocale
+    }
     if (typeof window !== 'undefined') {
       return detectInitialLocale()
     }
