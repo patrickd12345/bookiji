@@ -186,6 +186,7 @@ TOTAL TESTS: 25/25 PASSING (100% SUCCESS RATE)
 ## 🌍 **GLOBAL EXPANSION ROADMAP**
 
 ### **Phase 1: Core Markets (Week 1-2)**
+- ca **United States** - Primary launch market
 - 🇺🇸 **United States** - Primary launch market
 - 🇬🇧 **United Kingdom** - English validation  
 - 🇦🇺 **Australia** - Timezone diversity
