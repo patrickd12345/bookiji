@@ -195,4 +195,3 @@ export function detectServerLocale(headers: Headers): string {
 
 // 🔧 UTILITY EXPORTS
 export { SUPPORTED_LOCALES, getCurrencyInfo, getCountryInfo, getLocaleInfo } from './config'
-}
