@@ -27,7 +27,9 @@ export async function POST() {
 
     const { error: updateError } = await supabase
       .from('notifications')
+
       .update({ read: true, read_at: new Date().toISOString() })
+
       .eq('user_id', session.user.id)
       .is('read', false)
 
