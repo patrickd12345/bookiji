@@ -43,15 +43,15 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-8">
             <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-            🌍 Global Beta Launch - Available in 37 countries
+            {t('home.beta_banner', { count: '37' })}
           </div>
           
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Universal Booking Platform
+            {t('home.headline')}
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Book any service, anywhere, instantly. One-click booking with AI assistance and {formatCurrency(100)} commitment fee guarantee.
+            {t('home.tagline', { fee: formatCurrency(100) })}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -67,13 +67,13 @@ export default function HomePage() {
                 <a href="/get-started">
                   <Button className="h-10 px-8 text-lg flex items-center gap-2">
                     <PlayCircle className="w-4 h-4" />
-                    Start Booking
+                    {t('cta.start_booking')}
                   </Button>
                 </a>
                 <a href="/vendor/onboarding">
                   <Button variant="outline" className="h-10 px-8 text-lg flex items-center gap-2">
                     <Briefcase className="w-4 h-4" />
-                    List Your Business
+                    {t('cta.list_business')}
                   </Button>
                 </a>
               </>
@@ -83,14 +83,14 @@ export default function HomePage() {
                 {canBookServices && (
                   <a href="/dashboard">
                     <Button variant="outline" className="h-10 px-8 text-lg">
-                      📊 Customer Dashboard
+                      {t('cta.open_customer_dashboard')}
                     </Button>
                   </a>
                 )}
                 {canOfferServices && (
                   <a href="/vendor/dashboard">
                     <Button variant="outline" className="h-10 px-8 text-lg">
-                      🏪 Vendor Dashboard
+                      {t('cta.open_vendor_dashboard')}
                     </Button>
                   </a>
                 )}
@@ -99,7 +99,7 @@ export default function HomePage() {
                   <a href="/get-started">
                     <Button className="h-10 px-8 text-lg flex items-center gap-2">
                       <PlayCircle className="w-4 h-4" />
-                      Start Booking
+                      {t('cta.start_booking')}
                     </Button>
                   </a>
                 )}
@@ -107,7 +107,7 @@ export default function HomePage() {
                   <a href="/vendor/onboarding">
                     <Button variant="outline" className="h-10 px-8 text-lg flex items-center gap-2">
                       <Briefcase className="w-4 h-4" />
-                      List Your Business
+                      {t('cta.list_business')}
                     </Button>
                   </a>
                 )}
@@ -204,20 +204,20 @@ export default function HomePage() {
       {/* Global Launch Stats */}
       <section className="py-16 px-4 bg-muted/50">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-8 text-foreground">Global Scale, Local Feel</h2>
+          <h2 className="text-3xl font-bold mb-8 text-foreground">{t('home.launch_stats.title')}</h2>
           
           <div className="grid sm:grid-cols-3 gap-8">
             <div>
               <div className="text-3xl font-bold text-primary mb-2">37</div>
-              <div className="text-muted-foreground">Countries Supported</div>
+              <div className="text-muted-foreground">{t('home.launch_stats.countries')}</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-secondary mb-2">27</div>
-              <div className="text-muted-foreground">Currencies Available</div>
+              <div className="text-muted-foreground">{t('home.launch_stats.currencies')}</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-green-500 mb-2">17</div>
-              <div className="text-muted-foreground">Languages & Locales</div>
+              <div className="text-muted-foreground">{t('home.launch_stats.languages')}</div>
             </div>
           </div>
         </div>
@@ -227,10 +227,10 @@ export default function HomePage() {
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">
-            Ready to Transform Booking?
+            {t('home.cta.title')}
           </h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Join thousands of businesses already using Bookiji to streamline their booking process.
+            {t('home.cta.subtitle')}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -246,13 +246,13 @@ export default function HomePage() {
                 <a href="/get-started">
                   <Button className="h-10 px-8 text-lg flex items-center gap-2">
                     <PlayCircle className="w-4 h-4" />
-                    Start Booking Now
+                    {t('cta.start_booking_now')}
                   </Button>
                 </a>
                 <a href="/vendor/onboarding">
                   <Button variant="outline" className="h-10 px-8 text-lg flex items-center gap-2">
                     <Briefcase className="w-4 h-4" />
-                    List Your Business
+                    {t('cta.list_business')}
                   </Button>
                 </a>
               </>
@@ -262,14 +262,14 @@ export default function HomePage() {
                 {canBookServices && (
                   <a href="/dashboard">
                     <Button className="h-10 px-8 text-lg">
-                      Open Customer Dashboard
+                      {t('cta.open_customer_dashboard')}
                     </Button>
                   </a>
                 )}
                 {canOfferServices && (
                   <a href="/vendor/dashboard">
                     <Button variant="outline" className="h-10 px-8 text-lg">
-                      Open Vendor Dashboard
+                      {t('cta.open_vendor_dashboard')}
                     </Button>
                   </a>
                 )}
@@ -278,7 +278,7 @@ export default function HomePage() {
                   <a href="/get-started">
                     <Button className="h-10 px-8 text-lg flex items-center gap-2">
                       <PlayCircle className="w-4 h-4" />
-                      Get Started
+                      {t('cta.get_started')}
                     </Button>
                   </a>
                 )}
