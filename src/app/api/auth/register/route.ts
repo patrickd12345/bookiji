@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabaseClient'
-import { userService } from '../../../../lib/database'
+import { userService } from '@/lib/database'
+import { referralService } from '@/lib/referrals'
 
 export async function POST(request: Request) {
   try {
@@ -53,6 +54,9 @@ export async function POST(request: Request) {
       // Note: User was created in auth but profile failed
       // You might want to handle this cleanup
     }
+
+    // Credit referrer if there is a pending referral for this email
+    await referralService.completeReferral(email, authData.user.id, role)
 
     console.log('✅ User registered successfully:', authData.user.id)
 
