@@ -21,7 +21,7 @@ export default function AnalyticsDashboard() {
         const data = await res.json()
         if (data.ok) setFunnel(data.data)
 
-        const sys = await fetch('/api/analytics/system') // stub endpoint (future)
+        const sys = await fetch('/api/analytics/system')
         if (sys.ok) {
           const d = await sys.json()
           setApiMetrics(d.data)
@@ -76,7 +76,7 @@ export default function AnalyticsDashboard() {
                   <p className="text-xl font-bold text-gray-900">{m.value}</p>
                 </div>
               ))}
-              {apiMetrics.length === 0 && <p className="text-gray-500">Metric endpoint TBD</p>}
+              {apiMetrics.length === 0 && <p className="text-gray-500">No metrics available</p>}
             </div>
           </section>
         </>
