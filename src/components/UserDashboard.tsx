@@ -219,8 +219,9 @@ export default function UserDashboard() {
   // Set up real-time notifications for the current user
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 
-    const init = async () => {
+    const subscribe = async () => {
       const {
         data: { user }
       } = await supabase.auth.getUser()
@@ -247,15 +248,36 @@ export default function UserDashboard() {
             }))
           }
         )
+        .on('channel_error', () => {
+          console.error('Notifications channel error')
+          alert('Real-time connection lost. Reconnecting...')
+          attemptReconnect()
+        })
+        .on('close', () => {
+          console.warn('Notifications channel closed')
+          alert('Real-time connection closed. Reconnecting...')
+          attemptReconnect()
+        })
         .subscribe()
     }
 
-    init()
+    const attemptReconnect = () => {
+      if (reconnectTimeout) return
+      reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null
+        if (channel) {
+          supabase.removeChannel(channel)
+          channel = null
+        }
+        subscribe()
+      }, 5000)
+    }
+
+    subscribe()
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
+      if (channel) supabase.removeChannel(channel)
+      if (reconnectTimeout) clearTimeout(reconnectTimeout)
     }
   }, [])
 
