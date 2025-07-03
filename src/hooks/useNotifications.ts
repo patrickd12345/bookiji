@@ -22,11 +22,11 @@ export function useNotifications() {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
 
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user?.id) {
+    if (!session) {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: 'Please log in to view notifications'
+        error: 'User is not authenticated'
       }))
       return
     }
