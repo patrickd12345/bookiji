@@ -111,22 +111,19 @@ export const initAnalytics = () => {
 
   // Hotjar initialization
   if (ANALYTICS_CONFIG.HOTJAR_ID && typeof window !== 'undefined') {
-    (function(h: any, o: any, t: any, j: any, a: any, r: any) {
-      h.hj = h.hj || function() { (h.hj.q = h.hj.q || []).push(arguments) }
-      h._hjSettings = { hjid: parseInt(ANALYTICS_CONFIG.HOTJAR_ID!), hjsv: 6 }
-      a = o.getElementsByTagName('head')[0]
-      r = o.createElement('script')
-      r.async = 1
-      r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv
-      a.appendChild(r)
-    })(
-      window,
-      document,
-      'https://static.hotjar.com/c/hotjar-',
-      '.js?sv=',
-      document.createElement('script'),
-      document.getElementsByTagName('head')[0]
-    )
+    interface HotjarWindow extends Window {
+      hj?: ((...args: unknown[]) => void) & { q?: unknown[] }
+      _hjSettings?: { hjid: number; hjsv: number }
+    }
+    const w = window as HotjarWindow
+    w.hj = w.hj || function (...args: unknown[]) {
+      (w.hj!.q = w.hj!.q || []).push(args)
+    }
+    w._hjSettings = { hjid: parseInt(ANALYTICS_CONFIG.HOTJAR_ID!, 10), hjsv: 6 }
+    const script = document.createElement('script')
+    script.async = true
+    script.src = `https://static.hotjar.com/c/hotjar-${w._hjSettings.hjid}.js?sv=${w._hjSettings.hjsv}`
+    document.head.appendChild(script)
   }
 
   // PostHog initialization  
@@ -149,7 +146,7 @@ export const initAnalytics = () => {
 // Enhanced event tracking with user context
 export const trackEvent = async (
   event: string,
-  properties: any = {},
+  properties: Record<string, unknown> = {},
   userId?: string,
   sessionId?: string,
   deviceId?: string,
@@ -198,7 +195,11 @@ export const trackEvent = async (
 }
 
 // Conversion funnel tracking
-export const trackFunnelStep = (funnel: string, step: string, properties: any = {}) => {
+export const trackFunnelStep = (
+  funnel: string,
+  step: string,
+  properties: Record<string, unknown> = {}
+) => {
   trackEvent(`funnel_${funnel}_${step}`, {
     funnel_name: funnel,
     funnel_step: step,
@@ -207,7 +208,10 @@ export const trackFunnelStep = (funnel: string, step: string, properties: any = 
 }
 
 // User behavior analysis
-export const trackUserBehavior = (behavior: string, context: any = {}) => {
+export const trackUserBehavior = (
+  behavior: string,
+  context: Record<string, unknown> = {}
+) => {
   trackEvent('user_behavior', {
     behavior_type: behavior,
     context,
@@ -217,7 +221,10 @@ export const trackUserBehavior = (behavior: string, context: any = {}) => {
 }
 
 // Geographic tracking
-export const trackGeographicEvent = (event: string, properties: any = {}) => {
+export const trackGeographicEvent = (
+  event: string,
+  properties: Record<string, unknown> = {}
+) => {
   // Attempt to get user's country from various sources
   const country = properties.country || 
                   getCountryFromTimezone() || 
@@ -232,7 +239,11 @@ export const trackGeographicEvent = (event: string, properties: any = {}) => {
 }
 
 // Feature adoption tracking
-export const trackFeatureAdoption = (feature: string, stage: 'discovery' | 'engagement' | 'adoption', properties: any = {}) => {
+export const trackFeatureAdoption = (
+  feature: string,
+  stage: 'discovery' | 'engagement' | 'adoption',
+  properties: Record<string, unknown> = {}
+) => {
   trackEvent(`feature_${stage}`, {
     feature_name: feature,
     adoption_stage: stage,
@@ -241,7 +252,10 @@ export const trackFeatureAdoption = (feature: string, stage: 'discovery' | 'enga
 }
 
 // Error and confusion tracking
-export const trackUserConfusion = (context: string, details: any = {}) => {
+export const trackUserConfusion = (
+  context: string,
+  details: Record<string, unknown> = {}
+) => {
   trackEvent(TRACKING_EVENTS.CONFUSION_DETECTED, {
     confusion_context: context,
     confusion_details: details,
@@ -325,7 +339,11 @@ const getCountryDetectionMethod = (country: string): string => {
 }
 
 // A/B testing support
-export const trackABTest = (testName: string, variant: string, properties: any = {}) => {
+export const trackABTest = (
+  testName: string,
+  variant: string,
+  properties: Record<string, unknown> = {}
+) => {
   trackEvent('ab_test_exposure', {
     test_name: testName,
     variant,
@@ -334,7 +352,11 @@ export const trackABTest = (testName: string, variant: string, properties: any =
 }
 
 // Conversion optimization helpers
-export const trackConversionEvent = (conversionType: string, value?: number, properties: any = {}) => {
+export const trackConversionEvent = (
+  conversionType: string,
+  value?: number,
+  properties: Record<string, unknown> = {}
+) => {
   trackEvent('conversion', {
     conversion_type: conversionType,
     conversion_value: value,
@@ -343,7 +365,10 @@ export const trackConversionEvent = (conversionType: string, value?: number, pro
 }
 
 // Real-time user feedback collection
-export const collectUserFeedback = (trigger: string, feedback: any) => {
+export const collectUserFeedback = (
+  trigger: string,
+  feedback: unknown
+) => {
   trackEvent('user_feedback_collected', {
     feedback_trigger: trigger,
     feedback_data: feedback,
@@ -374,7 +399,14 @@ const determineUserSegment = (): string => {
   return 'new_user' // Placeholder
 }
 
-const getSessionContext = (): any => {
+interface SessionContext {
+  session_duration: number
+  page_views: number
+  current_page: string
+  entry_page: string
+}
+
+const getSessionContext = (): SessionContext => {
   return {
     session_duration: getSessionDuration(),
     page_views: getPageViewsInSession(),
@@ -383,7 +415,7 @@ const getSessionContext = (): any => {
   }
 }
 
-export default {
+const analytics = {
   initAnalytics,
   trackEvent,
   trackFunnelStep,
@@ -399,3 +431,5 @@ export default {
   TRACKING_EVENTS,
   USER_SEGMENTS
 }
+
+export default analytics
