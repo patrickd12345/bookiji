@@ -92,6 +92,7 @@ Bookiji is the world's first **AI-powered, privacy-first, real-time booking plat
 - **TypeScript** for type safety
 - **Tailwind CSS** for rapid styling
 - **React 18** with modern hooks
+- **Service Worker PWA** for offline usage (see `docs/OFFLINE_SUPPORT_AND_MOBILE_APPS.md`)
 
 ### **Backend**
 - **Supabase** (PostgreSQL) for data
