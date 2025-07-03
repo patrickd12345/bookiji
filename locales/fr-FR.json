@@ -7,5 +7,21 @@
   "button.cancel": "Annuler",
   "button.confirm": "Confirmer",
   "help.customer_guide": "Guide client",
-  "help.provider_guide": "Guide prestataire"
+  "help.provider_guide": "Guide prestataire",
+  "home.beta_banner": "🌍 Lancement de la bêta mondiale – Disponible dans {{count}} pays",
+  "home.headline": "Plateforme de réservation universelle",
+  "home.tagline": "Réservez n'importe quel service, n'importe où, instantanément. Réservation en un clic avec assistance IA et frais d'engagement de {{fee}}.",
+  "home.launch_stats.title": "Échelle mondiale, approche locale",
+  "home.launch_stats.countries": "Pays pris en charge",
+  "home.launch_stats.currencies": "Devises disponibles",
+  "home.launch_stats.languages": "Langues & paramètres régionaux",
+  "home.cta.title": "Prêt à transformer vos réservations ?",
+  "home.cta.subtitle": "Rejoignez des milliers d'entreprises qui utilisent déjà Bookiji pour simplifier leurs réservations.",
+  "cta.start_booking": "Commencer à réserver",
+  "cta.list_business": "Référencer votre entreprise",
+  "cta.start_booking_now": "Réserver maintenant",
+  "cta.open_customer_dashboard": "Tableau de bord client",
+  "cta.open_vendor_dashboard": "Tableau de bord fournisseur",
+  "cta.get_started": "Commencer",
+  "locale.select_language_region": "Sélectionner la langue et la région"
 }

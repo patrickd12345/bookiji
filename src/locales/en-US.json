@@ -7,5 +7,20 @@
   "button.cancel": "Cancel",
   "button.confirm": "Confirm",
   "help.customer_guide": "Customer Guide",
-  "help.provider_guide": "Provider Guide"
+  "help.provider_guide": "Provider Guide",
+  "home.beta_banner": "Join the Beta – {{count}} testers so far!",
+  "home.headline": "Instantly book any service, anywhere",
+  "home.tagline": "Reserve with just {{fee}} and guarantee your spot",
+  "home.launch_stats.title": "Global Launch Stats",
+  "home.launch_stats.countries": "Countries Active",
+  "home.launch_stats.currencies": "Supported Currencies",
+  "home.launch_stats.languages": "Available Languages",
+  "home.cta.title": "Ready to experience hassle-free booking?",
+  "home.cta.subtitle": "Create an account or list your business in minutes",
+  "cta.start_booking": "Start Booking",
+  "cta.start_booking_now": "Start Booking Now",
+  "cta.list_business": "List Your Business",
+  "cta.open_customer_dashboard": "Customer Dashboard",
+  "cta.open_vendor_dashboard": "Vendor Dashboard",
+  "cta.get_started": "Get Started"
 }
