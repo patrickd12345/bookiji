@@ -125,17 +125,17 @@ export default function MyTicketsPage() {
             setMessages((prev) => [...prev, payload.new as SupportMessage])
           }
         )
-        .on('error', () => {
-          console.error('Support chat channel error')
-          alert('Chat connection lost. Reconnecting...')
-          attemptReconnect()
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Support chat channel error')
+            alert('Chat connection lost. Reconnecting...')
+            attemptReconnect()
+          } else if (status === 'CLOSED') {
+            console.warn('Support chat channel closed')
+            alert('Chat connection closed. Reconnecting...')
+            attemptReconnect()
+          }
         })
-        .on('close', () => {
-          console.warn('Support chat channel closed')
-          alert('Chat connection closed. Reconnecting...')
-          attemptReconnect()
-        })
-        .subscribe()
 
       setChannelRef(channel)
     }
