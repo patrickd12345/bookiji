@@ -1,9 +1,8 @@
 'use client'
 
-import React, { useState, useEffect, useRef, type MouseEvent, type KeyboardEvent } from 'react'
+import React, { useState, type MouseEvent, type KeyboardEvent } from 'react'
 import { motion } from 'framer-motion'
 import { BookingPaymentModal } from './BookingPaymentModal'
-import { supabase } from '@/lib/supabaseClient'
 import { Zap } from 'lucide-react'
 
 interface Message {
@@ -11,7 +10,7 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
-  bookingData?: any
+  bookingData?: BookingResult
 }
 
 interface BookingData {
@@ -41,7 +40,7 @@ export default function RealTimeBookingChat() {
   const [isTyping, setIsTyping] = useState(false)
   const [currentBooking, setCurrentBooking] = useState<{ id: string; service: string; provider: string; date: string; time: string; customerId: string } | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [customerId, setCustomerId] = useState('550e8400-e29b-41d4-a716-446655440000') // Proper UUID format
+  const customerId = '550e8400-e29b-41d4-a716-446655440000' // Proper UUID format
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isTyping) return
@@ -234,7 +233,7 @@ export default function RealTimeBookingChat() {
     }
   }
 
-  const handlePaymentSuccess = (paymentIntentId: string) => {
+  const handlePaymentSuccess = () => {
     const successMessage: Message = {
       id: (Date.now() + 2).toString(),
       role: 'assistant',

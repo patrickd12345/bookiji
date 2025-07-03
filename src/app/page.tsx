@@ -13,11 +13,11 @@ import {
 } from '@/components'
 import { SimpleThemeToggle } from '@/components/ThemeSwitcher'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { PlayCircle, Briefcase } from 'lucide-react'
 
 export default function HomePage() {
-  const { t, formatCurrency, locale } = useI18n()
+  const { t, formatCurrency } = useI18n()
   const { 
     isAuthenticated, 
     canBookServices, 
