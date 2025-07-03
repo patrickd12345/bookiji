@@ -20,6 +20,17 @@ export function useNotifications() {
 
   const fetchNotifications = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'User is not authenticated'
+      }))
+      return
+    }
+
     try {
       const notifications = await notificationService.fetchNotifications()
       setState({
