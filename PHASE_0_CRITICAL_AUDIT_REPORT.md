@@ -77,7 +77,7 @@ return process.env.STRIPE_SECRET_KEY || 'sk_test_development_fallback_key'
 
 ### 4. **TODO/FIXME Items** - SEVERITY: LOW 🟢
 **Found:** 15+ TODO items including:
-- `src/lib/i18n/useI18n.ts:73` - "TODO: Load actual translations"
+- `src/lib/i18n/useI18n.ts:73` - translations are now loaded from JSON files
 - `src/components/VendorCalendar.tsx:40,94` - "TODO: Replace with actual API calls"
 - Missing proper password fields
 - Mock API integrations
