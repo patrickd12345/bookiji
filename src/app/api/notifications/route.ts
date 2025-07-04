@@ -1,9 +1,10 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { Notification } from '@/types/notification'
+import { getAuthenticatedUserId } from '../_utils/auth'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const cookieStore = await cookies()
     const supabase = createServerClient(
@@ -17,9 +18,9 @@ export async function GET() {
         }
       }
     )
-    
-    const { data: { session }, error: authError } = await supabase.auth.getSession()
-    if (authError || !session) {
+
+    const userId = await getAuthenticatedUserId(request)
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -29,7 +30,7 @@ export async function GET() {
     const { data: notifications, error: fetchError } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
     if (fetchError) {
@@ -65,8 +66,8 @@ export async function DELETE(request: Request) {
       }
     )
     
-    const { data: { session }, error: authError } = await supabase.auth.getSession()
-    if (authError || !session) {
+    const userId = await getAuthenticatedUserId(request)
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -87,7 +88,7 @@ export async function DELETE(request: Request) {
       .from('notifications')
       .delete()
       .eq('id', notificationId)
-      .eq('user_id', session.user.id)
+      .eq('user_id', userId)
 
     if (deleteError) {
       console.error('Error deleting notification:', deleteError)
