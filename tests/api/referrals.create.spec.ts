@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 import { describe, it, expect, vi } from 'vitest'
 import { POST } from '@/app/api/referrals/create/route'
+import { NextRequest } from 'next/server'
 
 const createReferralMock = vi.fn(async () => {})
 vi.mock('@/lib/referrals', () => ({
@@ -9,7 +10,7 @@ vi.mock('@/lib/referrals', () => ({
   }
 }))
 
-const BASE_URL = 'http://localhost:3000'
+const BASE_URL = process.env.TEST_BASE_URL || ''
 
 describe('POST /api/referrals/create', () => {
   it('records referral', async () => {
@@ -24,7 +25,7 @@ describe('POST /api/referrals/create', () => {
       body: JSON.stringify(body)
     })
 
-    const res = await POST(req as any)
+    const res = await POST(req as unknown as NextRequest)
     const data = await res.json()
 
     expect(res.status).toBe(200)

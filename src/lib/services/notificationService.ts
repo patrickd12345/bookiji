@@ -13,8 +13,10 @@ export class NotificationService {
     return NotificationService.instance
   }
 
-  async fetchNotifications(): Promise<Notification[]> {
-    const response = await fetch(this.baseUrl)
+  async fetchNotifications(token: string): Promise<Notification[]> {
+    const response = await fetch(this.baseUrl, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
     if (!response.ok) {
       const errorData = await response.json() as NotificationError
       throw new Error(errorData.error || 'Failed to fetch notifications')
@@ -23,9 +25,10 @@ export class NotificationService {
     return data.notifications
   }
 
-  async markAsRead(notificationId: string): Promise<void> {
+  async markAsRead(notificationId: string, token: string): Promise<void> {
     const response = await fetch(`${this.baseUrl}/${notificationId}/read`, {
-      method: 'POST'
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
     })
     if (!response.ok) {
       const errorData = await response.json() as NotificationError
@@ -33,9 +36,10 @@ export class NotificationService {
     }
   }
 
-  async markAllAsRead(): Promise<void> {
+  async markAllAsRead(token: string): Promise<void> {
     const response = await fetch(`${this.baseUrl}/mark-all-read`, {
-      method: 'POST'
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
     })
     if (!response.ok) {
       const errorData = await response.json() as NotificationError
@@ -43,9 +47,10 @@ export class NotificationService {
     }
   }
 
-  async deleteNotification(notificationId: string): Promise<void> {
+  async deleteNotification(notificationId: string, token: string): Promise<void> {
     const response = await fetch(`${this.baseUrl}/${notificationId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
     })
     if (!response.ok) {
       const errorData = await response.json() as NotificationError

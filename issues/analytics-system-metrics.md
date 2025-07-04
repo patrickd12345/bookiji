@@ -1,3 +1,3 @@
-# TODO: Implement real analytics metrics
+# Completed: Implement real analytics metrics
 
-The `/api/analytics/system` endpoint currently returns placeholder metrics. Implement queries to PostHog or Supabase to return actual aggregated system metrics (requests per minute, latency, error rate, active users, etc.).
+The `/api/analytics/system` endpoint now queries Supabase to aggregate system metrics including requests per minute, error rate, P95 session duration and active users. PostHog integration can be added later if advanced analytics are required.

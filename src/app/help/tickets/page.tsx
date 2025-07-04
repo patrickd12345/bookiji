@@ -106,27 +106,57 @@ export default function MyTicketsPage() {
 
     loadMessages(selectedTicket.id)
 
-    // realtime supabase subscription
-    const channel = supabase
-      .channel(`support_messages:${selectedTicket.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'support_messages',
-          filter: `ticket_id=eq.${selectedTicket.id}`
-        },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new as SupportMessage])
-        }
-      )
-      .subscribe()
+    // realtime supabase subscription with reconnection logic
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 
-    setChannelRef(channel)
+    const subscribe = () => {
+      channel = supabase
+        .channel(`support_messages:${selectedTicket.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'support_messages',
+            filter: `ticket_id=eq.${selectedTicket.id}`
+          },
+          (payload) => {
+            setMessages((prev) => [...prev, payload.new as SupportMessage])
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Support chat channel error')
+            alert('Chat connection lost. Reconnecting...')
+            attemptReconnect()
+          } else if (status === 'CLOSED') {
+            console.warn('Support chat channel closed')
+            alert('Chat connection closed. Reconnecting...')
+            attemptReconnect()
+          }
+        })
+
+      setChannelRef(channel)
+    }
+
+    const attemptReconnect = () => {
+      if (reconnectTimeout) return
+      reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null
+        if (channel) {
+          supabase.removeChannel(channel)
+          channel = null
+        }
+        subscribe()
+      }, 5000)
+    }
+
+    subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      if (channel) supabase.removeChannel(channel)
+      if (reconnectTimeout) clearTimeout(reconnectTimeout)
     }
   }, [selectedTicket])
 

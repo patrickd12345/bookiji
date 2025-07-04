@@ -20,8 +20,19 @@ export function useNotifications() {
 
   const fetchNotifications = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'User is not authenticated'
+      }))
+      return
+    }
+
     try {
-      const notifications = await notificationService.fetchNotifications()
+      const notifications = await notificationService.fetchNotifications(session.access_token)
       setState({
         data: notifications,
         isLoading: false,
@@ -37,13 +48,17 @@ export function useNotifications() {
   }, [])
 
   const markAsRead = useCallback(async (notificationId: string) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
     try {
-      await notificationService.markAsRead(notificationId)
+      await notificationService.markAsRead(notificationId, session.access_token)
       setState(prev => ({
         ...prev,
-        data: prev.data.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, read: true }
+        data: prev.data.map(notification =>
+          notification.id === notificationId
+
+            ? { ...notification, read: true, read_at: new Date().toISOString() }
+
             : notification
         )
       }))
@@ -53,11 +68,16 @@ export function useNotifications() {
   }, [])
 
   const markAllAsRead = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
     try {
-      await notificationService.markAllAsRead()
+      await notificationService.markAllAsRead(session.access_token)
+      const timestamp = new Date().toISOString()
       setState(prev => ({
         ...prev,
-        data: prev.data.map(notification => ({ ...notification, read: true }))
+
+        data: prev.data.map(notification => ({ ...notification, read: true, read_at: timestamp }))
+
       }))
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error)
@@ -65,8 +85,10 @@ export function useNotifications() {
   }, [])
 
   const deleteNotification = useCallback(async (notificationId: string) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
     try {
-      await notificationService.deleteNotification(notificationId)
+      await notificationService.deleteNotification(notificationId, session.access_token)
       setState(prev => ({
         ...prev,
         data: prev.data.filter(notification => notification.id !== notificationId)
@@ -76,13 +98,16 @@ export function useNotifications() {
     }
   }, [])
 
-  // Set up real-time notifications
+  // Set up real-time notifications with reconnection logic
   useEffect(() => {
-    const setupSubscription = async () => {
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
+
+    const subscribe = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.user?.id) return
 
-      const channel = supabase
+      channel = supabase
         .channel('notifications')
         .on(
           'postgres_changes',
@@ -133,16 +158,36 @@ export function useNotifications() {
             }))
           }
         )
-        .subscribe()
-
-      return () => {
-        supabase.removeChannel(channel)
-      }
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Notifications channel error')
+            alert('Real-time connection lost. Reconnecting...')
+            attemptReconnect()
+          } else if (status === 'CLOSED') {
+            console.warn('Notifications channel closed')
+            alert('Real-time connection closed. Reconnecting...')
+            attemptReconnect()
+          }
+        })
     }
 
-    const cleanup = setupSubscription()
+    const attemptReconnect = () => {
+      if (reconnectTimeout) return
+      reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null
+        if (channel) {
+          supabase.removeChannel(channel)
+          channel = null
+        }
+        subscribe()
+      }, 5000)
+    }
+
+    subscribe()
+
     return () => {
-      cleanup.then(cleanupFn => cleanupFn?.())
+      if (channel) supabase.removeChannel(channel)
+      if (reconnectTimeout) clearTimeout(reconnectTimeout)
     }
   }, [])
 

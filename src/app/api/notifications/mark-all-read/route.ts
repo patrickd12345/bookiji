@@ -1,8 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { getAuthenticatedUserId } from '../../_utils/auth'
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -17,8 +18,8 @@ export async function POST() {
       }
     );
     
-    const { data: { session }, error: authError } = await supabase.auth.getSession()
-    if (authError || !session) {
+    const userId = await getAuthenticatedUserId(request)
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -27,8 +28,10 @@ export async function POST() {
 
     const { error: updateError } = await supabase
       .from('notifications')
-      .update({ read: true })
-      .eq('user_id', session.user.id)
+
+      .update({ read: true, read_at: new Date().toISOString() })
+
+      .eq('user_id', userId)
       .is('read', false)
 
     if (updateError) {

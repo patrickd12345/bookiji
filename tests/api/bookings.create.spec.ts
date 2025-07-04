@@ -25,7 +25,7 @@ vi.mock('../../src/lib/supabaseClient', () => {
 
 const getMock = () => (globalThis as any).__SB_FROM_INT__ as ReturnType<typeof vi.fn>
 
-const TEST_BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
+const TEST_BASE_URL = process.env.TEST_BASE_URL || ''
 
 describe('POST /api/bookings/create', () => {
   it('should create a booking', async () => {

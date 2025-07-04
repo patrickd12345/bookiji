@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { bookingService } from '../../../../lib/database'
 import { refundPayment } from '../../../../lib/stripe'
+import { supabase } from '@/lib/supabaseClient'
 
 export async function POST(request: Request) {
   try {
@@ -91,8 +92,21 @@ export async function POST(request: Request) {
       }
     }
 
-    // TODO: Send notifications to provider and customer
-    console.log('Sending cancellation notifications for booking:', bookingId)
+    // Notify provider and customer about cancellation
+    await supabase.from('notifications').insert([
+      {
+        user_id: booking.vendor_id,
+        type: 'BOOKING_CANCELLED',
+        title: 'Booking Cancelled',
+        message: `Booking ${bookingId} was cancelled by the customer.`,
+      },
+      {
+        user_id: booking.customer_id,
+        type: 'BOOKING_CANCELLED',
+        title: 'Booking Cancelled',
+        message: 'Your booking has been cancelled and refund processing has started.',
+      }
+    ])
 
     return NextResponse.json({
       success: true,

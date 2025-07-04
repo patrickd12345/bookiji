@@ -1,4 +1,3 @@
-// TODO: Fix notification type inference issues
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
@@ -141,7 +140,6 @@ interface NotificationState {
   error: string | null;
 }
 
-// TODO: Fix notification type inference issues
 export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'credits' | 'favorites' | 'profile'>('overview')
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
@@ -167,7 +165,10 @@ export default function UserDashboard() {
     setNotificationState(prev => ({ ...prev, isLoading: true, error: null }))
     
     try {
-      const response = await fetch('/api/notifications')
+      const { data: { session } } = await supabase.auth.getSession()
+      const response = await fetch('/api/notifications', {
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined
+      })
       if (!response.ok) {
         const errorData = await response.json() as NotificationError
         throw new Error(errorData.error || 'Failed to fetch notifications')
@@ -191,8 +192,10 @@ export default function UserDashboard() {
 
   const markAsRead = async (notificationId: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch(`/api/notifications/${notificationId}/read`, {
-        method: 'POST'
+        method: 'POST',
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined
       })
       
       if (!response.ok) {
@@ -219,8 +222,9 @@ export default function UserDashboard() {
   // Set up real-time notifications for the current user
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 
-    const init = async () => {
+    const subscribe = async () => {
       const {
         data: { user }
       } = await supabase.auth.getUser()
@@ -247,15 +251,36 @@ export default function UserDashboard() {
             }))
           }
         )
-        .subscribe()
+        .subscribe((status) => {
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Notifications channel error')
+            alert('Real-time connection lost. Reconnecting...')
+            attemptReconnect()
+          } else if (status === 'CLOSED') {
+            console.warn('Notifications channel closed')
+            alert('Real-time connection closed. Reconnecting...')
+            attemptReconnect()
+          }
+        })
     }
 
-    init()
+    const attemptReconnect = () => {
+      if (reconnectTimeout) return
+      reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null
+        if (channel) {
+          supabase.removeChannel(channel)
+          channel = null
+        }
+        subscribe()
+      }, 5000)
+    }
+
+    subscribe()
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
+      if (channel) supabase.removeChannel(channel)
+      if (reconnectTimeout) clearTimeout(reconnectTimeout)
     }
   }, [])
 

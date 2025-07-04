@@ -6,11 +6,16 @@ import { registerTour } from '@/lib/guidedTourRegistry'
 import { useAutoTour } from '@/lib/useAutoTour'
 
 interface FunnelRow { step_name: string; count: number }
-interface ApiMetric { label: string; value: number }
+interface SystemMetrics {
+  requestsPerMinute: number
+  p95SessionDuration: number
+  errorRate: number
+  activeUsers: number
+}
 
 export default function AnalyticsDashboard() {
   const [funnel, setFunnel] = useState<FunnelRow[]>([])
-  const [apiMetrics, setApiMetrics] = useState<ApiMetric[]>([])
+  const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -24,7 +29,7 @@ export default function AnalyticsDashboard() {
         const sys = await fetch('/api/analytics/system')
         if (sys.ok) {
           const d = await sys.json()
-          setApiMetrics(d.data)
+          setSystemMetrics(d.data)
         }
       } catch (e) {
         console.error(e)
@@ -70,13 +75,27 @@ export default function AnalyticsDashboard() {
           <section className="bg-white p-6 rounded shadow">
             <h2 className="text-lg font-semibold mb-4">API Metrics (last hour)</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-tour="kpi-tiles">
-              {apiMetrics.map((m) => (
-                <div key={m.label} className="bg-gray-100 p-4 rounded text-center">
-                  <p className="text-sm text-gray-500">{m.label}</p>
-                  <p className="text-xl font-bold text-gray-900">{m.value}</p>
-                </div>
-              ))}
-              {apiMetrics.length === 0 && <p className="text-gray-500">No metrics available</p>}
+              {systemMetrics && (
+                <>
+                  <div className="bg-gray-100 p-4 rounded text-center">
+                    <p className="text-sm text-gray-500">Requests/min</p>
+                    <p className="text-xl font-bold text-gray-900">{systemMetrics.requestsPerMinute}</p>
+                  </div>
+                  <div className="bg-gray-100 p-4 rounded text-center">
+                    <p className="text-sm text-gray-500">p95 Session Duration (s)</p>
+                    <p className="text-xl font-bold text-gray-900">{systemMetrics.p95SessionDuration}</p>
+                  </div>
+                  <div className="bg-gray-100 p-4 rounded text-center">
+                    <p className="text-sm text-gray-500">Error Rate (%)</p>
+                    <p className="text-xl font-bold text-gray-900">{systemMetrics.errorRate}</p>
+                  </div>
+                  <div className="bg-gray-100 p-4 rounded text-center">
+                    <p className="text-sm text-gray-500">Active Users</p>
+                    <p className="text-xl font-bold text-gray-900">{systemMetrics.activeUsers}</p>
+                  </div>
+                </>
+              )}
+              {!systemMetrics && <p className="text-gray-500">No metrics available</p>}
             </div>
           </section>
         </>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { getAuthenticatedUserId } from '../../_utils/auth'
 
 export async function POST(
   request: Request,
@@ -20,10 +21,8 @@ export async function POST(
       }
     );
 
-    // Get the current user's session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    if (sessionError) throw sessionError
-    if (!session) {
+    const userId = await getAuthenticatedUserId(request);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -33,9 +32,11 @@ export async function POST(
     // Update the notification
     const { error: updateError } = await supabase
       .from('notifications')
-      .update({ read_at: new Date().toISOString() })
+
+      .update({ read: true, read_at: new Date().toISOString() })
+
       .eq('id', params.id)
-      .eq('user_id', session.user.id)
+      .eq('user_id', userId)
 
     if (updateError) throw updateError
 
