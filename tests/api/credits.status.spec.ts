@@ -2,7 +2,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { GET } from '@/app/api/credits/status/route'
 
-const BASE_URL = 'http://localhost:3000'
+const BASE_URL = process.env.TEST_BASE_URL || ''
 
 vi.mock('@/lib/database', () => ({
   getUserCredits: vi.fn(async () => ({

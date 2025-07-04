@@ -1,4 +1,3 @@
-// TODO: Fix notification type inference issues
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
@@ -141,7 +140,6 @@ interface NotificationState {
   error: string | null;
 }
 
-// TODO: Fix notification type inference issues
 export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'credits' | 'favorites' | 'profile'>('overview')
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)

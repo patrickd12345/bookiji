@@ -26,7 +26,7 @@ vi.mock('@/lib/referrals', () => ({
   }
 }))
 
-const BASE_URL = 'http://localhost:3000'
+const BASE_URL = process.env.TEST_BASE_URL || ''
 
 describe('POST /api/auth/register with referral', () => {
   it('credits referrer when referral email matches', async () => {

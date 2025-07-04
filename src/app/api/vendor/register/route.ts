@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabaseClient'
 
 export async function POST(request: NextRequest) {
   try {
@@ -142,11 +143,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // TODO: In production, save to actual database
-    console.log('💾 Mock database save - vendor profile created:', {
-      vendorId,
-      business_name: vendorProfile.business_name,
-      status: 'pending_verification'
+    // Persist vendor profile
+    await supabase.from('profiles').insert({
+      id: vendorId,
+      full_name: vendorData.contact_name,
+      email: vendorData.email,
+      phone: vendorData.phone,
+      role: 'vendor',
+      marketing_consent: vendorData.marketing_consent,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     })
 
     // Send verification email (mock)

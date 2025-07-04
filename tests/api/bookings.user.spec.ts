@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { GET } from '@/app/api/bookings/user/route'
 
-const TEST_BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
+const TEST_BASE_URL = process.env.TEST_BASE_URL || ''
 
 describe('GET /api/bookings/user', () => {
   it('returns empty bookings array when no bookings exist', async () => {
