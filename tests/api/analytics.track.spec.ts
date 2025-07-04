@@ -26,7 +26,7 @@ vi.mock('@/lib/supabaseClient', () => {
   }
 })
 
-const BASE_URL = 'http://localhost:3000'
+const BASE_URL = process.env.TEST_BASE_URL || ''
 
   describe('POST /api/analytics/track', () => {
     it('stores analytics event', async () => {

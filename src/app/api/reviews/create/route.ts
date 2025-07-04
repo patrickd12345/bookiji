@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     await supabase
       .from('notifications')
       .insert({
-        recipient_id: vendor_id,
+        user_id: vendor_id,
         type: 'new_review',
         title: 'New Review Received',
         message: `You received a ${rating}-star review`,

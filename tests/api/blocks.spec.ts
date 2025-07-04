@@ -7,7 +7,7 @@ import { describe, it, expect, vi } from 'vitest'
 // DELETE LINE: import { NextRequest } from 'next/server'
 
 // Ensure env vars exist so the route handlers don't throw
-process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321'
+process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'anon-test-key'
 
 /**
@@ -114,7 +114,7 @@ import { POST as createBlock } from '@/app/api/blocks/create/route'
 import { GET as listBlocks } from '@/app/api/blocks/list/route'
 import { DELETE as deleteBlock } from '@/app/api/blocks/delete/route'
 
-const BASE_URL = 'http://localhost:3000'
+const BASE_URL = process.env.TEST_BASE_URL || ''
 
 describe('Blocks API endpoints', () => {
   it('POST /api/blocks/create should create a user block', async () => {
