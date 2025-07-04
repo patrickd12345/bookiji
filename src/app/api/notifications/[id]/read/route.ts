@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
-import { getAuthenticatedUserId } from '../../_utils/auth'
+import { getAuthenticatedUserId } from '../../../_utils/auth'
 
 export async function POST(
   request: Request,
