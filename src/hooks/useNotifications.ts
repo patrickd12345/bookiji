@@ -32,7 +32,7 @@ export function useNotifications() {
     }
 
     try {
-      const notifications = await notificationService.fetchNotifications()
+      const notifications = await notificationService.fetchNotifications(session.access_token)
       setState({
         data: notifications,
         isLoading: false,
@@ -48,8 +48,10 @@ export function useNotifications() {
   }, [])
 
   const markAsRead = useCallback(async (notificationId: string) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
     try {
-      await notificationService.markAsRead(notificationId)
+      await notificationService.markAsRead(notificationId, session.access_token)
       setState(prev => ({
         ...prev,
         data: prev.data.map(notification =>
@@ -66,8 +68,10 @@ export function useNotifications() {
   }, [])
 
   const markAllAsRead = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
     try {
-      await notificationService.markAllAsRead()
+      await notificationService.markAllAsRead(session.access_token)
       const timestamp = new Date().toISOString()
       setState(prev => ({
         ...prev,
@@ -81,8 +85,10 @@ export function useNotifications() {
   }, [])
 
   const deleteNotification = useCallback(async (notificationId: string) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
     try {
-      await notificationService.deleteNotification(notificationId)
+      await notificationService.deleteNotification(notificationId, session.access_token)
       setState(prev => ({
         ...prev,
         data: prev.data.filter(notification => notification.id !== notificationId)

@@ -259,7 +259,11 @@ export default function AdminCockpit() {
                     <button
                       onClick={async () => {
                         // call API
-                        await fetch(`/api/notifications/${notification.id}/read`, { method: 'POST' })
+                        const { data: { session } } = await supabase.auth.getSession()
+                        await fetch(`/api/notifications/${notification.id}/read`, {
+                          method: 'POST',
+                          headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined
+                        })
                         setNotifications((prev: AdminNotification[]) => prev.map((n: AdminNotification) => n.id === notification.id ? { ...n, isRead: true } : n))
                       }}
                       className="px-3 py-1 text-sm text-gray-600 hover:text-gray-700 font-medium">

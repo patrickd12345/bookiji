@@ -165,7 +165,10 @@ export default function UserDashboard() {
     setNotificationState(prev => ({ ...prev, isLoading: true, error: null }))
     
     try {
-      const response = await fetch('/api/notifications')
+      const { data: { session } } = await supabase.auth.getSession()
+      const response = await fetch('/api/notifications', {
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined
+      })
       if (!response.ok) {
         const errorData = await response.json() as NotificationError
         throw new Error(errorData.error || 'Failed to fetch notifications')
@@ -189,8 +192,10 @@ export default function UserDashboard() {
 
   const markAsRead = async (notificationId: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch(`/api/notifications/${notificationId}/read`, {
-        method: 'POST'
+        method: 'POST',
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined
       })
       
       if (!response.ok) {
