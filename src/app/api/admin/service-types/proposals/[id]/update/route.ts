@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 const schema = z.object({ action: z.enum(['approve', 'reject']), reviewerId: z.string().uuid().optional(), notes: z.string().optional() })
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: { id: string } }) {
   const supabase = createSupabaseClient()
   const { id } = params
 
