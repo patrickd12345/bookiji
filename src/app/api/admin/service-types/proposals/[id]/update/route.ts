@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createSupabaseClient } from '@/lib/supabaseClient'
 import { z } from 'zod'
 
 const schema = z.object({ action: z.enum(['approve', 'reject']), reviewerId: z.string().uuid().optional(), notes: z.string().optional() })
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: { id: string } }) {
   const supabase = createSupabaseClient()
   const { id } = params
 
   try {
-    const body = await req.json()
+    const body = await request.json()
     const { action, reviewerId, notes } = schema.parse(body)
 
     const status = action === 'approve' ? 'approved' : 'rejected'
