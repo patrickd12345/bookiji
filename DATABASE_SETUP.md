@@ -38,7 +38,13 @@ After running migrations, test the connection:
 curl http://localhost:3000/api/test-database
 ```
 
-### **3. Set Up Authentication**
+### **3. Seed Demo Data**
+Populate your project with sample vendors, customers and bookings:
+```bash
+supabase db seed --file supabase/seed.sql
+```
+
+### **4. Set Up Authentication**
 Configure Supabase Auth settings:
 1. Go to Authentication > Settings
 2. Add your domain: `http://localhost:3000`
