@@ -20,7 +20,7 @@ interface ProviderZone {
 }
 
 export default function MapAbstraction({ 
-  markers = [], 
+  markers = [],  
   showExact = false,
   radius = 5,
   location = 'New York'
