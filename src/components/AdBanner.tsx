@@ -14,25 +14,36 @@ export default function AdBanner() {
   const hasAdsenseConfig = !!adClient && !!adSlot
 
   useEffect(() => {
-    if (isPremium || !hasAdsenseConfig) return
-    // Load the Google AdSense script once on mount
+    if (isPremium || !hasAdsenseConfig) {
+      if (!hasAdsenseConfig) {
+        console.warn('AdSense client or slot ID is missing; ads will not be shown.')
+      }
+      return
+    }
+
     const scriptId = 'adsbygoogle-js'
+
+    const initAds = () => {
+      try {
+        ;(window as any).adsbygoogle = (window as any).adsbygoogle || []
+        ;(window as any).adsbygoogle.push({})
+      } catch (e) {
+        console.error('AdSense initialization failed', e)
+      }
+    }
+
     if (!document.getElementById(scriptId)) {
       const s = document.createElement('script')
       s.id = scriptId
       s.async = true
-      s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'
-      s.setAttribute('data-ad-client', adClient)
+      s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adClient}`
+      s.crossOrigin = 'anonymous'
+      s.onload = initAds
       document.head.appendChild(s)
+    } else {
+      initAds()
     }
-    // Initialize adsbygoogle after script is loaded
-    try {
-      ;(window as any).adsbygoogle = (window as any).adsbygoogle || []
-      ;(window as any).adsbygoogle.push({})
-    } catch (e) {
-      console.error(e)
-    }
-  }, [isPremium, hasAdsenseConfig])
+  }, [isPremium, hasAdsenseConfig, adClient])
 
 
   if (isPremium || !hasAdsenseConfig) return null
