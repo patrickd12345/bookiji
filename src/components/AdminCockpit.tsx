@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, type MouseEvent } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { useUIStore } from '@/stores/uiStore';
 import type { AdminStats, AdminAction, AdminNotification } from '@/types/global.d';

@@ -103,10 +103,10 @@ async function generateAvailability(providerId: string) {
             const endHour = parseInt(block.end_time.split(':')[0]);
             const endMinute = parseInt(block.end_time.split(':')[1]);
 
-            let slotStart = new Date(currentDate);
+            const slotStart = new Date(currentDate);
             slotStart.setHours(startHour, startMinute);
 
-            let slotEnd = new Date(slotStart);
+            const slotEnd = new Date(slotStart);
             slotEnd.setMinutes(slotStart.getMinutes() + serviceDurationMinutes);
 
             while(slotEnd.getHours() < endHour || (slotEnd.getHours() === endHour && slotEnd.getMinutes() <= endMinute)) {

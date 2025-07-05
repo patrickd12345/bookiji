@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 
 interface AdminStats {
   totalUsers: number
@@ -18,32 +17,11 @@ interface AdminStats {
   }
 }
 
-interface PendingVendor {
-  id: string
-  business_name: string
-  email: string
-  service_type: string
-  location: string
-  submitted_at: string
-  requires_approval: boolean
-}
-
-interface RecentBooking {
-  id: string
-  customer_name: string
-  vendor_name: string
-  service: string
-  date: string
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
-  amount: number
-}
+// Removed unused auxiliary interfaces to satisfy ESLint
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null)
-  const [pendingVendors, setPendingVendors] = useState<PendingVendor[]>([])
-  const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'vendors' | 'bookings' | 'system'>('overview')
 
   useEffect(() => {
     loadDashboardData()
@@ -69,18 +47,7 @@ export default function AdminDashboard() {
       }
 
       setStats(mockStats)
-      setPendingVendors([
-        {
-          id: '1',
-          business_name: 'Elite Hair Studio',
-          email: 'contact@elitehair.com',
-          service_type: 'Hair & Beauty',
-          location: 'New York, NY',
-          submitted_at: '2024-01-14T10:30:00Z',
-          requires_approval: false
-        }
-      ])
-      setRecentBookings([])
+      // In a real implementation we would store fetched data into state variables
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {

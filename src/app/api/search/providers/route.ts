@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build the search query
-    let searchResults = await performAdvancedSearch(filters)
+    const searchResults = await performAdvancedSearch(filters)
 
     // Track search analytics
     await fetch('/api/analytics/track', {

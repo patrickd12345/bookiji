@@ -1,7 +1,6 @@
 import { createCommitmentFeePaymentIntent } from './stripe'
 import { supabase } from '../src/lib/supabaseClient'
-import { getCurrencyInfo, detectLocaleFromHeaders } from '../src/lib/i18n/config'
-import { getBookingFeeForCurrency } from '@/config/bookingFeeMatrix'
+import { detectLocaleFromHeaders } from '../src/lib/i18n/config'
 import { getLiveBookingFee } from './stripe'
 
 export interface BookingRequest {
