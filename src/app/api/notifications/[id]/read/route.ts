@@ -3,10 +3,7 @@ import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { getAuthenticatedUserId } from '../../../_utils/auth'
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -35,7 +32,7 @@ export async function POST(
 
       .update({ read: true, read_at: new Date().toISOString() })
 
-      .eq('id', params.id)
+      .eq('id', new URL(request.url).pathname.split('/')[3])
       .eq('user_id', userId)
 
     if (updateError) throw updateError

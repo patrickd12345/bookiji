@@ -3,12 +3,9 @@ import { createSupabaseClient } from '@/lib/supabaseClient'
 import { z } from 'zod'
 
 // GET /api/support/tickets/:ticketId/messages
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { ticketId: string } }
-) {
+export async function GET(req: NextRequest) {
   const supabase = createSupabaseClient()
-  const { ticketId } = params
+  const ticketId = new URL(req.url).pathname.split('/')[4]
 
   try {
     const { data, error } = await supabase
@@ -35,12 +32,9 @@ const postSchema = z.object({
   sender_type: z.enum(['customer', 'agent', 'system']).default('agent')
 })
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { ticketId: string } }
-) {
+export async function POST(req: NextRequest) {
   const supabase = createSupabaseClient()
-  const { ticketId } = params
+  const ticketId = new URL(req.url).pathname.split('/')[4]
 
   try {
     const body = await req.json()
