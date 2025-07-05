@@ -377,7 +377,7 @@ export const collectUserFeedback = (
   })
 }
 
-export interface PaymentMetadata {
+export interface PaymentMetadata extends Record<string, unknown> {
   amount: number
   currency: string
   country?: string

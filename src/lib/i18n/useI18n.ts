@@ -166,7 +166,7 @@ export function useI18n(initialLocale?: string): I18nHook {
 
   // 🗣️ TRANSLATE FUNCTION
   const t = useCallback((key: string, variables?: Record<string, string>): string => {
-    let text = translations[key] || baseTranslations[key] || key
+    let text = (translations as Record<string,string>)[key] || (baseTranslations as Record<string,string>)[key] || key
     
     // Replace variables in the format {{variable}}
     if (variables) {
