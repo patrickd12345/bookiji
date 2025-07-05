@@ -7,6 +7,9 @@ import { supabase } from '@/lib/supabaseClient';
 import { useI18n } from '@/lib/i18n/useI18n';
 import NotificationBell from '@/components/NotificationBell';
 
+// Toggle full navigation with NEXT_PUBLIC_ENABLE_NAV (defaults to false)
+const SHOW_NAV_ITEMS = process.env.NEXT_PUBLIC_ENABLE_NAV === 'true';
+
 export default function MainNavigation() {
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -47,69 +50,71 @@ export default function MainNavigation() {
             </Link>
           </div>
 
-          <div className="flex items-center space-x-4">
-            {isLoggedIn ? (
-              <>
-                <Link
-                  href="/dashboard"
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    pathname === '/dashboard'
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  {t('nav.dashboard')}
-                </Link>
-
-                {userRole === 'vendor' && (
+          {SHOW_NAV_ITEMS && (
+            <div className="flex items-center space-x-4">
+              {isLoggedIn ? (
+                <>
                   <Link
-                    href="/vendor/calendar"
+                    href="/dashboard"
                     className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      pathname.startsWith('/vendor')
+                      pathname === '/dashboard'
                         ? 'bg-blue-50 text-blue-700'
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    {t('nav.vendor_portal')}
+                    {t('nav.dashboard')}
                   </Link>
-                )}
 
-                <NotificationBell />
+                  {userRole === 'vendor' && (
+                    <Link
+                      href="/vendor/calendar"
+                      className={`px-3 py-2 rounded-md text-sm font-medium ${
+                        pathname.startsWith('/vendor')
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {t('nav.vendor_portal')}
+                    </Link>
+                  )}
 
-                <Link 
-                  href="/settings"
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    pathname.startsWith('/settings')
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  {t('nav.settings')} {isBetaUser && <span className="ml-1">⚡</span>}
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/get-started"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  {t('nav.start_booking')}
-                </Link>
-                <Link
-                  href="/vendor/onboarding"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  {t('nav.list_business')}
-                </Link>
-                <Link
-                  href="/login"
-                  className="px-3 py-2 rounded-md text-sm font-medium text-blue-600 hover:text-blue-500"
-                >
-                  {t('nav.log_in')}
-                </Link>
-              </>
-            )}
-          </div>
+                  <NotificationBell />
+
+                  <Link 
+                    href="/settings"
+                    className={`px-3 py-2 rounded-md text-sm font-medium ${
+                      pathname.startsWith('/settings')
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {t('nav.settings')} {isBetaUser && <span className="ml-1">⚡</span>}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/get-started"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    {t('nav.start_booking')}
+                  </Link>
+                  <Link
+                    href="/vendor/onboarding"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    {t('nav.list_business')}
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-blue-600 hover:text-blue-500"
+                  >
+                    {t('nav.log_in')}
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </nav>
