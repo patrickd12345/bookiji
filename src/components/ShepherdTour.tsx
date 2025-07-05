@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import 'shepherd.js/dist/css/shepherd.css';
 
 let globalTourInitialized = false
@@ -21,6 +21,16 @@ interface ShepherdTourProps {
   autoStart?: boolean
 }
 
+interface TourInstance {
+  start: () => void
+  cancel: () => void
+  complete: () => void
+  back: () => void
+  next: () => void
+  addStep: (config: Record<string, unknown>) => void
+  isActive?: () => boolean
+}
+
 export default function ShepherdTour({ 
   steps, 
   run = false, 
@@ -28,11 +38,11 @@ export default function ShepherdTour({
   onSkip,
   autoStart = false 
 }: ShepherdTourProps) {
-  const tourRef = useRef<any>(null)
-  const shepherdRef = useRef<any>(null)
+  const tourRef = useRef<TourInstance | null>(null)
+  const shepherdRef = useRef<unknown>(null)
   const startingRef = useRef<boolean>(false)
 
-  const cleanupTour = () => {
+  const cleanupTour = useCallback(() => {
     if (tourRef.current) {
       console.log('🧹 Cleaning up existing tour')
       try {
@@ -48,7 +58,7 @@ export default function ShepherdTour({
         startingRef.current = false
       }
     }
-  }
+  }, [run])
 
   useEffect(() => {
     console.log('🔧 Initializing Shepherd tour with steps:', steps.length)
@@ -94,7 +104,7 @@ export default function ShepherdTour({
         const isLast = index === steps.length - 1
         const isFirst = index === 0
 
-        const stepConfig: any = {
+        const stepConfig: Record<string, unknown> = {
           id: step.id,
           title: step.title,
           text: step.content,
@@ -175,7 +185,7 @@ export default function ShepherdTour({
         startingRef.current = false
       })
 
-      tour.on('show', (event: any) => {
+      tour.on('show', (event: { step?: { id?: string } }) => {
         console.log('👀 Step shown:', event.step?.id)
       })
 
@@ -196,7 +206,7 @@ export default function ShepherdTour({
     return () => {
       cleanupTour()
     }
-  }, [steps, onComplete, onSkip])
+  }, [steps, onComplete, onSkip, cleanupTour, run])
 
   useEffect(() => {
     console.log('🎮 Run effect triggered, run:', run, 'tourRef.current:', !!tourRef.current)

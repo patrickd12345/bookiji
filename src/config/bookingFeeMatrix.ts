@@ -22,8 +22,8 @@ export const DEFAULT_BOOKING_FEE = {
  * @deprecated Use getCurrencyInfo from @/lib/i18n/config instead
  * This function will be removed in v2.0.0
  */
-export function getBookingFeeForCurrency(_currency: string): number {
-  console.warn('getBookingFeeForCurrency is deprecated. Use getCurrencyInfo from @/lib/i18n/config instead')
+export function getBookingFeeForCurrency(currency: string): number {
+  console.warn(`getBookingFeeForCurrency is deprecated for currency ${currency}. Use getCurrencyInfo from @/lib/i18n/config instead`)
   return DEFAULT_BOOKING_FEE.amount
 }
 

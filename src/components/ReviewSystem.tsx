@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 
 interface Review {
   id: string
@@ -52,11 +53,7 @@ export default function ReviewSystem({
   const [valueForMoney, setValueForMoney] = useState(0)
   const [wouldRecommend, setWouldRecommend] = useState<boolean | null>(null)
 
-  useEffect(() => {
-    loadReviews()
-  }, [vendorId])
-
-  const loadReviews = async (page = 0) => {
+  const loadReviews = useCallback(async (page = 0) => {
     try {
       setLoading(true)
       const response = await fetch(
@@ -77,7 +74,12 @@ export default function ReviewSystem({
     } finally {
       setLoading(false)
     }
-  }
+  }, [vendorId])
+
+  // Load reviews on mount or when vendorId changes
+  useEffect(() => {
+    loadReviews()
+  }, [loadReviews])
 
   const submitReview = async () => {
     if (!rating || !bookingId || !userId) return
@@ -380,9 +382,11 @@ export default function ReviewSystem({
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                   {review.users.avatar_url ? (
-                    <img
+                    <Image
                       src={review.users.avatar_url}
                       alt={review.users.name}
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded-full"
                     />
                   ) : (

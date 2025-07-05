@@ -11,7 +11,6 @@ import {
   MapPin, 
   Settings, 
   Bell, 
-  History, 
   Star, 
   Coins,
   Plus,
@@ -22,8 +21,6 @@ import {
   CheckCircle,
   AlertCircle,
   Heart,
-  Bookmark,
-  Share,
   Phone,
   Mail,
   Shield,
@@ -84,18 +81,6 @@ interface CreditTransaction {
   type: 'purchase' | 'usage' | 'refund' | 'bonus'
   description: string
   date: string
-}
-
-interface FavoriteProvider {
-  id: string
-  name: string
-  business_name: string
-  avatar_url?: string
-  rating: number
-  total_reviews: number
-  distance?: number
-  last_booked?: string
-  specialties: string[]
 }
 
 interface DatabaseProvider {
@@ -159,7 +144,7 @@ export default function UserDashboard() {
   useEffect(() => {
     loadUserData()
     loadNotifications()
-  }, [])
+  }, [loadUserData])
 
   const loadNotifications = async (): Promise<void> => {
     setNotificationState(prev => ({ ...prev, isLoading: true, error: null }))
@@ -190,34 +175,11 @@ export default function UserDashboard() {
     }
   }
 
-  const markAsRead = async (notificationId: string) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const response = await fetch(`/api/notifications/${notificationId}/read`, {
-        method: 'POST',
-        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to mark notification as read')
-      }
-
-      setNotificationState(prev => ({
-        ...prev,
-        data: prev.data.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, read: true }
-            : notification
-        )
-      }))
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error)
-    }
-  }
+  // Removed unused markAsRead function
 
   const refreshNotifications = useCallback(() => {
     loadNotifications()
-  }, [])
+  }, [loadNotifications])
 
   // Set up real-time notifications for the current user
   useEffect(() => {

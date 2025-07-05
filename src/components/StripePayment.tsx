@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import type { Stripe } from '@stripe/stripe-js'
 import { motion } from 'framer-motion'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { getStripe } from '../../lib/stripe'
@@ -20,7 +21,6 @@ interface StripePaymentProps {
 }
 
 function PaymentForm({ 
-  clientSecret, 
   bookingId, 
   serviceDetails, 
   onSuccess, 
@@ -247,7 +247,7 @@ function DemoPaymentForm(props: StripePaymentProps) {
 }
 
 export default function StripePayment(props: StripePaymentProps) {
-  const [stripePromise, setStripePromise] = useState<any>(null)
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null)
   const [isStripeConfigured, setIsStripeConfigured] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 

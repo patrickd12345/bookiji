@@ -1,10 +1,9 @@
-﻿import React from "react";
+﻿import React, { HTMLAttributes } from "react";
 import { theme, combineClasses } from "../../config/theme";
 
-interface CardProps {
+type CardProps = HTMLAttributes<HTMLDivElement> & {
   className?: string;
-  [key: string]: any;
-}
+};
 
 export const Card = ({ className = "", ...props }: CardProps) => (
   <div

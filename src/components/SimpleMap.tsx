@@ -22,10 +22,6 @@ interface MapProps {
   onMapClick?: (e: google.maps.MapMouseEvent) => void
   onMarkerClick?: (marker: google.maps.Marker) => void
   className?: string
-  location?: string
-  radius?: number
-  showExact?: boolean
-  onRadiusChange?: (radius: number) => void
 }
 
 export default function SimpleMap({
@@ -34,11 +30,7 @@ export default function SimpleMap({
   markers = [],
   onMapClick,
   onMarkerClick,
-  className,
-  location,
-  radius,
-  showExact,
-  onRadiusChange
+  className
 }: MapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<google.maps.Map | null>(null)
@@ -67,8 +59,8 @@ export default function SimpleMap({
     setMap(mapInstance)
 
     return () => {
-      if (map && onMapClick) {
-        window.google.maps.event.clearListeners(map, 'click')
+      if (onMapClick) {
+        window.google.maps.event.clearListeners(mapInstance, 'click')
       }
     }
   }, [mapRef, center, zoom, onMapClick])
@@ -80,8 +72,10 @@ export default function SimpleMap({
 
     if (!map) return
 
+    const newMarkers: google.maps.Marker[] = []
+
     // Add new markers
-    const newMarkers = markers.map(markerData => {
+    markers.forEach(markerData => {
       const marker = new window.google.maps.Marker({
         position: markerData.position,
         map,
@@ -92,7 +86,7 @@ export default function SimpleMap({
         marker.addListener('click', () => onMarkerClick(marker))
       }
 
-      return marker
+      newMarkers.push(marker)
     })
 
     setMapMarkers(newMarkers)
@@ -100,7 +94,7 @@ export default function SimpleMap({
     return () => {
       newMarkers.forEach(marker => marker.setMap(null))
     }
-  }, [map, markers, onMarkerClick])
+  }, [map, markers, onMarkerClick, mapMarkers])
 
   return (
     <div ref={mapRef} className={cn('w-full h-[400px] rounded-lg', className)} />

@@ -1,10 +1,16 @@
 'use client'
 
-import { useState, type MouseEvent } from 'react'
+import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Rocket } from 'lucide-react'
 
 const RealAIChat = dynamic(() => import('./RealAIChat'), { ssr: false })
+
+interface FaqResult {
+  id: string
+  title: string
+  content: string
+}
 
 interface SimpleHelpCenterProps {
   type: 'customer' | 'vendor'
@@ -15,13 +21,13 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
   const [activeTab, setActiveTab] = useState(defaultTab)
   const [showChat, setShowChat] = useState(false)
   const [faqSearch, setFaqSearch] = useState('')
-  const [faqResults, setFaqResults] = useState<any[]>([])
+  const [faqResults, setFaqResults] = useState<FaqResult[]>([])
   const [faqLoading, setFaqLoading] = useState(false)
   const [showTicket, setShowTicket] = useState(false)
   const [ticketForm, setTicketForm] = useState({ title: '', description: '' })
   const [ticketSubmitting, setTicketSubmitting] = useState(false)
 
-  const tabs = [
+  const tabs: Array<{ id: 'guide' | 'faq' | 'tour'; name: string; icon: string; description: string }> = [
     {
       id: 'guide',
       name: 'User Guide',
@@ -48,7 +54,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
     try {
       const res = await fetch(`/api/support/faq?search=${encodeURIComponent(faqSearch)}&limit=10`)
       const data = await res.json()
-      if (data.ok) setFaqResults(data.data)
+      if (data.ok) setFaqResults(data.data as FaqResult[])
     } catch (e) {
       console.error('FAQ search error', e)
     } finally {
@@ -101,11 +107,11 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
               <div className="flex items-center justify-center space-x-3">
                 <span className="text-2xl">🛡️</span>
                 <div className="text-center">
-                  <h2 className="font-semibold text-blue-900 mb-1">Our Promise: You'll Never Be Left in the Dark</h2>
+                  <h2 className="font-semibold text-blue-900 mb-1">Our Promise: You’ll Never Be Left in the Dark</h2>
                   <p className="text-blue-700 text-sm">
                     Smart self-service → AI assistance → Professional support → Direct founder access. 
                     <br />
-                    <strong>There's always a path to resolution.</strong>
+                    <strong>There’s always a path to resolution.</strong>
                   </p>
                 </div>
                 <span className="text-2xl">✨</span>
@@ -121,7 +127,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`p-6 rounded-lg border-2 transition-all duration-200 text-left ${
                 activeTab === tab.id
                   ? 'border-blue-500 bg-blue-50 shadow-md'
@@ -258,7 +264,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                     <>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">What is the $1 commitment fee?</h3>
-                        <p className="text-gray-600">The $1 commitment fee guarantees your booking slot and prevents no-shows. It's fully refundable if the provider cancels or doesn't show up.</p>
+                        <p className="text-gray-600">The $1 commitment fee guarantees your booking slot and prevents no-shows. It’s fully refundable if the provider cancels or doesn’t show up.</p>
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">How do I pay for the actual service?</h3>
@@ -281,7 +287,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                     <>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">How much does Bookiji charge providers?</h3>
-                        <p className="text-gray-600">Bookiji is free for providers! You keep 100% of your service fees. We only collect the $1 commitment fee from customers.</p>
+                        <p className="text-gray-600">Bookiji is free for providers! You keep 100 % of your service fees. We only collect the $1 commitment fee from customers.</p>
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">How do I manage my availability?</h3>
@@ -292,7 +298,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                         <p className="text-gray-600">You receive payment directly from customers after service completion. For digital payments, we process weekly payouts via Stripe.</p>
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
-                        <h3 className="font-semibold text-gray-900 mb-2">What if a customer doesn't show up?</h3>
+                        <h3 className="font-semibold text-gray-900 mb-2">What if a customer doesn’t show up?</h3>
                         <p className="text-gray-600">You keep the $1 commitment fee as compensation for your time. You can also mark them as a no-show in your dashboard.</p>
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
@@ -367,7 +373,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                       <h4 className="font-semibold text-yellow-900 mb-1">Pro Tip</h4>
                       <p className="text-yellow-700 text-sm">
                         {type === 'customer' 
-                          ? 'Look for the "See it in ACTION" button on the main page to try the guided tour!'
+                          ? 'Look for the “See it in ACTION” button on the main page to try the guided tour!'
                           : 'The tour button will be available in your dashboard soon. For now, explore the dashboard directly.'
                         }
                       </p>
