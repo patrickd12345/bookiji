@@ -36,13 +36,12 @@ export default function RootLayout({
               name="google-adsense-account"
               content={process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}
             />
-            <Script
-              id="adsense-verify"
+            {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+            <script
               async
-              strategy="beforeInteractive"
               src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
               crossOrigin="anonymous"
-            />
+            ></script>
           </>
         )}
       </head>
