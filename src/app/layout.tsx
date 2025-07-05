@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import MainNavigation from '@/components/MainNavigation'
 import AdBanner from '@/components/AdBanner'
+import Script from 'next/script'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -28,14 +29,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="color-scheme" content="light dark" />
-        {/* Google AdSense code */}
-        <meta name="google-adsense-account" content="ca-pub-2311249346490347" />
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2311249346490347"
-          crossOrigin="anonymous"
-        ></script>
+        <Script id="adsense-head" strategy="beforeInteractive" async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || 'ca-pub-2311249346490347'}`} crossOrigin="anonymous" />
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
         <ThemeProvider
