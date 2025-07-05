@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
 
 interface NotificationRequest {
   type: 'email' | 'sms' | 'push'
@@ -13,7 +12,7 @@ export async function POST(request: Request) {
   try {
     const notification: NotificationRequest = await request.json()
 
-    const { type, recipient, template, data, priority = 'normal' } = notification
+    const { type, recipient, template, data } = notification
 
     // Validate input
     if (!type || !recipient || !template) {

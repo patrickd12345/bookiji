@@ -1,11 +1,10 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createSupabaseClient } from '@/lib/supabaseClient'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { TextareaHTMLAttributes } from 'react'
 
 interface Article {
   id?: string
@@ -27,11 +26,7 @@ export default function AdminFAQPage() {
     is_published: true
   })
 
-  useEffect(() => {
-    fetchArticles()
-  }, [])
-
-  async function fetchArticles() {
+  const fetchArticles = useCallback(async () => {
     setLoading(true)
     const { data, error } = await supabase
       .from('knowledge_base')
@@ -40,10 +35,14 @@ export default function AdminFAQPage() {
     if (error) {
       console.error(error)
     } else {
-      setArticles(data as any)
+      setArticles(data as Article[])
     }
     setLoading(false)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    fetchArticles()
+  }, [fetchArticles])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value, type } = e.target

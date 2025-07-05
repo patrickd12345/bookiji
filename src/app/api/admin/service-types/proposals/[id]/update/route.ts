@@ -98,9 +98,17 @@ export async function POST(req: Request) {
 
 
     return NextResponse.json({ ok: true })
-  } catch (err: any) {
-    const msg = err?.issues ? err.issues.map((i: any) => i.message).join(', ') : err.message
+  } catch (err: unknown) {
+    let msg = 'Unknown error'
+    if (err && typeof err === 'object') {
+      const e = err as { issues?: { message: string }[]; message?: string }
+      if (e.issues) {
+        msg = e.issues.map((i) => i.message).join(', ')
+      } else if (e.message) {
+        msg = e.message
+      }
+    }
     console.error('[service-types/update] error', err)
     return NextResponse.json({ ok: false, error: msg }, { status: 400 })
   }
-} 
+}

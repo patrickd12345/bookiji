@@ -34,7 +34,7 @@ export async function GET() {
       message: 'Demo credit packages'
     })
 
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({
       success: true,
       packages: DEFAULT_PACKAGES,

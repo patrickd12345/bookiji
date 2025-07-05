@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function AdminLayout({
@@ -12,11 +12,7 @@ export default function AdminLayout({
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
-  useEffect(() => {
-    checkAuthentication()
-  }, [])
-
-  const checkAuthentication = async () => {
+  const checkAuthentication = useCallback(async () => {
     try {
       // SECURE: Real admin authentication check
       console.log('Checking admin authentication...')
@@ -46,7 +42,11 @@ export default function AdminLayout({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    checkAuthentication()
+  }, [checkAuthentication])
 
   if (isLoading) {
     return (
@@ -62,7 +62,7 @@ export default function AdminLayout({
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-gray-600">You don't have permission to access this area.</p>
+          <p className="text-gray-600">You don&apos;t have permission to access this area.</p>
         </div>
       </div>
     )
