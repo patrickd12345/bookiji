@@ -19,8 +19,9 @@ export async function GET(req: NextRequest) {
     if (error) throw error
 
     return NextResponse.json({ ok: true, data })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[admin/service-types/proposals] error', err)
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
+    const msg = err && typeof err === 'object' && 'message' in err ? (err as { message: string }).message : 'Unknown error'
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 })
   }
-} 
+}

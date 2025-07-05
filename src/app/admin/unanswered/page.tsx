@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createSupabaseClient } from '@/lib/supabaseClient'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,20 +18,20 @@ export default function UnansweredPage() {
   const [items, setItems] = useState<Unanswered[]>([])
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    fetchItems()
-  }, [])
-
-  async function fetchItems() {
+  const fetchItems = useCallback(async () => {
     setLoading(true)
     const { data, error } = await supabase
       .from('support_unanswered_questions')
       .select('*')
       .order('created_at', { ascending: false })
     if (error) console.error(error)
-    else setItems(data as any)
+    else setItems(data as Unanswered[])
     setLoading(false)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    fetchItems()
+  }, [fetchItems])
 
   async function markProcessed(id: string) {
     const { error } = await supabase

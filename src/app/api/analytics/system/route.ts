@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseClient } from '@/lib/supabaseClient'
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   const supabase = createSupabaseClient()
 
   const now = new Date()
@@ -36,7 +36,7 @@ export async function GET(_req: NextRequest) {
 
   const userIds = new Set<string>()
   const durations: number[] = []
-  events?.forEach((row: any) => {
+  events?.forEach((row: { properties?: { user_id?: string; session_duration?: number | string } }) => {
     const props = row.properties || {}
     if (props.user_id) userIds.add(props.user_id)
     if (props.session_duration) {

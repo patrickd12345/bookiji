@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     // Aggregate counts in code
     const counts: Record<string, number> = {}
-    data.forEach((row: any) => {
+    data.forEach((row: { step_name: string }) => {
       counts[row.step_name] = (counts[row.step_name] || 0) + 1
     })
 
@@ -25,8 +25,9 @@ export async function GET(req: NextRequest) {
     const result = ordered.map((name) => ({ step_name: name, count: counts[name] || 0 }))
 
     return NextResponse.json({ ok: true, data: result })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[analytics/funnel] error', err)
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
+    const msg = err && typeof err === 'object' && 'message' in err ? (err as { message: string }).message : 'Unknown error'
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 })
   }
-} 
+}
