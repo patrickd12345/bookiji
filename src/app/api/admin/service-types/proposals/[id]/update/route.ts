@@ -4,12 +4,10 @@ import { z } from 'zod'
 
 const schema = z.object({ action: z.enum(['approve', 'reject']), reviewerId: z.string().uuid().optional(), notes: z.string().optional() })
 
-export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: Request) {
   const supabase = createSupabaseClient()
-  const { id } = params
+  const urlParts = new URL(req.url).pathname.split('/')
+  const id = urlParts[urlParts.length - 2] // path ends with /[id]/update/route
 
   try {
     const body = await req.json()
