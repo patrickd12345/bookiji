@@ -4,12 +4,12 @@ import { z } from 'zod'
 
 const schema = z.object({ action: z.enum(['approve', 'reject']), reviewerId: z.string().uuid().optional(), notes: z.string().optional() })
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Record<string, string> }) {
   const supabase = createSupabaseClient()
   const { id } = params
 
   try {
-    const body = await request.json()
+    const body = await req.json()
     const { action, reviewerId, notes } = schema.parse(body)
 
     const status = action === 'approve' ? 'approved' : 'rejected'
