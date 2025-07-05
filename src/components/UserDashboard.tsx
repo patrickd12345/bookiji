@@ -141,6 +141,30 @@ export default function UserDashboard() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('all')
   const router = useRouter()
 
+  // Load user data (profile, bookings, credits, favorites) in parallel
+  const loadUserData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const {
+        data: { session }
+      } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error('No session found')
+      }
+
+      await Promise.all([
+        loadUserProfile(session.user.id),
+        loadUserBookings(session.user.id),
+        loadUserCredits(session.user.id),
+        loadFavoriteProviders(session.user.id)
+      ])
+    } catch (error) {
+      console.error('Failed to load user data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     loadUserData()
     loadNotifications()
@@ -245,27 +269,6 @@ export default function UserDashboard() {
       if (reconnectTimeout) clearTimeout(reconnectTimeout)
     }
   }, [])
-
-  const loadUserData = async () => {
-    setLoading(true)
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        throw new Error('No session found')
-      }
-
-      await Promise.all([
-        loadUserProfile(session.user.id),
-        loadUserBookings(session.user.id),
-        loadUserCredits(session.user.id),
-        loadFavoriteProviders(session.user.id)
-      ])
-    } catch (error) {
-      console.error('Failed to load user data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const loadUserProfile = async (userId: string) => {
     try {
