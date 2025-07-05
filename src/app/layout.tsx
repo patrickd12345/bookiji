@@ -29,21 +29,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="color-scheme" content="light dark" />
-        {/* Google AdSense verification */}
-        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
-          <>
-            <meta
-              name="google-adsense-account"
-              content={process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}
-            />
-            {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-            <script
-              async
-              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
-              crossOrigin="anonymous"
-            ></script>
-          </>
-        )}
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
         <ThemeProvider
