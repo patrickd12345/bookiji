@@ -2,6 +2,7 @@
 
 import React, { useState, type MouseEvent } from 'react';
 import { motion } from 'framer-motion';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { useUIStore } from '@/stores/uiStore';
 import type { AdminStats, AdminAction, AdminNotification } from '@/types/global.d';
 
@@ -39,6 +40,8 @@ function ActionModal({ action, onClose }: { action: AdminAction; onClose: () => 
 
 export default function AdminCockpit() {
   const { showAdminCockpit, setShowAdminCockpit } = useUIStore();
+
+  const supabase = createSupabaseClient();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [stats] = useState<AdminStats>({

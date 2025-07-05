@@ -225,11 +225,13 @@ export const trackGeographicEvent = (
   event: string,
   properties: Record<string, unknown> = {}
 ) => {
-  // Attempt to get user's country from various sources
-  const country = properties.country || 
-                  getCountryFromTimezone() || 
-                  getCountryFromLanguage() || 
-                  'unknown'
+  // Ensure country is typed as a string for downstream helpers
+  const country = (
+    (properties as { country?: string }).country ??
+    getCountryFromTimezone() ??
+    getCountryFromLanguage() ??
+    'unknown'
+  ) as string
 
   trackEvent(event, {
     ...properties,
