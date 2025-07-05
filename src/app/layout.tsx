@@ -1,6 +1,5 @@
 ﻿import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
-import Script from 'next/script'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
@@ -29,6 +28,14 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="color-scheme" content="light dark" />
+        {/* Google AdSense code */}
+        <meta name="google-adsense-account" content="ca-pub-2311249346490347" />
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2311249346490347"
+          crossOrigin="anonymous"
+        ></script>
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
         <ThemeProvider
