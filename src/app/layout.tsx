@@ -1,13 +1,10 @@
 ﻿import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
-import Head from 'next/head'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import MainNavigation from '@/components/MainNavigation'
-
-const adsenseClientId =
-  process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || 'ca-pub-2311249346490347'
+import Script from 'next/script'
 
 // @ts-nocheck
 
@@ -17,6 +14,9 @@ export const metadata: Metadata = {
   title: 'Bookiji - Universal Booking Platform',
   description: 'Book any service, anywhere, with guaranteed bookings and $1 commitment fees.',
   manifest: '/manifest.json',
+  other: {
+    'google-adsense-account': 'ca-pub-2311249346490347',
+  },
 }
 
 export const viewport: Viewport = {
@@ -31,10 +31,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <Head>
-        <meta name="google-adsense-account" content={adsenseClientId} />
-      </Head>
+      {/* Head elements are managed via the metadata export above */}
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
+        {/* Google AdSense loader script */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="corporate"
