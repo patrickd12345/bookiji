@@ -162,6 +162,7 @@ pnpm dev
 
 ### **Revenue Streams**
 - **Booking Fees:** $1-5 per booking (varies by country/service)
+- **Availability Search Fee:** $1 to view open slots
 - **Provider Subscriptions:** Premium features for high-volume providers
 - **Enterprise Licenses:** White-label for large organizations
 - **Advertising Revenue:** Privacy-respecting contextual ads (AdSense integration) that surface complementary services
