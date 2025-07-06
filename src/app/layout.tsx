@@ -11,6 +11,9 @@ import Script from 'next/script'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  other: {
+    'google-adsense-account': 'ca-pub-2311249346490347',
+  },
   title: 'Bookiji - Universal Booking Platform',
   description: 'Book any service, anywhere, with guaranteed bookings and $1 commitment fees.',
   manifest: '/manifest.json',
@@ -28,7 +31,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      {/* Head elements are managed via the metadata export above */}
+      <head>
+        <meta name="google-adsense-account" content="ca-pub-2311249346490347" />
+      </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
         {/* Google AdSense loader script */}
         <Script
