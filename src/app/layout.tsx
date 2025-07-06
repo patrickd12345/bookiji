@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   title: 'Bookiji - Universal Booking Platform',
   description: 'Book any service, anywhere, with guaranteed bookings and $1 commitment fees.',
   manifest: '/manifest.json',
+  other: {
+    'google-adsense-account': 'ca-pub-2311249346490347',
+  },
 }
 
 export const viewport: Viewport = {
@@ -28,9 +31,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-       
-      </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
         <ThemeProvider
           attribute="class"
