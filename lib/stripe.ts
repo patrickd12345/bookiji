@@ -155,6 +155,48 @@ export async function createCommitmentFeePaymentIntent(
   }
 }
 
+// Payment intent for paid availability search
+export async function createAvailabilitySearchPaymentIntent(
+  customerId: string,
+  metadata: Record<string, string> = {},
+  currency: string = DEFAULT_BOOKING_FEE.currency,
+) {
+  try {
+    const amountCents = await getLiveBookingFee(currency)
+
+    if (!stripe) {
+      console.warn('Stripe not configured - returning mock payment intent')
+      return {
+        success: true,
+        paymentIntent: {
+          id: `pi_test_${Date.now()}`,
+          client_secret: `pi_test_${Date.now()}_secret_test`,
+          status: 'requires_payment_method',
+          amount: amountCents,
+          currency,
+        },
+      }
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountCents,
+      currency,
+      customer: customerId,
+      description: 'Bookiji Availability Search Fee',
+      metadata: {
+        payment_type: 'availability_search',
+        ...metadata,
+      },
+      automatic_payment_methods: { enabled: true },
+    })
+
+    return { success: true, paymentIntent }
+  } catch (error) {
+    console.error('Error creating search payment intent:', error)
+    return { success: false, error }
+  }
+}
+
 // Verify payment intent
 export async function verifyPaymentIntent(paymentIntentId: string) {
   try {
@@ -180,4 +222,4 @@ export async function verifyPaymentIntent(paymentIntentId: string) {
   }
 }
 
-export { getLiveBookingFee } 
+export { getLiveBookingFee, createAvailabilitySearchPaymentIntent }

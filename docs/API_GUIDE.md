@@ -47,6 +47,7 @@ Obtain tokens by signing up or authenticating through endpoints in `/api/auth`.
 
 - `GET /api/search/providers` – Search providers (supports POST for AI suggestions)
 - `POST /api/availability/generate` – Generate availability slots
+- `POST /api/availability/search-paid` – Search availability (charges $1 fee)
 
 ### Payments
 
