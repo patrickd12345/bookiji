@@ -22,8 +22,11 @@ interface Booking {
 }
 
 export default function ConfirmationPage() {
-  const params = useParams()
-  const bookingId = params.bookingId as string
+  const params = useParams<{ bookingId: string }>()
+  const bookingId = params?.bookingId ?? ''
+  if (!bookingId) {
+    return <div className="p-8 text-red-600">Invalid booking id</div>
+  }
   const { user } = useAuth()
   
   const [booking, setBooking] = useState<Booking | null>(null)

@@ -21,8 +21,11 @@ interface Vendor {
 }
 
 export default function BookVendorPage() {
-  const params = useParams()
-  const vendorId = params.vendorId as string
+  const params = useParams<{ vendorId: string }>()
+  const vendorId = params?.vendorId ?? ''
+  if (!vendorId) {
+    return <div className="p-8 text-red-600">Invalid vendor id</div>
+  }
   const { user } = useAuth()
   
   const [vendor, setVendor] = useState<Vendor | null>(null)

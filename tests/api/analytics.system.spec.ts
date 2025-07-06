@@ -1,8 +1,5 @@
-/// <reference types="vitest" />
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, Mock } from 'vitest'
 import { GET } from '@/app/api/analytics/system/route'
-
-const BASE_URL = process.env.TEST_BASE_URL || ''
 
 // Mock Supabase client with predefined query results
 const totalEvents = 120
@@ -13,17 +10,26 @@ const eventRows = [
   { properties: { user_id: 'u1', session_duration: 10 } }
 ]
 
-function createBuilder(result: any) {
-  const builder: any = {}
-  builder.select = vi.fn(() => builder)
-  builder.gte = vi.fn(() => builder)
-  builder.lte = vi.fn(() => builder)
-  builder.eq = vi.fn(() => builder)
-  builder.then = (resolve: any) => Promise.resolve(result).then(resolve)
-  return builder
+interface MockBuilder<T> {
+  select: Mock;
+  gte: Mock;
+  lte: Mock;
+  eq: Mock;
+  then: (resolve: (value: T) => void) => Promise<void>;
 }
 
-const builders = [
+function createBuilder<T>(result: T): MockBuilder<T> {
+  const builder: Partial<MockBuilder<T>> = {}
+  const chain = () => builder as MockBuilder<T>
+  builder.select = vi.fn(chain)
+  builder.gte = vi.fn(chain)
+  builder.lte = vi.fn(chain)
+  builder.eq = vi.fn(chain)
+  builder.then = (resolve: (value: T) => void) => Promise.resolve(result).then(resolve)
+  return builder as MockBuilder<T>
+}
+
+const builders: Array<MockBuilder<unknown>> = [
   createBuilder({ count: totalEvents }),
   createBuilder({ count: errorEvents }),
   createBuilder({ data: eventRows })
@@ -37,8 +43,7 @@ vi.mock('@/lib/supabaseClient', () => ({
 
 describe('GET /api/analytics/system', () => {
   it('returns aggregated system metrics', async () => {
-    const req = new Request(`${BASE_URL}/api/analytics/system`, { method: 'GET' })
-    const res = await GET(req as any)
+    const res = await GET()
     const data = await res.json()
 
     expect(res.status).toBe(200)

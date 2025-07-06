@@ -111,10 +111,13 @@ function PaymentForm({ clientSecret, bookingId }: { clientSecret: string, bookin
 }
 
 export default function PaymentPage() {
-  const params = useParams()
+  const params = useParams<{ bookingId: string }>()
   const searchParams = useSearchParams()
-  const bookingId = params.bookingId as string
-  const clientSecret = searchParams.get('client_secret')
+  const bookingId = params?.bookingId ?? ''
+  const clientSecret = searchParams?.get('client_secret') ?? null
+  if (!bookingId) {
+    return <div className="p-8 text-red-600">Invalid booking id</div>
+  }
   const { user } = useAuth()
   
   const [booking, setBooking] = useState<Booking | null>(null)
@@ -193,7 +196,7 @@ export default function PaymentPage() {
 
           {/* Payment Form */}
           <Elements stripe={stripePromise}>
-            <PaymentForm clientSecret={clientSecret} bookingId={bookingId} />
+            <PaymentForm clientSecret={clientSecret ?? ''} bookingId={bookingId} />
           </Elements>
         </div>
       </div>

@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { describe, it, expect, vi } from 'vitest'
 // FIRST_EDIT: delete early imports
 // DELETE LINE: import { POST as createBlock } from '@/app/api/blocks/create/route'
@@ -133,9 +132,7 @@ describe('Blocks API endpoints', () => {
   })
 
   it('GET /api/blocks/list should return block lists for user', async () => {
-    const response = await listBlocks(new Request(`${BASE_URL}/api/blocks/list`, {
-      method: 'GET'
-    }) as any)
+    const response = await listBlocks()
     const data = await response.json()
 
     expect(response.status).toBe(200)

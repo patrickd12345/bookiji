@@ -11,7 +11,7 @@ function VerifyEmailContent() {
 
   const verifyEmail = async () => {
     try {
-      const token = searchParams.get('token');
+      const token = searchParams?.get('token') || '';
       if (!token) {
         setVerificationStatus('error');
         return;

@@ -11,7 +11,7 @@ import NotificationBell from '@/components/NotificationBell';
 const SHOW_NAV_ITEMS = process.env.NEXT_PUBLIC_ENABLE_NAV === 'true';
 
 export default function MainNavigation() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isBetaUser, setIsBetaUser] = useState(false);

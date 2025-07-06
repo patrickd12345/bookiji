@@ -4,8 +4,8 @@ import './globals.css'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import MainNavigation from '@/components/MainNavigation'
-import AdBanner from '@/components/AdBanner'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
+
 // @ts-nocheck
 
 const inter = Inter({ subsets: ['latin'] })
@@ -46,7 +46,7 @@ export default function RootLayout({
           <main className="min-h-screen pt-16">
             {children}
           </main>
-          <AdBanner />
+    
         </ThemeProvider>
       </body>
     </html>

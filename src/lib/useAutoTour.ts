@@ -4,7 +4,7 @@ import Shepherd from 'shepherd.js'
 import { getTourByRoute } from './guidedTourRegistry'
 
 export function useAutoTour() {
-  const pathname = usePathname()
+  const pathname = usePathname() ?? ''
 
   useEffect(() => {
     const tourDef = getTourByRoute(pathname)
