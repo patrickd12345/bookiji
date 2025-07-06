@@ -4,14 +4,9 @@ import './globals.css'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import MainNavigation from '@/components/MainNavigation'
-import dynamic from 'next/dynamic'
+import Script from 'next/script'
 
 // @ts-nocheck
-
-const GoogleAdsense = dynamic(
-  () => import('nextjs-google-adsense').then((mod) => mod.GoogleAdsense || mod.default),
-  { ssr: false }
-)
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -35,8 +30,13 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       {/* Head elements are managed via the metadata export above */}
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
-        {/* Google AdSense loader component */}
-        <GoogleAdsense publisherId="ca-pub-2311249346490347" />
+        {/* Google AdSense loader script */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="corporate"

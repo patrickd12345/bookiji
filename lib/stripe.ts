@@ -222,4 +222,4 @@ export async function verifyPaymentIntent(paymentIntentId: string) {
   }
 }
 
-export { getLiveBookingFee, createAvailabilitySearchPaymentIntent }
+export { getLiveBookingFee }
