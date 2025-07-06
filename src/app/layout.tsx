@@ -29,14 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="color-scheme" content="light dark" />
-        {/* Google AdSense loader injected without extra attributes */}
-        {/* eslint-disable-next-line react/no-danger */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `!function(){var s=document.createElement('script');s.async=true;s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || 'ca-pub-2311249346490347'}';s.crossOrigin='anonymous';document.head.appendChild(s);}();`,
-          }}
-        />
+       
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
         <ThemeProvider

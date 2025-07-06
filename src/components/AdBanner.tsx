@@ -36,7 +36,6 @@ export default function AdBanner() {
       const s = document.createElement('script')
       s.id = scriptId
       s.async = true
-      s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adClient}`
       s.crossOrigin = 'anonymous'
       s.onload = initAds
       document.head.appendChild(s)
