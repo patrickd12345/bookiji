@@ -1,9 +1,13 @@
-﻿import type { Metadata, Viewport } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
+import Head from 'next/head'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import MainNavigation from '@/components/MainNavigation'
+
+const adsenseClientId =
+  process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || 'ca-pub-2311249346490347'
 
 
 // @ts-nocheck
@@ -28,6 +32,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <Head>
+        <meta name="google-adsense-account" content={adsenseClientId} />
+      </Head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
         <ThemeProvider
           attribute="class"
