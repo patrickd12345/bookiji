@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { TooltipProps } from 'recharts'
@@ -52,11 +52,7 @@ export default function VendorAnalytics() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadAnalytics()
-  }, [timeframe, loadAnalytics])
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -135,9 +131,13 @@ export default function VendorAnalytics() {
       setError('Failed to load analytics data')
       setAnalyticsData(null)
     } finally {
-      setLoading(false)
-    }
+    setLoading(false)
   }
+  }, [timeframe])
+
+  useEffect(() => {
+    loadAnalytics()
+  }, [timeframe, loadAnalytics])
 
   const calculateTimeframeData = (
     bookings: Array<{ created_at: string; price_cents: number }>,

@@ -54,7 +54,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       }
 
       const { items } = await calendarResponse.json()
-      const primaryCalendar = items.find((cal: Record<string, any>) => cal.primary)
+      const primaryCalendar = items.find((cal: Record<string, unknown>) => (cal as { primary?: boolean }).primary)
 
       if (!primaryCalendar) {
         throw new Error('No primary calendar found')
@@ -171,7 +171,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
         orderBy: 'startTime',
       });
 
-      return response.data.items.map((event: Record<string, any>) => ({
+      return response.data.items.map((event: Record<string, unknown>) => ({
         id: event.id,
         title: event.summary || 'Busy',
         start: new Date(event.start.dateTime || event.start.date),
@@ -199,7 +199,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
 
       const busySlots = response.data.calendars.primary.busy || [];
       return {
-        busy: busySlots.map((slot: Record<string, any>) => ({
+        busy: busySlots.map((slot: Record<string, unknown>) => ({
           start: new Date(slot.start),
           end: new Date(slot.end)
         }))
@@ -213,7 +213,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
   async getCalendarList(): Promise<{ id: string; name: string }[]> {
     try {
       const response = await this.calendar.calendarList.list();
-      return response.data.items.map((cal: Record<string, any>) => ({
+      return response.data.items.map((cal: Record<string, unknown>) => ({
         id: cal.id,
         name: cal.summary
       }));

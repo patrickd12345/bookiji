@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,15 +26,10 @@ export default function GoogleCalendarConnection({
   const [isLoading, setIsLoading] = useState(true)
   const [isDisconnecting, setIsDisconnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [email, setEmail] = useState('')
 
-  useEffect(() => {
-    checkConnectionStatus()
-  }, [profileId, checkConnectionStatus])
-
-  const checkConnectionStatus = async () => {
+  const checkConnectionStatus = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -55,7 +50,11 @@ export default function GoogleCalendarConnection({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [profileId, onConnectionChange])
+
+  useEffect(() => {
+    checkConnectionStatus()
+  }, [profileId, checkConnectionStatus])
 
   const handleConnect = async () => {
     setIsConnecting(true)
@@ -139,7 +138,7 @@ export default function GoogleCalendarConnection({
           className="w-full"
         />
         <p className="text-sm text-gray-500">
-          Leave blank to use your Google account's primary email
+          Leave blank to use your Google account&apos;s primary email
         </p>
       </div>
 
@@ -200,13 +199,6 @@ export default function GoogleCalendarConnection({
               </p>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Status Messages */}
-      {successMessage && (
-        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-          <p className="text-sm text-green-700">{successMessage}</p>
         </div>
       )}
 
