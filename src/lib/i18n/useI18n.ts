@@ -25,7 +25,7 @@ async function loadTranslations(locale: string): Promise<Record<string, string>>
     const translations = (await import(`../../../locales/${locale}.json`)).default
     translationCache[locale] = translations
     return translations
-  } catch (err) {
+  } catch (_err) {
     const fallback = (await import(`../../../locales/en-US.json`)).default
     translationCache[locale] = fallback
     return fallback
@@ -136,7 +136,6 @@ export function useI18n(initialLocale?: string): I18nHook {
   // 📊 GET CURRENT LOCALE INFO
   const localeInfo = getLocaleInfo(currentLocale)
   const currencyInfo = getCurrencyInfo(localeInfo.currency)
-  const countryInfo = getCountryInfo(localeInfo.country)
 
   // 💰 FORMAT CURRENCY
   const formatCurrency = useCallback((amount: number) => {

@@ -32,7 +32,7 @@ export default function GoogleCalendarConnection({
 
   useEffect(() => {
     checkConnectionStatus()
-  }, [profileId])
+  }, [profileId, checkConnectionStatus])
 
   const checkConnectionStatus = async () => {
     try {
@@ -49,9 +49,9 @@ export default function GoogleCalendarConnection({
       setIsConnected(data.isConnected)
       setConnectionInfo(data.connectionInfo)
       onConnectionChange?.(data.isConnected)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error checking Google Calendar status:', error)
-      setError(error.message)
+      setError(error instanceof Error ? error.message : 'Unknown error')
     } finally {
       setIsLoading(false)
     }
@@ -107,30 +107,6 @@ export default function GoogleCalendarConnection({
     }
   }
 
-  const handleTestSync = async () => {
-    try {
-      setError(null)
-      const response = await fetch('/api/calendar/sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ profileId }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Sync test failed')
-      }
-
-      setSuccessMessage('Calendar sync test successful!')
-      setTimeout(() => setSuccessMessage(null), 3000)
-    } catch (error: any) {
-      console.error('Error testing calendar sync:', error)
-      setError(error.message)
-    }
-  }
 
   if (isLoading) {
     return (
@@ -238,8 +214,8 @@ export default function GoogleCalendarConnection({
       {!isConnected && (
         <div className="mt-4 pt-4 border-t border-gray-100">
           <p className="text-sm text-gray-600">
-            Connect your Google Calendar to automatically sync your availability. 
-            You can use any Google Calendar account - it doesn't need to match your Bookiji email.
+            Connect your Google Calendar to automatically sync your availability.
+            You can use any Google Calendar account - it doesn&apos;t need to match your Bookiji email.
             We only request read-only access and you can disconnect at any time.
           </p>
         </div>

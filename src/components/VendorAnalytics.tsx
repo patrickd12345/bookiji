@@ -54,7 +54,7 @@ export default function VendorAnalytics() {
 
   useEffect(() => {
     loadAnalytics()
-  }, [timeframe])
+  }, [timeframe, loadAnalytics])
 
   const loadAnalytics = async () => {
     setLoading(true)

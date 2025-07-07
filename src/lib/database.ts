@@ -1,5 +1,4 @@
 import { supabase } from './supabaseClient'
-import { createClient } from '@supabase/supabase-js'
 import type { 
   UserCredits, 
   CreditTransaction, 
@@ -13,7 +12,7 @@ export interface UserProfile {
   email?: string
   phone?: string
   role: 'customer' | 'vendor' | 'admin'
-  preferences?: any
+  preferences?: Record<string, unknown>
   marketing_consent?: boolean
   business_name?: string // For vendors
   service_type?: string // For vendors

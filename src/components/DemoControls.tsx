@@ -4,10 +4,9 @@ import React from 'react';
 import { useUIStore } from '@/stores/uiStore';
 
 export default function DemoControls() {
-  const {
-    setShowBookingModal,
-  } = useUIStore();
+  const { setShowBookingModal } = useUIStore();
 
+  // Demo controls currently only trigger opening the booking modal
   return (
     <div className="fixed bottom-4 right-4 flex flex-col gap-2">
       <button
