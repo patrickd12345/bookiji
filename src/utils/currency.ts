@@ -2,7 +2,6 @@
 // Migration: Use @/lib/i18n/config instead
 // Will be removed in next major version
 
-import { detectLocaleFromHeaders } from '@/lib/i18n/config'
 
 /**
  * @deprecated Use detectLocaleFromHeaders from @/lib/i18n/config instead

@@ -87,6 +87,12 @@ type DotNotation<T> = T extends object
 type ThemePath = DotNotation<Theme>;
 
 // Utility function to get theme values
-export const getThemeValue = (path: ThemePath, defaultValue?: string): string | undefined => {
-  return path.split('.').reduce((obj: any, key) => obj?.[key], theme) || defaultValue;
-}; 
+export const getThemeValue = (
+  path: ThemePath,
+  defaultValue?: string
+): string | undefined => {
+  return (
+    path.split('.').reduce((obj: Record<string, unknown>, key) => (obj as any)?.[key], theme) ||
+    defaultValue
+  )
+};

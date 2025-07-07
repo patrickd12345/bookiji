@@ -20,7 +20,7 @@ export const fetchNearbyProviders = async (lat: number, lng: number, radius: num
 
 export const calculateRadiusZone = async (lat: number, lng: number): Promise<RadiusZone> => {
   // Get counts at different radii
-  const [twoKm, fiveKm, tenKm] = await Promise.all([
+  const [twoKm, fiveKm] = await Promise.all([
     fetchNearbyProviders(lat, lng, 2),
     fetchNearbyProviders(lat, lng, 5),
     fetchNearbyProviders(lat, lng, 10)

@@ -55,7 +55,7 @@ export interface ExternalEvent {
   location?: string;
   status: 'confirmed' | 'tentative' | 'cancelled';
   last_modified: Date;
-  raw_data?: any; // Store provider-specific data
+  raw_data?: unknown; // Store provider-specific data
 }
 
 export interface SyncResult {
