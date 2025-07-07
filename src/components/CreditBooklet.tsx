@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Elements } from '@stripe/react-stripe-js'
 import { getStripe } from '../../lib/stripe'
@@ -31,7 +31,6 @@ interface CreditBookletProps {
   isOpen: boolean
   onCloseAction: () => void
   onCreditsUpdated?: (newBalance: number) => void
-  initialCredits?: number
 }
 
 interface PaymentOption {
@@ -46,7 +45,6 @@ export default function CreditBooklet({
   isOpen,
   onCloseAction,
   onCreditsUpdated,
-  initialCredits = 0
 }: CreditBookletProps) {
   const [packages, setPackages] = useState<CreditPackage[]>([])
   const [userCredits, setUserCredits] = useState<UserCredits | null>(null)
@@ -57,9 +55,6 @@ export default function CreditBooklet({
   const [error, setError] = useState<string | null>(null)
   const [showCustomAmount, setShowCustomAmount] = useState(false)
   const [customAmount, setCustomAmount] = useState<number>(10)
-  const [credits, setCredits] = useState(initialCredits)
-  const [purchaseAmount, setPurchaseAmount] = useState('')
-  const [useAmount, setUseAmount] = useState('')
 
   const paymentOptions: PaymentOption[] = [
     {
@@ -76,7 +71,7 @@ export default function CreditBooklet({
     }
   ]
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true)
     try {
       // Fetch credit packages and user balance
@@ -101,7 +96,7 @@ export default function CreditBooklet({
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId])
 
   useEffect(() => {
     if (isOpen) {
@@ -496,7 +491,7 @@ export default function CreditBooklet({
                           />
                         </label>
                         <div className="text-center">
-                          <p className="text-sm text-gray-500">You'll receive</p>
+                          <p className="text-sm text-gray-500">You&apos;ll receive</p>
                           <p className="text-xl font-bold text-green-600">
                             {customAmount * 100} credits
                           </p>

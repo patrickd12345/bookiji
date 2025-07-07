@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 interface TourStep {
   target: string
@@ -20,93 +20,23 @@ interface GuidedTourManagerProps {
   onSkip?: () => void
 }
 
+interface Tour {
+  start: () => void
+  next: () => void
+  back: () => void
+  complete: () => void
+  on: (event: string, handler: () => void) => void
+}
+
 export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTourManagerProps) {
   const [isClient, setIsClient] = useState(false)
-  const [tour, setTour] = useState<any>(null)
+  const [tour, setTour] = useState<Tour | null>(null)
 
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  const customerTourSteps: TourStep[] = [
-    {
-      target: 'body',
-      title: 'Welcome to Your Bookiji Dashboard!',
-      text: 'Let us show you around your personal booking hub. This tour will help you discover all the features available to make booking services easier than ever.',
-      placement: 'bottom'
-    },
-    {
-      target: '[data-tour="credit-balance"]',
-      title: 'Your Credit Balance',
-      text: 'Keep track of your Bookiji Credits here. Credits make booking faster and earn you bonuses. Click the balance to purchase more credits or view your transaction history.',
-      placement: 'bottom'
-    },
-    {
-      target: '[data-tour="upcoming-bookings"]',
-      title: 'Upcoming Bookings',
-      text: 'See all your confirmed appointments at a glance. Get reminders, reschedule if needed, or cancel with our flexible policies. Never miss an appointment again!',
-      placement: 'top'
-    },
-    {
-      target: '[data-tour="favorites"]',
-      title: 'Your Favorites',
-      text: 'Save your favorite providers for quick rebooking. Build relationships with trusted service providers and enjoy faster booking experiences.',
-      placement: 'top'
-    },
-    {
-      target: '[data-tour="booking-history"]',
-      title: 'Booking History',
-      text: 'Review your past appointments, leave reviews, and track your loyalty points. Your booking history helps us provide better recommendations.',
-      placement: 'top'
-    },
-    {
-      target: '[data-tour="profile-settings"]',
-      title: 'Profile Settings',
-      text: 'Manage your personal information, payment methods, and notification preferences. Keep your profile updated for the best booking experience.',
-      placement: 'left'
-    }
-  ]
-
-  const vendorTourSteps: TourStep[] = [
-    {
-      target: 'body',
-      title: 'Welcome to Your Provider Dashboard!',
-      text: 'Your business command center is here! This tour will show you how to manage bookings, track performance, and grow your business with Bookiji.',
-      placement: 'bottom'
-    },
-    {
-      target: '[data-tour="revenue-overview"]',
-      title: 'Revenue Overview',
-      text: 'Monitor your earnings in real-time. See total revenue, this week\'s bookings, and track your business growth. Every booking includes our commitment guarantee.',
-      placement: 'bottom'
-    },
-    {
-      target: '[data-tour="recent-bookings"]',
-      title: 'Recent Bookings',
-      text: 'Manage all your appointments here. Accept new bookings, confirm details, and communicate with customers. Our commitment system ensures serious customers only.',
-      placement: 'top'
-    },
-    {
-      target: '[data-tour="calendar-tab"]',
-      title: 'Calendar Management',
-      text: 'Keep your availability updated to maximize bookings. Connect your existing calendar or use our built-in system. Set working hours, block time, and manage multiple services.',
-      placement: 'bottom'
-    },
-    {
-      target: '[data-tour="analytics-tab"]',
-      title: 'Performance Analytics',
-      text: 'Understand your business with detailed insights. Track revenue trends, booking patterns, customer satisfaction, and get AI-powered recommendations for growth.',
-      placement: 'bottom'
-    },
-    {
-      target: '[data-tour="no-show-guarantee"]',
-      title: 'No-Show Protection',
-      text: 'Our $1 commitment system has reduced no-shows by 95%. Every customer pays a commitment fee, ensuring they\'re serious about their booking. You\'re protected!',
-      placement: 'top'
-    }
-  ]
-
-  const initializeTour = async () => {
+  const initializeTour = useCallback(async () => {
     if (!isClient) return
 
     try {
@@ -120,6 +50,84 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
           modalOverlayOpeningPadding: 4
         }
       })
+
+      const customerTourSteps: TourStep[] = [
+        {
+          target: 'body',
+          title: 'Welcome to Your Bookiji Dashboard!',
+          text: 'Let us show you around your personal booking hub. This tour will help you discover all the features available to make booking services easier than ever.',
+          placement: 'bottom'
+        },
+        {
+          target: '[data-tour="credit-balance"]',
+          title: 'Your Credit Balance',
+          text: 'Keep track of your Bookiji Credits here. Credits make booking faster and earn you bonuses. Click the balance to purchase more credits or view your transaction history.',
+          placement: 'bottom'
+        },
+        {
+          target: '[data-tour="upcoming-bookings"]',
+          title: 'Upcoming Bookings',
+          text: 'See all your confirmed appointments at a glance. Get reminders, reschedule if needed, or cancel with our flexible policies. Never miss an appointment again!',
+          placement: 'top'
+        },
+        {
+          target: '[data-tour="favorites"]',
+          title: 'Your Favorites',
+          text: 'Save your favorite providers for quick rebooking. Build relationships with trusted service providers and enjoy faster booking experiences.',
+          placement: 'top'
+        },
+        {
+          target: '[data-tour="booking-history"]',
+          title: 'Booking History',
+          text: 'Review your past appointments, leave reviews, and track your loyalty points. Your booking history helps us provide better recommendations.',
+          placement: 'top'
+        },
+        {
+          target: '[data-tour="profile-settings"]',
+          title: 'Profile Settings',
+          text: 'Manage your personal information, payment methods, and notification preferences. Keep your profile updated for the best booking experience.',
+          placement: 'left'
+        }
+      ]
+
+      const vendorTourSteps: TourStep[] = [
+        {
+          target: 'body',
+          title: 'Welcome to Your Provider Dashboard!',
+          text: 'Your business command center is here! This tour will show you how to manage bookings, track performance, and grow your business with Bookiji.',
+          placement: 'bottom'
+        },
+        {
+          target: '[data-tour="revenue-overview"]',
+          title: 'Revenue Overview',
+          text: 'Monitor your earnings in real-time. See total revenue, this week\'s bookings, and track your business growth. Every booking includes our commitment guarantee.',
+          placement: 'bottom'
+        },
+        {
+          target: '[data-tour="recent-bookings"]',
+          title: 'Recent Bookings',
+          text: 'Manage all your appointments here. Accept new bookings, confirm details, and communicate with customers. Our commitment system ensures serious customers only.',
+          placement: 'top'
+        },
+        {
+          target: '[data-tour="calendar-tab"]',
+          title: 'Calendar Management',
+          text: 'Keep your availability updated to maximize bookings. Connect your existing calendar or use our built-in system. Set working hours, block time, and manage multiple services.',
+          placement: 'bottom'
+        },
+        {
+          target: '[data-tour="analytics-tab"]',
+          title: 'Performance Analytics',
+          text: 'Understand your business with detailed insights. Track revenue trends, booking patterns, customer satisfaction, and get AI-powered recommendations for growth.',
+          placement: 'bottom'
+        },
+        {
+          target: '[data-tour="no-show-guarantee"]',
+          title: 'No-Show Protection',
+          text: 'Our $1 commitment system has reduced no-shows by 95%. Every customer pays a commitment fee, ensuring they\'re serious about their booking. You\'re protected!',
+          placement: 'top'
+        }
+      ]
 
       const steps = type === 'customer' ? customerTourSteps : vendorTourSteps
 
@@ -177,10 +185,10 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
     } catch (error) {
       console.error('Failed to initialize tour:', error)
     }
-  }
+  }, [isClient, type, onComplete, onSkip])
 
   // helper to attach global shortcuts (advance on Enter/Space or overlay click)
-  const attachShortcuts = (activeTour: any) => {
+  const attachShortcuts = useCallback((activeTour: Tour) => {
     const keyHandler = (e: KeyboardEvent) => {
       if (['Enter', ' '].includes(e.key)) {
         e.preventDefault()
@@ -209,19 +217,22 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
 
     activeTour.on('complete', detach)
     activeTour.on('cancel', detach)
-  }
+  }, [])
 
-  const startTour = async () => {
+  const startTour = useCallback(async () => {
     let currentTour = tour
     if (!currentTour) {
-      currentTour = await initializeTour()
+      const newTour = await initializeTour()
+      if (newTour) {
+        currentTour = newTour
+      }
     }
     
     if (currentTour) {
       currentTour.start()
       attachShortcuts(currentTour)
     }
-  }
+  }, [tour, initializeTour, attachShortcuts])
 
   useEffect(() => {
     if (isClient) {
@@ -240,7 +251,7 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
         }
       }
     }
-  }, [isClient, type])
+  }, [isClient, type, initializeTour, startTour, tour])
 
   return (
     <>

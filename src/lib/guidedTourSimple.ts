@@ -28,7 +28,7 @@ export interface TourOptions {
 export class Tour {
   private steps: TourStep[] = [];
 
-  constructor(options?: TourOptions) {
+  constructor() {
     // Stub constructor
   }
 
