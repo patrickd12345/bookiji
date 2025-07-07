@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { describe, it, expect, vi } from 'vitest'
 import { POST } from '@/app/api/bookings/create/route'
 import { NextRequest } from 'next/server'
@@ -17,15 +16,16 @@ vi.mock('../../lib/stripe', () => ({
 // Mock Supabase similar to previous global mock
 vi.mock('../../src/lib/supabaseClient', () => {
   const from = vi.fn()
-  ;(globalThis as any).__SB_FROM_INT__ = from
+  ;(globalThis as Record<string, unknown>).__SB_FROM_INT__ = from
   return {
     supabase: { from }
   }
 })
 
-const getMock = () => (globalThis as any).__SB_FROM_INT__ as ReturnType<typeof vi.fn>
+// Helper function for getting mock (unused but kept for potential future use)
+const getMock = () => (globalThis as Record<string, unknown>).__SB_FROM_INT__ as ReturnType<typeof vi.fn>
 
-const TEST_BASE_URL = process.env.TEST_BASE_URL || ''
+const TEST_BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
 
 describe('POST /api/bookings/create', () => {
   it('should create a booking', async () => {
@@ -49,7 +49,7 @@ describe('POST /api/bookings/create', () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(bookingData)
-      })
+    })
     )
 
     const response = await POST(mockRequest)

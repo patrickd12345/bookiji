@@ -1,64 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createSupabaseClient } from '@/lib/supabaseClient'
 
 export async function GET() {
-  const supabase = createSupabaseClient()
+  try {
+    const supabase = createSupabaseClient()
+    
+    // Get system metrics
+    const { data: metrics, error } = await supabase
+      .from('analytics_events')
+      .select('event, created_at')
+      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false })
 
-  const now = new Date()
-  const from = new Date(now.getTime() - 60 * 60 * 1000).toISOString()
-  const to = now.toISOString()
-
-  // total events in the last hour
-  const totalRes = await supabase
-    .from('analytics_events')
-    .select('id', { count: 'exact', head: true })
-    .gte('created_at', from)
-    .lte('created_at', to)
-
-  const totalEvents = totalRes.count ?? 0
-
-  // error events in the last hour
-  const errRes = await supabase
-    .from('analytics_events')
-    .select('id', { count: 'exact', head: true })
-    .eq('event_name', 'error_encountered')
-    .gte('created_at', from)
-    .lte('created_at', to)
-
-  const errorEvents = errRes.count ?? 0
-
-  // fetch events to compute active users and p95 session duration
-  const { data: events } = await supabase
-    .from('analytics_events')
-    .select('properties')
-    .gte('created_at', from)
-    .lte('created_at', to)
-
-  const userIds = new Set<string>()
-  const durations: number[] = []
-  events?.forEach((row: { properties?: { user_id?: string; session_duration?: number | string } }) => {
-    const props = row.properties || {}
-    if (props.user_id) userIds.add(props.user_id)
-    if (props.session_duration) {
-      const n = Number(props.session_duration)
-      if (!isNaN(n)) durations.push(n)
+    if (error) {
+      console.error('Error fetching analytics:', error)
+      return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 })
     }
-  })
 
-  durations.sort((a, b) => a - b)
-  const p95Index = durations.length ? Math.floor(durations.length * 0.95) - 1 : -1
-  const p95 = p95Index >= 0 ? durations[p95Index] : 0
+    // Process metrics
+    const eventCounts = metrics?.reduce((acc: Record<string, number>, event) => {
+      acc[event.event] = (acc[event.event] || 0) + 1
+      return acc
+    }, {}) || {}
 
-  const requestsPerMinute = Number((totalEvents / 60).toFixed(2))
-  const errorRate = totalEvents > 0 ? Number(((errorEvents / totalEvents) * 100).toFixed(2)) : 0
-  const activeUsers = userIds.size
-
-  const metrics = {
-    requestsPerMinute,
-    p95SessionDuration: p95,
-    errorRate,
-    activeUsers
+    return NextResponse.json({
+      success: true,
+      metrics: {
+        totalEvents: metrics?.length || 0,
+        eventCounts,
+        lastUpdated: new Date().toISOString()
+      }
+    })
+  } catch (error) {
+    console.error('Analytics system error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-
-  return NextResponse.json({ ok: true, data: metrics })
 }

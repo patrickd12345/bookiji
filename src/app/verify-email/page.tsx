@@ -55,7 +55,7 @@ function VerifyEmailContent() {
               ✉️
             </div>
             <p className="text-sm text-gray-500">
-              Didn&apos;t receive an email? Check your spam folder or{' '}
+              Didn't receive an email? Check your spam folder or{' '}
               <button
                 onClick={() => router.push('/register')}
                 className="text-blue-600 hover:text-blue-500"

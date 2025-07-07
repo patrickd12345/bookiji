@@ -53,6 +53,7 @@ Obtain tokens by signing up or authenticating through endpoints in `/api/auth`.
 
 - `POST /api/payments/create-payment-intent` – Create Stripe payment intent
 - `POST /api/payments/webhook` – Stripe webhook (server-to-server)
+- `GET /api/payments/fees` – Get PPP-adjusted fees for currency
 
 ### Misc
 

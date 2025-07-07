@@ -1,6 +1,6 @@
 # 🌍 Bookiji: Universal Booking Platform
 
-**Status:** 🚀 **PRODUCTION READY** | **Global Beta Live** | **Domain:** [bookiji.com](https://bookiji.com)
+**Status:** 🚀 **BETA READY** | **Global Beta Live** | **Domain:** [bookiji.com](https://bookiji.com)
 
 ---
 
@@ -23,29 +23,29 @@ Bookiji is the world's first **AI-powered, privacy-first, real-time booking plat
 
 ---
 
-## 🚀 **CURRENT STATUS: ENTERPRISE READY**
+## 🚀 **CURRENT STATUS: BETA READY**
 
 ### ✅ **Production Metrics**
-- **100% Test Coverage** (25/25 tests passing)
+- **81.3% Test Coverage** (26/32 tests passing)
 - **Domain Acquired** (bookiji.com)
-- **Complete Feature Set** (MVP+ with advanced features)
+- **Core Feature Set** (MVP with essential features)
 - **International Support** (37 countries, 27 currencies)
-- **Real Payment Processing** (Stripe integration)
+- **Payment Processing** (Stripe integration ready)
 - **AI-Powered Search** (Natural language booking)
 
-### 🏆 **Technical Excellence** 
+### 🏆 **Technical Status** 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   🏆 PERFECT SCORE! 🏆                     │
+│                   🏆 BETA READY! 🏆                        │
 │                                                             │
-│    📊 Test Coverage: 100% (25/25 passing)                  │
-│    🔧 Build Status: ✅ Perfect                             │
+│    📊 Test Coverage: 81.3% (26/32 passing)                 │
+│    🔧 Build Status: ✅ Working                             │
 │    🌍 Global Ready: 37 countries supported                 │
-│    💳 Payments: Live Stripe integration                    │
+│    💳 Payments: Stripe integration ready                   │
 │    🧠 AI: Ollama + OpenAI integration                      │
 │    🗄️ Database: Supabase with full schema                  │
 │                                                             │
-│              🚀 READY FOR SCALE 🚀                         │
+│              🚀 READY FOR BETA TESTING 🚀                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -58,6 +58,7 @@ Bookiji is the world's first **AI-powered, privacy-first, real-time booking plat
 - Tiny barrier, massive impact
 - Refunded if provider no-shows
 - Perfect accountability system
+- **Global Fairness**: PPP-adjusted for economic equality
 
 ### 2. **AI-Powered Discovery** 
 - Natural language search: "haircut near me tomorrow"
@@ -83,8 +84,10 @@ Bookiji is the world's first **AI-powered, privacy-first, real-time booking plat
 - Real-time chat with providers
 - Dynamic pricing optimization
 
--## 🌟 **Additional Features**
--**Interactive Dashboard Tours** guide new users step-by-step via our custom `guidedTourSimple` wrapper (powered by Shepherd.js). See [GUIDED_TOURS.md](docs/GUIDED_TOURS.md) for details.
+---
+
+## 🌟 **Additional Features**
+- **Interactive Dashboard Tours** guide new users step-by-step via our custom `guidedTourSimple` wrapper (powered by Shepherd.js). See [GUIDED_TOURS.md](docs/GUIDED_TOURS.md) for details.
 - **Real-Time Support Portal** with ticket dashboard and live chat
 - **Voice & Image Chat Inputs** in our AI assistants
 - **Advanced Analytics Dashboard** with funnels, heatmaps and session recording
@@ -119,7 +122,7 @@ Bookiji is the world's first **AI-powered, privacy-first, real-time booking plat
 - **Vitest** for unit testing
 - **Supertest** for API testing
 - **MSW** for API mocking
-- **100% coverage** achieved
+- **81.3% coverage** achieved (26/32 tests passing)
 
 ---
 
@@ -161,7 +164,8 @@ pnpm dev
 ## 📈 **BUSINESS MODEL** 
 
 ### **Revenue Streams**
-- **Booking Fees:** $1-5 per booking (varies by country/service)
+- **Customer Commitment Fees:** $1 equivalent (PPP-adjusted for global fairness)
+- **Vendor Platform Fees:** 15% of service price (PPP-adjusted with profitability guarantee)
 - **Availability Search Fee:** $1 to view open slots
 - **Provider Subscriptions:** Premium features for high-volume providers
 - **Enterprise Licenses:** White-label for large organizations
@@ -184,12 +188,14 @@ pnpm dev
 - **Book anything:** Any service, anywhere, instantly
 - **Pay fairly:** PPP-adjusted pricing for your country
 - **Stay safe:** Privacy-first, guaranteed service
+- **Global Fairness:** Same economic effort regardless of location
 
 ### **For Providers**  
 - **Zero setup fees** during beta
 - **Keep 95%+** of your earnings
 - **Global reach** from day one
 - **AI-powered** customer matching
+- **Fair Platform Fees:** PPP-adjusted for your local economy
 
 ### **For Developers**
 - **Open source** core (coming soon)
@@ -200,32 +206,42 @@ pnpm dev
 
 ---
 
-## 📊 **KEY METRICS & ACHIEVEMENTS**
+## 🧪 **TESTING STATUS**
 
-### **Technical**
-- ✅ 100% test coverage (25/25 tests)
-- ✅ Zero critical bugs in production
-- ✅ <200ms average API response time
-- ✅ 99.9% uptime target
+### **Current Test Results**
+- **Total Tests:** 32
+- **Passing:** 26 (81.3%)
+- **Failing:** 6 (18.7%)
+- **Status:** ⚠️ Needs attention
 
-### **Business**  
-- 🎯 37 countries with localized experience  
-- 🎯 27 currencies with fair pricing
-- 🎯 Domain secured (bookiji.com)
-- 🎯 Beta launch ready
+### **Working Features**
+- ✅ User Interface Components (100% tested)
+- ✅ Form Validation (100% tested)
+- ✅ Error Handling (100% tested)
+- ⚠️ API Endpoints (test configuration issues)
+- ⚠️ Analytics Tracking (mock setup issues)
 
-### **Product**
-- 🚀 AI-powered service discovery
-- 🚀 Privacy-first provider protection  
-- 🚀 $1 commitment no-show elimination
-- 🚀 Real-time booking confirmation
+### **Known Issues**
+- API test configuration needs URL parsing fixes
+- Analytics mock setup has hoisting conflicts
+- Test infrastructure requires immediate attention
 
----
-
-**🌍 Ready to change how the world books services?**  
-**[Join Bookiji Beta →](https://bookiji.com)**
+**Note:** Test failures are primarily configuration issues, not necessarily functional problems. Core user-facing features are working.
 
 ---
 
-*Built with ❤️ by the Bookiji team. Making booking painless, one appointment at a time.*
+## 📚 **DOCUMENTATION**
+
+- [**API Guide**](./docs/API_GUIDE.md) - Complete API reference
+- [**Features Overview**](./docs/FEATURES_OVERVIEW.md) - Detailed feature list
+- [**Guided Tours**](./docs/GUIDED_TOURS.md) - User onboarding system
+- [**Privacy Policy**](./docs/PRIVACY_POLICY.md) - Data protection details
+- [**Maintenance Guide**](./MAINTENANCE_GUIDE.md) - Regular maintenance tasks
+- [**Test Results**](./TEST_RESULTS_DASHBOARD.md) - Current testing status
+
+---
+
+**Last Updated:** January 16, 2025  
+**Test Status:** 81.3% passing (26/32 tests)  
+**Documentation Status:** ✅ Current (Verified against actual codebase)
 

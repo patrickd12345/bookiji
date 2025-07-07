@@ -1,4 +1,5 @@
 import { SupportedLocale, CurrencyInfo, CountryInfo } from './types'
+import { getPPPVendorFee, getPPPCustomerFee } from '@/lib/ppp'
 
 // 🌍 COMPREHENSIVE CURRENCY CONFIGURATION
 export const CURRENCIES: Record<string, CurrencyInfo> = {
@@ -39,6 +40,114 @@ export const CURRENCIES: Record<string, CurrencyInfo> = {
   ars: { code: 'ars', symbol: '$', name: 'Argentine Peso', decimals: 2, bookingFee: 10000, tier: 3 },
 }
 
+// 💰 VENDOR FEE CONFIGURATION
+// Based on 15% of average service price by category (USD base values in cents)
+export const VENDOR_FEES_USD: Record<string, number> = {
+  // High-value services (15% of average $200+ service)
+  'Health & Medical': 3000,        // 15% of $200 = $30.00
+  'Professional Services': 1800,    // 15% of $120 = $18.00
+  'Legal Services': 3000,           // 15% of $200 = $30.00
+  'Financial Services': 2250,       // 15% of $150 = $22.50
+  
+  // Personal care services (15% of average $60-100 service)
+  'Beauty & Wellness': 900,         // 15% of $60 = $9.00
+  'Hair & Styling': 1200,           // 15% of $80 = $12.00
+  'Nails & Spa': 1050,              // 15% of $70 = $10.50
+  'Massage & Therapy': 1350,        // 15% of $90 = $13.50
+  'Fitness & Training': 1200,       // 15% of $80 = $12.00
+  
+  // Home services (15% of average $50-100 service)
+  'Home Services': 1200,            // 15% of $80 = $12.00
+  'Cleaning & Maintenance': 900,    // 15% of $60 = $9.00
+  'Repairs & Installation': 1350,   // 15% of $90 = $13.50
+  'Plumbing': 1500,                 // 15% of $100 = $15.00
+  'Electrical': 1500,               // 15% of $100 = $15.00
+  
+  // Creative and specialized services
+  'Creative Services': 1200,        // 15% of $80 = $12.00
+  'Photography & Video': 1500,      // 15% of $100 = $15.00
+  'Event Services': 1800,           // 15% of $120 = $18.00
+  
+  // Transportation and automotive
+  'Automotive': 750,                // 15% of $50 = $7.50
+  'Transportation': 900,            // 15% of $60 = $9.00
+  
+  // Education and consulting
+  'Tutoring & Education': 1200,     // 15% of $80 = $12.00
+  'Consulting': 1800,               // 15% of $120 = $18.00
+  
+  // Pet and specialized services
+  'Pet Services': 900,              // 15% of $60 = $9.00
+  
+  // Default for uncategorized services
+  'Other': 600                      // 15% of $40 = $6.00
+}
+
+// 🏷️ SERVICE CATEGORY MAPPING
+// Maps service categories to their fee tiers for consistent pricing
+export const SERVICE_CATEGORY_MAPPING: Record<string, string> = {
+  // Medical and health
+  'Health & Medical': 'Health & Medical',
+  'Medical': 'Health & Medical',
+  'Dental': 'Health & Medical',
+  
+  // Professional services
+  'Professional Services': 'Professional Services',
+  'Legal Services': 'Legal Services',
+  'Financial Services': 'Financial Services',
+  'Consulting': 'Consulting',
+  'Business Services': 'Professional Services',
+  
+  // Beauty and personal care
+  'Beauty & Wellness': 'Beauty & Wellness',
+  'Hair & Styling': 'Hair & Styling',
+  'Nails & Spa': 'Nails & Spa',
+  'Massage & Therapy': 'Massage & Therapy',
+  'Spa': 'Nails & Spa',
+  'Salon': 'Hair & Styling',
+  
+  // Fitness and wellness
+  'Fitness & Training': 'Fitness & Training',
+  'Personal Training': 'Fitness & Training',
+  'Yoga': 'Fitness & Training',
+  'Wellness': 'Beauty & Wellness',
+  
+  // Home services
+  'Home Services': 'Home Services',
+  'Cleaning & Maintenance': 'Cleaning & Maintenance',
+  'Repairs & Installation': 'Repairs & Installation',
+  'Plumbing': 'Plumbing',
+  'Electrical': 'Electrical',
+  'HVAC': 'Repairs & Installation',
+  'Landscaping': 'Home Services',
+  
+  // Creative services
+  'Creative Services': 'Creative Services',
+  'Photography & Video': 'Photography & Video',
+  'Event Services': 'Event Services',
+  'Design': 'Creative Services',
+  'Art': 'Creative Services',
+  
+  // Automotive and transportation
+  'Automotive': 'Automotive',
+  'Transportation': 'Transportation',
+  'Car Service': 'Automotive',
+  'Delivery': 'Transportation',
+  
+  // Education
+  'Tutoring & Education': 'Tutoring & Education',
+  'Education': 'Tutoring & Education',
+  'Tutoring': 'Tutoring & Education',
+  
+  // Pet services
+  'Pet Services': 'Pet Services',
+  'Pet Care': 'Pet Services',
+  'Veterinary': 'Pet Services',
+  
+  // Default
+  'Other': 'Other'
+}
+
 // 🗺️ COMPREHENSIVE COUNTRY CONFIGURATION
 export const COUNTRIES: Record<string, CountryInfo> = {
   // North America
@@ -77,12 +186,10 @@ export const COUNTRIES: Record<string, CountryInfo> = {
   
   // Middle East & Africa
   IL: { code: 'IL', name: 'Israel', currency: 'ils', continent: 'Asia', timezone: 'Asia/Jerusalem', emergingMarket: false },
-  ZA: { code: 'ZA', name: 'South Africa', currency: 'zar', continent: 'Africa', timezone: 'Africa/Johannesburg', emergingMarket: true },
   NG: { code: 'NG', name: 'Nigeria', currency: 'ngn', continent: 'Africa', timezone: 'Africa/Lagos', emergingMarket: true },
-  
-  // South America
-  BR: { code: 'BR', name: 'Brazil', currency: 'brl', continent: 'South America', timezone: 'America/Sao_Paulo', emergingMarket: true },
+  ZA: { code: 'ZA', name: 'South Africa', currency: 'zar', continent: 'Africa', timezone: 'Africa/Johannesburg', emergingMarket: true },
   AR: { code: 'AR', name: 'Argentina', currency: 'ars', continent: 'South America', timezone: 'America/Argentina/Buenos_Aires', emergingMarket: true },
+  BR: { code: 'BR', name: 'Brazil', currency: 'brl', continent: 'South America', timezone: 'America/Sao_Paulo', emergingMarket: true },
 }
 
 // 🌐 SUPPORTED LOCALES CONFIGURATION
@@ -158,4 +265,156 @@ export function detectLocaleFromHeaders(acceptLanguage?: string): SupportedLocal
   }
   
   return SUPPORTED_LOCALES[DEFAULT_LOCALE]
+}
+
+// 💰 VENDOR FEE CALCULATION FUNCTIONS
+
+/**
+ * Get the normalized service category for fee calculation
+ * Maps various category names to standardized fee categories
+ */
+export function getNormalizedServiceCategory(category: string): string {
+  const normalized = SERVICE_CATEGORY_MAPPING[category]
+  return normalized || 'Other'
+}
+
+/**
+ * Get vendor fee in USD cents for a given service category
+ * @param category - Service category (will be normalized)
+ * @returns Fee amount in USD cents
+ */
+export function getVendorFeeUSD(category: string): number {
+  const normalizedCategory = getNormalizedServiceCategory(category)
+  return VENDOR_FEES_USD[normalizedCategory] || VENDOR_FEES_USD['Other']
+}
+
+/**
+ * Get vendor fee for a given service category and currency
+ * @param category - Service category (will be normalized)
+ * @param currency - Currency code (e.g., 'usd', 'inr', 'jpy')
+ * @returns Fee amount in the specified currency's smallest unit (cents for most currencies)
+ */
+export function getVendorFee(category: string, currency: string = 'usd'): number {
+  const usdFee = getVendorFeeUSD(category)
+  
+  // 🌍 Use real PPP calculations for accurate economic fairness
+  try {
+    return getPPPVendorFee(usdFee, currency)
+  } catch (error) {
+    // Fallback to legacy tier-based system if PPP module not available
+    const currencyInfo = getCurrencyInfo(currency)
+    
+    // 🎯 EQUAL PAYMENT EFFORT SCALING (Legacy)
+    const baseMultiplier = currencyInfo.bookingFee / 100 // USD commitment fee is 100 cents
+    let equalEffortMultiplier = baseMultiplier
+    
+    // Apply equal effort adjustments based on currency tier
+    if (currencyInfo.tier === 3) {
+      equalEffortMultiplier = baseMultiplier * 0.25 // 25% of base to achieve equal effort
+    } else if (currencyInfo.tier === 2) {
+      equalEffortMultiplier = baseMultiplier * 0.5 // 50% of base to achieve equal effort
+    }
+    
+    return Math.round(usdFee * equalEffortMultiplier)
+  }
+}
+
+/**
+ * Get vendor fee with proper formatting for display
+ * @param category - Service category
+ * @param currency - Currency code
+ * @returns Formatted fee string (e.g., "$30.00", "₹1,500", "¥3,000")
+ */
+export function getFormattedVendorFee(category: string, currency: string = 'usd'): string {
+  const fee = getVendorFee(category, currency)
+  const currencyInfo = getCurrencyInfo(currency)
+  
+  // Format based on currency decimals
+  if (currencyInfo.decimals === 0) {
+    // For zero-decimal currencies like JPY, KRW
+    return `${currencyInfo.symbol}${fee.toLocaleString()}`
+  } else {
+    // For decimal currencies, convert from smallest unit
+    const amount = fee / Math.pow(10, currencyInfo.decimals)
+    return `${currencyInfo.symbol}${amount.toLocaleString(undefined, { minimumFractionDigits: currencyInfo.decimals, maximumFractionDigits: currencyInfo.decimals })}`
+  }
+}
+
+/**
+ * Get vendor fee breakdown for transparency
+ * @param category - Service category
+ * @param currency - Currency code
+ * @returns Object with fee details
+ */
+export function getVendorFeeBreakdown(category: string, currency: string = 'usd') {
+  const normalizedCategory = getNormalizedServiceCategory(category)
+  const usdFee = getVendorFeeUSD(category)
+  const localFee = getVendorFee(category, currency)
+  const currencyInfo = getCurrencyInfo(currency)
+  
+  return {
+    category: normalizedCategory,
+    usdFee: usdFee / 100, // Convert to dollars
+    localFee: localFee,
+    localFeeFormatted: getFormattedVendorFee(category, currency),
+    currency: currency,
+    currencySymbol: currencyInfo.symbol,
+    percentage: 15, // Always 15% of average service price
+    description: `15% of average ${normalizedCategory} service price`
+  }
+}
+
+/**
+ * Get customer commitment fee using PPP calculations
+ * @param currency - Currency code
+ * @returns Fee amount in local currency cents
+ */
+export function getCustomerFee(currency: string = 'usd'): number {
+  // 🌍 Use real PPP calculations for accurate economic fairness
+  try {
+    return getPPPCustomerFee(currency)
+  } catch (error) {
+    // Fallback to legacy tier-based system if PPP module not available
+    const currencyInfo = getCurrencyInfo(currency)
+    return currencyInfo.bookingFee
+  }
+}
+
+/**
+ * Get formatted customer fee for display
+ * @param currency - Currency code
+ * @returns Formatted fee string (e.g., "$1.00", "₹50", "¥100")
+ */
+export function getFormattedCustomerFee(currency: string = 'usd'): string {
+  const fee = getCustomerFee(currency)
+  const currencyInfo = getCurrencyInfo(currency)
+  
+  // Format based on currency decimals
+  if (currencyInfo.decimals === 0) {
+    // For zero-decimal currencies like JPY, KRW
+    return `${currencyInfo.symbol}${fee.toLocaleString()}`
+  } else {
+    // For decimal currencies, convert from smallest unit
+    const amount = fee / Math.pow(10, currencyInfo.decimals)
+    return `${currencyInfo.symbol}${amount.toLocaleString(undefined, { minimumFractionDigits: currencyInfo.decimals, maximumFractionDigits: currencyInfo.decimals })}`
+  }
+}
+
+/**
+ * Get customer fee breakdown for transparency
+ * @param currency - Currency code
+ * @returns Object with fee details
+ */
+export function getCustomerFeeBreakdown(currency: string = 'usd') {
+  const fee = getCustomerFee(currency)
+  const currencyInfo = getCurrencyInfo(currency)
+  
+  return {
+    usdFee: 1.0, // Always $1.00 base
+    localFee: fee,
+    localFeeFormatted: getFormattedCustomerFee(currency),
+    currency: currency,
+    currencySymbol: currencyInfo.symbol,
+    description: `Commitment fee adjusted for ${currency.toUpperCase()} purchasing power`
+  }
 } 

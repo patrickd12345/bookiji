@@ -1,145 +1,122 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import dynamic from 'next/dynamic'
-import AIRadiusScaling from './AIRadiusScaling'
-
-interface MarkerData {
-  id: string
-  lat: number
-  lng: number
-  label: string
-}
+import React, { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 interface MapAbstractionAIProps {
-  service: string
-  location: string
-  markers?: MarkerData[]
-  showExact?: boolean
-  radius?: number
-  onRadiusChange?: (radius: number) => void
+  onLocationSelect?: (location: { lat: number; lng: number; address: string }) => void
+  className?: string
 }
 
-// Load SimpleMap only on the client to avoid Leaflet SSR errors
-const SimpleMap = dynamic(() => import('./SimpleMap'), { ssr: false })
+export default function MapAbstractionAI({ onLocationSelect, className = '' }: MapAbstractionAIProps) {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [selectedLocation, setSelectedLocation] = useState<{
+    lat: number
+    lng: number
+    address: string
+  } | null>(null)
 
-export default function MapAbstractionAI({ 
-  service, 
-  location, 
-  markers = [], 
-  showExact = false,
-  radius: controlledRadius,
-  onRadiusChange
-}: MapAbstractionAIProps) {
-  const [aiRadius, setAIRadius] = useState<number>(controlledRadius ?? 5)
-  const [isAIRadiusLoaded, setIsAIRadiusLoaded] = useState(false)
-
-  // Sync with controlled prop
+  // Simulated location suggestions based on search
   useEffect(() => {
-    if (typeof controlledRadius === 'number') {
-      setAIRadius(controlledRadius)
-    }
-  }, [controlledRadius])
-
-  const handleRadiusChange = (radius: number) => {
-    if (onRadiusChange) {
-      onRadiusChange(radius)
+    if (searchQuery.length > 2) {
+      const mockSuggestions = [
+        `${searchQuery} - Downtown`,
+        `${searchQuery} - North District`,
+        `${searchQuery} - South Area`,
+        `${searchQuery} - East Side`,
+        `${searchQuery} - West End`
+      ]
+      setSuggestions(mockSuggestions)
     } else {
-      setAIRadius(radius)
+      setSuggestions([])
     }
-    setIsAIRadiusLoaded(true)
+  }, [searchQuery])
+
+  const handleLocationSelect = (suggestion: string) => {
+    setSearchQuery(suggestion)
+    setSuggestions([])
+    
+    // Simulate geocoding
+    const mockLocation = {
+      lat: Math.random() * 180 - 90,
+      lng: Math.random() * 360 - 180,
+      address: suggestion
+    }
+    
+    setSelectedLocation(mockLocation)
+    onLocationSelect?.(mockLocation)
+  }
+
+  const handleConfirmLocation = () => {
+    if (selectedLocation) {
+      onLocationSelect?.(selectedLocation)
+    }
   }
 
   return (
-    <div className="space-y-6">
-      {/* AI Radius Scaling Control Panel */}
-      <AIRadiusScaling 
-        service={service}
-        location={location}
-        onRadiusChangeAction={handleRadiusChange}
-      />
-
-      {/* Map Display with AI-Recommended Radius */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: isAIRadiusLoaded ? 0.2 : 0 }}
-        className="relative"
-      >
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-              <span className="text-white text-xs">🗺️</span>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Availability Map</h3>
-              <p className="text-sm text-gray-500">
-                Showing providers with AI-optimized privacy protection
-              </p>
-            </div>
-          </div>
-          
-          {isAIRadiusLoaded && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-green-50 rounded-full">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-green-700 font-medium">
-                AI Radius: {typeof controlledRadius === 'number' ? controlledRadius : aiRadius} km
-              </span>
-            </div>
-          )}
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <span className="text-2xl">🗺️</span>
+          AI Location Finder
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <Label htmlFor="location-search">What area are you looking for?</Label>
+          <Input
+            id="location-search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="e.g., coffee shops near me, restaurants downtown"
+            className="mt-1"
+          />
         </div>
 
-        <SimpleMap 
-          center={{ lat: 0, lng: 0 }}
-          zoom={12}
-          markers={markers.map(m => ({
-            position: { lat: m.lat, lng: m.lng },
-            title: m.label
-          }))}
-        />
-
-        {/* Privacy Protection Notice */}
-        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
-          <div className="flex items-start gap-3">
-            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-blue-600 text-sm">🔒</span>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-blue-900 mb-1">
-                Vendor Privacy Protection Active
-              </h4>
-              <p className="text-sm text-blue-700">
-                Providers are shown as availability zones rather than exact locations. 
-                This protects their privacy while helping you find nearby services. 
-                The blue circles indicate approximate service areas.
-              </p>
+        {suggestions.length > 0 && (
+          <div className="space-y-2">
+            <Label className="text-sm text-gray-600">Suggestions:</Label>
+            <div className="space-y-1">
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleLocationSelect(suggestion)}
+                  className="w-full text-left p-2 hover:bg-gray-100 rounded text-sm"
+                >
+                  {suggestion}
+                </button>
+              ))}
             </div>
           </div>
-        </div>
-      </motion.div>
+        )}
 
-      {/* Service Information */}
-      <div className="bg-white rounded-xl p-4 border border-gray-100">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <span className="text-xs text-gray-500 uppercase tracking-wide">Service</span>
-            <p className="text-sm font-medium text-gray-900">{service}</p>
+        {selectedLocation && (
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm text-green-800">
+              <strong>Selected:</strong> {selectedLocation.address}
+            </p>
+            <p className="text-xs text-green-600 mt-1">
+              Coordinates: {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
+            </p>
           </div>
-          <div>
-            <span className="text-xs text-gray-500 uppercase tracking-wide">Location</span>
-            <p className="text-sm font-medium text-gray-900">{location}</p>
-          </div>
-          <div>
-            <span className="text-xs text-gray-500 uppercase tracking-wide">Providers Found</span>
-            <p className="text-sm font-medium text-gray-900">{markers.length}</p>
-          </div>
-          <div>
-            <span className="text-xs text-gray-500 uppercase tracking-wide">Search Radius</span>
-            <p className="text-sm font-medium text-gray-900">{typeof controlledRadius === 'number' ? controlledRadius : aiRadius} km</p>
-          </div>
+        )}
+
+        <Button 
+          onClick={handleConfirmLocation}
+          disabled={!selectedLocation}
+          className="w-full"
+        >
+          Confirm Location
+        </Button>
+
+        <div className="text-xs text-gray-500 text-center">
+          🔒 Your exact location is protected until you confirm
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 } 

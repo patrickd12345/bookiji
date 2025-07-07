@@ -130,8 +130,8 @@ export default function ApplicationPage() {
           )}>
             Testimonials
           </summary>
-          <p className="italic text-gray-600 mt-2">&quot;Bookiji made booking so easy and reliable!&quot;</p>
-          <p className="italic text-gray-600">&quot;No more no-shows. I love the $1 guarantee.&quot;</p>
+          <p className="italic text-gray-600 mt-2">"Bookiji made booking so easy and reliable!"</p>
+          <p className="italic text-gray-600">"No more no-shows. I love the $1 guarantee."</p>
         </details>
         <details className="bg-white rounded-xl shadow p-4">
           <summary className={combineClasses(
@@ -141,7 +141,7 @@ export default function ApplicationPage() {
             FAQ
           </summary>
           <p className="mb-1 mt-2"><b>How does the $1 fee work?</b> It guarantees your spot and reduces no-shows.</p>
-          <p className="mb-1"><b>What if my vendor cancels?</b> You&apos;ll get the provider&apos;s contact info after booking - arrange directly with them.</p>
+          <p className="mb-1"><b>What if my vendor cancels?</b> You'll get the provider's contact info after booking - arrange directly with them.</p>
           <p className="mb-1"><b>What about no-show penalties?</b> Vendors may indicate their own policies on their booking offers - check their terms.</p>
           <p className="mb-1"><b>How is my privacy protected?</b> Both parties contact details are abstracted until booking is confirmed.</p>
         </details>

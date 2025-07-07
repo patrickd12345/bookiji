@@ -268,7 +268,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">How do I pay for the actual service?</h3>
-                        <p className="text-gray-600">You pay the service fee directly to the provider after your appointment is completed. The commitment fee is separate and goes to Bookiji.</p>
+                        <p className="text-gray-600">You pay the service fee directly to the provider after your appointment is completed. Bookiji only processes the $1 commitment fee to secure your booking.</p>
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">What if I need to cancel my booking?</h3>
@@ -295,7 +295,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">When do I get paid?</h3>
-                        <p className="text-gray-600">You receive payment directly from customers after service completion. For digital payments, we process weekly payouts via Stripe.</p>
+                        <p className="text-gray-600">You receive payment directly from customers after service completion. Bookiji does not process the final service payment - only the $1 commitment fee.</p>
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">What if a customer doesn’t show up?</h3>

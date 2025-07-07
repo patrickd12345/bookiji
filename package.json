@@ -2,6 +2,7 @@
   "name": "bookiji",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +12,8 @@
     "type-check:watch": "tsc --noEmit --watch",
     "context": "node startup-context.js",
     "test": "vitest run",
-    "ai:test": "node scripts/ai-test-loop.mjs"
+    "ai:test": "node scripts/ai-test-loop.mjs",
+    "maintenance:calendar": "node scripts/setup-maintenance-calendar.mjs"
   },
   "dependencies": {
     "@formspree/react": "^3.0.0",

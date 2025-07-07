@@ -1,57 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseClient } from '@/lib/supabaseClient'
-import { stripe } from '@/lib/stripe'
-import { createCommitmentFeePaymentIntent } from '../../../../../lib/stripe'
-import { supabase } from '@/lib/supabaseClient'
-import { detectLocaleFromHeaders } from '@/lib/i18n/config'
-import type Stripe from 'stripe'
+import { createCommitmentFeePaymentIntent } from '@/lib/stripe'
 
-type CreatePaymentIntentRequest = {
+interface PaymentIntentRequest {
   amount: number
-  currency?: string
-  customerId?: string | null
-}
-
-type PaymentIntentParams = Omit<Stripe.PaymentIntentCreateParams, 'customer'> & {
-  customer?: string
-}
-
-function isValidCustomerId(id: string | null | undefined): id is string {
-  return typeof id === 'string' && id.length > 0
+  currency: string
+  customerId: string
+  serviceId: string
+  bookingId?: string
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const data = await request.json() as CreatePaymentIntentRequest
-    const { amount, currency = 'usd', customerId } = data
-
-    if (!amount) {
-      return NextResponse.json({ error: 'Amount is required' }, { status: 400 })
+    const body: PaymentIntentRequest = await request.json()
+    
+    // Validate required fields
+    if (!body.amount || !body.currency || !body.customerId || !body.serviceId) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
     }
 
-    const baseParams = {
-      amount,
-      currency,
-      automatic_payment_methods: {
-        enabled: true,
-      }
-    }
+    // Create payment intent
+    const paymentIntent = await createCommitmentFeePaymentIntent(body.amount, body.currency)
 
-    // Create payment intent with or without customer
-    const paymentIntent = await stripe.paymentIntents.create(
-      typeof customerId === 'string' && customerId
-        ? { ...baseParams, customer: customerId as string }
-        : baseParams
-    )
-
-    return NextResponse.json({ clientSecret: paymentIntent.client_secret })
+    return NextResponse.json({
+      success: true,
+      paymentIntent: paymentIntent
+    })
   } catch (error) {
     console.error('Payment intent creation error:', error)
     return NextResponse.json(
-      { error: 'Failed to create payment intent' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
-}
-
-// Legacy POST_OLD handler removed — kept in Git history if we ever need to reference it. 
+} 

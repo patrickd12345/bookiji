@@ -1,6 +1,7 @@
-/// <reference types="vitest" />
 import { describe, it, expect, vi } from 'vitest'
 import { POST } from '@/app/api/auth/register/route'
+
+const completeReferralMock = vi.hoisted(() => vi.fn(async () => ({ success: true })))
 
 vi.mock('@/lib/supabaseClient', () => ({
   supabase: {
@@ -19,14 +20,13 @@ vi.mock('@/lib/database', () => ({
   }
 }))
 
-const completeReferralMock = vi.fn(async () => {})
 vi.mock('@/lib/referrals', () => ({
   referralService: {
     completeReferral: completeReferralMock
   }
 }))
 
-const BASE_URL = process.env.TEST_BASE_URL || ''
+const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
 
 describe('POST /api/auth/register with referral', () => {
   it('credits referrer when referral email matches', async () => {

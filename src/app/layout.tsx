@@ -56,6 +56,45 @@ export default function RootLayout({
           <main className="min-h-screen pt-16">
             {children}
           </main>
+          
+          <footer className="bg-gray-50 border-t py-8 px-4">
+            <div className="max-w-6xl mx-auto">
+              <div className="grid md:grid-cols-4 gap-8">
+                <div>
+                  <h3 className="font-semibold mb-3">Bookiji</h3>
+                  <p className="text-sm text-gray-600">
+                    Universal booking platform for all your service needs.
+                  </p>
+                </div>
+                                  <div>
+                    <h3 className="font-semibold mb-3">Learn More</h3>
+                    <ul className="space-y-2 text-sm">
+                      <li><a href="/about" className="text-gray-600 hover:text-gray-900">About Us</a></li>
+                      <li><a href="/how-it-works" className="text-gray-600 hover:text-gray-900">How It Works</a></li>
+                      <li><a href="/faq" className="text-gray-600 hover:text-gray-900">FAQ</a></li>
+                      <li><a href="/blog" className="text-gray-600 hover:text-gray-900">Blog</a></li>
+                    </ul>
+                  </div>
+                <div>
+                  <h3 className="font-semibold mb-3">Support</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li><a href="/help" className="text-gray-600 hover:text-gray-900">Help Center</a></li>
+                    <li><a href="/help/tickets" className="text-gray-600 hover:text-gray-900">Contact Support</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-3">Legal</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li><a href="/terms" className="text-gray-600 hover:text-gray-900">Terms of Service</a></li>
+                    <li><a href="/privacy" className="text-gray-600 hover:text-gray-900">Privacy Policy</a></li>
+                  </ul>
+                </div>
+              </div>
+              <div className="border-t mt-8 pt-8 text-center text-sm text-gray-600">
+                <p>© {new Date().getFullYear()} Bookiji. All rights reserved.</p>
+              </div>
+            </div>
+          </footer>
     
         </ThemeProvider>
       </body>

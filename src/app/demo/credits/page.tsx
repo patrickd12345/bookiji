@@ -270,7 +270,7 @@ export default function CreditsDemoPage() {
           <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
             <p className="text-sm text-gray-700">
               <strong>💡 Smart Math:</strong> The Ultimate Pack costs the same as a Premium Pack ($70) 
-              but gives you $150 in credits instead of $70. That&apos;s more than 2x the value! 
+              but gives you $150 in credits instead of $70. That's more than 2x the value! 
               Perfect for power users who book frequently.
             </p>
           </div>

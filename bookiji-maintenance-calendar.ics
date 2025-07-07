@@ -1,0 +1,53 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Bookiji//Maintenance Calendar//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Bookiji Maintenance
+X-WR-CALDESC:Regular maintenance tasks for Bookiji platform
+BEGIN:VEVENT
+DTSTART:20250707T130000Z
+DTEND:20250707T140000Z
+DTSTAMP:20250706T230127Z
+UID:1751842887677-g5ekhx53x@bookiji.com
+SUMMARY:🔧 Bookiji Weekly Maintenance
+DESCRIPTION:Weekly Maintenance Checklist:\n\n□ Update sitemap with new content (public/sitemap.xml)\n□ Review Google Search Console for issues\n□ Check AdSense performance dashboard\n□ Monitor site speed with PageSpeed Insights\n□ Review support tickets and user feedback\n□ Update blog content calendar\n□ Check for broken links\n□ Review error logs\n\nReference: MAINTENANCE_GUIDE.md
+RRULE:FREQ=WEEKLY;BYDAY=MO
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20250804T130000Z
+DTEND:20250804T140000Z
+DTSTAMP:20250706T230127Z
+UID:1751842887677-spxufsaju@bookiji.com
+SUMMARY:🔧 Bookiji Monthly Maintenance
+DESCRIPTION:Monthly Maintenance Checklist:\n\n□ Update all dependencies (pnpm update)\n□ Run security audit (pnpm audit)\n□ Review and update FAQ based on support tickets\n□ Analyze Google Analytics data\n□ Update meta descriptions and title tags\n□ Review and optimize ad placements\n□ Clean up database (old sessions, logs)\n□ Update legal documents if needed\n□ Review competitor changes\n□ Plan content for next month\n\nReference: MAINTENANCE_GUIDE.md
+RRULE:FREQ=MONTHLY;BYDAY=1MO
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20251006T130000Z
+DTEND:20251006T140000Z
+DTSTAMP:20250706T230127Z
+UID:1751842887677-8923bku99@bookiji.com
+SUMMARY:🔧 Bookiji Quarterly Maintenance
+DESCRIPTION:Quarterly Maintenance Checklist:\n\n□ Full SEO audit and optimization\n□ Review and update Terms of Service\n□ Review and update Privacy Policy\n□ Comprehensive security review\n□ Performance optimization audit\n□ User experience testing\n□ Feature planning session\n□ Backup strategy verification\n□ Domain and SSL certificate check\n□ Brand guidelines review\n\nReference: MAINTENANCE_GUIDE.md
+RRULE:FREQ=MONTHLY;INTERVAL=3;BYDAY=1MO
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20250721T130000Z
+DTEND:20250721T140000Z
+DTSTAMP:20250706T230127Z
+UID:1751842887677-yk9xzvhi0@bookiji.com
+SUMMARY:💰 AdSense Performance Review
+DESCRIPTION:AdSense Performance Check:\n\n□ Review earnings and CTR\n□ Check for policy violations\n□ Optimize ad placements\n□ Monitor page speed impact\n□ Review content compliance\n□ Check for invalid traffic\n\nReference: MAINTENANCE_GUIDE.md - AdSense Section
+RRULE:FREQ=WEEKLY;INTERVAL=2
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20250707T130000Z
+DTEND:20250707T140000Z
+DTSTAMP:20250706T230127Z
+UID:1751842887677-j6tq96ruf@bookiji.com
+SUMMARY:🗺️ Sitemap Update Check
+DESCRIPTION:Sitemap Maintenance:\n\n□ Check if new pages were added\n□ Update public/sitemap.xml if needed\n□ Test sitemap at https://bookiji.com/sitemap.xml\n□ Submit to Google Search Console if updated\n□ Update lastmod dates for changed pages\n\nWhen to update:\n- New pages added (FAQ, About, Blog posts)\n- Service categories added\n- Landing pages created\n- Major content updates\n\nReference: MAINTENANCE_GUIDE.md - Sitemap Section
+RRULE:FREQ=WEEKLY;BYDAY=MO
+END:VEVENT
+END:VCALENDAR
