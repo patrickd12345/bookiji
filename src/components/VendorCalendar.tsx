@@ -17,13 +17,6 @@ interface CalendarEvent {
   price: number
 }
 
-interface AvailabilitySlot {
-  date: string
-  startTime: string
-  endTime: string
-  isAvailable: boolean
-}
-
 interface QuickActionModalProps {
   type: 'availability' | 'block' | 'service';
   providerId: string;
@@ -32,7 +25,6 @@ interface QuickActionModalProps {
 }
 
 function QuickActionModal({ type, providerId, onClose, onSuccess }: QuickActionModalProps) {
-  const { user } = useAuth();
   const [form, setForm] = useState({
     date: '',
     start: '',
@@ -125,10 +117,10 @@ function QuickActionModal({ type, providerId, onClose, onSuccess }: QuickActionM
 export default function VendorCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [events, setEvents] = useState<CalendarEvent[]>([])
-  const [availability, setAvailability] = useState<AvailabilitySlot[]>([])
+  // Removed unused 'availability' state
   const [view, setView] = useState<'month' | 'week' | 'day'>('week')
   const [isLoading, setIsLoading] = useState(true)
-  const { formatDate, formatTime, formatCurrency } = useI18n()
+  const { formatDate, formatCurrency } = useI18n() // Removed unused 'formatTime'
   const [action, setAction] = useState<null | 'availability' | 'block' | 'service'>(null)
   const { user } = useAuth()
   const vendorId = user?.id || ''
@@ -149,7 +141,7 @@ export default function VendorCalendar() {
       if (scheduleResponse.ok) {
         const scheduleData = await scheduleResponse.json()
         if (scheduleData.success) {
-          setAvailability(scheduleData.schedule || [])
+          // setAvailability(scheduleData.schedule || []) // This line was removed
         }
       }
       

@@ -41,8 +41,8 @@ export default function AuthEntry({ mode = "signup" }: { mode?: "signup" | "logi
         if (error) throw error;
         router.push("/dashboard");
       }
-    } catch (err: any) {
-      setError(err.message || `Failed to ${isSignUp ? "sign up" : "sign in"}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : `Failed to ${isSignUp ? "sign up" : "sign in"}`);
     } finally {
       setIsLoading(false);
     }

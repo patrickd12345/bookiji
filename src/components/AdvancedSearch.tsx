@@ -43,13 +43,11 @@ interface Provider {
 interface AdvancedSearchProps {
   onResults?: (results: { providers: Provider[], total: number }) => void
   defaultLocation?: string
-  showMap?: boolean
 }
 
 export default function AdvancedSearch({ 
   onResults,
-  defaultLocation = '',
-  showMap = true 
+  defaultLocation = ''
 }: AdvancedSearchProps) {
   const [filters, setFilters] = useState<SearchFilters>({
     query: '',
@@ -97,12 +95,12 @@ export default function AdvancedSearch({
       })
 
       const response = await fetch(`/api/search/providers?${queryParams}`)
-      const result = await response.json()
+      const data = await response.json()
 
-      if (result.success && result.providers) {
+      if (data.success && data.providers) {
         onResults?.({
-          providers: result.providers as Provider[],
-          total: result.total || 0
+          providers: data.providers as Provider[],
+          total: data.total || 0
         })
       }
     } catch (error) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import StripePayment from './StripePayment'
@@ -33,19 +33,11 @@ export function BookingPaymentModal({
   },
   bookingId
 }: BookingPaymentModalProps) {
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (isOpen && serviceDetails.price > 0) {
-      createPaymentIntent()
-    }
-  }, [isOpen, serviceDetails.price])
-
-  const createPaymentIntent = async () => {
+  const createPaymentIntent = useCallback(async () => {
     try {
-      setLoading(true)
       const response = await fetch('/api/payments/create-payment-intent', {
         method: 'POST',
         headers: {
@@ -63,15 +55,18 @@ export function BookingPaymentModal({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Payment setup failed')
       onPaymentErrorAction(err instanceof Error ? err : new Error('Payment setup failed'))
-    } finally {
-      setLoading(false)
     }
-  }
+  }, [serviceDetails.price, onPaymentErrorAction])
+
+  useEffect(() => {
+    if (isOpen && serviceDetails.price > 0) {
+      createPaymentIntent()
+    }
+  }, [isOpen, createPaymentIntent])
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
-    setLoading(true)
 
     try {
       // Payment processing logic here
@@ -79,8 +74,6 @@ export function BookingPaymentModal({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Payment failed')
       onPaymentErrorAction(err instanceof Error ? err : new Error('Payment failed'))
-    } finally {
-      setLoading(false)
     }
   }
 

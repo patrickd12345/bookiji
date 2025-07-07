@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, type MouseEvent } from 'react'
+import { useState, useEffect, type MouseEvent, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -10,6 +10,7 @@ interface BookingStatus {
   payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
   created_at: string
   slot_start: string
+  id: string // Added id to the interface
 }
 
 interface ConfirmationStatusProps {
@@ -73,13 +74,7 @@ export default function ConfirmationStatus({
   const [loading, setLoading] = useState(!initialStatus)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!initialStatus) {
-      fetchBookingStatus()
-    }
-  }, [bookingId, initialStatus])
-
-  const fetchBookingStatus = async () => {
+  const fetchBookingStatus = useCallback(async () => {
     try {
       setLoading(true)
       if (!user?.id) {
@@ -89,14 +84,15 @@ export default function ConfirmationStatus({
       const data = await response.json()
       
       if (data.success) {
-        const booking = data.bookings.find((b: any) => b.id === bookingId)
+        const booking = data.bookings.find((b: unknown) => (b as BookingStatus).id === bookingId)
         if (booking) {
           const bookingStatus: BookingStatus = {
-            status: booking.status,
-            commitment_fee_paid: booking.commitment_fee_paid,
-            payment_status: booking.payment_status || 'pending',
-            created_at: booking.created_at,
-            slot_start: booking.slot_start
+            id: (booking as BookingStatus).id,
+            status: (booking as BookingStatus).status,
+            commitment_fee_paid: (booking as BookingStatus).commitment_fee_paid,
+            payment_status: (booking as BookingStatus).payment_status || 'pending',
+            created_at: (booking as BookingStatus).created_at,
+            slot_start: (booking as BookingStatus).slot_start
           }
           setStatus(bookingStatus)
           onStatusChange?.(bookingStatus)
@@ -112,7 +108,13 @@ export default function ConfirmationStatus({
     } finally {
       setLoading(false)
     }
-  }
+  }, [bookingId, onStatusChange, user])
+
+  useEffect(() => {
+    if (!initialStatus) {
+      fetchBookingStatus()
+    }
+  }, [bookingId, initialStatus, fetchBookingStatus])
 
   const handleCancelBooking = async () => {
     if (!confirm('Are you sure you want to cancel this booking?')) return

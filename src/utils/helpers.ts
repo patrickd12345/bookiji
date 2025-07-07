@@ -1,4 +1,4 @@
-import type { Provider, Zone, RadiusZone } from '../types/global.d';
+import type { Provider, Zone } from '../types/global.d';
 import { calculateDistance, calculateRadiusZone, generateAvailabilityDescription, fetchAvailabilityZones } from './dataFetchers';
 
 export {
@@ -104,7 +104,7 @@ function generateMockProviders(count: number): Provider[] {
   return providers;
 }
 
-export const generateAIResponse = (input: string): string => {
+export const generateAIResponse = (): string => {
   // Simple mock AI response generator
   const responses = [
     'I understand you\'re looking for a service. Let me help you find the right provider.',

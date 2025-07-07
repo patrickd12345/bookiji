@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Elements } from '@stripe/react-stripe-js'
 import { getStripe } from '../../lib/stripe'
 import StripePayment from './StripePayment'
-import type { FormEvent, ChangeEvent } from 'react'
 
 interface CreditPackage {
   id: string
@@ -33,8 +32,6 @@ interface CreditBookletProps {
   onCloseAction: () => void
   onCreditsUpdated?: (newBalance: number) => void
   initialCredits?: number
-  onPurchase?: (amount: number) => Promise<void>
-  onUse?: (amount: number) => Promise<void>
 }
 
 interface PaymentOption {
@@ -49,9 +46,7 @@ export default function CreditBooklet({
   isOpen,
   onCloseAction,
   onCreditsUpdated,
-  initialCredits = 0,
-  onPurchase,
-  onUse
+  initialCredits = 0
 }: CreditBookletProps) {
   const [packages, setPackages] = useState<CreditPackage[]>([])
   const [userCredits, setUserCredits] = useState<UserCredits | null>(null)
@@ -81,12 +76,6 @@ export default function CreditBooklet({
     }
   ]
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchData()
-    }
-  }, [isOpen, userId])
-
   const fetchData = async () => {
     setLoading(true)
     try {
@@ -113,6 +102,12 @@ export default function CreditBooklet({
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchData()
+    }
+  }, [isOpen, userId, fetchData])
 
   const calculateSavings = (packageData: CreditPackage) => {
     const totalCredits = packageData.credits_cents + (packageData.bonus_credits_cents || 0)
@@ -288,60 +283,6 @@ export default function CreditBooklet({
   }
 
   const bestValueId = getBestValueBadge()
-
-  const handlePurchaseSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
-
-    try {
-      const amount = Number(purchaseAmount)
-      if (isNaN(amount) || amount <= 0) {
-        throw new Error('Please enter a valid amount')
-      }
-
-      await onPurchase?.(amount)
-      setCredits(prev => prev + amount)
-      setPurchaseAmount('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to purchase credits')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleUseSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-
-    try {
-      const amount = Number(useAmount)
-      if (isNaN(amount) || amount <= 0) {
-        throw new Error('Please enter a valid amount')
-      }
-
-      if (amount > credits) {
-        throw new Error('Insufficient credits')
-      }
-
-      await onUse?.(amount)
-      setCredits(prev => prev - amount)
-      setUseAmount('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to use credits')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handlePurchaseChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setPurchaseAmount(e.target.value)
-  }
-
-  const handleUseChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setUseAmount(e.target.value)
-  }
 
   if (!isOpen) return null
 

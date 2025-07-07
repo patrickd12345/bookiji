@@ -9,7 +9,7 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react';
-import type { VendorService } from '@/types/global.d';
+
 
 interface VendorFormData {
   // Business Information
@@ -147,7 +147,7 @@ export default function VendorRegistration() {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [businessImages, setBusinessImages] = useState<File[]>([]);
+  // const [businessImages, setBusinessImages] = useState<File[]>([]);
 
   const totalSteps = 6;
 
@@ -211,7 +211,7 @@ export default function VendorRegistration() {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
-  const handleInputChange = (field: keyof VendorFormData, value: any) => {
+  const handleInputChange = (field: keyof VendorFormData, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -219,55 +219,55 @@ export default function VendorRegistration() {
     }
   };
 
-  const addService = () => {
-    const newService: ServiceOffering = {
-      id: `service_${Date.now()}`,
-      name: '',
-      description: '',
-      category: formData.service_categories[0] || '',
-      duration_minutes: 60,
-      price_cents: 5000, // $50.00
-      deposit_required: false,
-      deposit_percentage: 20
-    };
-    setFormData(prev => ({
-      ...prev,
-      services: [...prev.services, newService]
-    }));
-  };
+  // const addService = () => {
+  //   const newService: ServiceOffering = {
+  //     id: `service_${Date.now()}`,
+  //     name: '',
+  //     description: '',
+  //     category: formData.service_categories[0] || '',
+  //     duration_minutes: 60,
+  //     price_cents: 5000, // $50.00
+  //     deposit_required: false,
+  //     deposit_percentage: 20
+  //   };
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     services: [...prev.services, newService]
+  //   }));
+  // };
 
-  const updateService = (serviceId: string, updates: Partial<ServiceOffering>) => {
-    setFormData(prev => ({
-      ...prev,
-      services: prev.services.map(service =>
-        service.id === serviceId ? { ...service, ...updates } : service
-      )
-    }));
-  };
+  // const updateService = (serviceId: string, updates: Partial<ServiceOffering>) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     services: prev.services.map(service =>
+  //       service.id === serviceId ? { ...service, ...updates } : service
+  //   //   ))
+  //   // }));
+  // };
 
-  const removeService = (serviceId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      services: prev.services.filter(service => service.id !== serviceId)
-    }));
-  };
+  // const removeService = (serviceId: string) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     services: prev.services.filter(service => service.id !== serviceId)
+  //   }));
+  // };
 
-  const handleDayHoursChange = (day: keyof WeeklyHours, updates: Partial<DayHours>) => {
-    setFormData(prev => ({
-      ...prev,
-      operating_hours: {
-        ...prev.operating_hours,
-        [day]: { ...prev.operating_hours[day], ...updates }
-      }
-    }));
-  };
+  // const handleDayHoursChange = (day: keyof WeeklyHours, updates: Partial<DayHours>) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     operating_hours: {
+  //       ...prev.operating_hours,
+  //       [day]: { ...prev.operating_hours[day], ...updates }
+  //   //   }
+  //   // }));
+  // };
 
-  const handleImageUpload = (files: FileList | null) => {
-    if (files) {
-      const newImages = Array.from(files).slice(0, 5); // Max 5 images
-      setBusinessImages(prev => [...prev, ...newImages].slice(0, 5));
-    }
-  };
+  // const handleImageUpload = (files: FileList | null) => {
+  //   if (files) {
+  //     const newImages = Array.from(files).slice(0, 5); // Max 5 images
+  //     setBusinessImages(prev => [...prev, ...newImages].slice(0, 5));
+  //   }
+  // };
 
   const handleSubmit = async () => {
     if (!validateStep(currentStep)) return;
@@ -289,9 +289,9 @@ export default function VendorRegistration() {
       });
 
       // Add images
-      businessImages.forEach((image, index) => {
-        submitData.append(`business_image_${index}`, image);
-      });
+      // businessImages.forEach((image, index) => {
+      //   submitData.append(`business_image_${index}`, image);
+      // });
 
       const response = await fetch('/api/vendor/register', {
         method: 'POST',
@@ -333,7 +333,7 @@ export default function VendorRegistration() {
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Registration Successful!</h1>
           <p className="text-gray-600 mb-6">
             Welcome to Bookiji! Your vendor account has been created and is pending verification. 
-            You'll receive an email with next steps within 24 hours.
+            You&apos;ll receive an email with next steps within 24 hours.
           </p>
           <div className="bg-blue-50 rounded-lg p-4">
             <p className="text-sm text-blue-700">

@@ -29,6 +29,7 @@ import {
   Zap
 } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { NotificationList } from './NotificationList'
 import { useRouter } from 'next/navigation'
 
@@ -141,6 +142,35 @@ export default function UserDashboard() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('all')
   const router = useRouter()
 
+  const loadNotifications = useCallback(async (): Promise<void> => {
+    setNotificationState(prev => ({ ...prev, isLoading: true, error: null }))
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const response = await fetch('/api/notifications', {
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined
+      })
+      if (!response.ok) {
+        const errorData = await response.json() as NotificationError
+        throw new Error(errorData.error || 'Failed to fetch notifications')
+      }
+      
+      const data = await response.json() as NotificationResponse
+      setNotificationState({
+        data: data.notifications,
+        isLoading: false,
+        error: null
+      })
+    } catch (error) {
+      console.error('Failed to load notifications:', error)
+      setNotificationState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to load notifications'
+      }))
+    }
+  }, [])
+
   // Load user data (profile, bookings, credits, favorites) in parallel
   const loadUserData = useCallback(async () => {
     setLoading(true)
@@ -168,36 +198,7 @@ export default function UserDashboard() {
   useEffect(() => {
     loadUserData()
     loadNotifications()
-  }, [loadUserData])
-
-  const loadNotifications = async (): Promise<void> => {
-    setNotificationState(prev => ({ ...prev, isLoading: true, error: null }))
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const response = await fetch('/api/notifications', {
-        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined
-      })
-      if (!response.ok) {
-        const errorData = await response.json() as NotificationError
-        throw new Error(errorData.error || 'Failed to fetch notifications')
-      }
-      
-      const data = await response.json() as NotificationResponse
-      setNotificationState({
-        data: data.notifications,
-        isLoading: false,
-        error: null
-      })
-    } catch (error) {
-      console.error('Failed to load notifications:', error)
-      setNotificationState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to load notifications'
-      }))
-    }
-  }
+  }, [loadUserData, loadNotifications])
 
   // Removed unused markAsRead function
 
@@ -387,11 +388,11 @@ export default function UserDashboard() {
         id: booking.id,
         service_name: booking.service_name,
         provider_name: Array.isArray(booking.provider)
-          ? (booking.provider[0] as any)?.name || 'Unknown Provider'
-          : (booking.provider as any)?.name || 'Unknown Provider',
+          ? (booking.provider[0] as unknown as DatabaseProvider)?.business_name || 'Unknown Provider'
+          : (booking.provider as unknown as DatabaseProvider)?.business_name || 'Unknown Provider',
         provider_avatar: Array.isArray(booking.provider)
-          ? (booking.provider[0] as any)?.avatar_url
-          : (booking.provider as any)?.avatar_url,
+          ? (booking.provider[0] as unknown as DatabaseProvider)?.avatar_url
+          : (booking.provider as unknown as DatabaseProvider)?.avatar_url,
         date: new Date(booking.scheduled_for).toISOString().split('T')[0],
         time: new Date(booking.scheduled_for).toTimeString().slice(0, 5),
         duration_minutes: booking.duration_minutes,
@@ -600,7 +601,7 @@ export default function UserDashboard() {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'overview' | 'bookings' | 'credits' | 'favorites' | 'profile')}
                 className={`flex items-center space-x-2 px-4 py-3 rounded-xl transition-all whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
@@ -787,7 +788,7 @@ export default function UserDashboard() {
                       <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <select
                         value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value as any)}
+                        onChange={(e) => setFilterStatus(e.target.value as 'all' | 'upcoming' | 'completed' | 'cancelled')}
                         className="pl-10 pr-8 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
                       >
                         <option value="all">All Status</option>
@@ -936,7 +937,7 @@ export default function UserDashboard() {
                     <div key={index} className="p-4 border rounded-lg">
                       <h3 className="font-semibold">{provider.business_name}</h3>
                       <Link href={`/book/${provider.business_name}`}>
-                        <img src={provider.avatar_url} alt={provider.business_name} className="w-16 h-16 rounded-full" />
+                        <Image src={provider.avatar_url} alt={provider.business_name} width={64} height={64} className="w-16 h-16 rounded-full" />
                       </Link>
                       <div className="flex items-center mt-2">
                         <Star className="w-4 h-4 text-yellow-400" />
