@@ -113,9 +113,11 @@ export default function AdvancedSearch({
   useEffect(() => {
     // Check geolocation permission
     if (navigator.permissions) {
-      navigator.permissions.query({ name: 'geolocation' as PermissionName }).then(result => {
-        // Permission state handled silently
-      })
+      navigator.permissions
+        .query({ name: 'geolocation' as PermissionName })
+        .then(() => {
+          // Permission state handled silently
+        })
     }
   }, [])
 

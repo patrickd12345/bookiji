@@ -301,6 +301,7 @@ export function getVendorFee(category: string, currency: string = 'usd'): number
   try {
     return getPPPVendorFee(usdFee, currency)
   } catch (error) {
+    console.error(error)
     // Fallback to legacy tier-based system if PPP module not available
     const currencyInfo = getCurrencyInfo(currency)
     
@@ -374,6 +375,7 @@ export function getCustomerFee(currency: string = 'usd'): number {
   try {
     return getPPPCustomerFee(currency)
   } catch (error) {
+    console.error(error)
     // Fallback to legacy tier-based system if PPP module not available
     const currencyInfo = getCurrencyInfo(currency)
     return currencyInfo.bookingFee

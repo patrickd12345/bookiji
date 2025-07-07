@@ -6,14 +6,12 @@ import baseTranslations from '@/locales/en-US.json'
 import { 
   SUPPORTED_LOCALES, 
   DEFAULT_LOCALE, 
-  getCurrencyInfo, 
-  getCountryInfo, 
+  getCurrencyInfo,
   getLocaleInfo,
   detectLocaleFromHeaders 
 } from './config'
 
 // 🌍 GLOBAL I18N STATE (simple client-side state management)
-let globalLocale = DEFAULT_LOCALE
 let localeChangeListeners: ((locale: string) => void)[] = []
 
 // 📚 Loaded translations cache
@@ -26,6 +24,7 @@ async function loadTranslations(locale: string): Promise<Record<string, string>>
     translationCache[locale] = translations
     return translations
   } catch (err) {
+    console.error(err)
     const fallback = (await import(`../../../locales/en-US.json`)).default
     translationCache[locale] = fallback
     return fallback
@@ -92,7 +91,6 @@ function createTimeFormatter(locale: string, timeFormat: '12h' | '24h') {
 export function useI18n(initialLocale?: string): I18nHook {
   const [currentLocale, setCurrentLocale] = useState<string>(() => {
     if (initialLocale && SUPPORTED_LOCALES[initialLocale]) {
-      globalLocale = initialLocale
       return initialLocale
     }
     if (typeof window !== 'undefined') {
@@ -126,7 +124,6 @@ export function useI18n(initialLocale?: string): I18nHook {
       newLocale = DEFAULT_LOCALE
     }
     
-    globalLocale = newLocale
     saveLocaleToStorage(newLocale)
     
     // Notify all components
@@ -136,7 +133,6 @@ export function useI18n(initialLocale?: string): I18nHook {
   // 📊 GET CURRENT LOCALE INFO
   const localeInfo = getLocaleInfo(currentLocale)
   const currencyInfo = getCurrencyInfo(localeInfo.currency)
-  const countryInfo = getCountryInfo(localeInfo.country)
 
   // 💰 FORMAT CURRENCY
   const formatCurrency = useCallback((amount: number) => {

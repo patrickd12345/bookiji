@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,15 +26,10 @@ export default function GoogleCalendarConnection({
   const [isLoading, setIsLoading] = useState(true)
   const [isDisconnecting, setIsDisconnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [email, setEmail] = useState('')
 
-  useEffect(() => {
-    checkConnectionStatus()
-  }, [profileId])
-
-  const checkConnectionStatus = async () => {
+  const checkConnectionStatus = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -49,13 +44,17 @@ export default function GoogleCalendarConnection({
       setIsConnected(data.isConnected)
       setConnectionInfo(data.connectionInfo)
       onConnectionChange?.(data.isConnected)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error checking Google Calendar status:', error)
-      setError(error.message)
+      setError(error instanceof Error ? error.message : 'Unknown error')
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [profileId, onConnectionChange])
+
+  useEffect(() => {
+    checkConnectionStatus()
+  }, [profileId, checkConnectionStatus])
 
   const handleConnect = async () => {
     setIsConnecting(true)
@@ -107,30 +106,6 @@ export default function GoogleCalendarConnection({
     }
   }
 
-  const handleTestSync = async () => {
-    try {
-      setError(null)
-      const response = await fetch('/api/calendar/sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ profileId }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Sync test failed')
-      }
-
-      setSuccessMessage('Calendar sync test successful!')
-      setTimeout(() => setSuccessMessage(null), 3000)
-    } catch (error: any) {
-      console.error('Error testing calendar sync:', error)
-      setError(error.message)
-    }
-  }
 
   if (isLoading) {
     return (
@@ -163,7 +138,7 @@ export default function GoogleCalendarConnection({
           className="w-full"
         />
         <p className="text-sm text-gray-500">
-          Leave blank to use your Google account's primary email
+          Leave blank to use your Google account&apos;s primary email
         </p>
       </div>
 
@@ -227,19 +202,13 @@ export default function GoogleCalendarConnection({
         </div>
       )}
 
-      {/* Status Messages */}
-      {successMessage && (
-        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-          <p className="text-sm text-green-700">{successMessage}</p>
-        </div>
-      )}
 
       {/* Help Text */}
       {!isConnected && (
         <div className="mt-4 pt-4 border-t border-gray-100">
           <p className="text-sm text-gray-600">
-            Connect your Google Calendar to automatically sync your availability. 
-            You can use any Google Calendar account - it doesn't need to match your Bookiji email.
+            Connect your Google Calendar to automatically sync your availability.
+            You can use any Google Calendar account - it doesn&apos;t need to match your Bookiji email.
             We only request read-only access and you can disconnect at any time.
           </p>
         </div>

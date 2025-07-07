@@ -1,11 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { FormEvent } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import StripePayment from './StripePayment'
+import { motion } from 'framer-motion'
 import CreditBooklet from './CreditBooklet'
-import { loadStripe } from '@stripe/stripe-js'
 
 interface EnhancedPaymentModalProps {
   isOpen: boolean
@@ -23,11 +21,6 @@ interface EnhancedPaymentModalProps {
   onError?: (error: Error) => void
 }
 
-interface UserCredits {
-  balance_cents: number
-  [key: string]: any
-}
-
 export function EnhancedPaymentModal({
   isOpen,
   onCloseAction,
@@ -39,37 +32,8 @@ export function EnhancedPaymentModal({
   const [error, setError] = useState<string | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [showCreditBooklet, setShowCreditBooklet] = useState(false)
-  const [userCredits, setUserCredits] = useState<UserCredits | null>(null)
-  const [paymentSuccess, setPaymentSuccess] = useState(false)
 
-  useEffect(() => {
-    if (isOpen && bookingDetails.amountCents > 0) {
-      createPaymentIntent()
-    }
-  }, [isOpen, bookingDetails.amountCents])
-
-  useEffect(() => {
-    if (isOpen && bookingDetails.amountCents > 0) {
-      fetchUserCredits()
-    }
-  }, [isOpen, bookingDetails.amountCents])
-
-  const fetchUserCredits = async () => {
-    if (!bookingDetails.amountCents) return
-
-    try {
-      const response = await fetch(`/api/credits/balance?userId=${bookingDetails.amountCents}`)
-      const data = await response.json()
-
-      if (data.success) {
-        setUserCredits(data.credits)
-      }
-    } catch (error) {
-      console.error('Error fetching user credits:', error)
-    }
-  }
-
-  const createPaymentIntent = async () => {
+  const createPaymentIntent = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/payments/create-payment-intent', {
@@ -92,7 +56,13 @@ export function EnhancedPaymentModal({
     } finally {
       setLoading(false)
     }
-  }
+  }, [bookingDetails.amountCents, onError])
+
+  useEffect(() => {
+    if (isOpen && bookingDetails.amountCents > 0) {
+      createPaymentIntent()
+    }
+  }, [isOpen, bookingDetails.amountCents, createPaymentIntent])
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -110,39 +80,7 @@ export function EnhancedPaymentModal({
     }
   }
 
-  const handlePaymentSuccess = (paymentIntentId: string) => {
-    setPaymentSuccess(true)
-    console.log('Payment successful:', paymentIntentId)
-    
-    // Refresh user credits
-    fetchUserCredits()
-    
-    // Close modal after a short delay
-    setTimeout(() => {
-      onCloseAction()
-    }, 2000)
-  }
 
-  const handlePaymentError = (error: string) => {
-    setError(error)
-  }
-
-  const resetModal = () => {
-    setClientSecret(null)
-    setError(null)
-    setPaymentSuccess(false)
-    setShowCreditBooklet(false)
-  }
-
-  const canAffordWithCredits = () => {
-    if (!userCredits || !bookingDetails.amountCents) return false
-    return userCredits.balance_cents >= bookingDetails.amountCents
-  }
-
-  const needsMoreCredits = () => {
-    if (!userCredits || !bookingDetails.amountCents) return 0
-    return Math.max(0, bookingDetails.amountCents - userCredits.balance_cents)
-  }
 
   const handleCreditBookletClose = () => {
     setShowCreditBooklet(false)
@@ -200,16 +138,6 @@ export function EnhancedPaymentModal({
           )}
         </form>
 
-        {/* Success State */}
-        {paymentSuccess && (
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="mt-4 p-3 bg-green-100 text-green-700 rounded"
-          >
-            <p>Payment successful!</p>
-          </motion.div>
-        )}
       </motion.div>
 
       {/* Credit Booklet Modal */}

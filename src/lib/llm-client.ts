@@ -1,4 +1,4 @@
-import { config, getLLMConfig, isDevelopment, isProduction } from '@/config/environment';
+import { getLLMConfig, isDevelopment } from '@/config/environment';
 
 export interface LLMRequest {
   messages: Array<{
@@ -133,7 +133,7 @@ class LLMClient {
   /**
    * Format the response to a consistent structure
    */
-  private formatResponse(data: any): LLMResponse {
+  private formatResponse(data: Record<string, unknown>): LLMResponse {
     if (isDevelopment()) {
       // Ollama response format
       return {
@@ -209,12 +209,12 @@ class LLMClient {
         // Ollama models
         const response = await fetch(`${this.baseURL}/api/tags`);
         const data = await response.json();
-        return data.models?.map((model: any) => model.name) || [];
+        return data.models?.map((model: { name: string }) => model.name) || [];
       } else {
         // OpenAI-compatible models
         const response = await fetch(`${this.baseURL}/v1/models`);
         const data = await response.json();
-        return data.data?.map((model: any) => model.id) || [];
+        return data.data?.map((model: { id: string }) => model.id) || [];
       }
     } catch (error) {
       console.error('❌ Failed to get available models:', error);

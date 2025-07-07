@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { trackEvent, collectUserFeedback, TRACKING_EVENTS } from '@/lib/analytics'
+import { useState, useEffect, useCallback } from 'react'
+import { trackEvent, collectUserFeedback } from '@/lib/analytics'
 
 // 📋 Smart Feedback Collection for Post-Launch Optimization
 // Triggers contextual micro-surveys at key moments
@@ -172,17 +172,7 @@ export default function FeedbackCollector({
   }, [currentPage])
 
   // Listen for trigger events
-  useEffect(() => {
-    const handleTriggerEvent = (event: CustomEvent) => {
-      const eventName = event.detail.eventName
-      checkTriggers(eventName)
-    }
-
-    window.addEventListener('feedback-trigger', handleTriggerEvent as EventListener)
-    return () => window.removeEventListener('feedback-trigger', handleTriggerEvent as EventListener)
-  }, [timeOnPage, sessionCount, userSegment])
-
-  const checkTriggers = (eventName?: string) => {
+  const checkTriggers = useCallback((eventName?: string) => {
     // Don't show multiple feedback requests in same session
     if (sessionStorage.getItem('feedback_shown')) return
 
@@ -226,7 +216,17 @@ export default function FeedbackCollector({
         priority: triggeredFeedback.priority
       })
     }
-  }
+  }, [currentPage, userSegment, sessionCount, timeOnPage])
+
+  useEffect(() => {
+    const handleTriggerEvent = (event: CustomEvent) => {
+      const eventName = event.detail.eventName
+      checkTriggers(eventName)
+    }
+
+    window.addEventListener('feedback-trigger', handleTriggerEvent as EventListener)
+    return () => window.removeEventListener('feedback-trigger', handleTriggerEvent as EventListener)
+  }, [timeOnPage, sessionCount, userSegment, checkTriggers])
 
   const submitFeedback = async () => {
     if (!activeTrigger) return

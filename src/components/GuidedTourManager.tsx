@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 interface TourStep {
   target: string
@@ -22,7 +22,7 @@ interface GuidedTourManagerProps {
 
 export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTourManagerProps) {
   const [isClient, setIsClient] = useState(false)
-  const [tour, setTour] = useState<any>(null)
+  const [tour, setTour] = useState<unknown>(null)
 
   useEffect(() => {
     setIsClient(true)
@@ -106,7 +106,7 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
     }
   ]
 
-  const initializeTour = async () => {
+  const initializeTour = useCallback(async () => {
     if (!isClient) return
 
     try {
@@ -177,10 +177,10 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
     } catch (error) {
       console.error('Failed to initialize tour:', error)
     }
-  }
+  }, [isClient, type, onComplete, onSkip])
 
   // helper to attach global shortcuts (advance on Enter/Space or overlay click)
-  const attachShortcuts = (activeTour: any) => {
+  const attachShortcuts = (activeTour: { next: () => void; on: (event: string, cb: () => void) => void }) => {
     const keyHandler = (e: KeyboardEvent) => {
       if (['Enter', ' '].includes(e.key)) {
         e.preventDefault()
@@ -211,7 +211,7 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
     activeTour.on('cancel', detach)
   }
 
-  const startTour = async () => {
+  const startTour = useCallback(async () => {
     let currentTour = tour
     if (!currentTour) {
       currentTour = await initializeTour()
@@ -221,7 +221,7 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
       currentTour.start()
       attachShortcuts(currentTour)
     }
-  }
+  }, [initializeTour, tour])
 
   useEffect(() => {
     if (isClient) {
@@ -240,7 +240,7 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
         }
       }
     }
-  }, [isClient, type])
+  }, [isClient, type, initializeTour, startTour, tour])
 
   return (
     <>

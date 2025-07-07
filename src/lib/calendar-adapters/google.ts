@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import type { CalendarAdapter, CalendarEvent, CalendarCredentials, CalendarSystemConfig } from './types';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { CalendarProvider, ExternalCalendarConfig, ExternalEvent } from './types'
+import { CalendarProvider, ExternalCalendarConfig } from './types'
 
 const GOOGLE_CALENDAR_API = 'https://www.googleapis.com/calendar/v3'
 
@@ -12,8 +12,8 @@ interface GoogleOAuthConfig {
 }
 
 export class GoogleCalendarAdapter implements CalendarAdapter {
-  private oauth2Client: any;
-  private calendar: any;
+  private oauth2Client: unknown;
+  private calendar: unknown;
   private credentials: CalendarCredentials | null = null;
   private config: CalendarSystemConfig;
   private supabase = createClientComponentClient()
@@ -54,7 +54,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       }
 
       const { items } = await calendarResponse.json()
-      const primaryCalendar = items.find((cal: any) => cal.primary)
+      const primaryCalendar = items.find((cal: Record<string, unknown>) => cal.primary)
 
       if (!primaryCalendar) {
         throw new Error('No primary calendar found')
@@ -171,7 +171,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
         orderBy: 'startTime',
       });
 
-      return response.data.items.map((event: any) => ({
+      return response.data.items.map((event: Record<string, unknown>) => ({
         id: event.id,
         title: event.summary || 'Busy',
         start: new Date(event.start.dateTime || event.start.date),
@@ -199,7 +199,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
 
       const busySlots = response.data.calendars.primary.busy || [];
       return {
-        busy: busySlots.map((slot: any) => ({
+        busy: busySlots.map((slot: Record<string, unknown>) => ({
           start: new Date(slot.start),
           end: new Date(slot.end)
         }))
@@ -213,7 +213,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
   async getCalendarList(): Promise<{ id: string; name: string }[]> {
     try {
       const response = await this.calendar.calendarList.list();
-      return response.data.items.map((cal: any) => ({
+      return response.data.items.map((cal: Record<string, unknown>) => ({
         id: cal.id,
         name: cal.summary
       }));
