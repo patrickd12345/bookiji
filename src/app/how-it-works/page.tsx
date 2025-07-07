@@ -145,7 +145,7 @@ export default function HowItWorksPage() {
             <h3 className="text-xl font-semibold mb-3">Privacy Protection</h3>
             <p className="text-gray-600">
               Map abstraction technology lets you find nearby services without revealing 
-              your exact location until you're ready to book.
+              your exact location until you&apos;re ready to book.
             </p>
           </div>
 

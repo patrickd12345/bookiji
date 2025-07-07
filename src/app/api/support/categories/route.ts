@@ -1,22 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseClient } from '@/lib/supabaseClient'
+import { NextResponse } from 'next/server'
 
 /**
  * GET /api/support/categories
  */
-export async function GET(_request: NextRequest) {
-  const supabase = createSupabaseClient()
-
+export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from('support_categories')
-      .select('id,name,icon,description,priority')
-      .order('priority', { ascending: true })
-    if (error) throw error
+    const categories = [
+      { id: 'general', name: 'General Questions', description: 'General platform questions' },
+      { id: 'booking', name: 'Booking Issues', description: 'Problems with bookings' },
+      { id: 'payment', name: 'Payment Problems', description: 'Payment and billing issues' },
+      { id: 'technical', name: 'Technical Support', description: 'Technical problems' },
+      { id: 'account', name: 'Account Issues', description: 'Account and profile problems' }
+    ];
 
-    return NextResponse.json({ ok: true, data })
-  } catch (err: any) {
-    console.error('[support/categories] error', err)
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
+    return NextResponse.json({ categories });
+  } catch (error) {
+    console.error('Error fetching support categories:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch categories' },
+      { status: 500 }
+    );
   }
 } 

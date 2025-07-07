@@ -75,7 +75,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to update schedule' }, { status: 500 });
     }
 
-    const scheduleToInsert: any[] = [];
+    const scheduleToInsert: Array<{
+        profile_id: string;
+        day_of_week: number;
+        start_time: string;
+        end_time: string;
+    }> = [];
     for (const [day, daySchedule] of Object.entries(schedule)) {
         if (daySchedule.isEnabled && daySchedule.timeRanges) {
             for (const timeRange of daySchedule.timeRanges) {
@@ -103,7 +108,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: 'Schedule saved successfully' });
   } catch (error) {
-    console.error('Error in /api/vendor/schedule:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('Error updating vendor schedule:', error);
+    return NextResponse.json(
+      { error: 'Failed to update schedule' },
+      { status: 500 }
+    );
   }
 } 

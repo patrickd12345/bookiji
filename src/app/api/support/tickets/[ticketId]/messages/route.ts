@@ -18,9 +18,12 @@ export async function GET(req: NextRequest) {
     if (error) throw error
 
     return NextResponse.json({ ok: true, data })
-  } catch (err: any) {
-    console.error('[support/messages] GET error', err)
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
+  } catch (error) {
+    console.error('Error fetching ticket messages:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch messages' },
+      { status: 500 }
+    );
   }
 }
 
@@ -55,9 +58,11 @@ export async function POST(req: NextRequest) {
     if (error) throw error
 
     return NextResponse.json({ ok: true, data })
-  } catch (err: any) {
-    const msg = err?.issues ? err.issues.map((i: any) => i.message).join(', ') : err.message
-    console.error('[support/messages] POST error', err)
-    return NextResponse.json({ ok: false, error: msg }, { status: 400 })
+  } catch (error) {
+    console.error('Error creating ticket message:', error);
+    return NextResponse.json(
+      { error: 'Failed to create message' },
+      { status: 500 }
+    );
   }
 } 

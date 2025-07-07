@@ -98,7 +98,7 @@ export default function BetaSignup() {
     checkAccess()
   }, [router])
 
-  const handleInputChange = (field: keyof BetaSignupForm, value: any) => {
+  const handleInputChange = (field: keyof BetaSignupForm, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -163,7 +163,7 @@ export default function BetaSignup() {
             Welcome to the Beta!
           </h2>
           <p className="text-gray-600 mb-6">
-            Thank you for joining Bookiji's beta program. We'll review your application and get back to you within 48 hours.
+            Thank you for joining Bookiji&apos;s beta program. We&apos;ll review your application and get back to you within 48 hours.
           </p>
           
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
@@ -172,7 +172,7 @@ export default function BetaSignup() {
               <li>• 50% reduced fees for first 6 months</li>
               <li>• Priority customer support</li>
               <li>• Direct input on new features</li>
-              <li>• "Founding Provider" badge</li>
+              <li>• &quot;Founding Provider&quot; badge</li>
               <li>• Early access to new tools</li>
             </ul>
           </div>
@@ -208,8 +208,8 @@ export default function BetaSignup() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Join the Bookiji Beta
             </h1>
-            <p className="text-gray-600 text-lg">
-              Be among the first providers to experience zero no-shows and guaranteed bookings
+            <p className="text-lg text-gray-600 mb-8">
+              Join our exclusive beta program and be among the first to experience the future of booking. You&apos;ll get early access to new features and exclusive benefits.
             </p>
           </div>
 
@@ -435,9 +435,8 @@ export default function BetaSignup() {
               {loading ? 'Submitting Application...' : 'Join Beta Program'}
             </button>
 
-            <p className="text-xs text-gray-500 text-center">
-              By submitting this form, you agree to Bookiji's terms of service and privacy policy.
-              We'll review your application within 48 hours.
+            <p className="text-sm text-gray-500 mt-2">
+              By signing up, you agree to our Terms of Service and Privacy Policy
             </p>
           </form>
         </div>

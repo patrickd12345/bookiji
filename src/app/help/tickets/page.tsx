@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import Link from 'next/link'
 import { registerTour } from '@/lib/guidedTourRegistry'
 import { useAutoTour } from '@/lib/useAutoTour'
 
@@ -26,12 +25,11 @@ interface SupportMessage {
 export default function MyTicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
-  const [userId, setUserId] = useState<string | null>(null)
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [messages, setMessages] = useState<SupportMessage[]>([])
   const [messageText, setMessageText] = useState('')
   const [sending, setSending] = useState(false)
-  const [channelRef, setChannelRef] = useState<any | null>(null)
+  const [channelRef, setChannelRef] = useState<ReturnType<typeof supabase.channel> | null>(null);
 
   const loadTickets = async (uid: string) => {
     setLoading(true)
@@ -87,7 +85,6 @@ export default function MyTicketsPage() {
         window.location.href = '/login?redirect=/help/tickets'
         return
       }
-      setUserId(session.user.id)
       loadTickets(session.user.id)
     }
     getSession()
@@ -158,7 +155,7 @@ export default function MyTicketsPage() {
       if (channel) supabase.removeChannel(channel)
       if (reconnectTimeout) clearTimeout(reconnectTimeout)
     }
-  }, [selectedTicket])
+  }, [selectedTicket, channelRef])
 
   useEffect(() => {
     registerTour({
@@ -178,8 +175,8 @@ export default function MyTicketsPage() {
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">My Support Tickets</h1>
-        <p className="mb-6 text-gray-600">
-          Need help? You can also <Link href="/help" className="text-blue-600 hover:underline">open a new ticket</Link> in the Help Center.
+        <p className="text-lg text-gray-600 mb-8">
+          Need help? Create a support ticket and we&apos;ll get back to you as soon as possible.
         </p>
         {loading && <p>Loading…</p>}
         {!loading && tickets.length === 0 && (

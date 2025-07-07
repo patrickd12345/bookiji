@@ -26,8 +26,11 @@ export async function GET(req: NextRequest) {
     if (error) throw error
 
     return NextResponse.json({ ok: true, data })
-  } catch (err: any) {
-    console.error('[support/tickets/list] error', err)
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
+  } catch (error) {
+    console.error('Error fetching support tickets:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch tickets' },
+      { status: 500 }
+    );
   }
 } 

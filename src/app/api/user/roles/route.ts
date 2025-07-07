@@ -74,14 +74,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Add role using the database function
-    const { data, error } = await supabase.rpc('add_user_role', {
-      target_user_id: user.id,
-      new_role: role
-    })
+    const { error } = await supabase
+      .from('user_roles')
+      .upsert({
+        user_id: user.id,
+        role: role,
+        updated_at: new Date().toISOString()
+      });
 
     if (error) {
-      console.error('Error adding role:', error)
-      return NextResponse.json({ error: 'Failed to add role' }, { status: 500 })
+      console.error('Error updating user role:', error);
+      return NextResponse.json(
+        { error: 'Failed to update user role' },
+        { status: 500 }
+      );
     }
 
     // Get updated user roles
@@ -145,14 +151,18 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Remove role using the database function
-    const { data, error } = await supabase.rpc('remove_user_role', {
-      target_user_id: user.id,
-      old_role: role
-    })
+    const { error } = await supabase
+      .from('user_roles')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('role', role);
 
     if (error) {
-      console.error('Error removing role:', error)
-      return NextResponse.json({ error: 'Failed to remove role' }, { status: 500 })
+      console.error('Error removing user role:', error);
+      return NextResponse.json(
+        { error: 'Failed to remove user role' },
+        { status: 500 }
+      );
     }
 
     // Get updated user roles

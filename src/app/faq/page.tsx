@@ -59,7 +59,7 @@ export default function FAQPage() {
             <h3 className="text-xl font-semibold mb-3">Is my personal information safe?</h3>
             <p className="text-gray-700 leading-relaxed">
               Yes! We use advanced map abstraction technology that lets you find services near you 
-              without revealing your exact location until you're ready to book. Your privacy is 
+              without revealing your exact location until you&apos;re ready to book. Your privacy is 
               protected throughout the entire process, and we never share your personal information 
               without your consent.
             </p>
@@ -99,7 +99,7 @@ export default function FAQPage() {
       <div className="bg-blue-50 p-6 rounded-lg mt-8 text-center">
         <h3 className="text-xl font-semibold mb-3">Still have questions?</h3>
         <p className="text-gray-600 mb-4">
-          Can't find what you're looking for? Our support team is here to help!
+          Can&apos;t find what you&apos;re looking for? Our support team is here to help!
         </p>
         <div className="space-x-4">
           <a 

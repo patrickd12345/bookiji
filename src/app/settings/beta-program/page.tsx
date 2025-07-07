@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { Switch } from '@/components/ui/switch';
@@ -12,11 +12,7 @@ export default function BetaProgram() {
   const [betaType, setBetaType] = useState<'early_access' | 'public_beta' | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    checkBetaStatus();
-  }, []);
-
-  const checkBetaStatus = async () => {
+  const checkBetaStatus = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       router.push('/login');
@@ -34,7 +30,11 @@ export default function BetaProgram() {
       setBetaType(profile.beta_status.type);
     }
     setLoading(false);
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkBetaStatus();
+  }, [checkBetaStatus]);
 
   const handleBetaToggle = async (enabled: boolean) => {
     setBetaEnabled(enabled);

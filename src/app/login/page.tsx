@@ -18,7 +18,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -27,8 +27,12 @@ export default function LoginPage() {
 
       // Successful login
       router.push('/get-started');
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign in');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message || 'Failed to sign in');
+      } else {
+        setError('Failed to sign in');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -36,7 +40,7 @@ export default function LoginPage() {
 
   const handleSocialLogin = async (provider: 'google' | 'github') => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
@@ -44,8 +48,12 @@ export default function LoginPage() {
       });
 
       if (error) throw error;
-    } catch (err: any) {
-      setError(err.message || `Failed to sign in with ${provider}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message || `Failed to sign in with ${provider}`);
+      } else {
+        setError(`Failed to sign in with ${provider}`);
+      }
     }
   };
 

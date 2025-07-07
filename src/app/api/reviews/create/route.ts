@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabaseClient'
 
-interface Review {
-  id: string
-  rating: number
-  comment: string
-  created_at: string
-  updated_at: string
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await request.json();
     
     const {
       booking_id,
@@ -272,11 +264,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
-
-// Calculate average rating
-const calculateAverageRating = (reviews: Review[]): number => {
-  return reviews.reduce((sum: number, review: Review) => {
-    return sum + review.rating
-  }, 0) / reviews.length
 } 

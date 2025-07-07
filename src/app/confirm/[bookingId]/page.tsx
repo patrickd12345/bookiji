@@ -24,35 +24,32 @@ interface Booking {
 export default function ConfirmationPage() {
   const params = useParams<{ bookingId: string }>()
   const bookingId = params?.bookingId ?? ''
-  if (!bookingId) {
-    return <div className="p-8 text-red-600">Invalid booking id</div>
-  }
   const { user } = useAuth()
   
   const [booking, setBooking] = useState<Booking | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) return
-
+    if (!bookingId || !user) return;
     const fetchBooking = async () => {
       try {
-        const response = await fetch(`/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`)
-        const data = await response.json()
-        
+        const response = await fetch(`/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`);
+        const data = await response.json();
         if (data.success) {
-          const foundBooking = data.bookings.find((b: Booking) => b.id === bookingId)
-          setBooking(foundBooking || null)
+          setBooking(data.booking);
         }
       } catch (error) {
-        console.error('Error fetching booking:', error)
+        console.error('Error fetching booking:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
+    fetchBooking();
+  }, [bookingId, user]);
 
-    fetchBooking()
-  }, [bookingId, user])
+  if (!bookingId) {
+    return <div className="p-8 text-red-600">Invalid booking id</div>
+  }
 
   if (loading) {
     return (
@@ -84,8 +81,8 @@ export default function ConfirmationPage() {
             <h1 className="text-3xl font-bold text-green-600 mb-2">
               Booking Confirmed!
             </h1>
-            <p className="text-gray-600 text-lg">
-              Your appointment has been successfully booked
+            <p className="text-lg text-gray-600 mb-8">
+              Confirm your booking details. You&apos;ll be charged a $1 commitment fee to secure your appointment.
             </p>
           </div>
 
@@ -170,14 +167,14 @@ export default function ConfirmationPage() {
                 <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-0.5">1</div>
                 <div>
                   <p className="font-medium">Provider receives your booking</p>
-                  <p className="text-sm text-blue-700">They'll receive an immediate notification with your details</p>
+                  <p className="text-sm text-blue-700">They&apos;ll receive an immediate notification with your details</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-0.5">2</div>
                 <div>
                   <p className="font-medium">Contact details exchanged</p>
-                  <p className="text-sm text-blue-700">You'll both receive each other's contact information to coordinate</p>
+                  <p className="text-sm text-blue-700">You&apos;ll both receive each other&apos;s contact information to coordinate</p>
                 </div>
               </div>
               <div className="flex items-start">

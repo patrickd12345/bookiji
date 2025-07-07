@@ -23,7 +23,6 @@ vi.mock('../../src/lib/supabaseClient', () => {
 })
 
 // Helper function for getting mock (unused but kept for potential future use)
-const getMock = () => (globalThis as Record<string, unknown>).__SB_FROM_INT__ as ReturnType<typeof vi.fn>
 
 const TEST_BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
 

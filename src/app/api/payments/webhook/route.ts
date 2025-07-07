@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getStripeOrThrow } from '../../../../../lib/stripe'
 import { supabase } from '@/lib/supabaseClient'
 import { trackPaymentSuccess, trackPaymentFailure } from '@/lib/analytics'
+import Stripe from 'stripe'
+
+interface PaymentIntentWithMetadata extends Stripe.PaymentIntent {
+  metadata: {
+    booking_id?: string;
+  };
+  charges?: {
+    data?: Array<{
+      billing_details?: {
+        address?: {
+          country?: string;
+        };
+      };
+      payment_method_details?: {
+        type?: string;
+      };
+    }>;
+  };
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.text()
@@ -29,13 +48,13 @@ export async function POST(req: NextRequest) {
   try {
     switch (event.type) {
       case 'payment_intent.succeeded':
-        await handlePaymentSucceeded(event.data.object)
+        await handlePaymentSucceeded(event.data.object as PaymentIntentWithMetadata)
         break
       case 'payment_intent.payment_failed':
-        await handlePaymentFailed(event.data.object)
+        await handlePaymentFailed(event.data.object as PaymentIntentWithMetadata)
         break
       case 'payment_intent.canceled':
-        await handlePaymentCanceled(event.data.object)
+        await handlePaymentCanceled(event.data.object as PaymentIntentWithMetadata)
         break
       default:
         console.log(`Unhandled event type: ${event.type}`)
@@ -48,7 +67,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function handlePaymentSucceeded(paymentIntent: any) {
+async function handlePaymentSucceeded(paymentIntent: PaymentIntentWithMetadata) {
   const bookingId = paymentIntent.metadata?.booking_id
   
   if (!bookingId) {
@@ -119,7 +138,7 @@ async function handlePaymentSucceeded(paymentIntent: any) {
   }
 }
 
-async function handlePaymentFailed(paymentIntent: any) {
+async function handlePaymentFailed(paymentIntent: PaymentIntentWithMetadata) {
   const bookingId = paymentIntent.metadata?.booking_id
   
   if (!bookingId) {
@@ -152,7 +171,7 @@ async function handlePaymentFailed(paymentIntent: any) {
   })
 }
 
-async function handlePaymentCanceled(paymentIntent: any) {
+async function handlePaymentCanceled(paymentIntent: PaymentIntentWithMetadata) {
   const bookingId = paymentIntent.metadata?.booking_id
   
   if (!bookingId) {

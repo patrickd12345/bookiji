@@ -4,13 +4,13 @@ interface NotificationRequest {
   type: 'email' | 'sms' | 'push'
   recipient: string
   template: 'booking_confirmation' | 'booking_cancelled' | 'vendor_welcome' | 'admin_alert' | 'reminder'
-  data: Record<string, any>
+  data: Record<string, unknown>
   priority?: 'low' | 'normal' | 'high' | 'urgent'
 }
 
 export async function POST(request: Request) {
   try {
-    const notification: NotificationRequest = await request.json()
+    const notification: NotificationRequest = await request.json();
 
     const { type, recipient, template, data } = notification
 
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 }
 
 // Email notification handler
-async function sendEmail(recipient: string, template: string, data: Record<string, any>) {
+async function sendEmail(recipient: string, template: string, data: Record<string, unknown>) {
   try {
     const { subject, html } = generateEmailContent(template, data)
 
@@ -98,7 +98,7 @@ async function sendEmail(recipient: string, template: string, data: Record<strin
 }
 
 // SMS notification handler
-async function sendSMS(recipient: string, template: string, data: Record<string, any>) {
+async function sendSMS(recipient: string, template: string, data: Record<string, unknown>) {
   try {
     const message = generateSMSContent(template, data)
 
@@ -134,7 +134,7 @@ async function sendSMS(recipient: string, template: string, data: Record<string,
 }
 
 // Push notification handler
-async function sendPushNotification(recipient: string, template: string, data: Record<string, any>) {
+async function sendPushNotification(recipient: string, template: string, data: Record<string, unknown>) {
   try {
     const pushContent = generatePushContent(template, data)
 
@@ -173,7 +173,7 @@ async function sendPushNotification(recipient: string, template: string, data: R
 }
 
 // Email content generator
-function generateEmailContent(template: string, data: Record<string, any>) {
+function generateEmailContent(template: string, data: Record<string, unknown>) {
   const templates = {
     booking_confirmation: {
       subject: `Booking Confirmed - ${data.service}`,
@@ -257,7 +257,7 @@ function generateEmailContent(template: string, data: Record<string, any>) {
 }
 
 // SMS content generator
-function generateSMSContent(template: string, data: Record<string, any>) {
+function generateSMSContent(template: string, data: Record<string, unknown>) {
   const templates = {
     booking_confirmation: `Booking confirmed! ${data.service} on ${data.date} at ${data.time}. Provider details coming 24hrs before. - Bookiji`,
     booking_cancelled: `Booking cancelled. Refund processed within 3-5 days. Book again at bookiji.com - Bookiji`,
@@ -270,7 +270,7 @@ function generateSMSContent(template: string, data: Record<string, any>) {
 }
 
 // Push notification content generator
-function generatePushContent(template: string, data: Record<string, any>) {
+function generatePushContent(template: string, data: Record<string, unknown>) {
   const templates = {
     booking_confirmation: {
       title: 'Booking Confirmed!',

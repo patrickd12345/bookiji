@@ -37,8 +37,8 @@ export default function TestCalendarPage() {
 
       setSyncMessage(data.message)
       setBusySlots(data.busy || [])
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred')
     } finally {
       setIsLoading(false)
     }

@@ -22,8 +22,12 @@ export default function RegisterPage() {
       });
       if (error) throw error;
       router.push('/beta/signup');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('An unknown error occurred.');
+      }
     }
   };
 

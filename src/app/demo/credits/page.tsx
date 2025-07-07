@@ -4,45 +4,12 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CreditBooklet, EnhancedPaymentModal } from '@/components'
 
-interface CreditPackage {
-  id: string
-  name: string
-  credits: number
-  price: number
-  description: string
-}
-
-const creditPackages: CreditPackage[] = [
-  {
-    id: 'basic',
-    name: 'Basic',
-    credits: 100,
-    price: 9.99,
-    description: 'Perfect for getting started'
-  },
-  {
-    id: 'pro',
-    name: 'Professional',
-    credits: 500,
-    price: 39.99,
-    description: 'Best value for active users'
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    credits: 2000,
-    price: 149.99,
-    description: 'For high-volume businesses'
-  }
-]
-
 const MotionButton = motion.button
 
 export default function CreditsDemoPage() {
   const [showCreditBooklet, setShowCreditBooklet] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [userCredits, setUserCredits] = useState(750) // $7.50 starting balance
-  const [selectedPackage, setSelectedPackage] = useState<string | null>(null)
 
   const mockBookingDetails = {
     id: 'booking_demo_123',
@@ -54,10 +21,6 @@ export default function CreditsDemoPage() {
     amountCents: 1200, // $12.00
   }
 
-  const handlePackageSelect = (packageId: string) => {
-    setSelectedPackage(packageId)
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4">
       <div className="max-w-4xl mx-auto py-8">
@@ -66,8 +29,8 @@ export default function CreditsDemoPage() {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             💎 Credit Booklet System Demo
           </h1>
-          <p className="text-xl text-gray-600 mb-6">
-            The more you buy, the less you pay per credit!
+          <p className="text-lg text-gray-600 mb-8">
+            Experience Bookiji&apos;s credit system with demo credits. Try out our platform features without any real charges.
           </p>
           <div className="bg-white rounded-2xl shadow-lg p-6 inline-block">
             <div className="flex items-center gap-4">
@@ -270,7 +233,7 @@ export default function CreditsDemoPage() {
           <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
             <p className="text-sm text-gray-700">
               <strong>💡 Smart Math:</strong> The Ultimate Pack costs the same as a Premium Pack ($70) 
-              but gives you $150 in credits instead of $70. That's more than 2x the value! 
+              but gives you $150 in credits instead of $70. That&apos;s more than 2x the value! 
               Perfect for power users who book frequently.
             </p>
           </div>

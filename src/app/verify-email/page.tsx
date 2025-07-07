@@ -1,19 +1,19 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  // Remove unused verificationStatus variable
 
-  const verifyEmail = async () => {
+  const verifyEmail = useCallback(async () => {
     try {
       const token = searchParams?.get('token') || '';
       if (!token) {
-        setVerificationStatus('error');
+        // setVerificationStatus('error'); // This line is removed
         return;
       }
 
@@ -24,21 +24,21 @@ function VerifyEmailContent() {
 
       if (error) {
         console.error('Verification error:', error);
-        setVerificationStatus('error');
+        // setVerificationStatus('error'); // This line is removed
       } else {
-        setVerificationStatus('success');
+        // setVerificationStatus('success'); // This line is removed
         router.push('/dashboard');
       }
     } catch (error) {
       console.error('Verification error:', error);
-      setVerificationStatus('error');
+      // setVerificationStatus('error'); // This line is removed
     }
-  };
+  }, [searchParams, router]);
 
   useEffect(() => {
     if (!searchParams) return;
     verifyEmail();
-  }, [searchParams]);
+  }, [searchParams, verifyEmail]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -55,7 +55,7 @@ function VerifyEmailContent() {
               ✉️
             </div>
             <p className="text-sm text-gray-500">
-              Didn't receive an email? Check your spam folder or{' '}
+              Didn&apos;t receive an email? Check your spam folder or{' '}
               <button
                 onClick={() => router.push('/register')}
                 className="text-blue-600 hover:text-blue-500"

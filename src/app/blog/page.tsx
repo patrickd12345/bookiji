@@ -171,7 +171,7 @@ export default function BlogPage() {
         <p className="text-gray-700 leading-relaxed">
           Our team of experts shares insights on how platforms like Bookiji are transforming traditional 
           service industries through features like guaranteed bookings, AI-powered matching, and privacy-first 
-          location services. Whether you're a service provider looking to grow your business or a customer 
+          location services. Whether you&apos;re a service provider looking to grow your business or a customer 
           seeking the best booking experience, our blog has something for you.
         </p>
       </div>

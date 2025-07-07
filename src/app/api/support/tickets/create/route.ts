@@ -25,8 +25,11 @@ export async function POST(req: NextRequest) {
     if (error) throw error
 
     return NextResponse.json({ ok: true, ticketId: data.id })
-  } catch (err: any) {
-    console.error('[support/tickets/create] error', err)
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
+  } catch (error) {
+    console.error('Error creating support ticket:', error);
+    return NextResponse.json(
+      { error: 'Failed to create ticket' },
+      { status: 500 }
+    );
   }
 } 

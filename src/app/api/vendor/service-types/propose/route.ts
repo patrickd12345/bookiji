@@ -33,9 +33,11 @@ export async function POST(req: NextRequest) {
     if (error) throw error
 
     return NextResponse.json({ ok: true, proposalId: data.id, status: data.status })
-  } catch (err: any) {
-    const msg = err?.issues ? err.issues.map((i: any) => i.message).join(', ') : err.message
-    console.error('[service-types/propose] error', err)
-    return NextResponse.json({ ok: false, error: msg }, { status: 400 })
+  } catch (error) {
+    console.error('Error creating service type proposal:', error);
+    return NextResponse.json(
+      { error: 'Failed to create proposal' },
+      { status: 500 }
+    );
   }
 } 

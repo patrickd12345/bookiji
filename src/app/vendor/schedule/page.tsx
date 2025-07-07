@@ -308,7 +308,7 @@ export default function SchedulePage() {
         if (!response.ok) throw new Error('Failed to save schedule');
         setSaveStatus('success');
         saveSuccess = true;
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Error saving schedule:', error);
         setSaveStatus('error');
     } finally {
@@ -331,9 +331,9 @@ export default function SchedulePage() {
         if (!response.ok) throw new Error(result.error || 'Failed to generate availability');
         setGenerationStatus(result.message);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error generating availability:', error);
-        setGenerationStatus(`Error: ${error.message}`);
+        setGenerationStatus(`Error: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
         setIsGenerating(false);
         setTimeout(() => setGenerationStatus(null), 5000);

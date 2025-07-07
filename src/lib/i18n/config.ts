@@ -305,17 +305,17 @@ export function getVendorFee(category: string, currency: string = 'usd'): number
     const currencyInfo = getCurrencyInfo(currency)
     
     // 🎯 EQUAL PAYMENT EFFORT SCALING (Legacy)
-    const baseMultiplier = currencyInfo.bookingFee / 100 // USD commitment fee is 100 cents
-    let equalEffortMultiplier = baseMultiplier
-    
-    // Apply equal effort adjustments based on currency tier
-    if (currencyInfo.tier === 3) {
-      equalEffortMultiplier = baseMultiplier * 0.25 // 25% of base to achieve equal effort
-    } else if (currencyInfo.tier === 2) {
-      equalEffortMultiplier = baseMultiplier * 0.5 // 50% of base to achieve equal effort
-    }
-    
-    return Math.round(usdFee * equalEffortMultiplier)
+  const baseMultiplier = currencyInfo.bookingFee / 100 // USD commitment fee is 100 cents
+  let equalEffortMultiplier = baseMultiplier
+  
+  // Apply equal effort adjustments based on currency tier
+  if (currencyInfo.tier === 3) {
+    equalEffortMultiplier = baseMultiplier * 0.25 // 25% of base to achieve equal effort
+  } else if (currencyInfo.tier === 2) {
+    equalEffortMultiplier = baseMultiplier * 0.5 // 50% of base to achieve equal effort
+  }
+  
+  return Math.round(usdFee * equalEffortMultiplier)
   }
 }
 

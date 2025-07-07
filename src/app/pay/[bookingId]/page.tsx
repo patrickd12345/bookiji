@@ -115,31 +115,30 @@ export default function PaymentPage() {
   const searchParams = useSearchParams()
   const bookingId = params?.bookingId ?? ''
   const clientSecret = searchParams?.get('client_secret') ?? null
-  if (!bookingId) {
-    return <div className="p-8 text-red-600">Invalid booking id</div>
-  }
   const { user } = useAuth()
   
   const [booking, setBooking] = useState<Booking | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) return
-
+    if (!user || !bookingId) return;
     const fetchBooking = async () => {
       try {
-        const response = await fetch(`/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`)
-        const data = await response.json()
-        setBooking(data.booking)
+        const response = await fetch(`/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`);
+        const data = await response.json();
+        setBooking(data.booking);
       } catch (error) {
-        console.error('Error fetching booking:', error)
+        console.error('Error fetching booking:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
+    fetchBooking();
+  }, [bookingId, user]);
 
-    fetchBooking()
-  }, [bookingId, user])
+  if (!bookingId) {
+    return <div className="p-8 text-red-600">Invalid booking id</div>
+  }
 
   if (loading) {
     return (

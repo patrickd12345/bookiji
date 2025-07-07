@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       max_price: searchParams.get('max_price') ? parseFloat(searchParams.get('max_price')!) : undefined,
       availability_date: searchParams.get('availability_date') || undefined,
       availability_time: searchParams.get('availability_time') || undefined,
-      sort_by: (searchParams.get('sort_by') as any) || 'rating',
+      sort_by: (searchParams.get('sort_by') as 'distance' | 'rating' | 'price' | 'availability' | 'popularity') || 'rating',
       limit: parseInt(searchParams.get('limit') || '20'),
       offset: parseInt(searchParams.get('offset') || '0')
     }
@@ -333,8 +333,7 @@ function sortProviders(providers: ProviderWithDistance[], sortBy: 'distance' | '
 // POST endpoint for AI-powered search suggestions
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { query, location, user_preferences } = body
+    const { query, location, user_preferences } = await request.json();
 
     // Generate AI-powered search suggestions
     const suggestions = await generateSearchSuggestions(query, location, user_preferences)
@@ -345,11 +344,11 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('AI search suggestions error:', error)
+    console.error('Error searching providers:', error);
     return NextResponse.json(
-      { error: 'Failed to generate suggestions' },
+      { error: 'Failed to search providers' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -412,16 +411,4 @@ async function generateSearchSuggestions(
   }
 
   return Array.from(suggestions)
-}
-
-// Filter providers by availability
-const filterProvidersByAvailability = (providers: Provider[], slot: AvailabilitySlot): Provider[] => {
-  return providers.filter((provider: Provider) => {
-    return provider.availability.some((availableSlot: AvailabilitySlot) => {
-      const slotStart = new Date(availableSlot.start_time)
-      const slotEnd = new Date(availableSlot.end_time)
-      const requestedStart = new Date(slot.start_time)
-      return !availableSlot.is_booked && slotStart <= requestedStart && requestedStart < slotEnd
-    })
-  })
 } 

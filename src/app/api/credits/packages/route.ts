@@ -34,12 +34,11 @@ export async function GET() {
       message: 'Demo credit packages'
     })
 
-  } catch (_error) {
-    return NextResponse.json({
-      success: true,
-      packages: DEFAULT_PACKAGES,
-      usingDefaults: true,
-      error: 'Using demo packages'
-    })
+  } catch (error) {
+    console.error('Error fetching credit packages:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch credit packages' },
+      { status: 500 }
+    );
   }
 }

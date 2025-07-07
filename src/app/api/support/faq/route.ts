@@ -42,8 +42,11 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ ok: true, data })
-  } catch (err: any) {
-    console.error('[support/faq] error', err)
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
+  } catch (error) {
+    console.error('Error fetching FAQ:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch FAQ' },
+      { status: 500 }
+    );
   }
 } 

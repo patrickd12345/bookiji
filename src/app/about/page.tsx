@@ -4,6 +4,9 @@ export default function AboutPage() {
       <h1 className="text-4xl font-bold mb-8 text-center">About Bookiji</h1>
       
       <div className="prose prose-lg max-w-none">
+        <p className="text-lg text-gray-600 mb-8">
+          Bookiji is the world&apos;s first universal booking platform that connects customers with service providers instantly.
+        </p>
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
           <p className="text-gray-600 leading-relaxed">
@@ -21,7 +24,7 @@ export default function AboutPage() {
               <h3 className="text-xl font-medium mb-2">🔒 Guaranteed Bookings</h3>
               <p className="text-gray-600">
                 Our unique commitment fee system ensures that every booking is serious, 
-                reducing no-shows and protecting service providers' time.
+                reducing no-shows and protecting service providers&apos; time.
               </p>
             </div>
             <div>
@@ -35,7 +38,7 @@ export default function AboutPage() {
               <h3 className="text-xl font-medium mb-2">🗺️ Map Abstraction</h3>
               <p className="text-gray-600">
                 Find services near you without revealing your exact location until 
-                you're ready to book, protecting your privacy.
+                you&apos;re ready to book, protecting your privacy.
               </p>
             </div>
             <div>

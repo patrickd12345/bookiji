@@ -18,8 +18,11 @@ export async function POST(req: NextRequest) {
     if (error) throw error
 
     return NextResponse.json({ ok: true })
-  } catch (err: any) {
-    console.error('[support/tickets/update] error', err)
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
+  } catch (error) {
+    console.error('Error updating support ticket:', error);
+    return NextResponse.json(
+      { error: 'Failed to update ticket' },
+      { status: 500 }
+    );
   }
 } 

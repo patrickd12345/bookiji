@@ -3,8 +3,8 @@ export default function PrivacyPage() {
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-4">Privacy Policy</h1>
-        <p className="text-lg text-gray-600">
-          Last updated: {new Date().toLocaleDateString()}
+        <p className="text-lg text-gray-600 mb-8">
+          Your privacy is important to us. This policy explains how we collect, use, and protect your personal information.
         </p>
       </div>
 
@@ -12,7 +12,7 @@ export default function PrivacyPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
           <p className="text-gray-700 leading-relaxed">
-            Bookiji ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy 
+            Bookiji (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy 
             explains how we collect, use, disclose, and safeguard your information when you use our 
             universal booking platform and services.
           </p>
@@ -174,7 +174,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">8. Children's Privacy</h2>
+          <h2 className="text-2xl font-semibold mb-4">8. Children&apos;s Privacy</h2>
           <p className="text-gray-700 leading-relaxed">
             Our services are not intended for children under 13 years of age. We do not knowingly collect 
             personal information from children under 13. If we become aware that a child under 13 has 
@@ -204,7 +204,7 @@ export default function PrivacyPage() {
           <h2 className="text-2xl font-semibold mb-4">11. Changes to This Privacy Policy</h2>
           <p className="text-gray-700 leading-relaxed">
             We may update this Privacy Policy from time to time. We will notify you of any material 
-            changes by posting the new Privacy Policy on this page and updating the "Last updated" date. 
+            changes by posting the new Privacy Policy on this page and updating the &quot;Last updated&quot; date. 
             Your continued use of our services after any changes constitutes acceptance of the updated policy.
           </p>
         </section>
@@ -222,8 +222,8 @@ export default function PrivacyPage() {
       <div className="bg-green-50 p-6 rounded-lg mt-8">
         <h3 className="text-xl font-semibold mb-3">🔒 Your Privacy Matters</h3>
         <p className="text-gray-600 mb-4">
-          We're committed to protecting your privacy and being transparent about our data practices. 
-          If you have any questions or concerns, we're here to help.
+          We&apos;re committed to ensuring your privacy and security at every step. 
+          If you have any questions or concerns, we&apos;re here to help.
         </p>
         <a 
           href="/help" 

@@ -22,7 +22,7 @@ export default function GetStartedPage() {
             'mt-3 text-xl',
             theme.typography.body.color
           )}>
-            Join the world's first AI-powered booking platform
+            Join the world&apos;s first AI-powered booking platform
           </p>
         </div>
         <AuthEntry mode="signup" />

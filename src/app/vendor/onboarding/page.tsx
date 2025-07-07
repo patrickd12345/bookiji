@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { theme, combineClasses } from '@/config/theme';
 import type { ServiceTypeProposal } from '@/types/serviceTypes';
 
@@ -44,20 +43,6 @@ export default function VendorOnboardingPage() {
     if (field === 'serviceType') {
       setShowCustomServiceInput(value === 'Other');
     }
-  };
-
-  const createServiceTypeProposal = (): ServiceTypeProposal => {
-    return {
-      id: `proposal_${Date.now()}`,
-      proposedServiceType: formData.customServiceType,
-      submittedBy: {
-        businessName: formData.businessName,
-        email: formData.email,
-        phone: formData.phone
-      },
-      submittedAt: new Date(),
-      status: 'pending'
-    };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

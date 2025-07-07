@@ -33,7 +33,7 @@ export default function DashboardSettings() {
           {['profile', 'notifications', 'preferences'].map((t) => (
             <button
               key={t}
-              onClick={() => setTab(t as any)}
+              onClick={() => setTab(t as 'profile' | 'notifications' | 'preferences')}
               className={`pb-2 border-b-2 transition-colors ${
                 tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'
               }`}

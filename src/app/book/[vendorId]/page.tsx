@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
@@ -23,9 +23,6 @@ interface Vendor {
 export default function BookVendorPage() {
   const params = useParams<{ vendorId: string }>()
   const vendorId = params?.vendorId ?? ''
-  if (!vendorId) {
-    return <div className="p-8 text-red-600">Invalid vendor id</div>
-  }
   const { user } = useAuth()
   
   const [vendor, setVendor] = useState<Vendor | null>(null)
@@ -36,7 +33,11 @@ export default function BookVendorPage() {
   const [availabilitySlots, setAvailabilitySlots] = useState<{ date: string; time: string }[]>([])
   const [loading, setLoading] = useState(true)
 
-  const fetchVendorAndServices = async () => {
+  if (!vendorId) {
+    return <div className="p-8 text-red-600">Invalid vendor id</div>
+  }
+
+  const fetchVendorAndServices = useCallback(async () => {
     try {
       // Fetch vendor details
       const { data: vendorData } = await supabase
@@ -60,10 +61,10 @@ export default function BookVendorPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [vendorId])
 
   // Fetch availability slots from the server
-  const fetchAvailability = async () => {
+  const fetchAvailability = useCallback(async () => {
     try {
       const res = await fetch('/api/availability/generate', {
         method: 'POST',
@@ -74,7 +75,7 @@ export default function BookVendorPage() {
       const data = await res.json()
 
       if (Array.isArray(data.finalSlots)) {
-        const slots = data.finalSlots.map((slot: any) => {
+        const slots = data.finalSlots.map((slot: { start_time: string }) => {
           const start = new Date(slot.start_time)
           return {
             date: start.toISOString().split('T')[0],
@@ -86,13 +87,13 @@ export default function BookVendorPage() {
     } catch (error) {
       console.error('Error fetching availability:', error)
     }
-  }
+  }, [vendorId])
 
   useEffect(() => {
-    if (!vendorId) return
-    fetchVendorAndServices()
-    fetchAvailability()
-  }, [vendorId])
+    if (!vendorId) return;
+    fetchVendorAndServices();
+    fetchAvailability();
+  }, [vendorId, fetchVendorAndServices, fetchAvailability]);
 
   const handleBooking = async () => {
     if (!selectedService || !selectedDate || !selectedTime) {
@@ -156,7 +157,9 @@ export default function BookVendorPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Book with {vendor.full_name}
           </h1>
-          <p className="text-gray-600 mb-8">{vendor.email}</p>
+          <p className="text-lg text-gray-600 mb-8">
+            Book your appointment with {vendor?.full_name || 'this provider'}. You&apos;ll only pay a $1 commitment fee now, with the full payment due after service completion.
+          </p>
 
           {/* Services Selection */}
           <div className="mb-8">

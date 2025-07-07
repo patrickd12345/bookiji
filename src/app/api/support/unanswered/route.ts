@@ -18,8 +18,11 @@ export async function POST(request: NextRequest) {
     ])
     if (error) throw error
     return NextResponse.json({ ok: true })
-  } catch (err: any) {
-    console.error('[support/unanswered] error', err)
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
+  } catch (error) {
+    console.error('Error fetching unanswered tickets:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch unanswered tickets' },
+      { status: 500 }
+    );
   }
 } 
