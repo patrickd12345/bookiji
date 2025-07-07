@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { theme, combineClasses } from '@/config/theme';
-import type { ServiceTypeProposal } from '@/types/serviceTypes';
 
 export default function VendorOnboardingPage() {
   const router = useRouter();
@@ -291,7 +290,7 @@ export default function VendorOnboardingPage() {
                       required
                     />
                     <p className="mt-2 text-sm text-gray-500">
-                      We'll review your service type and may add it to our standard categories for future providers.
+                      We&apos;ll review your service type and may add it to our standard categories for future providers.
                     </p>
                   </div>
                 )}
@@ -406,7 +405,7 @@ export default function VendorOnboardingPage() {
               </form>
 
               <p className="mt-4 text-sm text-gray-500 text-center">
-                We'll review your application and get back to you within 24 hours
+                We&apos;ll review your application and get back to you within 24 hours
               </p>
             </div>
           </div>

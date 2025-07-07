@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 
 interface AIRadiusScalingProps {
@@ -32,7 +32,7 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
     return 'sparse'
   }
 
-  const fetchRadiusRecommendation = async () => {
+  const fetchRadiusRecommendation = useCallback(async () => {
     if (!service || !location) return
 
     setIsLoading(true)
@@ -76,13 +76,13 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [service, location, onRadiusChangeAction])
 
   useEffect(() => {
     if (service && location) {
       fetchRadiusRecommendation()
     }
-  }, [service, location])
+  }, [service, location, fetchRadiusRecommendation])
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">

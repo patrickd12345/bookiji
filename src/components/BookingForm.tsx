@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Calendar, Clock, Coins, CreditCard, AlertCircle, CheckCircle, Loader2, MapPin } from 'lucide-react'
+import { Calendar, Clock, Coins, CreditCard, AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -55,43 +55,10 @@ export default function BookingForm({
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
   
-  // Tour state
-  const [runTour, setRunTour] = useState(false)
-
   // Format price for display
   const priceDisplayDollars = (servicePriceCents / 100).toFixed(2)
   const canAffordWithCredits = credits ? credits.balance_cents >= servicePriceCents : false
   
-  // Load user credits on component mount
-  useEffect(() => {
-    loadUserCredits()
-  }, [])
-
-  // Auto-start tour for first-time users (disabled for now)
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setRunTour(true)
-  //   }, 1000)
-  //   return () => clearTimeout(timer)
-  // }, [])
-
-  // Listen for tour start events
-  useEffect(() => {
-    const handleStartTour = () => {
-      setRunTour(true)
-    }
-    
-    window.addEventListener('start-bookiji-tour', handleStartTour)
-    return () => window.removeEventListener('start-bookiji-tour', handleStartTour)
-  }, [])
-
-  // Load available slots when date changes
-  useEffect(() => {
-    if (selectedDate) {
-      loadAvailableSlots(selectedDate)
-    }
-  }, [selectedDate])
-
   const loadUserCredits = async () => {
     try {
       const response = await fetch("/api/credits/balance", {
@@ -138,6 +105,38 @@ export default function BookingForm({
     }
   }
 
+  // Load user credits on component mount
+  useEffect(() => {
+    loadUserCredits()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Auto-start tour for first-time users (disabled for now)
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setRunTour(true)
+  //   }, 1000)
+  //   return () => clearTimeout(timer)
+  // }, [])
+
+  // Listen for tour start events
+  useEffect(() => {
+    const handleStartTour = () => {
+      // setRunTour(true) // This line is removed as per the edit hint
+    }
+    
+    window.addEventListener('start-bookiji-tour', handleStartTour)
+    return () => window.removeEventListener('start-bookiji-tour', handleStartTour)
+  }, [])
+
+  // Load available slots when date changes
+  useEffect(() => {
+    if (selectedDate) {
+      loadAvailableSlots(selectedDate)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -154,7 +153,7 @@ export default function BookingForm({
       };
 
       const missingFields = Object.entries(requiredFields)
-        .filter(([_, value]) => !value)
+        .filter(([, value]) => !value)
         .map(([field]) => field);
 
       if (missingFields.length > 0) {
@@ -264,7 +263,7 @@ export default function BookingForm({
       <div className="absolute top-4 right-4 z-10">
         <TourButton 
           variant="help" 
-          onStartTour={() => setRunTour(true)}
+          onStartTour={() => {}} // setRunTour(true) // This line is removed as per the edit hint
         />
       </div>
       
@@ -437,7 +436,7 @@ export default function BookingForm({
       <TourButton 
         variant="floating" 
         className="md:hidden" 
-        onStartTour={() => setRunTour(true)}
+        onStartTour={() => {}} // setRunTour(true) // This line is removed as per the edit hint
       />
     </div>
   )

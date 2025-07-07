@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 
 interface SearchFilters {
   query: string
@@ -63,13 +63,10 @@ export default function AdvancedSearch({
     sort_by: 'rating'
   })
 
-  const [results, setResults] = useState<Provider[]>([])
   const [loading, setLoading] = useState(false)
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
-  const [total, setTotal] = useState(0)
-  const [geoPermission, setGeoPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt')
 
   const searchInputRef = useRef<HTMLInputElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
@@ -86,11 +83,40 @@ export default function AdvancedSearch({
     'Other'
   ]
 
+  const performSearch = useCallback(async () => {
+    if (!filters.query && !filters.location) return
+
+    setLoading(true)
+    try {
+      const queryParams = new URLSearchParams()
+      
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value && value !== '' && value !== 0) {
+          queryParams.append(key, value.toString())
+        }
+      })
+
+      const response = await fetch(`/api/search/providers?${queryParams}`)
+      const result = await response.json()
+
+      if (result.success && result.providers) {
+        onResults?.({
+          providers: result.providers as Provider[],
+          total: result.total || 0
+        })
+      }
+    } catch (error) {
+      console.error('Search failed:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [filters, onResults])
+
   useEffect(() => {
     // Check geolocation permission
     if (navigator.permissions) {
-      navigator.permissions.query({ name: 'geolocation' }).then(result => {
-        setGeoPermission(result.state)
+      navigator.permissions.query({ name: 'geolocation' as PermissionName }).then(result => {
+        // Permission state handled silently
       })
     }
   }, [])
@@ -104,7 +130,7 @@ export default function AdvancedSearch({
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [filters])
+  }, [filters, performSearch])
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -167,35 +193,6 @@ export default function AdvancedSearch({
       setShowSuggestions(true)
     } catch (error) {
       console.error('Failed to get suggestions:', error)
-    }
-  }
-
-  const performSearch = async () => {
-    if (!filters.query && !filters.location) return
-
-    setLoading(true)
-    try {
-      const queryParams = new URLSearchParams()
-      
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value && value !== '' && value !== 0) {
-          queryParams.append(key, value.toString())
-        }
-      })
-
-      const response = await fetch(`/api/search/providers?${queryParams}`)
-      const result = await response.json()
-
-      if (result.success && result.providers) {
-        onResults?.({
-          providers: result.providers as Provider[],
-          total: result.total || 0
-        })
-      }
-    } catch (error) {
-      console.error('Search failed:', error)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -310,54 +307,36 @@ export default function AdvancedSearch({
             disabled={loading}
             className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
           >
-            {loading ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                Searching...
-              </div>
-            ) : (
-              'Search'
-            )}
+            {loading ? 'Searching...' : 'Search'}
           </button>
         </div>
 
-        {/* Filter Toggle */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-            </svg>
-            Filters
-            {showFilters && <span className="text-xs">(Hide)</span>}
-          </button>
-
-          {total > 0 && (
-            <p className="text-gray-600">
-              Found {total} provider{total !== 1 ? 's' : ''}
-            </p>
-          )}
-        </div>
+        {/* Filters Toggle */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          {showFilters ? 'Hide Filters' : 'Show Filters'}
+        </button>
       </div>
 
       {/* Advanced Filters */}
       {showFilters && (
-        <div className="border-t border-gray-200 pt-6 mt-4">
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Service Category */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Service Category
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
               <select
                 value={filters.service_category}
                 onChange={(e) => setFilters(prev => ({ ...prev, service_category: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">All Categories</option>
-                {serviceCategories.map(category => (
+                {serviceCategories.map((category) => (
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
@@ -365,32 +344,27 @@ export default function AdvancedSearch({
 
             {/* Radius */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Radius ({filters.radius} miles)
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="50"
+              <label className="block text-sm font-medium text-gray-700 mb-1">Radius (km)</label>
+              <select
                 value={filters.radius}
-                onChange={(e) => setFilters(prev => ({ ...prev, radius: parseInt(e.target.value) }))}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>1 mile</span>
-                <span>50 miles</span>
-              </div>
+                onChange={(e) => setFilters(prev => ({ ...prev, radius: Number(e.target.value) }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value={5}>5 km</option>
+                <option value={10}>10 km</option>
+                <option value={25}>25 km</option>
+                <option value={50}>50 km</option>
+                <option value={100}>100 km</option>
+              </select>
             </div>
 
-            {/* Minimum Rating */}
+            {/* Min Rating */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Rating
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Min Rating</label>
               <select
                 value={filters.min_rating}
-                onChange={(e) => setFilters(prev => ({ ...prev, min_rating: parseFloat(e.target.value) }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={(e) => setFilters(prev => ({ ...prev, min_rating: Number(e.target.value) }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value={0}>Any Rating</option>
                 <option value={3}>3+ Stars</option>
@@ -401,78 +375,68 @@ export default function AdvancedSearch({
 
             {/* Max Price */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Max Price (${filters.max_price})
-              </label>
-              <input
-                type="range"
-                min="10"
-                max="1000"
-                step="10"
+              <label className="block text-sm font-medium text-gray-700 mb-1">Max Price</label>
+              <select
                 value={filters.max_price}
-                onChange={(e) => setFilters(prev => ({ ...prev, max_price: parseInt(e.target.value) }))}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>$10</span>
-                <span>$1000+</span>
-              </div>
+                onChange={(e) => setFilters(prev => ({ ...prev, max_price: Number(e.target.value) }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value={1000}>Any Price</option>
+                <option value={50}>$50</option>
+                <option value={100}>$100</option>
+                <option value={200}>$200</option>
+                <option value={500}>$500</option>
+              </select>
             </div>
 
             {/* Availability Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Availability Date
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
               <input
                 type="date"
                 value={filters.availability_date}
-                min={new Date().toISOString().split('T')[0]}
                 onChange={(e) => setFilters(prev => ({ ...prev, availability_date: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             {/* Availability Time */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Preferred Time
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
               <select
                 value={filters.availability_time}
                 onChange={(e) => setFilters(prev => ({ ...prev, availability_time: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Any Time</option>
-                <option value="08:00">Morning (8 AM - 12 PM)</option>
-                <option value="12:00">Afternoon (12 PM - 5 PM)</option>
-                <option value="17:00">Evening (5 PM - 9 PM)</option>
+                <option value="morning">Morning (6AM-12PM)</option>
+                <option value="afternoon">Afternoon (12PM-6PM)</option>
+                <option value="evening">Evening (6PM-12AM)</option>
+                <option value="night">Night (12AM-6AM)</option>
               </select>
             </div>
 
             {/* Sort By */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sort By
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
               <select
                 value={filters.sort_by}
-                onChange={(e) => setFilters(prev => ({ ...prev, sort_by: e.target.value as any }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={(e) => setFilters(prev => ({ ...prev, sort_by: e.target.value as SearchFilters['sort_by'] }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="rating">Highest Rated</option>
-                <option value="distance">Closest</option>
-                <option value="price">Lowest Price</option>
-                <option value="popularity">Most Popular</option>
-                <option value="availability">Most Available</option>
+                <option value="rating">Rating</option>
+                <option value="distance">Distance</option>
+                <option value="price">Price</option>
+                <option value="availability">Availability</option>
+                <option value="popularity">Popularity</option>
               </select>
             </div>
 
-            {/* Clear Filters Button */}
+            {/* Clear Filters */}
             <div className="flex items-end">
               <button
                 onClick={clearFilters}
-                className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="w-full px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
               >
                 Clear Filters
               </button>
@@ -480,57 +444,6 @@ export default function AdvancedSearch({
           </div>
         </div>
       )}
-
-      {/* Results Summary */}
-      {results.length > 0 && (
-        <div className="border-t border-gray-200 pt-4 mt-6">
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>
-              Showing {results.length} of {total} results
-              {filters.location && ` near ${filters.location}`}
-            </span>
-            <span>
-              {loading && 'Updating results...'}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Quick Action Buttons */}
-      <div className="border-t border-gray-200 pt-4 mt-4">
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => handleQueryChange('haircut')}
-            className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200"
-          >
-            Haircut
-          </button>
-          <button
-            onClick={() => handleQueryChange('massage')}
-            className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200"
-          >
-            Massage
-          </button>
-          <button
-            onClick={() => handleQueryChange('personal trainer')}
-            className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200"
-          >
-            Personal Trainer
-          </button>
-          <button
-            onClick={() => handleQueryChange('house cleaning')}
-            className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200"
-          >
-            House Cleaning
-          </button>
-          <button
-            onClick={() => handleQueryChange('tutoring')}
-            className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200"
-          >
-            Tutoring
-          </button>
-        </div>
-      </div>
     </div>
   )
 } 

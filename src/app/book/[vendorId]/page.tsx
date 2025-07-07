@@ -33,11 +33,9 @@ export default function BookVendorPage() {
   const [availabilitySlots, setAvailabilitySlots] = useState<{ date: string; time: string }[]>([])
   const [loading, setLoading] = useState(true)
 
-  if (!vendorId) {
-    return <div className="p-8 text-red-600">Invalid vendor id</div>
-  }
-
   const fetchVendorAndServices = useCallback(async () => {
+    if (!vendorId) return;
+    
     try {
       // Fetch vendor details
       const { data: vendorData } = await supabase
@@ -65,6 +63,8 @@ export default function BookVendorPage() {
 
   // Fetch availability slots from the server
   const fetchAvailability = useCallback(async () => {
+    if (!vendorId) return;
+    
     try {
       const res = await fetch('/api/availability/generate', {
         method: 'POST',
@@ -132,6 +132,11 @@ export default function BookVendorPage() {
       console.error('Booking error:', error)
       alert('Booking failed')
     }
+  }
+
+  // Early returns after all hooks
+  if (!vendorId) {
+    return <div className="p-8 text-red-600">Invalid vendor id</div>
   }
 
   if (loading) {

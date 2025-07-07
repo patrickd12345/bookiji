@@ -28,13 +28,15 @@ export default function ApplicationPage() {
         return;
       }
       // Map to marker format for MapAbstraction
-      // TODO: Replace 'any' with a proper type for location object
-      const mapped = (data || []).map((loc: any) => ({
-        id: loc.id,
-        lat: parseFloat(loc.latitude),
-        lng: parseFloat(loc.longitude),
-        label: loc.users?.full_name || 'Provider',
-      }));
+      const mapped = (data || []).map((loc: unknown) => {
+        const location = loc as { id: string; latitude: string; longitude: string; vendor_id: string; users: { full_name: string } | null };
+        return {
+          id: location.id,
+          lat: parseFloat(location.latitude),
+          lng: parseFloat(location.longitude),
+          label: location.users?.full_name || 'Provider',
+        };
+      });
       setMarkers(mapped);
       setLoading(false);
     }
