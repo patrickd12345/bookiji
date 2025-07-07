@@ -13,7 +13,7 @@ export default function HelpBanner() {
         </div>
         <div className="ml-3">
           <p className="text-sm text-blue-700">
-            Need help? We're here to assist you with any questions about booking services.
+            Need help? We&apos;re here to assist you with any questions about booking services.
           </p>
         </div>
       </div>

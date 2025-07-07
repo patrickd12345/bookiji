@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, type MouseEvent } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -27,19 +27,20 @@ export default function RealAIChat() {
 
   // Speech recognition setup
   useEffect(() => {
-    let recognition: any = null
+    let recognition: SpeechRecognition | null = null
     if (isRecording) {
-      const SpeechRecognition: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-      if (!SpeechRecognition) {
+      const SpeechRecognitionCtor =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      if (!SpeechRecognitionCtor) {
         alert('Speech recognition not supported in this browser.')
         setIsRecording(false)
         return
       }
-      recognition = new SpeechRecognition()
+      recognition = new SpeechRecognitionCtor()
       recognition.lang = 'en-US'
       recognition.continuous = false
       recognition.interimResults = false
-      recognition.onresult = (e: any) => {
+      recognition.onresult = (e: SpeechRecognitionEvent) => {
         const transcript = e.results[0][0].transcript
         setInputMessage((prev) => (prev ? prev + ' ' + transcript : transcript))
       }

@@ -64,7 +64,7 @@ export default function LLMQuoteGenerator() {
       <Card>
         <CardHeader>
           <CardTitle className="text-center">
-            Get an AI-Powered Quote for "{request.service}"
+            Get an AI-Powered Quote for &quot;{request.service}&quot;
           </CardTitle>
         </CardHeader>
         <CardContent>

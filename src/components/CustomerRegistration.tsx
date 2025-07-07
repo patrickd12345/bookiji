@@ -22,10 +22,7 @@ export default function CustomerRegistration() {
     preferences: {}
   });
 
-  const {
-    showRegistration,
-    setShowRegistration
-  } = useUIStore();
+  const { showRegistration } = useUIStore();
 
   if (!showRegistration) return null;
 
@@ -229,6 +226,12 @@ export default function CustomerRegistration() {
               </label>
             </div>
           </div>
+
+          {error && (
+            <p className="text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          )}
 
           <div className="pt-6">
             <button
