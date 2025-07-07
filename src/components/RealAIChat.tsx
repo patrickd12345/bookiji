@@ -30,7 +30,8 @@ export default function RealAIChat() {
     let recognition: SpeechRecognition | null = null
     if (isRecording) {
       const SpeechRecognitionCtor =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+        (window as unknown as { SpeechRecognition: new () => SpeechRecognition }).SpeechRecognition ||
+        (window as unknown as { webkitSpeechRecognition: new () => SpeechRecognition }).webkitSpeechRecognition
       if (!SpeechRecognitionCtor) {
         alert('Speech recognition not supported in this browser.')
         setIsRecording(false)
