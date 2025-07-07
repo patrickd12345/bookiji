@@ -91,8 +91,18 @@ export const getThemeValue = (
   path: ThemePath,
   defaultValue?: string
 ): string | undefined => {
-  return (
-    path.split('.').reduce((obj: Record<string, unknown>, key) => (obj as any)?.[key], theme) ||
-    defaultValue
-  )
-};
+  try {
+    const keys = path.split('.')
+    let current: unknown = theme
+    for (const key of keys) {
+      if (typeof current === 'object' && current !== null && key in current) {
+        current = (current as Record<string, unknown>)[key]
+      } else {
+        return defaultValue
+      }
+    }
+    return typeof current === 'string' ? current : defaultValue
+  } catch {
+    return defaultValue
+  }
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { trackEvent, collectUserFeedback } from '@/lib/analytics'
 
 // 📋 Smart Feedback Collection for Post-Launch Optimization
@@ -161,28 +161,8 @@ export default function FeedbackCollector({
   const [rating, setRating] = useState<number>(0)
   const [timeOnPage, setTimeOnPage] = useState(0)
 
-  // Track time on page
-  useEffect(() => {
-    const startTime = Date.now()
-    const interval = setInterval(() => {
-      setTimeOnPage(Math.floor((Date.now() - startTime) / 1000))
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [currentPage])
-
-  // Listen for trigger events
-  useEffect(() => {
-    const handleTriggerEvent = (event: CustomEvent) => {
-      const eventName = event.detail.eventName
-      checkTriggers(eventName)
-    }
-
-    window.addEventListener('feedback-trigger', handleTriggerEvent as EventListener)
-    return () => window.removeEventListener('feedback-trigger', handleTriggerEvent as EventListener)
-  }, [timeOnPage, sessionCount, userSegment, checkTriggers])
-
-  const checkTriggers = (eventName?: string) => {
+  // Move this up so it's declared before useEffect
+  const checkTriggers = useCallback((eventName?: string) => {
     // Don't show multiple feedback requests in same session
     if (sessionStorage.getItem('feedback_shown')) return
 
@@ -226,7 +206,28 @@ export default function FeedbackCollector({
         priority: triggeredFeedback.priority
       })
     }
-  }
+  }, [currentPage, userSegment, timeOnPage, sessionCount])
+
+  // Track time on page
+  useEffect(() => {
+    const startTime = Date.now()
+    const interval = setInterval(() => {
+      setTimeOnPage(Math.floor((Date.now() - startTime) / 1000))
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [currentPage])
+
+  // Listen for trigger events
+  useEffect(() => {
+    const handleTriggerEvent = (event: CustomEvent) => {
+      const eventName = event.detail.eventName
+      checkTriggers(eventName)
+    }
+
+    window.addEventListener('feedback-trigger', handleTriggerEvent as EventListener)
+    return () => window.removeEventListener('feedback-trigger', handleTriggerEvent as EventListener)
+  }, [timeOnPage, sessionCount, userSegment, checkTriggers])
 
   const submitFeedback = async () => {
     if (!activeTrigger) return

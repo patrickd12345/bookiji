@@ -11,6 +11,36 @@ interface Message {
   timestamp: Date
 }
 
+// Proper interfaces for SpeechRecognition API
+interface SpeechRecognitionEvent {
+  results: {
+    [index: number]: {
+      [index: number]: {
+        transcript: string
+      }
+    }
+  }
+}
+
+interface SpeechRecognition extends EventTarget {
+  lang: string
+  continuous: boolean
+  interimResults: boolean
+  onresult: ((event: SpeechRecognitionEvent) => void) | null
+  onend: (() => void) | null
+  start: () => void
+  stop: () => void
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition
+}
+
+interface Window {
+  SpeechRecognition?: SpeechRecognitionConstructor
+  webkitSpeechRecognition?: SpeechRecognitionConstructor
+}
+
 export default function RealAIChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -30,22 +60,24 @@ export default function RealAIChat() {
     let recognition: SpeechRecognition | null = null
     if (isRecording) {
       const SpeechRecognitionCtor =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+        (window as Window).SpeechRecognition || (window as Window).webkitSpeechRecognition
       if (!SpeechRecognitionCtor) {
         alert('Speech recognition not supported in this browser.')
         setIsRecording(false)
         return
       }
       recognition = new SpeechRecognitionCtor()
-      recognition.lang = 'en-US'
-      recognition.continuous = false
-      recognition.interimResults = false
-      recognition.onresult = (e: SpeechRecognitionEvent) => {
-        const transcript = e.results[0][0].transcript
-        setInputMessage((prev) => (prev ? prev + ' ' + transcript : transcript))
+      if (recognition) {
+        recognition.lang = 'en-US'
+        recognition.continuous = false
+        recognition.interimResults = false
+        recognition.onresult = (e: SpeechRecognitionEvent) => {
+          const transcript = e.results[0][0].transcript
+          setInputMessage((prev) => (prev ? prev + ' ' + transcript : transcript))
+        }
+        recognition.onend = () => setIsRecording(false)
       }
-      recognition.onend = () => setIsRecording(false)
-      recognition.start()
+      recognition?.start()
     }
     return () => {
       if (recognition && isRecording) recognition.stop()

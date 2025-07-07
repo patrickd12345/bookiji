@@ -38,6 +38,11 @@ export interface LLMError {
   };
 }
 
+interface OllamaMessage {
+  content: string;
+  [key: string]: unknown;
+}
+
 class LLMClient {
   private baseURL: string;
   private model: string;
@@ -146,20 +151,20 @@ class LLMClient {
             index: 0,
             message: {
               role: 'assistant',
-              content: data.message?.content || data.response || '',
+              content: (data.message as OllamaMessage)?.content || (data.response as string) || '',
             },
             finish_reason: 'stop',
           },
         ],
         usage: {
-          prompt_tokens: data.prompt_eval_count || 0,
-          completion_tokens: data.eval_count || 0,
-          total_tokens: (data.prompt_eval_count || 0) + (data.eval_count || 0),
+          prompt_tokens: typeof data.prompt_eval_count === 'number' ? data.prompt_eval_count : 0,
+          completion_tokens: typeof data.eval_count === 'number' ? data.eval_count : 0,
+          total_tokens: (typeof data.prompt_eval_count === 'number' ? data.prompt_eval_count : 0) + (typeof data.eval_count === 'number' ? data.eval_count : 0),
         },
       };
     } else {
       // OpenAI-compatible response format
-      return data;
+      return data as unknown as LLMResponse;
     }
   }
 

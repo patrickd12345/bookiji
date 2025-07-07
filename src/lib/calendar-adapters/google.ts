@@ -11,9 +11,81 @@ interface GoogleOAuthConfig {
   redirectUri: string;
 }
 
+// Google Calendar API interfaces
+interface GoogleCalendarItem {
+  id: string;
+  primary?: boolean;
+  summary?: string;
+}
+
+interface GoogleCalendarEvent {
+  id: string;
+  summary?: string;
+  start: {
+    dateTime?: string;
+    date?: string;
+  };
+  end: {
+    dateTime?: string;
+    date?: string;
+  };
+  transparency?: string;
+  description?: string;
+  location?: string;
+}
+
+interface GoogleCalendarResponse {
+  data: {
+    items: GoogleCalendarEvent[];
+  };
+}
+
+interface GoogleFreebusySlot {
+  start: string;
+  end: string;
+}
+
+interface GoogleFreebusyResponse {
+  data: {
+    calendars: {
+      primary: {
+        busy: GoogleFreebusySlot[];
+      };
+    };
+  };
+}
+
+interface GoogleCalendarListResponse {
+  data: {
+    items: GoogleCalendarItem[];
+  };
+}
+
 export class GoogleCalendarAdapter implements CalendarAdapter {
   private oauth2Client: unknown;
-  private calendar: unknown;
+  private calendar!: {
+    events: {
+      list: (params: {
+        calendarId: string;
+        timeMin: string;
+        timeMax: string;
+        singleEvents: boolean;
+        orderBy: string;
+      }) => Promise<GoogleCalendarResponse>;
+    };
+    freebusy: {
+      query: (params: {
+        requestBody: {
+          timeMin: string;
+          timeMax: string;
+          items: Array<{ id: string }>;
+        };
+      }) => Promise<GoogleFreebusyResponse>;
+    };
+    calendarList: {
+      list: () => Promise<GoogleCalendarListResponse>;
+    };
+  };
   private credentials: CalendarCredentials | null = null;
   private config: CalendarSystemConfig;
   private supabase = createClientComponentClient()
@@ -54,7 +126,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       }
 
       const { items } = await calendarResponse.json()
-      const primaryCalendar = items.find((cal: Record<string, any>) => cal.primary)
+      const primaryCalendar = items.find((cal: GoogleCalendarItem) => cal.primary)
 
       if (!primaryCalendar) {
         throw new Error('No primary calendar found')
@@ -171,11 +243,11 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
         orderBy: 'startTime',
       });
 
-      return response.data.items.map((event: Record<string, any>) => ({
+      return response.data.items.map((event: GoogleCalendarEvent) => ({
         id: event.id,
         title: event.summary || 'Busy',
-        start: new Date(event.start.dateTime || event.start.date),
-        end: new Date(event.end.dateTime || event.end.date),
+        start: new Date(event.start.dateTime || event.start.date || new Date()),
+        end: new Date(event.end.dateTime || event.end.date || new Date()),
         isAllDay: !event.start.dateTime,
         status: event.transparency === 'transparent' ? 'free' : 'busy',
         description: event.description,
@@ -199,7 +271,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
 
       const busySlots = response.data.calendars.primary.busy || [];
       return {
-        busy: busySlots.map((slot: Record<string, any>) => ({
+        busy: busySlots.map((slot: GoogleFreebusySlot) => ({
           start: new Date(slot.start),
           end: new Date(slot.end)
         }))
@@ -213,9 +285,9 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
   async getCalendarList(): Promise<{ id: string; name: string }[]> {
     try {
       const response = await this.calendar.calendarList.list();
-      return response.data.items.map((cal: Record<string, any>) => ({
+      return response.data.items.map((cal: GoogleCalendarItem) => ({
         id: cal.id,
-        name: cal.summary
+        name: cal.summary || ''
       }));
     } catch (error) {
       console.error('Failed to fetch Google Calendar list:', error);

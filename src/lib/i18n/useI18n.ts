@@ -7,13 +7,11 @@ import {
   SUPPORTED_LOCALES, 
   DEFAULT_LOCALE, 
   getCurrencyInfo, 
-  getCountryInfo, 
   getLocaleInfo,
   detectLocaleFromHeaders 
 } from './config'
 
 // 🌍 GLOBAL I18N STATE (simple client-side state management)
-let globalLocale = DEFAULT_LOCALE
 let localeChangeListeners: ((locale: string) => void)[] = []
 
 // 📚 Loaded translations cache
@@ -25,7 +23,7 @@ async function loadTranslations(locale: string): Promise<Record<string, string>>
     const translations = (await import(`../../../locales/${locale}.json`)).default
     translationCache[locale] = translations
     return translations
-  } catch (_err) {
+  } catch {
     const fallback = (await import(`../../../locales/en-US.json`)).default
     translationCache[locale] = fallback
     return fallback
@@ -92,7 +90,6 @@ function createTimeFormatter(locale: string, timeFormat: '12h' | '24h') {
 export function useI18n(initialLocale?: string): I18nHook {
   const [currentLocale, setCurrentLocale] = useState<string>(() => {
     if (initialLocale && SUPPORTED_LOCALES[initialLocale]) {
-      globalLocale = initialLocale
       return initialLocale
     }
     if (typeof window !== 'undefined') {
@@ -126,7 +123,6 @@ export function useI18n(initialLocale?: string): I18nHook {
       newLocale = DEFAULT_LOCALE
     }
     
-    globalLocale = newLocale
     saveLocaleToStorage(newLocale)
     
     // Notify all components
@@ -197,4 +193,4 @@ export function detectServerLocale(headers: Headers): string {
 }
 
 // 🔧 UTILITY EXPORTS
-export { SUPPORTED_LOCALES, getCurrencyInfo, getCountryInfo, getLocaleInfo } from './config'
+export { SUPPORTED_LOCALES, getCurrencyInfo, getLocaleInfo } from './config'

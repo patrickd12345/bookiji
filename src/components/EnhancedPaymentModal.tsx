@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { FormEvent } from 'react'
 import { motion } from 'framer-motion'
 import CreditBooklet from './CreditBooklet'
@@ -21,11 +21,6 @@ interface EnhancedPaymentModalProps {
   onError?: (error: Error) => void
 }
 
-interface UserCredits {
-  balance_cents: number
-  [key: string]: unknown
-}
-
 export function EnhancedPaymentModal({
   isOpen,
   onCloseAction,
@@ -37,36 +32,9 @@ export function EnhancedPaymentModal({
   const [error, setError] = useState<string | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [showCreditBooklet, setShowCreditBooklet] = useState(false)
-  const [userCredits, setUserCredits] = useState<UserCredits | null>(null)
 
-  useEffect(() => {
-    if (isOpen && bookingDetails.amountCents > 0) {
-      createPaymentIntent()
-    }
-  }, [isOpen, bookingDetails.amountCents, createPaymentIntent])
-
-  useEffect(() => {
-    if (isOpen && bookingDetails.amountCents > 0) {
-      fetchUserCredits()
-    }
-  }, [isOpen, bookingDetails.amountCents, fetchUserCredits])
-
-  const fetchUserCredits = async () => {
-    if (!bookingDetails.amountCents) return
-
-    try {
-      const response = await fetch(`/api/credits/balance?userId=${bookingDetails.amountCents}`)
-      const data = await response.json()
-
-      if (data.success) {
-        setUserCredits(data.credits)
-      }
-    } catch (error) {
-      console.error('Error fetching user credits:', error)
-    }
-  }
-
-  const createPaymentIntent = async () => {
+  // Move these up so they're declared before useEffect
+  const createPaymentIntent = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/payments/create-payment-intent', {
@@ -89,7 +57,14 @@ export function EnhancedPaymentModal({
     } finally {
       setLoading(false)
     }
-  }
+  }, [bookingDetails.amountCents, onError])
+
+  useEffect(() => {
+    if (isOpen && bookingDetails.amountCents > 0) {
+      createPaymentIntent()
+    }
+  }, [isOpen, bookingDetails.amountCents, createPaymentIntent])
+
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
