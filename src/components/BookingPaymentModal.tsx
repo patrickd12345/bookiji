@@ -62,7 +62,7 @@ export function BookingPaymentModal({
     if (isOpen && serviceDetails.price > 0) {
       createPaymentIntent()
     }
-  }, [isOpen, createPaymentIntent])
+  }, [isOpen, serviceDetails.price, createPaymentIntent])
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()

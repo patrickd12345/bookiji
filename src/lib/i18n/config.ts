@@ -300,7 +300,7 @@ export function getVendorFee(category: string, currency: string = 'usd'): number
   // 🌍 Use real PPP calculations for accurate economic fairness
   try {
     return getPPPVendorFee(usdFee, currency)
-  } catch (error) {
+  } catch (_error) {
     // Fallback to legacy tier-based system if PPP module not available
     const currencyInfo = getCurrencyInfo(currency)
     
@@ -373,7 +373,7 @@ export function getCustomerFee(currency: string = 'usd'): number {
   // 🌍 Use real PPP calculations for accurate economic fairness
   try {
     return getPPPCustomerFee(currency)
-  } catch (error) {
+  } catch (_error) {
     // Fallback to legacy tier-based system if PPP module not available
     const currencyInfo = getCurrencyInfo(currency)
     return currencyInfo.bookingFee

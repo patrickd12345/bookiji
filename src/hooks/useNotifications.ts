@@ -45,7 +45,7 @@ export function useNotifications() {
         error: error instanceof Error ? error.message : 'Failed to load notifications'
       }))
     }
-  }, [])
+  }, [notificationService])
 
   const markAsRead = useCallback(async (notificationId: string) => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -65,7 +65,7 @@ export function useNotifications() {
     } catch (error) {
       console.error('Failed to mark notification as read:', error)
     }
-  }, [])
+  }, [notificationService])
 
   const markAllAsRead = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -82,7 +82,7 @@ export function useNotifications() {
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error)
     }
-  }, [])
+  }, [notificationService])
 
   const deleteNotification = useCallback(async (notificationId: string) => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -96,7 +96,7 @@ export function useNotifications() {
     } catch (error) {
       console.error('Failed to delete notification:', error)
     }
-  }, [])
+  }, [notificationService])
 
   // Set up real-time notifications with reconnection logic
   useEffect(() => {

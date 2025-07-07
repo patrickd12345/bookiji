@@ -4,7 +4,7 @@ import { HTMLMotionProps } from 'framer-motion'
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      [elemName: string]: any;
+      [elemName: string]: unknown;
     }
   }
   var __DEV__: boolean;

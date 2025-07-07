@@ -22,7 +22,7 @@ interface GuidedTourManagerProps {
 
 export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTourManagerProps) {
   const [isClient, setIsClient] = useState(false)
-  const [tour, setTour] = useState<any>(null)
+  const [tour, setTour] = useState<unknown>(null)
 
   useEffect(() => {
     setIsClient(true)
@@ -180,7 +180,7 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
   }
 
   // helper to attach global shortcuts (advance on Enter/Space or overlay click)
-  const attachShortcuts = (activeTour: any) => {
+  const attachShortcuts = (activeTour: { next: () => void; on: (event: string, cb: () => void) => void }) => {
     const keyHandler = (e: KeyboardEvent) => {
       if (['Enter', ' '].includes(e.key)) {
         e.preventDefault()
@@ -240,7 +240,7 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
         }
       }
     }
-  }, [isClient, type])
+  }, [isClient, type, initializeTour, startTour, tour])
 
   return (
     <>

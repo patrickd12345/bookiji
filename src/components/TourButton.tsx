@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Tour, BookijiTour } from '@/lib/guidedTourSimple';
+import { BookijiTour } from '@/lib/guidedTourSimple';
 
 interface TourButtonProps {
   variant?: 'help' | 'start' | 'floating';

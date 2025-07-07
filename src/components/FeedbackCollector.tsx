@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { trackEvent, collectUserFeedback, TRACKING_EVENTS } from '@/lib/analytics'
+import { trackEvent, collectUserFeedback } from '@/lib/analytics'
 
 // 📋 Smart Feedback Collection for Post-Launch Optimization
 // Triggers contextual micro-surveys at key moments
@@ -180,7 +180,7 @@ export default function FeedbackCollector({
 
     window.addEventListener('feedback-trigger', handleTriggerEvent as EventListener)
     return () => window.removeEventListener('feedback-trigger', handleTriggerEvent as EventListener)
-  }, [timeOnPage, sessionCount, userSegment])
+  }, [timeOnPage, sessionCount, userSegment, checkTriggers])
 
   const checkTriggers = (eventName?: string) => {
     // Don't show multiple feedback requests in same session
