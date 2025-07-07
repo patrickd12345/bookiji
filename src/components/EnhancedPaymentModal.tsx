@@ -65,7 +65,6 @@ export function EnhancedPaymentModal({
     }
   }, [isOpen, bookingDetails.amountCents, createPaymentIntent])
 
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
@@ -81,8 +80,6 @@ export function EnhancedPaymentModal({
       setLoading(false)
     }
   }
-
-
 
   const handleCreditBookletClose = () => {
     setShowCreditBooklet(false)

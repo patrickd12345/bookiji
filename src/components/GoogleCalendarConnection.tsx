@@ -55,9 +55,7 @@ export default function GoogleCalendarConnection({
 
   useEffect(() => {
     checkConnectionStatus()
-  }, [checkConnectionStatus])
-
-
+  }, [profileId, checkConnectionStatus])
 
   const handleConnect = async () => {
     setIsConnecting(true)
@@ -204,9 +202,6 @@ export default function GoogleCalendarConnection({
           )}
         </div>
       )}
-
-      {/* Status Messages */}
-      {/* Connection Details */}
 
       {/* Help Text */}
       {!isConnected && (

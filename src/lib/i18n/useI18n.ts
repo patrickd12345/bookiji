@@ -8,7 +8,7 @@ import {
   DEFAULT_LOCALE, 
   getCurrencyInfo, 
   getLocaleInfo,
-  detectLocaleFromHeaders 
+  detectLocaleFromHeaders
 } from './config'
 
 // 🌍 GLOBAL I18N STATE (simple client-side state management)
