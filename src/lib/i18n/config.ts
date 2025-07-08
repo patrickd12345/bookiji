@@ -332,11 +332,11 @@ export function getFormattedVendorFee(category: string, currency: string = 'usd'
   // Format based on currency decimals
   if (currencyInfo.decimals === 0) {
     // For zero-decimal currencies like JPY, KRW
-    return `${currencyInfo.symbol}${fee.toLocaleString()}`
+    return `${currencyInfo.symbol}${fee.toLocaleString('en-US')}`
   } else {
     // For decimal currencies, convert from smallest unit
     const amount = fee / Math.pow(10, currencyInfo.decimals)
-    return `${currencyInfo.symbol}${amount.toLocaleString(undefined, { minimumFractionDigits: currencyInfo.decimals, maximumFractionDigits: currencyInfo.decimals })}`
+    return `${currencyInfo.symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: currencyInfo.decimals, maximumFractionDigits: currencyInfo.decimals })}`
   }
 }
 
@@ -392,11 +392,11 @@ export function getFormattedCustomerFee(currency: string = 'usd'): string {
   // Format based on currency decimals
   if (currencyInfo.decimals === 0) {
     // For zero-decimal currencies like JPY, KRW
-    return `${currencyInfo.symbol}${fee.toLocaleString()}`
+    return `${currencyInfo.symbol}${fee.toLocaleString('en-US')}`
   } else {
     // For decimal currencies, convert from smallest unit
     const amount = fee / Math.pow(10, currencyInfo.decimals)
-    return `${currencyInfo.symbol}${amount.toLocaleString(undefined, { minimumFractionDigits: currencyInfo.decimals, maximumFractionDigits: currencyInfo.decimals })}`
+    return `${currencyInfo.symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: currencyInfo.decimals, maximumFractionDigits: currencyInfo.decimals })}`
   }
 }
 

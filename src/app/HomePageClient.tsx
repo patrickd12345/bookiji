@@ -9,12 +9,14 @@ import {
   BigActionButton, 
   AIRadiusScaling,
   GuidedTourManager,
-  SimpleTourButton
+  SimpleTourButton,
+  PlatformDisclosures
 } from '@/components'
 import { SimpleThemeToggle } from '@/components/ThemeSwitcher'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { PlayCircle, Briefcase } from 'lucide-react'
+import Link from 'next/link'
 
 interface HomePageClientProps {
   initialLocale: string
@@ -38,7 +40,7 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
   }, [initialLocale, setLocale])
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Language Selector */}
       <div className="absolute top-4 left-4">
         <LocaleSelector variant="icon-only" />
@@ -50,84 +52,126 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
       </div>
       
       {/* Hero Section */}
-      <section className="pt-20 pb-12 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-8">
-            <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-            {t('home.beta_banner', { count: '37' })}
-          </div>
-          
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            {t('home.headline')}
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            {t('home.tagline', { fee: formatCurrency(100) })}
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            {loading ? (
-              // Loading state - show skeleton buttons
-              <>
-                <div className="h-10 w-32 bg-muted animate-pulse rounded-md"></div>
-                <div className="h-10 w-32 bg-muted animate-pulse rounded-md"></div>
-              </>
-            ) : !isAuthenticated ? (
-              // Not logged in - show onboarding buttons
-              <>
-                <a href="/get-started">
-                  <Button className="h-10 px-8 text-lg flex items-center gap-2">
-                    <PlayCircle className="w-4 h-4" />
-                    {t('cta.start_booking')}
-                  </Button>
-                </a>
-                <a href="/vendor/onboarding">
-                  <Button variant="outline" className="h-10 px-8 text-lg flex items-center gap-2">
-                    <Briefcase className="w-4 h-4" />
-                    {t('cta.list_business')}
-                  </Button>
-                </a>
-              </>
-            ) : (
-              // Logged in - show appropriate dashboard buttons based on capabilities
-              <>
-                {canBookServices && (
-                  <a href="/dashboard">
-                    <Button variant="outline" className="h-10 px-8 text-lg">
-                      {t('cta.open_customer_dashboard')}
-                    </Button>
-                  </a>
-                )}
-                {canOfferServices && (
-                  <a href="/vendor/dashboard">
-                    <Button variant="outline" className="h-10 px-8 text-lg">
-                      {t('cta.open_vendor_dashboard')}
-                    </Button>
-                  </a>
-                )}
-                {/* Show onboarding options if user doesn't have those capabilities yet */}
-                {!canBookServices && (
-                  <a href="/get-started">
-                    <Button className="h-10 px-8 text-lg flex items-center gap-2">
-                      <PlayCircle className="w-4 h-4" />
-                      {t('cta.start_booking')}
-                    </Button>
-                  </a>
-                )}
-                {!canOfferServices && (
-                  <a href="/vendor/onboarding">
-                    <Button variant="outline" className="h-10 px-8 text-lg flex items-center gap-2">
-                      <Briefcase className="w-4 h-4" />
-                      {t('cta.list_business')}
-                    </Button>
-                  </a>
-                )}
-              </>
-            )}
-            <SimpleThemeToggle />
+      <div className="relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="text-center" data-tour="hero-section">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+              Book Anything,{' '}
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Anywhere
+              </span>
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              The universal booking platform powered by AI. Find and book local services instantly.
+            </p>
+            
+            {/* Search Section */}
+            <div className="max-w-2xl mx-auto mb-8" data-tour="search-section">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <input
+                  type="text"
+                  placeholder="What service do you need?"
+                  className="flex-1 px-6 py-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200">
+                  Search
+                </button>
+              </div>
+            </div>
+
+            {/* AI Chat Section */}
+            <div className="mb-8" data-tour="ai-chat">
+              <div className="inline-flex items-center gap-3 px-6 py-3 bg-white rounded-full shadow-lg border">
+                <span className="text-2xl">🤖</span>
+                <span className="text-gray-700 font-medium">Try our AI booking assistant</span>
+                <button className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors">
+                  Start Chat
+                </button>
+              </div>
+            </div>
+
+            {/* Commitment Fee Explanation */}
+            <div className="mb-8" data-tour="commitment-fee">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm">
+                <span>💡</span>
+                <span>Only $1 commitment fee • No hidden charges</span>
+              </div>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center" data-tour="get-started-btn">
+              <Link
+                href="/get-started"
+                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-lg"
+              >
+                Get Started
+              </Link>
+              <button className="px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-gray-400 transition-all duration-200 text-lg">
+                Watch Demo
+              </button>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
+
+      {/* Map Section */}
+      <div className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Discover Local Providers
+            </h2>
+            <p className="text-xl text-gray-600">
+              Find trusted service providers in your area with real-time availability
+            </p>
+          </div>
+          
+          {/* Map Container */}
+          <div className="relative" data-tour="map-container">
+            <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center" data-tour="map-controls">
+              <div className="text-center">
+                <div className="text-6xl mb-4">🗺️</div>
+                <p className="text-gray-600">Interactive Map Coming Soon</p>
+                <p className="text-sm text-gray-500">Real-time provider discovery with availability</p>
+              </div>
+            </div>
+            
+            {/* Map Controls */}
+            <div className="absolute top-4 right-4 flex flex-col gap-2" data-tour="map-controls">
+              <button className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center hover:bg-gray-50">
+                ➕
+              </button>
+              <button className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center hover:bg-gray-50">
+                ➖
+              </button>
+            </div>
+            
+            {/* Provider Markers Placeholder */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" data-tour="provider-markers">
+              <div className="flex gap-4">
+                <div className="w-4 h-4 bg-green-500 rounded-full shadow-lg" title="Available Provider"></div>
+                <div className="w-4 h-4 bg-orange-500 rounded-full shadow-lg" title="Limited Availability"></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Filter Panel */}
+          <div className="mt-8 flex flex-wrap gap-4 justify-center" data-tour="filter-panel">
+            <button className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm">All Services</button>
+            <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm hover:bg-gray-300">Health & Medical</button>
+            <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm hover:bg-gray-300">Beauty & Wellness</button>
+            <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm hover:bg-gray-300">Hair & Styling</button>
+            <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm hover:bg-gray-300">Automotive</button>
+          </div>
+          
+          {/* View Toggle */}
+          <div className="mt-6 text-center" data-tour="list-view-toggle">
+            <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">
+              Switch to List View
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Feature Grid */}
       <section id="feature-grid" className="py-16 px-4">
@@ -307,6 +351,7 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
           onSkip={() => setShowTour(false)}
         />
       )}
+      <PlatformDisclosures />
     </div>
   )
 } 

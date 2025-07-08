@@ -227,7 +227,7 @@ export default function VendorDashboard() {
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-tour="booking-stats">
               <StatCard
                 title="Total Bookings"
                 value={stats.totalBookings}
@@ -247,10 +247,10 @@ export default function VendorDashboard() {
                 value={`${stats.noShowRate.toFixed(1)}%`}
                 subtitle="Lower is better"
                 icon="⚠️"
-                color={stats.noShowRate < 5 ? 'green' : 'red'}
+                color="red"
               />
               <StatCard
-                title="Average Rating"
+                title="Avg Rating"
                 value={stats.avgRating}
                 subtitle="Customer satisfaction"
                 icon="⭐"
@@ -276,63 +276,37 @@ export default function VendorDashboard() {
             </div>
 
             {/* Recent Bookings */}
-            <div className="bg-white rounded-lg shadow-sm" data-tour="recent-bookings">
-              <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold">Recent Bookings</h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Revenue</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {recentBookings.map((booking) => (
-                      <tr key={booking.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-medium text-gray-900">{booking.customer_name}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-900">
-                          {booking.service_name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-900">
-                          {new Date(booking.slot_start).toLocaleDateString()}
-                          <br />
-                          <span className="text-sm text-gray-500">
-                            {new Date(booking.slot_start).toLocaleTimeString([], { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            booking.status === 'confirmed' 
-                              ? 'bg-green-100 text-green-800'
-                              : booking.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-gray-900">
-                            ${(booking.total_amount_cents / 100).toFixed(2)}
-                          </div>
-                          {booking.commitment_fee_paid && (
-                            <div className="text-xs text-green-600">✓ Paid</div>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="bg-white rounded-lg shadow-sm p-6" data-tour="recent-bookings">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Bookings</h3>
+              <div className="space-y-4">
+                {recentBookings.map((booking) => (
+                  <div key={booking.id} className="flex justify-between items-center p-4 border rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{booking.customer_name}</p>
+                      <p className="text-sm text-gray-600">{booking.service_name}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(booking.slot_start).toLocaleDateString()} at{' '}
+                        {new Date(booking.slot_start).toLocaleTimeString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-gray-900">
+                        ${(booking.total_amount_cents / 100).toFixed(2)}
+                      </p>
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full ${
+                          booking.status === 'confirmed'
+                            ? 'bg-green-100 text-green-800'
+                            : booking.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {booking.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

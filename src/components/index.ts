@@ -59,4 +59,5 @@ export { default as HelpBanner } from './HelpBanner'
 export { default as LocaleSelector } from './LocaleSelector'
 export { default as SimpleHelpCenter } from './SimpleHelpCenter'
 export { default as SmartFAQ } from './SmartFAQ'
+export { PlatformDisclosures } from './PlatformDisclosures'
 

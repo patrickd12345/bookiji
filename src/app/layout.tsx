@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import MainNavigation from '@/components/MainNavigation'
 import Script from 'next/script'
+import { ConsentManager } from '@/components/ConsentManager'
 
 // @ts-nocheck
 
@@ -33,15 +34,49 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="google-adsense-account" content="ca-pub-2311249346490347" />
-      </head>
-      <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
-        {/* Google AdSense loader script */}
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"
-          crossOrigin="anonymous"
           strategy="afterInteractive"
+          data-ad-client="ca-pub-2311249346490347"
+          crossOrigin="anonymous"
+          data-nscript="afterInteractive"
         />
+        <Script id="adsense-consent" strategy="afterInteractive">
+          {`
+            (function() {
+              function getCookie(name) {
+                const value = "; " + document.cookie;
+                const parts = value.split("; " + name + "=");
+                if (parts.length === 2) return parts.pop().split(";").shift();
+              }
+              
+              // Check consent cookie
+              const personalized = getCookie('personalized_ads');
+              if (personalized === '0') {
+                // User opted out of personalized ads
+                window.adsbygoogle = window.adsbygoogle || [];
+                window.adsbygoogle.push({
+                  'google_ad_client': 'ca-pub-2311249346490347',
+                  'enable_page_level_ads': true,
+                  'tag_partner': 'bookiji',
+                  'non_personalized_ads': 1
+                });
+              } else {
+                // Default or user consented to personalized ads
+                window.adsbygoogle = window.adsbygoogle || [];
+                window.adsbygoogle.push({
+                  'google_ad_client': 'ca-pub-2311249346490347',
+                  'enable_page_level_ads': true,
+                  'tag_partner': 'bookiji'
+                });
+              }
+            })();
+          `}
+        </Script>
+      </head>
+      <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
+        {/* Google AdSense loader script */}
         <ThemeProvider
           attribute="class"
           defaultTheme="corporate"
@@ -87,6 +122,7 @@ export default function RootLayout({
                   <ul className="space-y-2 text-sm">
                     <li><a href="/terms" className="text-gray-600 hover:text-gray-900">Terms of Service</a></li>
                     <li><a href="/privacy" className="text-gray-600 hover:text-gray-900">Privacy Policy</a></li>
+                    <li><a href="/compliance" className="text-gray-600 hover:text-gray-900">AdSense Compliance</a></li>
                   </ul>
                 </div>
               </div>
@@ -97,6 +133,7 @@ export default function RootLayout({
           </footer>
     
         </ThemeProvider>
+        <ConsentManager />
       </body>
     </html>
   )

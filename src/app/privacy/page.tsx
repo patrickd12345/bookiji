@@ -217,6 +217,15 @@ export default function PrivacyPage() {
             and protecting your privacy.
           </p>
         </section>
+
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">13. AdSense Compliance</h2>
+          <p className="text-gray-700 leading-relaxed">
+            We maintain full compliance with Google AdSense policies. For detailed information about 
+            our compliance measures, please see our 
+            <a href="/compliance" className="text-blue-600 hover:text-blue-800 underline">AdSense Compliance Audit</a>.
+          </p>
+        </section>
       </div>
 
       <div className="bg-green-50 p-6 rounded-lg mt-8">

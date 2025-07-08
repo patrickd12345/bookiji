@@ -1,6 +1,14 @@
 [
+  "/",
+  "/get-started",
+  "/dashboard",
+  "/book/[vendorId]",
+  "/pay/[bookingId]",
+  "/confirm/[bookingId]",
+  "/vendor/onboarding",
+  "/vendor/dashboard",
+  "/vendor/calendar",
   "/admin/analytics",
   "/admin/service-types",
-  "/vendor/dashboard",
   "/help/tickets"
 ] 

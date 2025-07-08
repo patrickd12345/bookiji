@@ -1,5 +1,5 @@
 ﻿import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import BookingForm from "@/components/BookingForm";
 
@@ -21,7 +21,7 @@ describe("BookingForm", () => {
     vi.clearAllMocks();
   });
 
-  it("renders form fields correctly", () => {
+  it("renders form fields correctly", async () => {
     // Mock credits fetch
     mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
@@ -37,7 +37,9 @@ describe("BookingForm", () => {
       })
     );
 
-    render(<BookingForm {...defaultProps} />);
+    await act(async () => {
+      render(<BookingForm {...defaultProps} />);
+    });
 
     expect(screen.getByText(/test service/i)).toBeInTheDocument();
     expect(screen.getByText(/test vendor/i)).toBeInTheDocument();
@@ -80,7 +82,9 @@ describe("BookingForm", () => {
       })
     );
 
-    render(<BookingForm {...defaultProps} />);
+    await act(async () => {
+      render(<BookingForm {...defaultProps} />);
+    });
 
     const dateInput = screen.getByLabelText(/select date/i);
     await user.type(dateInput, "2024-05-01");
@@ -107,7 +111,9 @@ describe("BookingForm", () => {
       })
     );
 
-    render(<BookingForm {...defaultProps} />);
+    await act(async () => {
+      render(<BookingForm {...defaultProps} />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText("Balance: $100")).toBeInTheDocument();
@@ -130,7 +136,9 @@ describe("BookingForm", () => {
       })
     );
 
-    render(<BookingForm {...defaultProps} />);
+    await act(async () => {
+      render(<BookingForm {...defaultProps} />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText("Balance: $10")).toBeInTheDocument();
@@ -174,7 +182,9 @@ describe("BookingForm", () => {
       })
     );
     
-    render(<BookingForm {...defaultProps} />);
+    await act(async () => {
+      render(<BookingForm {...defaultProps} />);
+    });
 
     // Submit empty form
     const submitButton = screen.getByRole("button", { name: /confirm booking/i });
