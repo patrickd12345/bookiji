@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { makeCreditsStatusHandler } from '@/app/api/credits/status/route'
+import { makeCreditsStatusHandler } from '@/lib/creditsStatusHandler'
 import { NextRequest } from 'next/server'
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'

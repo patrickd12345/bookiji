@@ -191,7 +191,7 @@ registerTour({
 })
 
 // 11. VENDOR CALENDAR TOUR
-registerTour({
+  registerTour({
   id: 'vendor-calendar',
   route: '/vendor/calendar',
   title: 'Calendar Management',

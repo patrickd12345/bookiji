@@ -12,7 +12,7 @@
     ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
   ],
   "files.autoOpen": [
-    "*.md"
+    "PROJECT_TRACKING.md", "README.md"
   ],
   "tailwindCSS.includeLanguages": {
     "typescript": "javascript",
