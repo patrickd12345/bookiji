@@ -3,7 +3,6 @@ import { vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 
 // Set up environment variables for integration tests
-process.env.NODE_ENV = 'test'
 process.env.DEPLOY_ENV = 'test'
 
 // Supabase Test Project (create a dedicated test project)
@@ -19,15 +18,54 @@ process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_your_webhook_secret'
 process.env.LOCAL_LLM_URL = 'http://localhost:11434' // Local Ollama for tests
 process.env.LOCAL_LLM_MODEL = 'llama2:7b' // Smaller model for faster tests
 
-// Base URL for API routes
+// Test base URL
 process.env.TEST_BASE_URL = 'http://localhost:3000'
 
-// Configure testing-library
-beforeEach(() => {
-  vi.clearAllMocks()
-  vi.restoreAllMocks()
-})
+// Mock fetch for tests
+global.fetch = vi.fn()
 
+// Cleanup after each test
 afterEach(() => {
   cleanup()
+  vi.clearAllMocks()
+})
+
+// Mock Next.js router
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/',
+}))
+
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn(),
+}
+global.localStorage = localStorageMock as Storage
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
 })
