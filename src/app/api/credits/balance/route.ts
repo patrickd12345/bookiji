@@ -1,44 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from 'next/server'
+import { createCreditsBalanceHandler } from '@/lib/creditsBalanceHandler'
+
+const handler = createCreditsBalanceHandler()
 
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "User ID is required" }, 
-        { status: 400 }
-      );
-    }
-
-    console.log("Fetching credit balance for user:", userId);
-
-    const mockCredits = {
-      user_id: userId,
-      balance_cents: 2500,
-      total_purchased_cents: 5000,
-      total_used_cents: 2500,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    console.log("Using mock credit balance");
-
-    return NextResponse.json({
-      success: true,
-      credits: mockCredits,
-      balance_dollars: mockCredits.balance_cents / 100,
-      mock: true,
-      message: "Mock credit balance retrieved successfully"
-    });
-
-  } catch (error) {
-    console.error("Error in credit balance API:", error);
-    return NextResponse.json({
-      success: false,
-      error: "Failed to fetch credit balance",
-      mock: true
-    }, { status: 500 });
-  }
+  return handler.handle(request)
 } 
