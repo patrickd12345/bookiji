@@ -37,7 +37,7 @@ export default function DashboardPage() {
                     <div>
                       <h3 className="font-medium text-gray-900">Haircut & Styling</h3>
                       <p className="text-sm text-gray-600">Tomorrow at 2:00 PM</p>
-                      <p className="text-sm text-gray-600">Sarah's Salon</p>
+                      <p className="text-sm text-gray-600">Sarah&apos;s Salon</p>
                     </div>
                     <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Confirmed</span>
                   </div>

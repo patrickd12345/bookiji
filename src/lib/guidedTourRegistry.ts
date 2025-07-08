@@ -1,5 +1,3 @@
-import requiredRoutes from '../../guidedTourRequiredRoutes.json'
-
 export interface GuidedTourStep {
   target: string // CSS selector or element
   content: string
