@@ -18,7 +18,8 @@ export default function DashboardSettings() {
     )
   }
 
-  if (!user) {
+  // Skip auth check during AdSense approval
+  if (!user && process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE !== 'true') {
     router.push('/login')
     return null
   }

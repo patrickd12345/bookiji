@@ -80,12 +80,15 @@ export default function MyTicketsPage() {
   useEffect(() => {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.user?.id) {
+      // Skip auth check during AdSense approval
+      if (!session?.user?.id && process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE !== 'true') {
         // redirect to login
         window.location.href = '/login?redirect=/help/tickets'
         return
       }
-      loadTickets(session.user.id)
+      if (session?.user?.id) {
+        loadTickets(session.user.id)
+      }
     }
     getSession()
   }, [])

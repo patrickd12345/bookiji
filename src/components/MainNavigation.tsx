@@ -41,12 +41,12 @@ export default function MainNavigation() {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200">
+    <nav className="bg-background border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link href="/" className="flex items-center">
-              <span className="text-xl font-bold text-blue-600">Bookiji</span>
+              <span className="text-xl font-bold text-primary">Bookiji</span>
             </Link>
           </div>
 
@@ -55,11 +55,11 @@ export default function MainNavigation() {
               {isLoggedIn ? (
                 <>
                   <Link
-                    href="/dashboard"
+                    href="/customer/dashboard"
                     className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      pathname === '/dashboard'
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-700 hover:bg-gray-50'
+                      pathname === '/customer/dashboard'
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-foreground hover:bg-muted'
                     }`}
                   >
                     {t('nav.dashboard')}
@@ -70,8 +70,8 @@ export default function MainNavigation() {
                       href="/vendor/calendar"
                       className={`px-3 py-2 rounded-md text-sm font-medium ${
                         pathname.startsWith('/vendor')
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-foreground hover:bg-muted'
                       }`}
                     >
                       {t('nav.vendor_portal')}
@@ -84,8 +84,8 @@ export default function MainNavigation() {
                     href="/settings"
                     className={`px-3 py-2 rounded-md text-sm font-medium ${
                       pathname.startsWith('/settings')
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-foreground hover:bg-muted'
                     }`}
                   >
                     {t('nav.settings')} {isBetaUser && <span className="ml-1">⚡</span>}
@@ -95,19 +95,19 @@ export default function MainNavigation() {
                 <>
                   <Link
                     href="/get-started"
-                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
                   >
                     {t('nav.start_booking')}
                   </Link>
                   <Link
                     href="/vendor/onboarding"
-                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
                   >
                     {t('nav.list_business')}
                   </Link>
                   <Link
                     href="/login"
-                    className="px-3 py-2 rounded-md text-sm font-medium text-blue-600 hover:text-blue-500"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-primary hover:opacity-80"
                   >
                     {t('nav.log_in')}
                   </Link>

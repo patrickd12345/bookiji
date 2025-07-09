@@ -1,11 +1,13 @@
 import NotifyForm from '@/components/NotifyForm'
 import HomePageClient from './HomePageClient'
 
+// TEMPORARY: Show real site during AdSense approval mode (do not show maintenance page)
+const isProduction = process.env.NODE_ENV === 'production'
+const isAdSenseApproval = process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE === 'true'
+
 export default function HomePage() {
-  const isProduction = process.env.NODE_ENV === 'production'
-  
-  // In production, show the temporary landing page
-  if (isProduction) {
+  // In production, show the temporary landing page unless AdSense approval mode is enabled
+  if (isProduction && !isAdSenseApproval) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-background text-center p-8 gap-6">
         <div>
@@ -22,6 +24,6 @@ export default function HomePage() {
     )
   }
 
-  // In development, show the real landing page
+  // In development or AdSense approval mode, show the real landing page
   return <HomePageClient initialLocale="en-US" />
 } 

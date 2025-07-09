@@ -208,7 +208,7 @@ export function validatePPPCalculations() {
 }
 
 // 🧪 Test the PPP system
-if (typeof window === 'undefined') { // Only run in Node.js
+if (typeof window === 'undefined' && process.env.NODE_ENV === 'development' && !process.env.ADSENSE_APPROVAL_MODE) { // Only run in development and not during AdSense approval
   console.log('🧪 Testing PPP Calculations:')
   console.log('Customer Fees:')
   console.log(`US: $${getPPPCustomerFee('usd') / 100}`)

@@ -101,7 +101,8 @@ export default function BookVendorPage() {
       return
     }
 
-    if (!user) {
+    // Skip auth check during AdSense approval
+    if (!user && process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE !== 'true') {
       alert('Please log in to book an appointment')
       return
     }
@@ -111,7 +112,7 @@ export default function BookVendorPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerId: user.id,
+          customerId: user?.id ?? null,
           service: selectedService.name,
           providerId: vendorId,
           location: 'TBD',

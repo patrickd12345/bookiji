@@ -4,14 +4,16 @@ import { ollamaService, BOOKIJI_PROMPTS } from '../../../../lib/ollama'
 export async function POST(request: Request) {
   try {
     const { service, location, providerDensity, currentRadius } = await request.json()
-
+    
     if (!service || !location) {
       return NextResponse.json({ 
         error: 'Service and location are required' 
       }, { status: 400 })
     }
 
-    console.log('🗺️ AI Radius Scaling Request:', { service, location, providerDensity, currentRadius })
+    if (process.env.NODE_ENV === 'development' && !process.env.ADSENSE_APPROVAL_MODE) {
+      console.log('🗺️ AI Radius Scaling Request:', { service, location, providerDensity, currentRadius })
+    }
 
     // Generate AI-powered radius recommendation
     const aiResponse = await ollamaService.generate(
@@ -22,10 +24,12 @@ export async function POST(request: Request) {
     const radiusMatch = aiResponse.match(/(\d+(?:\.\d+)?)\s*km/i)
     const recommendedRadius = radiusMatch ? parseFloat(radiusMatch[1]) : 5
 
-    console.log('🗺️ AI Radius Recommendation:', recommendedRadius, 'km')
+    if (process.env.NODE_ENV === 'development' && !process.env.ADSENSE_APPROVAL_MODE) {
+      console.log('🗺️ AI Radius Recommendation:', recommendedRadius, 'km')
+    }
 
-    return NextResponse.json({
-      success: true,
+    return NextResponse.json({ 
+      success: true, 
       recommendedRadius,
       explanation: aiResponse,
       service,
@@ -34,7 +38,9 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
-    console.error('❌ AI Radius Scaling error:', error)
+    if (process.env.NODE_ENV === 'development' && !process.env.ADSENSE_APPROVAL_MODE) {
+      console.error('❌ AI Radius Scaling error:', error)
+    }
     return NextResponse.json({ 
       error: error instanceof Error ? error.message : 'Failed to generate radius recommendation',
       success: false
