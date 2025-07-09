@@ -75,7 +75,7 @@ export default function CustomerRegistration() {
       if (profileError) throw profileError;
 
       // Redirect to dashboard
-      window.location.href = '/dashboard';
+      window.location.href = '/customer/dashboard';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {

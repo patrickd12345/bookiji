@@ -27,7 +27,7 @@ function VerifyEmailContent() {
         // setVerificationStatus('error'); // This line is removed
       } else {
         // setVerificationStatus('success'); // This line is removed
-        router.push('/dashboard');
+        router.push('/customer/dashboard');
       }
     } catch (error) {
       console.error('Verification error:', error);

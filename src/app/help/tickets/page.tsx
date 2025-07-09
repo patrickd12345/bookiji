@@ -87,7 +87,7 @@ export default function MyTicketsPage() {
         return
       }
       if (session?.user?.id) {
-        loadTickets(session.user.id)
+      loadTickets(session.user.id)
       }
     }
     getSession()

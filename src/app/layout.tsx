@@ -86,11 +86,14 @@ export default function RootLayout({
         />
         <Script id="adsense-init" strategy="afterInteractive">
           {`
-            window.adsbygoogle = window.adsbygoogle || [];
-            window.adsbygoogle.push({
-              google_ad_client: 'ca-pub-2311249346490347',
-              enable_page_level_ads: true
-            });
+            if (!window.__adsbygoogle_page_level_ads_initialized) {
+              window.adsbygoogle = window.adsbygoogle || [];
+              window.adsbygoogle.push({
+                google_ad_client: 'ca-pub-2311249346490347',
+                enable_page_level_ads: true
+              });
+              window.__adsbygoogle_page_level_ads_initialized = true;
+            }
           `}
         </Script>
       </head>

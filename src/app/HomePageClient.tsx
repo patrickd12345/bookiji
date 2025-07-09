@@ -113,65 +113,6 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
         </div>
       </div>
 
-      {/* Map Section */}
-      <div className="py-16 bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Discover Local Providers
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Find trusted service providers in your area with real-time availability
-            </p>
-          </div>
-          
-          {/* Map Container */}
-          <div className="relative" data-tour="map-container">
-            <div className="bg-muted rounded-lg h-96 flex items-center justify-center" data-tour="map-controls">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🗺️</div>
-                <p className="text-muted-foreground">Interactive Map Coming Soon</p>
-                <p className="text-sm text-muted-foreground">Real-time provider discovery with availability</p>
-              </div>
-            </div>
-            
-            {/* Map Controls */}
-            <div className="absolute top-4 right-4 flex flex-col gap-2" data-tour="map-controls">
-              <button className="w-10 h-10 bg-card rounded-lg shadow-lg flex items-center justify-center hover:bg-muted border border-border">
-                ➕
-              </button>
-              <button className="w-10 h-10 bg-card rounded-lg shadow-lg flex items-center justify-center hover:bg-muted border border-border">
-                ➖
-              </button>
-            </div>
-            
-            {/* Provider Markers Placeholder */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" data-tour="provider-markers">
-              <div className="flex gap-4">
-                <div className="w-4 h-4 bg-green-500 rounded-full shadow-lg" title="Available Provider"></div>
-                <div className="w-4 h-4 bg-orange-500 rounded-full shadow-lg" title="Limited Availability"></div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Filter Panel */}
-          <div className="mt-8 flex flex-wrap gap-4 justify-center" data-tour="filter-panel">
-            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm">All Services</button>
-            <button className="px-4 py-2 bg-muted text-muted-foreground rounded-full text-sm hover:bg-accent">Health & Medical</button>
-            <button className="px-4 py-2 bg-muted text-muted-foreground rounded-full text-sm hover:bg-accent">Beauty & Wellness</button>
-            <button className="px-4 py-2 bg-muted text-muted-foreground rounded-full text-sm hover:bg-accent">Hair & Styling</button>
-            <button className="px-4 py-2 bg-muted text-muted-foreground rounded-full text-sm hover:bg-accent">Automotive</button>
-          </div>
-          
-          {/* View Toggle */}
-          <div className="mt-6 text-center" data-tour="list-view-toggle">
-            <button className="px-4 py-2 bg-muted text-muted-foreground rounded-lg text-sm hover:bg-accent">
-              Switch to List View
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Feature Grid */}
       <section id="feature-grid" className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
@@ -297,44 +238,59 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
             ) : !isAuthenticated ? (
               // Not logged in - show onboarding CTAs
               <>
-                <a href="/get-started">
-                  <Button className="h-10 px-8 text-lg flex items-center gap-2">
-                    <PlayCircle className="w-4 h-4" />
-                    {t('cta.start_booking_now')}
-                  </Button>
-                </a>
-                <a href="/vendor/onboarding">
-                  <Button variant="outline" className="h-10 px-8 text-lg flex items-center gap-2">
-                    <Briefcase className="w-4 h-4" />
-                    {t('cta.list_business')}
-                  </Button>
-                </a>
+                <Button
+                  className="h-14 px-10 text-xl flex flex-col items-start gap-1 rounded-lg shadow-lg"
+                  onClick={() => {
+                    window.location.href = '/register?redirect=/customer/dashboard';
+                  }}
+                  aria-label="Book an appointment as a customer"
+                >
+                  <span>Book an Appointment</span>
+                  <span className="text-sm text-gray-200">(Customer)</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-14 px-10 text-xl flex flex-col items-start gap-1 rounded-lg shadow-lg"
+                  onClick={() => {
+                    window.location.href = '/register?redirect=/vendor/dashboard';
+                  }}
+                  aria-label="Offer your services as a provider"
+                >
+                  <span>Offer Your Services</span>
+                  <span className="text-sm text-gray-500">(Provider)</span>
+                </Button>
               </>
             ) : (
               // Logged in - show dashboard CTAs based on capabilities
               <>
                 {canBookServices && (
-                  <a href="/dashboard">
-                    <Button className="h-10 px-8 text-lg">
-                      {t('cta.open_customer_dashboard')}
+                  <a href="/customer/dashboard">
+                    <Button className="h-10 px-8 text-lg flex flex-col items-start gap-1">
+                      <span>Book an Appointment</span>
+                      <span className="text-xs text-gray-500">(Customer)</span>
                     </Button>
                   </a>
                 )}
                 {canOfferServices && (
                   <a href="/vendor/dashboard">
-                    <Button variant="outline" className="h-10 px-8 text-lg">
-                      {t('cta.open_vendor_dashboard')}
+                    <Button variant="outline" className="h-10 px-8 text-lg flex flex-col items-start gap-1">
+                      <span>Offer Your Services</span>
+                      <span className="text-xs text-gray-500">(Provider)</span>
                     </Button>
                   </a>
                 )}
                 {/* Fallback CTAs if user lacks capabilities */}
                 {!canBookServices && !canOfferServices && (
-                  <a href="/get-started">
-                    <Button className="h-10 px-8 text-lg flex items-center gap-2">
-                      <PlayCircle className="w-4 h-4" />
-                      {t('cta.get_started')}
-                    </Button>
-                  </a>
+                  <Button
+                    className="h-10 px-8 text-lg flex flex-col items-start gap-1"
+                    onClick={() => {
+                      window.location.href = '/register?redirect=/customer/dashboard';
+                    }}
+                    aria-label="Book an appointment as a customer"
+                  >
+                    <span>Book an Appointment</span>
+                    <span className="text-xs text-gray-500">(Customer)</span>
+                  </Button>
                 )}
               </>
             )}

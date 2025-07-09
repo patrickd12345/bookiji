@@ -357,7 +357,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                     <button
                       onClick={() => {
                         // Navigate to dashboard
-                        window.location.href = type === 'customer' ? '/dashboard' : '/vendor/dashboard'
+                        window.location.href = type === 'customer' ? '/customer/dashboard' : '/vendor/dashboard'
                       }}
                       className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 hover:scale-105"
                     >

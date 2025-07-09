@@ -88,7 +88,7 @@ export default function BetaSignup() {
       
       if (!isVendorFlow) {
         console.log('Redirecting non-vendor user to dashboard')
-        router.push('/dashboard')
+        router.push('/customer/dashboard')
         return
       }
 
