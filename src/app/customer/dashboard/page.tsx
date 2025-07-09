@@ -2,7 +2,7 @@ import dynamic from 'next/dynamic'
 import { SimpleThemeToggle } from '@/components/SimpleThemeToggle'
 
 // GuidedTourManager is a client component; dynamic import keeps the server bundle lean
-const GuidedTourManager = dynamic(() => import('../../components/GuidedTourManager'))
+const GuidedTourManager = dynamic(() => import('../../../components/GuidedTourManager'))
 
 export default function DashboardPage() {
   return (
