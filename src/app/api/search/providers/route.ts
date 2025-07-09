@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabaseClient'
 
+// Constants for dynamic radius logic (in kilometers)
+const MIN_PROVIDERS_THRESHOLD = 3
+const RADIUS_STEP = 2
+const START_RADIUS = 3
+
 interface Provider {
   id: string
   name: string
@@ -41,7 +46,8 @@ interface SearchFilters {
   location?: string
   latitude?: number
   longitude?: number
-  radius?: number // in miles
+  radius?: number // in miles (legacy)
+  maxTravelDistance?: number // in kilometers
   service_category?: string
   min_rating?: number
   max_price?: number
@@ -54,7 +60,6 @@ interface SearchFilters {
 
 interface ProviderWithDistance extends Provider {
   distance?: number
-  within_radius?: boolean
 }
 
 interface UserPreferences {
@@ -73,10 +78,21 @@ export async function GET(request: NextRequest) {
     const filters: SearchFilters = {
       query: searchParams.get('query') || undefined,
       location: searchParams.get('location') || undefined,
-      latitude: searchParams.get('latitude') ? parseFloat(searchParams.get('latitude')!) : undefined,
-      longitude: searchParams.get('longitude') ? parseFloat(searchParams.get('longitude')!) : undefined,
-      radius: searchParams.get('radius') ? parseFloat(searchParams.get('radius')!) : 10,
-      service_category: searchParams.get('service_category') || undefined,
+      latitude: searchParams.get('userLat')
+        ? parseFloat(searchParams.get('userLat')!)
+        : searchParams.get('latitude')
+          ? parseFloat(searchParams.get('latitude')!)
+          : undefined,
+      longitude: searchParams.get('userLon')
+        ? parseFloat(searchParams.get('userLon')!)
+        : searchParams.get('longitude')
+          ? parseFloat(searchParams.get('longitude')!)
+          : undefined,
+      radius: searchParams.get('radius') ? parseFloat(searchParams.get('radius')!) : undefined,
+      maxTravelDistance: searchParams.get('maxTravelDistance')
+        ? parseFloat(searchParams.get('maxTravelDistance')!)
+        : 20,
+      service_category: searchParams.get('service_category') || searchParams.get('category') || undefined,
       min_rating: searchParams.get('min_rating') ? parseFloat(searchParams.get('min_rating')!) : undefined,
       max_price: searchParams.get('max_price') ? parseFloat(searchParams.get('max_price')!) : undefined,
       availability_date: searchParams.get('availability_date') || undefined,
@@ -86,8 +102,12 @@ export async function GET(request: NextRequest) {
       offset: parseInt(searchParams.get('offset') || '0')
     }
 
+    const bookingStatus = searchParams.get('bookingStatus') || undefined
+
     // Build the search query
     const searchResults = await performAdvancedSearch(filters)
+    const finalProviders = applyPrivacy(searchResults.providers, bookingStatus)
+    const matchFound = finalProviders.length >= MIN_PROVIDERS_THRESHOLD
 
     // Track search analytics
     await fetch('/api/analytics/track', {
@@ -101,7 +121,7 @@ export async function GET(request: NextRequest) {
           query: filters.query,
           location: filters.location,
           service_category: filters.service_category,
-          results_count: searchResults.providers.length,
+          results_count: finalProviders.length,
           has_geo_location: !!(filters.latitude && filters.longitude)
         }
       })
@@ -109,7 +129,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      ...searchResults,
+      matchFound,
+      providers: finalProviders,
+      total: finalProviders.length,
+      radiusUsed: searchResults.radiusUsed,
+      message: matchFound ? undefined : `No providers available within ${filters.maxTravelDistance || 20} km.`,
+      suggestion: matchFound ? undefined : 'Try expanding your search or changing service type.',
+      pagination: searchResults.pagination,
       filters_applied: filters
     })
 
@@ -208,10 +234,9 @@ async function performAdvancedSearch(filters: SearchFilters) {
       const minDistance = Math.min(...distances)
       return {
         ...provider,
-        distance: minDistance,
-        within_radius: minDistance <= (filters.radius || 10)
+        distance: minDistance
       }
-    }).filter((provider: ProviderWithDistance) => provider.within_radius)
+    })
   }
 
   // Apply price filtering
@@ -236,17 +261,22 @@ async function performAdvancedSearch(filters: SearchFilters) {
   // Apply sorting
   filteredProviders = sortProviders(filteredProviders, filters.sort_by || 'rating')
 
-  // Calculate total for pagination
-  const total = filteredProviders.length
+  // Dynamic radius expansion
+  const { providers: radiusProviders, radiusUsed } = dynamicRadiusFilter(
+    filteredProviders,
+    filters.maxTravelDistance || 20
+  )
 
-  // Apply pagination after filtering
+  const total = radiusProviders.length
+
   const startIndex = filters.offset || 0
   const endIndex = startIndex + (filters.limit || 20)
-  const paginatedProviders = filteredProviders.slice(startIndex, endIndex)
+  const paginatedProviders = radiusProviders.slice(startIndex, endIndex)
 
   return {
     providers: paginatedProviders,
     total,
+    radiusUsed,
     pagination: {
       limit: filters.limit || 20,
       offset: filters.offset || 0,
@@ -256,7 +286,7 @@ async function performAdvancedSearch(filters: SearchFilters) {
 }
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 3959 // Earth's radius in miles
+  const R = 6371 // Earth's radius in kilometers
   const dLat = toRadians(lat2 - lat1)
   const dLon = toRadians(lon2 - lon1)
   const a = 
@@ -328,6 +358,26 @@ function sortProviders(providers: ProviderWithDistance[], sortBy: 'distance' | '
     default:
       return providers
   }
+}
+
+function dynamicRadiusFilter(providers: ProviderWithDistance[], maxTravelDistance: number) {
+  let currentRadius = START_RADIUS
+  while (currentRadius <= maxTravelDistance) {
+    const within = providers.filter(p => (p.distance || Infinity) <= currentRadius)
+    if (within.length >= MIN_PROVIDERS_THRESHOLD) {
+      return { providers: within, radiusUsed: currentRadius }
+    }
+    currentRadius += RADIUS_STEP
+  }
+  return { providers: [], radiusUsed: maxTravelDistance }
+}
+
+function applyPrivacy(providers: ProviderWithDistance[], bookingStatus?: string) {
+  if (bookingStatus === 'committed') return providers
+  return providers.map(p => ({
+    distance: p.distance,
+    id: p.id
+  }))
 }
 
 // POST endpoint for AI-powered search suggestions
