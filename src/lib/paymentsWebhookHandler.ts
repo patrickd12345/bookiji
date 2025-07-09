@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripeOrThrow } from '../../lib/stripe'
 import { supabase } from '@/lib/supabaseClient'
-import { trackPaymentSuccess, trackPaymentFailure } from '@/lib/analytics'
+import { trackPaymentSuccess, trackPaymentFailure, PaymentMetadata } from '@/lib/analytics'
 import Stripe from 'stripe'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export interface PaymentIntentWithMetadata extends Stripe.PaymentIntent {
   metadata: {
@@ -28,15 +29,15 @@ export interface PaymentsWebhookResponse {
 }
 
 export interface PaymentsWebhookHandler {
-  handle(request: NextRequest): Promise<NextResponse<PaymentsWebhookResponse>>
+  handle(request: NextRequest) : Promise<NextResponse<PaymentsWebhookResponse>>
 }
 
 export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
   constructor(
-    private getStripeOrThrow: () => any,
-    private supabase: any,
-    private trackPaymentSuccess: (data: any) => void,
-    private trackPaymentFailure: (data: any) => void
+    private getStripeOrThrow: () => Stripe,
+    private supabase: SupabaseClient,
+    private trackPaymentSuccess: (data: PaymentMetadata) => void,
+    private trackPaymentFailure: (data: PaymentMetadata) => void
   ) {}
 
   async handle(request: NextRequest): Promise<NextResponse<PaymentsWebhookResponse>> {
@@ -47,7 +48,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       return NextResponse.json({ error: 'No signature' }, { status: 400 })
     }
 
-    let event
+    let event: Stripe.Event
     try {
       const stripe = this.getStripeOrThrow()
       event = stripe.webhooks.constructEvent(
@@ -55,7 +56,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
         signature,
         process.env.STRIPE_WEBHOOK_SECRET!
       )
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Webhook signature verification failed:', err)
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
@@ -78,13 +79,13 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       }
 
       return NextResponse.json({ received: true })
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Webhook handler error:', error)
       return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
     }
   }
 
-  private async handlePaymentSucceeded(paymentIntent: PaymentIntentWithMetadata) {
+  private async handlePaymentSucceeded(paymentIntent: PaymentIntentWithMetadata): Promise<void> {
     const bookingId = paymentIntent.metadata?.booking_id
     
     if (!bookingId) {
@@ -155,7 +156,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
     }
   }
 
-  private async handlePaymentFailed(paymentIntent: PaymentIntentWithMetadata) {
+  private async handlePaymentFailed(paymentIntent: PaymentIntentWithMetadata): Promise<void> {
     const bookingId = paymentIntent.metadata?.booking_id
     
     if (!bookingId) {
@@ -188,7 +189,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
     })
   }
 
-  private async handlePaymentCanceled(paymentIntent: PaymentIntentWithMetadata) {
+  private async handlePaymentCanceled(paymentIntent: PaymentIntentWithMetadata): Promise<void> {
     const bookingId = paymentIntent.metadata?.booking_id
     
     if (!bookingId) {
@@ -201,14 +202,15 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
     // Update booking status to cancelled
     const { error } = await this.supabase
       .from('bookings')
-      .update({ 
+      .update({
         status: 'cancelled',
+        commitment_fee_paid: false,
         updated_at: new Date().toISOString()
       })
       .eq('id', bookingId)
 
     if (error) {
-      console.error('Error updating booking status:', error)
+      console.error('Error updating booking status after payment cancellation:', error)
     }
   }
 }

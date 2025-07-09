@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BookingEngine } from '../../lib/bookingEngine'
+import { Booking } from './database'
 
 export interface BookingsUserResponse {
   success: boolean
-  bookings: any[]
+  bookings: Booking[]
   count: number
   message?: string
   error?: string
@@ -21,7 +22,7 @@ export class BookingsUserHandlerImpl implements BookingsUserHandler {
   async handle(request: NextRequest): Promise<NextResponse<BookingsUserResponse>> {
     try {
       const { searchParams } = new URL(request.url)
-      const userId = searchParams.get('userId')
+      const userId: string | null = searchParams.get('userId')
 
       if (!userId) {
         return NextResponse.json({ 
@@ -35,10 +36,9 @@ export class BookingsUserHandlerImpl implements BookingsUserHandler {
       console.log('📋 Fetching bookings for user:', userId)
 
       // Get user bookings using the booking engine
-      const rawBookings = await this.bookingEngine.getUserBookings(userId)
-
+      const rawBookings: unknown = await this.bookingEngine.getUserBookings(userId)
       // Ensure we always work with an array to avoid runtime errors
-      const bookings = Array.isArray(rawBookings) ? rawBookings : []
+      const bookings: Booking[] = Array.isArray(rawBookings) ? rawBookings as Booking[] : []
 
       console.log('✅ Found bookings:', bookings.length)
 
@@ -49,7 +49,7 @@ export class BookingsUserHandlerImpl implements BookingsUserHandler {
         message: 'Bookings retrieved successfully'
       })
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Error fetching user bookings:', error)
       return NextResponse.json({ 
         error: error instanceof Error ? error.message : 'Failed to fetch bookings',

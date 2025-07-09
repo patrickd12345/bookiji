@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { bookingService } from './database'
+import { bookingService, Booking } from './database'
 import { refundPayment } from './stripe'
 import { supabase } from '@/lib/supabaseClient'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export interface BookingCancelRequest {
   bookingId: string
@@ -9,15 +10,17 @@ export interface BookingCancelRequest {
   reason?: string
 }
 
+export type RefundResult = {
+  success: boolean
+  amount?: number
+  refund_id?: string
+  error?: string
+}
+
 export interface BookingCancelResponse {
   success: boolean
-  booking?: any
-  refund?: {
-    success: boolean
-    amount?: number
-    refund_id?: string
-    error?: string
-  } | null
+  booking?: Booking
+  refund?: RefundResult | null
   message?: string
   error?: string
 }
@@ -26,11 +29,21 @@ export interface BookingCancelHandler {
   handle(request: NextRequest): Promise<NextResponse<BookingCancelResponse>>
 }
 
+// Define proper types for the service objects
+interface BookingService {
+  getBookingById: (id: string) => Promise<Booking | null>;
+  updateBooking: (id: string, data: Partial<Booking>) => Promise<Booking | null>;
+}
+
+interface RefundPaymentFunction {
+  (paymentIntentId: string, amount?: number): Promise<{ id: string; amount: number }>;
+}
+
 export class BookingCancelHandlerImpl implements BookingCancelHandler {
   constructor(
-    private bookingService: { getBookingById: (id: string) => Promise<any>; updateBooking: (id: string, data: any) => Promise<any>; },
-    private refundPayment: (paymentIntentId: string) => Promise<any>,
-    private supabase: any
+    private bookingService: BookingService,
+    private refundPayment: RefundPaymentFunction,
+    private supabase: SupabaseClient
   ) {}
 
   async handle(request: NextRequest): Promise<NextResponse<BookingCancelResponse>> {
@@ -105,7 +118,7 @@ export class BookingCancelHandlerImpl implements BookingCancelHandler {
       }
 
       // Process refund if commitment fee was paid
-      let refundResult = null
+      let refundResult: RefundResult | null = null
       if (booking.commitment_fee_paid && booking.payment_intent_id) {
         try {
           const refund = await this.refundPayment(booking.payment_intent_id)
@@ -119,7 +132,7 @@ export class BookingCancelHandlerImpl implements BookingCancelHandler {
             amount: refund.amount || 0,
             refund_id: refund.id
           }
-        } catch (refundError) {
+        } catch (refundError: unknown) {
           console.error('Refund processing error:', refundError)
           // Don't fail the cancellation if refund fails
           refundResult = {
@@ -152,7 +165,7 @@ export class BookingCancelHandlerImpl implements BookingCancelHandler {
         message: 'Booking cancelled successfully'
       })
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Booking cancellation error:', error)
       return NextResponse.json({ 
         error: error instanceof Error ? error.message : 'Failed to cancel booking',

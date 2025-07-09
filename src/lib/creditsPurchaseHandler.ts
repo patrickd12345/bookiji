@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '../../lib/stripe'
+import Stripe from 'stripe'
 import { addCredits, getCreditPackages } from './database'
+import { CreditPackage } from '../types/global.d'
+import { stripe as defaultStripe } from '../../lib/stripe'
 
 export interface CreditsPurchaseRequest {
   userId: string
@@ -25,16 +27,25 @@ export interface CreditsPurchaseHandler {
   handle(request: NextRequest): Promise<NextResponse<CreditsPurchaseResponse>>
 }
 
+// Define proper types for the function parameters
+interface AddCreditsFunction {
+  (userId: string, creditsCents: number, description: string, transactionType?: 'purchase' | 'bonus' | 'refund', transactionId?: string): Promise<{ success: boolean; error?: string }>;
+}
+
+interface GetCreditPackagesFunction {
+  (): Promise<{ success: boolean; packages?: CreditPackage[]; error?: string }>;
+}
+
 export class CreditsPurchaseHandlerImpl implements CreditsPurchaseHandler {
   constructor(
-    private stripe: any,
-    private addCredits: (userId: string, creditsCents: number, description: string, transactionType?: 'purchase' | 'bonus' | 'refund', transactionId?: string) => Promise<any>,
-    private getCreditPackages: () => Promise<any>
+    private stripe: Stripe | null,
+    private addCredits: AddCreditsFunction,
+    private getCreditPackages: GetCreditPackagesFunction
   ) {}
 
   async handle(request: NextRequest): Promise<NextResponse<CreditsPurchaseResponse>> {
     try {
-      const { userId, packageId, customAmount } = await request.json() as CreditsPurchaseRequest
+      const { userId, packageId, customAmount }: CreditsPurchaseRequest = await request.json()
 
       if (!userId) {
         return NextResponse.json({ 
@@ -56,7 +67,7 @@ export class CreditsPurchaseHandlerImpl implements CreditsPurchaseHandler {
           throw new Error('Failed to fetch credit packages')
         }
 
-        const selectedPackage = packagesResult.packages.find((p: any) => p.id === packageId)
+        const selectedPackage: CreditPackage | undefined = packagesResult.packages.find((p: CreditPackage): boolean => p.id === packageId)
         if (!selectedPackage) {
           throw new Error('Credit package not found')
         }
@@ -80,7 +91,7 @@ export class CreditsPurchaseHandlerImpl implements CreditsPurchaseHandler {
         // Mock payment for development
         console.warn('Stripe not configured - using mock payment')
         
-        const result = await this.addCredits(userId, creditsCents, description, 'purchase', `mock_${Date.now()}`)
+        const result: { success: boolean; error?: string } = await this.addCredits(userId, creditsCents, description, 'purchase', `mock_${Date.now()}`)
         
         if (!result.success) {
           throw new Error(result.error)
@@ -95,7 +106,7 @@ export class CreditsPurchaseHandlerImpl implements CreditsPurchaseHandler {
       }
 
       // Create Stripe payment intent
-      const paymentIntent = await this.stripe.paymentIntents.create({
+      const paymentIntent: Stripe.PaymentIntent = await this.stripe.paymentIntents.create({
         amount: amountCents,
         currency: 'usd',
         description: description,
@@ -113,14 +124,14 @@ export class CreditsPurchaseHandlerImpl implements CreditsPurchaseHandler {
 
       return NextResponse.json({
         success: true,
-        clientSecret: paymentIntent.client_secret,
+        clientSecret: paymentIntent.client_secret || '',
         paymentIntentId: paymentIntent.id,
         amountCents,
         creditsCents,
         description,
       })
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Error creating credit purchase:', error)
       return NextResponse.json({ 
         error: error instanceof Error ? error.message : 'Failed to create credit purchase',
@@ -131,5 +142,5 @@ export class CreditsPurchaseHandlerImpl implements CreditsPurchaseHandler {
 }
 
 export function createCreditsPurchaseHandler(): CreditsPurchaseHandler {
-  return new CreditsPurchaseHandlerImpl(stripe, addCredits, getCreditPackages)
+  return new CreditsPurchaseHandlerImpl(defaultStripe, addCredits, getCreditPackages)
 } 

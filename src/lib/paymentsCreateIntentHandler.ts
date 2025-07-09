@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createCommitmentFeePaymentIntent } from './stripe'
+import Stripe from 'stripe'
 
 export interface PaymentIntentRequest {
   amount: number
@@ -11,7 +12,7 @@ export interface PaymentIntentRequest {
 
 export interface PaymentIntentResponse {
   success: boolean
-  paymentIntent?: any
+  paymentIntent?: Stripe.PaymentIntent
   error?: string
 }
 
@@ -21,7 +22,7 @@ export interface PaymentsCreateIntentHandler {
 
 export class PaymentsCreateIntentHandlerImpl implements PaymentsCreateIntentHandler {
   constructor(
-    private createCommitmentFeePaymentIntent: (amount: number, currency: string) => Promise<any>
+    private createCommitmentFeePaymentIntent: (amount: number, currency: string) => Promise<Stripe.PaymentIntent>
   ) {}
 
   async handle(request: NextRequest): Promise<NextResponse<PaymentIntentResponse>> {
@@ -37,13 +38,13 @@ export class PaymentsCreateIntentHandlerImpl implements PaymentsCreateIntentHand
       }
 
       // Create payment intent
-      const paymentIntent = await this.createCommitmentFeePaymentIntent(body.amount, body.currency)
+      const paymentIntent: Stripe.PaymentIntent = await this.createCommitmentFeePaymentIntent(body.amount, body.currency)
 
       return NextResponse.json({
         success: true,
         paymentIntent: paymentIntent
       })
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Payment intent creation error:', error)
       return NextResponse.json(
         { error: 'Internal server error', success: false },

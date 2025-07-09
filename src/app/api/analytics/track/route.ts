@@ -1,7 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseClient } from '@/lib/supabaseClient'
+import { createClient } from '@supabase/supabase-js'
 
-type SupabaseClient = ReturnType<typeof createSupabaseClient>
+type SupabaseClient = ReturnType<typeof createClient>
+
+// Lazy Supabase client creation to avoid build-time errors
+function createSupabaseClient(): SupabaseClient {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl) {
+    throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_URL')
+  }
+
+  if (!supabaseAnonKey) {
+    throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  })
+}
 
 interface EventProperties {
   session_id?: string;
@@ -29,6 +51,7 @@ interface EnhancedEvent {
   event_name: string;
   properties: EventProperties;
   created_at: string;
+  [key: string]: unknown;
 }
 
 interface AnalyticsResponse {
@@ -73,7 +96,7 @@ export async function POST(request: NextRequest) {
     // Store raw event data
     const { error: eventError } = await supabase
       .from('analytics_events')
-      .insert([enhancedEvent])
+      .insert([enhancedEvent as Record<string, unknown>])
 
     if (eventError) {
       console.error('Failed to store analytics event:', eventError)
@@ -212,15 +235,15 @@ async function updateUserSegmentation(supabase: SupabaseClient, properties: Even
     // Calculate user segments based on behavior
     const segments = []
     
-    if (userData?.completed_bookings >= 3 || userData?.session_duration > 600) {
+    if ((userData?.completed_bookings as number) >= 3 || (userData?.session_duration as number) > 600) {
       segments.push('power_user')
     }
     
-    if (userData?.help_clicks > 2 || userData?.signup_abandoned) {
+    if ((userData?.help_clicks as number) > 2 || userData?.signup_abandoned) {
       segments.push('confused_user')
     }
     
-    if (userData?.payment_abandoned || userData?.pricing_page_visits > 3) {
+    if (userData?.payment_abandoned || (userData?.pricing_page_visits as number) > 3) {
       segments.push('price_sensitive')
     }
     
@@ -228,7 +251,7 @@ async function updateUserSegmentation(supabase: SupabaseClient, properties: Even
       segments.push('international_user')
     }
     
-    if (properties.is_mobile && userData?.session_count > 2) {
+    if (properties.is_mobile && (userData?.session_count as number) > 2) {
       segments.push('mobile_user')
     }
 
