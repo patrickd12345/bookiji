@@ -110,7 +110,8 @@ This mode is for temporary use only during AdSense review. It bypasses all secur
 ### Authentication Bypass
 - `hooks/useAuth.ts` - Authentication bypass logic
 - `src/app/book/[vendorId]/page.tsx` - Booking auth check
-- `src/app/dashboard/settings/page.tsx` - Dashboard auth check  
+- `src/app/customer/dashboard/page.tsx` - Customer dashboard auth check
+- `src/app/customer/dashboard/settings/page.tsx` - Customer dashboard settings auth check
 - `src/app/help/tickets/page.tsx` - Support tickets auth check
 - `src/app/admin/layout.tsx` - Admin auth check
 
@@ -143,6 +144,10 @@ During AdSense review, the maintenance/coming soon page is **not** shown in prod
 ```ts
 if (isProduction && !isAdSenseApproval) { /* show maintenance page */ }
 ```
+
+### Sitemap and Navigation Updates
+- `src/app/sitemap.xml` - Updated to use `/customer/dashboard` and `/vendor/dashboard` paths
+- `src/components/MainNavigation.tsx` - Navigation links updated to new dashboard paths
 
 ## Policy References
 
