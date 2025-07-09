@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '../../../../hooks/useAuth'
+import { useAuth } from '../../../../../hooks/useAuth'
 
 export default function DashboardSettings() {
   const { user, loading } = useAuth()
@@ -18,7 +18,8 @@ export default function DashboardSettings() {
     )
   }
 
-  if (!user) {
+  // Skip auth check during AdSense approval
+  if (!user && process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE !== 'true') {
     router.push('/login')
     return null
   }

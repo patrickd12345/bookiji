@@ -39,7 +39,7 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
   }, [initialLocale, setLocale])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-background via-card to-muted/30">
       {/* Language Selector */}
       <div className="absolute top-4 left-4">
         <LocaleSelector variant="icon-only" />
@@ -54,13 +54,13 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
       <div className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center" data-tour="hero-section">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
               Book Anything,{' '}
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Anywhere
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
               The universal booking platform powered by AI. Find and book local services instantly.
             </p>
             
@@ -70,9 +70,9 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
                 <input
                   type="text"
                   placeholder="What service do you need?"
-                  className="flex-1 px-6 py-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-6 py-4 text-lg border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground placeholder-muted-foreground"
                 />
-                <button className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200">
+                <button className="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-all duration-200">
                   Search
                 </button>
               </div>
@@ -80,10 +80,10 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
 
             {/* AI Chat Section */}
             <div className="mb-8" data-tour="ai-chat">
-              <div className="inline-flex items-center gap-3 px-6 py-3 bg-white rounded-full shadow-lg border">
+              <div className="inline-flex items-center gap-3 px-6 py-3 bg-card rounded-full shadow-lg border border-border">
                 <span className="text-2xl">🤖</span>
-                <span className="text-gray-700 font-medium">Try our AI booking assistant</span>
-                <button className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors">
+                <span className="text-card-foreground font-medium">Try our AI booking assistant</span>
+                <button className="ml-4 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm hover:opacity-90 transition-colors">
                   Start Chat
                 </button>
               </div>
@@ -91,7 +91,7 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
 
             {/* Commitment Fee Explanation */}
             <div className="mb-8" data-tour="commitment-fee">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-full text-sm">
                 <span>💡</span>
                 <span>Only $1 commitment fee • No hidden charges</span>
               </div>
@@ -101,11 +101,11 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
             <div className="flex flex-col sm:flex-row gap-4 justify-center" data-tour="get-started-btn">
               <Link
                 href="/get-started"
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-lg"
+                className="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-all duration-200 text-lg"
               >
                 Get Started
               </Link>
-              <button className="px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-gray-400 transition-all duration-200 text-lg">
+              <button className="px-8 py-4 border-2 border-border text-foreground font-semibold rounded-lg hover:border-muted-foreground transition-all duration-200 text-lg">
                 Watch Demo
               </button>
             </div>
@@ -114,33 +114,33 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
       </div>
 
       {/* Map Section */}
-      <div className="py-16 bg-white">
+      <div className="py-16 bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Discover Local Providers
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-muted-foreground">
               Find trusted service providers in your area with real-time availability
             </p>
           </div>
           
           {/* Map Container */}
           <div className="relative" data-tour="map-container">
-            <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center" data-tour="map-controls">
+            <div className="bg-muted rounded-lg h-96 flex items-center justify-center" data-tour="map-controls">
               <div className="text-center">
                 <div className="text-6xl mb-4">🗺️</div>
-                <p className="text-gray-600">Interactive Map Coming Soon</p>
-                <p className="text-sm text-gray-500">Real-time provider discovery with availability</p>
+                <p className="text-muted-foreground">Interactive Map Coming Soon</p>
+                <p className="text-sm text-muted-foreground">Real-time provider discovery with availability</p>
               </div>
             </div>
             
             {/* Map Controls */}
             <div className="absolute top-4 right-4 flex flex-col gap-2" data-tour="map-controls">
-              <button className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center hover:bg-gray-50">
+              <button className="w-10 h-10 bg-card rounded-lg shadow-lg flex items-center justify-center hover:bg-muted border border-border">
                 ➕
               </button>
-              <button className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center hover:bg-gray-50">
+              <button className="w-10 h-10 bg-card rounded-lg shadow-lg flex items-center justify-center hover:bg-muted border border-border">
                 ➖
               </button>
             </div>
@@ -156,16 +156,16 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
           
           {/* Filter Panel */}
           <div className="mt-8 flex flex-wrap gap-4 justify-center" data-tour="filter-panel">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm">All Services</button>
-            <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm hover:bg-gray-300">Health & Medical</button>
-            <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm hover:bg-gray-300">Beauty & Wellness</button>
-            <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm hover:bg-gray-300">Hair & Styling</button>
-            <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full text-sm hover:bg-gray-300">Automotive</button>
+            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm">All Services</button>
+            <button className="px-4 py-2 bg-muted text-muted-foreground rounded-full text-sm hover:bg-accent">Health & Medical</button>
+            <button className="px-4 py-2 bg-muted text-muted-foreground rounded-full text-sm hover:bg-accent">Beauty & Wellness</button>
+            <button className="px-4 py-2 bg-muted text-muted-foreground rounded-full text-sm hover:bg-accent">Hair & Styling</button>
+            <button className="px-4 py-2 bg-muted text-muted-foreground rounded-full text-sm hover:bg-accent">Automotive</button>
           </div>
           
           {/* View Toggle */}
           <div className="mt-6 text-center" data-tour="list-view-toggle">
-            <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">
+            <button className="px-4 py-2 bg-muted text-muted-foreground rounded-lg text-sm hover:bg-accent">
               Switch to List View
             </button>
           </div>
@@ -185,7 +185,7 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
-                    <span className="text-white text-sm">💬</span>
+                    <span className="text-primary-foreground text-sm">💬</span>
                   </div>
                   <CardTitle className="text-foreground">Real-Time Booking Chat</CardTitle>
                 </div>
@@ -202,7 +202,7 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
-                    <span className="text-white text-sm">🗺️</span>
+                    <span className="text-primary-foreground text-sm">🗺️</span>
                   </div>
                   <CardTitle className="text-foreground">AI Radius Scaling</CardTitle>
                 </div>

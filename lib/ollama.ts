@@ -70,7 +70,9 @@ export class OllamaService {
       const data = await response.json() as OllamaResponse
       return data.response
     } catch (error) {
-      console.error('Ollama service error:', error)
+      if (process.env.NODE_ENV === 'development' && !process.env.ADSENSE_APPROVAL_MODE) {
+        console.error('Ollama service error:', error)
+      }
       return 'I apologize, but I\'m having trouble connecting to my AI service right now. Please try again later.'
     }
   }

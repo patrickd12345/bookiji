@@ -57,7 +57,8 @@ export default function AdminLayout({
     )
   }
 
-  if (!isAuthenticated) {
+  // Skip auth check during AdSense approval
+  if (!isAuthenticated && process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE !== 'true') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

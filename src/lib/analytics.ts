@@ -1,6 +1,30 @@
 // 📊 Bookiji Analytics & User Journey Tracking
 // Post-launch optimization and conversion analytics
 
+// TEMPORARY: Disable console logging for AdSense approval
+const ADSENSE_APPROVAL_MODE = true // Set to false after approval
+
+// Suppress console logging during AdSense approval
+if (ADSENSE_APPROVAL_MODE && typeof window !== 'undefined') {
+  const originalConsole = {
+    log: console.log,
+    error: console.error,
+    warn: console.warn,
+    info: console.info,
+    debug: console.debug
+  }
+  
+  // Override console methods to suppress output
+  console.log = () => {}
+  console.error = () => {}
+  console.warn = () => {}
+  console.info = () => {}
+  console.debug = () => {}
+  
+  // Store original methods for potential restoration
+  ;(window as { __originalConsole?: typeof originalConsole }).__originalConsole = originalConsole
+}
+
 // Analytics configuration
 const ANALYTICS_CONFIG = {
   HOTJAR_ID: process.env.NEXT_PUBLIC_HOTJAR_ID,
