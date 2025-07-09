@@ -103,15 +103,31 @@ export default function MainNavigation() {
                   </Link>
                   <button
                     onClick={() => {
+                      if (isLoggedIn && userRole !== 'vendor') {
+                        router.push('/customer/dashboard');
+                      } else {
+                        router.push('/register?redirect=/customer/dashboard');
+                      }
+                    }}
+                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted flex flex-col items-start"
+                    aria-label="Book an appointment as a customer"
+                  >
+                    <span>Book an Appointment</span>
+                    <span className="text-xs text-gray-500">(Customer)</span>
+                  </button>
+                  <button
+                    onClick={() => {
                       if (isLoggedIn && userRole === 'vendor') {
                         router.push('/vendor/dashboard');
                       } else {
                         router.push('/register?redirect=/vendor/dashboard');
                       }
                     }}
-                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted flex flex-col items-start"
+                    aria-label="Offer your services as a provider"
                   >
-                    {t('nav.list_business')}
+                    <span>Offer Your Services</span>
+                    <span className="text-xs text-gray-500">(Provider)</span>
                   </button>
                   <Link
                     href="/login"
