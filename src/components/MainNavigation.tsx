@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useI18n } from '@/lib/i18n/useI18n';
 import NotificationBell from '@/components/NotificationBell';
+import { useRouter } from 'next/navigation';
 
 // Toggle full navigation with NEXT_PUBLIC_ENABLE_NAV (defaults to false)
 const SHOW_NAV_ITEMS = process.env.NEXT_PUBLIC_ENABLE_NAV === 'true';
@@ -16,6 +17,7 @@ export default function MainNavigation() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isBetaUser, setIsBetaUser] = useState(false);
   const { t } = useI18n();
+  const router = useRouter();
 
   useEffect(() => {
     checkAuth();
@@ -99,12 +101,18 @@ export default function MainNavigation() {
                   >
                     {t('nav.start_booking')}
                   </Link>
-                  <Link
-                    href="/vendor/onboarding"
+                  <button
+                    onClick={() => {
+                      if (isLoggedIn && userRole === 'vendor') {
+                        router.push('/vendor/dashboard');
+                      } else {
+                        router.push('/register?redirect=/vendor/dashboard');
+                      }
+                    }}
                     className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
                   >
                     {t('nav.list_business')}
-                  </Link>
+                  </button>
                   <Link
                     href="/login"
                     className="px-3 py-2 rounded-md text-sm font-medium text-primary hover:opacity-80"

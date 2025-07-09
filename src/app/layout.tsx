@@ -83,38 +83,14 @@ export default function RootLayout({
           strategy="afterInteractive"
           data-ad-client="ca-pub-2311249346490347"
           crossOrigin="anonymous"
-          data-nscript="afterInteractive"
         />
-        <Script id="adsense-consent" strategy="afterInteractive">
+        <Script id="adsense-init" strategy="afterInteractive">
           {`
-            (function() {
-              function getCookie(name) {
-                const value = "; " + document.cookie;
-                const parts = value.split("; " + name + "=");
-                if (parts.length === 2) return parts.pop().split(";").shift();
-              }
-              
-              // Check consent cookie
-              const personalized = getCookie('personalized_ads');
-              if (personalized === '0') {
-                // User opted out of personalized ads
-                window.adsbygoogle = window.adsbygoogle || [];
-                window.adsbygoogle.push({
-                  'google_ad_client': 'ca-pub-2311249346490347',
-                  'enable_page_level_ads': true,
-                  'tag_partner': 'bookiji',
-                  'non_personalized_ads': 1
-                });
-              } else {
-                // Default or user consented to personalized ads
-                window.adsbygoogle = window.adsbygoogle || [];
-                window.adsbygoogle.push({
-                  'google_ad_client': 'ca-pub-2311249346490347',
-                  'enable_page_level_ads': true,
-                  'tag_partner': 'bookiji'
-                });
-              }
-            })();
+            window.adsbygoogle = window.adsbygoogle || [];
+            window.adsbygoogle.push({
+              google_ad_client: 'ca-pub-2311249346490347',
+              enable_page_level_ads: true
+            });
           `}
         </Script>
       </head>
