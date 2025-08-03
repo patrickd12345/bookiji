@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 import { describe, it, expect, vi } from 'vitest'
+=======
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+>>>>>>> 559c7caef80edf247990f3a72b976ae2c5cb869b
 import { NextRequest } from 'next/server'
 
+<<<<<<< HEAD
 // Mock the ollama service
 vi.mock('@/lib/ollama', () => ({
   ollamaService: {
@@ -10,6 +15,160 @@ vi.mock('@/lib/ollama', () => ({
     bookingQuery: vi.fn(() => 'Mock prompt')
   }
 }))
+=======
+// Set up test environment variables
+beforeAll(() => {
+  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
+  process.env.STRIPE_SECRET_KEY = 'sk_test_123'
+  process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test'
+  process.env.OLLAMA_HOST = 'http://localhost:11434'
+})
+
+// Mock Supabase client directly
+vi.mock('@/lib/supabaseClient', () => ({
+  supabase: {
+    auth: {
+      signUp: vi.fn(() => Promise.resolve({ 
+        data: { 
+          user: { 
+            id: 'test-user-123', 
+            email: 'test@example.com',
+            email_confirmed_at: new Date().toISOString()
+          } 
+        }, 
+        error: null 
+      }))
+    },
+    from: vi.fn(() => ({
+      insert: vi.fn(() => Promise.resolve({ 
+        data: [{ 
+          id: 'test-booking-123',
+          customer_id: 'test-user-123',
+          service: 'haircut',
+          status: 'pending'
+        }], 
+        error: null 
+      })),
+      select: vi.fn(() => ({
+        eq: vi.fn(() => Promise.resolve({ data: [], error: null })),
+        single: vi.fn(() => Promise.resolve({ 
+          data: { id: 'test-user-123', role: 'customer' }, 
+          error: null 
+        }))
+      }))
+    }))
+  }
+}))
+
+// Also mock for routes that use createClient
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: () => ({
+    auth: {
+      signUp: vi.fn(() => Promise.resolve({ 
+        data: { 
+          user: { 
+            id: 'test-user-123', 
+            email: 'test@example.com',
+            email_confirmed_at: new Date().toISOString()
+          } 
+        }, 
+        error: null 
+      }))
+    },
+    from: () => ({
+      insert: vi.fn(() => Promise.resolve({ 
+        data: [{ 
+          id: 'test-booking-123',
+          customer_id: 'test-user-123',
+          service: 'haircut',
+          status: 'pending'
+        }], 
+        error: null 
+      })),
+      select: vi.fn(() => ({
+        eq: vi.fn(() => Promise.resolve({ data: [], error: null })),
+        single: vi.fn(() => Promise.resolve({ 
+          data: { id: 'test-user-123', role: 'customer' }, 
+          error: null 
+        }))
+      }))
+    })
+  })
+}))
+
+// Mock fetch for Ollama API
+global.fetch = vi.fn((url) => {
+  if (url.includes('ollama') || url.includes('11434')) {
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({
+        message: {
+          content: "Hi there! I'm Bookiji, your AI booking assistant. I'd be happy to help you with your booking request."
+        }
+      })
+    })
+  }
+  return Promise.resolve({
+    ok: true,
+    status: 200,
+    json: () => Promise.resolve({ success: true })
+  })
+}) as any
+
+vi.mock('stripe', () => ({
+  default: class MockStripe {
+    paymentIntents = {
+      create: vi.fn(() => Promise.resolve({ 
+        id: 'pi_test_123',
+        client_secret: 'pi_test_123_secret',
+        amount: 100,
+        currency: 'usd'
+      }))
+    }
+    webhooks = {
+      constructEvent: vi.fn(() => ({
+        type: 'payment_intent.succeeded',
+        data: { object: { id: 'pi_test_123' } }
+      }))
+    }
+  }
+}))
+
+// Mock user service and referral service
+vi.mock('@/lib/database', () => ({
+  userService: {
+    createUserProfile: vi.fn(() => Promise.resolve({ 
+      id: 'test-user-123', 
+      email: 'test@example.com' 
+    }))
+  }
+}))
+
+vi.mock('@/lib/referrals', () => ({
+  referralService: {
+    processReferral: vi.fn(() => Promise.resolve())
+  }
+}))
+
+// Mock Ollama service
+vi.mock('../../../../lib/ollama', () => ({
+  ollamaService: {
+    generate: vi.fn(() => Promise.resolve("Hi there! I'm Bookiji, your AI booking assistant. I'd be happy to help you with your booking request."))
+  },
+  BOOKIJI_PROMPTS: {
+    bookingQuery: vi.fn((message) => `You are Bookiji AI. User says: ${message}`)
+  }
+}))
+
+// Import API route handlers directly
+import { POST as registerRoute } from '@/app/api/auth/register/route'
+import { POST as aiChatRoute } from '@/app/api/ai-chat/route'
+import { POST as bookingCreateRoute } from '@/app/api/bookings/create/route'
+import { POST as paymentIntentRoute } from '@/app/api/payments/create-payment-intent/route'
+import { POST as stripeWebhookRoute } from '@/app/api/payments/webhook/route'
+>>>>>>> 559c7caef80edf247990f3a72b976ae2c5cb869b
 
 // Mock Supabase client with comprehensive mocks
 vi.mock('@/lib/supabaseClient', () => ({

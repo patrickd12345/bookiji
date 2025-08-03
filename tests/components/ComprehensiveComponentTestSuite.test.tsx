@@ -16,7 +16,9 @@ vi.mock('@/lib/i18n/useI18n', () => ({
   useI18n: () => ({
     t: (key: string) => key,
     formatCurrency: (amount: number) => `$${amount}`,
-    setLocale: vi.fn()
+    setLocale: vi.fn(),
+    locale: 'en-US',
+    country: 'US'
   }),
   SUPPORTED_LOCALES: ['en-US', 'de-DE', 'fr-FR']
 }))
@@ -66,7 +68,34 @@ vi.mock('@/lib/mapbox', () => ({
       setLngLat: vi.fn(() => ({
         addTo: vi.fn()
       }))
-    }))
+    })),
+    maps: {
+      Map: vi.fn(() => ({
+        on: vi.fn(),
+        addControl: vi.fn(),
+        remove: vi.fn()
+      }))
+    }
+  },
+  default: {
+    accessToken: 'test-token',
+    Map: vi.fn(() => ({
+      on: vi.fn(),
+      addControl: vi.fn(),
+      remove: vi.fn()
+    })),
+    Marker: vi.fn(() => ({
+      setLngLat: vi.fn(() => ({
+        addTo: vi.fn()
+      }))
+    })),
+    maps: {
+      Map: vi.fn(() => ({
+        on: vi.fn(),
+        addControl: vi.fn(),
+        remove: vi.fn()
+      }))
+    }
   }
 }))
 
@@ -95,6 +124,14 @@ vi.mock('@/components/GuidedTourManager', () => ({
 
 vi.mock('@/components/MapAbstraction', () => ({
   default: () => <div data-testid="map-abstraction">Map Component</div>
+}))
+
+vi.mock('@/components/SimpleMap', () => ({
+  default: () => <div data-testid="simple-map">Simple Map</div>
+}))
+
+vi.mock('@/components/LocaleSelector', () => ({
+  default: () => <div data-testid="locale-selector">Locale Selector</div>
 }))
 
 vi.mock('@/components/StripePayment', () => ({
