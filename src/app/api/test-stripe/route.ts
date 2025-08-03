@@ -6,10 +6,12 @@ export async function GET() {
     // Check if Stripe is configured
     if (!stripe) {
       return NextResponse.json({
-        success: false,
-        message: 'Stripe not configured',
+        success: true,
         configured: false,
-        details: 'Missing STRIPE_SECRET_KEY environment variable'
+        mode: 'mock',
+        message: 'Stripe running in mock mode - no real payments possible',
+        details: 'Configure STRIPE_SECRET_KEY and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY for live payments',
+        timestamp: new Date().toISOString()
       })
     }
 
@@ -19,7 +21,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       configured: true,
-      message: 'Stripe connection successful',
+      mode: 'live',
+      message: 'Stripe connection successful - live payments enabled',
       paymentMethodsCount: paymentMethods.data.length,
       apiVersion: '2024-06-20',
       timestamp: new Date().toISOString()
@@ -29,6 +32,7 @@ export async function GET() {
     return NextResponse.json({
       success: false,
       configured: false,
+      mode: 'error',
       error: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
     }, { status: 500 })

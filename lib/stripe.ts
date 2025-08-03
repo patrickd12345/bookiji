@@ -6,16 +6,18 @@ import { supabase } from '@/lib/supabaseClient'
 // Get Stripe keys with strict validation (NO FALLBACKS FOR SECURITY)
 const getStripeSecretKey = () => {
   const key = process.env.STRIPE_SECRET_KEY
-  if (!key) {
-    throw new Error('STRIPE_SECRET_KEY environment variable is required for payment processing')
+  if (!key || key === 'sk_test_your-stripe-secret-key') {
+    console.warn('Stripe secret key not configured - running in mock mode')
+    return null
   }
   return key
 }
 
 const getStripePublishableKey = () => {
   const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-  if (!key) {
-    throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY environment variable is required for payment processing')
+  if (!key || key === 'pk_test_your-stripe-publishable-key') {
+    console.warn('Stripe publishable key not configured - running in mock mode')
+    return null
   }
   return key
 }

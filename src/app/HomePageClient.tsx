@@ -10,11 +10,12 @@ import {
   AIRadiusScaling,
   GuidedTourManager,
   SimpleTourButton,
-  PlatformDisclosures
+  PlatformDisclosures,
+  RealAIChat
 } from '@/components'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
-import { PlayCircle, Briefcase } from 'lucide-react'
+
 import Link from 'next/link'
 
 interface HomePageClientProps {
@@ -30,6 +31,7 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
     loading 
   } = useAuth()
   const [showTour, setShowTour] = useState(false)
+  const [showAIChat, setShowAIChat] = useState(false)
 
   // Sync initial server locale on mount
   useEffect(() => {
@@ -72,7 +74,10 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
                   placeholder="What service do you need?"
                   className="flex-1 px-6 py-4 text-lg border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground placeholder-muted-foreground"
                 />
-                <button className="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-all duration-200">
+                <button 
+                  onClick={() => setShowAIChat(true)}
+                  className="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-all duration-200"
+                >
                   Search
                 </button>
               </div>
@@ -83,7 +88,10 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
               <div className="inline-flex items-center gap-3 px-6 py-3 bg-card rounded-full shadow-lg border border-border">
                 <span className="text-2xl">🤖</span>
                 <span className="text-card-foreground font-medium">Try our AI booking assistant</span>
-                <button className="ml-4 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm hover:opacity-90 transition-colors">
+                <button 
+                  onClick={() => setShowAIChat(true)}
+                  className="ml-4 px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm hover:opacity-90 transition-colors"
+                >
                   Start Chat
                 </button>
               </div>
@@ -105,7 +113,10 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
               >
                 Get Started
               </Link>
-              <button className="px-8 py-4 border-2 border-border text-foreground font-semibold rounded-lg hover:border-muted-foreground transition-all duration-200 text-lg">
+              <button 
+                onClick={() => setShowTour(true)}
+                className="px-8 py-4 border-2 border-border text-foreground font-semibold rounded-lg hover:border-muted-foreground transition-all duration-200 text-lg"
+              >
                 Watch Demo
               </button>
             </div>
@@ -297,6 +308,26 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
           </div>
         </div>
       </section>
+
+      {/* AI Chat Modal */}
+      {showAIChat && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900">AI Booking Assistant</h2>
+              <button 
+                onClick={() => setShowAIChat(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <RealAIChat />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Guided Tour Manager */}
       {showTour && (

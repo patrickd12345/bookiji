@@ -22,7 +22,7 @@ export interface PaymentsCreateIntentHandler {
 
 export class PaymentsCreateIntentHandlerImpl implements PaymentsCreateIntentHandler {
   constructor(
-    private createCommitmentFeePaymentIntent: (amount: number, currency: string) => Promise<Stripe.PaymentIntent>
+    private createCommitmentFeePaymentIntent: (amount: number, currency?: string) => Promise<Stripe.PaymentIntent>
   ) {}
 
   async handle(request: NextRequest): Promise<NextResponse<PaymentIntentResponse>> {
@@ -37,8 +37,8 @@ export class PaymentsCreateIntentHandlerImpl implements PaymentsCreateIntentHand
         )
       }
 
-      // Create payment intent
-      const paymentIntent: Stripe.PaymentIntent = await this.createCommitmentFeePaymentIntent(body.amount, body.currency)
+      // Create payment intent with proper parameters
+      const paymentIntent = await this.createCommitmentFeePaymentIntent(body.amount, body.currency)
 
       return NextResponse.json({
         success: true,
