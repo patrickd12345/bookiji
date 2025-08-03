@@ -1,9 +1,15 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GET } from '@/app/api/analytics/system/route'
 
-// Mock Supabase client
-vi.mock('@/lib/supabaseClient', () => ({
-  createSupabaseClient: () => ({
+// Set up environment variables
+beforeEach(() => {
+  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
+})
+
+// Mock Supabase createClient
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: () => ({
     from: () => ({
       select: () => ({
         gte: () => ({

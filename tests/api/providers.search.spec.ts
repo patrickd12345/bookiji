@@ -6,7 +6,7 @@ const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
 
 const mockFrom = vi.fn()
 
-vi.mock('../../src/lib/supabaseClient', () => {
+vi.mock('@/lib/supabaseClient', () => {
   const chain: any = {
     select: vi.fn(() => chain),
     eq: vi.fn(() => chain),
