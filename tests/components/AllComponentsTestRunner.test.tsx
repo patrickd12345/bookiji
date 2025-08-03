@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 
 // Mock all external dependencies
 vi.mock('@/hooks/useAuth', () => ({
@@ -106,7 +106,7 @@ global.fetch = vi.fn(() =>
   Promise.resolve({
     json: () => Promise.resolve({ ok: true, data: [] })
   })
-) as any
+) as unknown as typeof fetch
 
 // Mock complex components
 vi.mock('@/components/RealAIChat', () => ({
@@ -182,9 +182,7 @@ import {
   Label,
   
   // Payment Components
-  BookingPaymentModal,
   StripePayment,
-  EnhancedPaymentModal,
   
   // Booking Components
   BookingForm,
@@ -264,17 +262,38 @@ describe('ALL COMPONENTS TEST SUITE', () => {
 
   describe('Payment Components', () => {
     it('StripePayment renders without crashing', () => {
-      expect(() => render(<StripePayment />)).not.toThrow()
+      expect(() => render(<StripePayment 
+        clientSecret="test_secret"
+        bookingId="test_booking"
+        serviceDetails={{ service: 'Test Service', provider: 'Test Provider', date: '2024-01-01', time: '10:00' }}
+        onSuccess={vi.fn()}
+        onError={vi.fn()}
+        onCancel={vi.fn()}
+      />)).not.toThrow()
     })
   })
 
   describe('Booking Components', () => {
     it('BookingForm renders without crashing', () => {
-      expect(() => render(<BookingForm />)).not.toThrow()
+      expect(() =>
+        render(
+          <BookingForm
+            vendorId="test_vendor"
+            vendorName="Test Vendor"
+            serviceName="Test Service"
+            serviceDuration={30}
+            servicePriceCents={1000}
+          />
+        )
+      ).not.toThrow()
     })
 
     it('BookingGuaranteeModal renders without crashing', () => {
-      expect(() => render(<BookingGuaranteeModal />)).not.toThrow()
+      expect(() =>
+        render(
+          <BookingGuaranteeModal />
+        )
+      ).not.toThrow()
     })
 
     it('ConfirmationStatus renders without crashing', () => {
@@ -352,7 +371,7 @@ describe('ALL COMPONENTS TEST SUITE', () => {
 
   describe('Tour Components', () => {
     it('GuidedTourManager renders without crashing', () => {
-      expect(() => render(<GuidedTourManager />)).not.toThrow()
+      expect(() => render(<GuidedTourManager type="customer" />)).not.toThrow()
     })
 
     it('ShepherdTour renders without crashing', () => {
@@ -392,11 +411,13 @@ describe('ALL COMPONENTS TEST SUITE', () => {
     })
 
     it('BigActionButton renders without crashing', () => {
-      expect(() => render(<BigActionButton text="Test" onClick={vi.fn()} />)).not.toThrow()
+      expect(() => render(<BigActionButton onStartTour={vi.fn()} />)).not.toThrow()
     })
 
     it('CreditBooklet renders without crashing', () => {
       expect(() => render(<CreditBooklet userId="test" isOpen={false} onCloseAction={vi.fn()} />)).not.toThrow()
+    })
+
     })
 
     it('DemoControls renders without crashing', () => {
@@ -467,4 +488,3 @@ describe('ALL COMPONENTS TEST SUITE', () => {
       expect(componentNames.length).toBeGreaterThan(30) // Ensure we have comprehensive coverage
     })
   })
-}) 

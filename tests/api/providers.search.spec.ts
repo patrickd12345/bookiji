@@ -4,24 +4,7 @@ import { NextRequest } from 'next/server'
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
 
-<<<<<<< HEAD
-=======
-const mockFrom = vi.fn()
 
-vi.mock('@/lib/supabaseClient', () => {
-  const chain: any = {
-    select: vi.fn(() => chain),
-    eq: vi.fn(() => chain),
-    or: vi.fn(() => chain),
-    gte: vi.fn(() => chain),
-    range: vi.fn(async () => ({ data: mockProviders, error: null })),
-    single: vi.fn(async () => ({ data: [], error: null }))
-  }
-  mockFrom.mockReturnValue(chain)
-  return { supabase: { from: mockFrom } }
-})
-
->>>>>>> 559c7caef80edf247990f3a72b976ae2c5cb869b
 let mockProviders: any[] = []
 
 // Mock the supabase client from the correct path

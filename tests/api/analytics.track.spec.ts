@@ -2,29 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST } from '@/app/api/analytics/track/route'
 import { NextRequest } from 'next/server'
 
-<<<<<<< HEAD
-// Mock the createClient function from @supabase/supabase-js
-vi.mock('@supabase/supabase-js', () => {
-  const mockFrom = vi.fn(() => ({
-    insert: vi.fn(() => Promise.resolve({ data: null, error: null })),
-    upsert: vi.fn(() => Promise.resolve({ data: null, error: null })),
-    select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        single: vi.fn(() => Promise.resolve({ data: {}, error: null }))
-      }))
-    })),
-    rpc: vi.fn(() => Promise.resolve({ data: null, error: null }))
-  }))
-
-  const mockClient = {
-    from: mockFrom
-  }
-
-  return {
-    createClient: vi.fn(() => mockClient)
-  }
-})
-=======
 // Set up environment variables
 beforeEach(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
@@ -52,7 +29,6 @@ vi.mock('@supabase/supabase-js', () => ({
     rpc: sbMocks.rpc
   })
 }))
->>>>>>> 559c7caef80edf247990f3a72b976ae2c5cb869b
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
 

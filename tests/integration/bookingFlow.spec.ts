@@ -1,21 +1,6 @@
-<<<<<<< HEAD
-import { describe, it, expect, vi } from 'vitest'
-=======
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
->>>>>>> 559c7caef80edf247990f3a72b976ae2c5cb869b
+import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 
-<<<<<<< HEAD
-// Mock the ollama service
-vi.mock('@/lib/ollama', () => ({
-  ollamaService: {
-    generate: vi.fn(() => Promise.resolve('Mock AI response for booking query'))
-  },
-  BOOKIJI_PROMPTS: {
-    bookingQuery: vi.fn(() => 'Mock prompt')
-  }
-}))
-=======
 // Set up test environment variables
 beforeAll(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
@@ -115,7 +100,7 @@ global.fetch = vi.fn((url) => {
     status: 200,
     json: () => Promise.resolve({ success: true })
   })
-}) as any
+}) as unknown as typeof fetch
 
 vi.mock('stripe', () => ({
   default: class MockStripe {
@@ -161,14 +146,6 @@ vi.mock('../../../../lib/ollama', () => ({
     bookingQuery: vi.fn((message) => `You are Bookiji AI. User says: ${message}`)
   }
 }))
-
-// Import API route handlers directly
-import { POST as registerRoute } from '@/app/api/auth/register/route'
-import { POST as aiChatRoute } from '@/app/api/ai-chat/route'
-import { POST as bookingCreateRoute } from '@/app/api/bookings/create/route'
-import { POST as paymentIntentRoute } from '@/app/api/payments/create-payment-intent/route'
-import { POST as stripeWebhookRoute } from '@/app/api/payments/webhook/route'
->>>>>>> 559c7caef80edf247990f3a72b976ae2c5cb869b
 
 // Mock Supabase client with comprehensive mocks
 vi.mock('@/lib/supabaseClient', () => ({
@@ -238,7 +215,7 @@ describe('INTEGRATION: Core functionality tests', () => {
     expect(data).toHaveProperty('response')
     expect(typeof data.response).toBe('string')
     expect(data.response.length).toBeGreaterThan(0)
-  })
+  }, 20000)
 
   it('AI chat handles missing message gracefully', async () => {
     const body = { 

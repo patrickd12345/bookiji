@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock all external dependencies
 vi.mock('@/hooks/useAuth', () => ({
@@ -101,13 +101,11 @@ vi.mock('@/lib/mapbox', () => ({
 
 // Mock complex components that depend on external services
 vi.mock('@/components/RealAIChat', () => ({
-  default: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => (
-    isOpen ? (
-      <div data-testid="ai-chat-modal">
-        <h2>AI Chat Modal</h2>
-        <button onClick={onClose} data-testid="close-ai-chat">Close</button>
-      </div>
-    ) : null
+  default: () => (
+    <div data-testid="ai-chat-component">
+      <h2>AI Booking Assistant</h2>
+      <p>I can help you find and book any service</p>
+    </div>
   )
 }))
 
@@ -162,6 +160,10 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 
+// Define proper types for Button variants and sizes
+type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+type ButtonSize = 'default' | 'sm' | 'lg' | 'icon'
+
 // Import application components that are actually exported
 import {
   LocaleSelector,
@@ -206,18 +208,18 @@ describe('Comprehensive Component Test Suite', () => {
       })
 
       it('supports all variants', () => {
-        const variants = ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link']
+        const variants: ButtonVariant[] = ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link']
         variants.forEach(variant => {
-          const { unmount } = render(<Button variant={variant as any}>Variant {variant}</Button>)
+          const { unmount } = render(<Button variant={variant}>Variant {variant}</Button>)
           expect(screen.getByText(`Variant ${variant}`)).toBeInTheDocument()
           unmount()
         })
       })
 
       it('supports all sizes', () => {
-        const sizes = ['default', 'sm', 'lg', 'icon']
+        const sizes: ButtonSize[] = ['default', 'sm', 'lg', 'icon']
         sizes.forEach(size => {
-          const { unmount } = render(<Button size={size as any}>Size {size}</Button>)
+          const { unmount } = render(<Button size={size}>Size {size}</Button>)
           expect(screen.getByText(`Size ${size}`)).toBeInTheDocument()
           unmount()
         })
@@ -433,8 +435,8 @@ describe('Comprehensive Component Test Suite', () => {
     })
 
     it('modal components can be opened and closed', async () => {
-      render(<RealAIChat isOpen={true} onClose={vi.fn()} />)
-      expect(screen.getByTestId('ai-chat-modal')).toBeInTheDocument()
+      render(<RealAIChat />)
+      expect(screen.getByTestId('ai-chat-component')).toBeInTheDocument()
     })
 
     it('dropdown components render correctly', () => {
@@ -501,7 +503,7 @@ describe('Comprehensive Component Test Suite', () => {
         render(<Button />)
         render(<Input />)
         render(<Card />)
-        render(<Label />)
+        render(<Label>Test Label</Label>)
       }).not.toThrow()
     })
 
