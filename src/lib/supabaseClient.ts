@@ -1,19 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseConfig } from '@/config/supabase';
 
-// Validate environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl) {
-  throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_URL');
-}
-
-if (!supabaseAnonKey) {
-  throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_ANON_KEY');
-}
+// Get configuration with backward compatibility
+const config = getSupabaseConfig();
 
 // Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(config.url, config.publishableKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
@@ -23,7 +15,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Export function to create new client instances (for server-side use)
 export const createSupabaseClient = () => {
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  return createClient(config.url, config.publishableKey, {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
