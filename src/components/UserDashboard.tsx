@@ -37,6 +37,8 @@ import { ErrorDisplay, NetworkError } from '@/components/ui/ErrorDisplay'
 import { SuccessMessage, InfoMessage } from '@/components/ui/StatusMessage'
 import { useAsyncData } from '@/hooks/useAsyncState'
 import { cn } from '@/lib/utils'
+import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
+import { customerDashboardSteps, customerDashboardTourId } from '@/tours/dashboardNavigation'
 
 interface UserProfile {
   id: string
@@ -140,6 +142,7 @@ export default function UserDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('all')
   const router = useRouter()
+  const { startTour, hasCompletedTour } = useGuidedTour()
 
   // Use the new async state hook for notifications
   const notifications = useAsyncData<NotificationResponse['notifications']>({
@@ -228,6 +231,12 @@ export default function UserDashboard() {
     loadUserData()
   }, [router, loadNotifications])
 
+  useEffect(() => {
+    if (!hasCompletedTour(customerDashboardTourId)) {
+      startTour(customerDashboardTourId, customerDashboardSteps)
+    }
+  }, [hasCompletedTour, startTour])
+
   // Helper functions
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -266,7 +275,7 @@ export default function UserDashboard() {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
+            <div data-tour="dashboard-welcome">
               <h1 className="text-3xl font-bold text-gray-900">
                 Welcome back, {userProfile.name.split(' ')[0]}! 👋
               </h1>
@@ -397,7 +406,7 @@ export default function UserDashboard() {
                 </div>
 
                 {/* Recent Activity */}
-                <div className="bg-gray-50 p-6 rounded-lg">
+                <div className="bg-gray-50 p-6 rounded-lg" data-tour="upcoming-bookings">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
                   {bookings.length > 0 ? (
                     <div className="space-y-3">
@@ -597,7 +606,7 @@ export default function UserDashboard() {
 
             {/* Favorites Tab */}
             {activeTab === 'favorites' && (
-              <div className="space-y-6">
+              <div className="space-y-6" data-tour="favorites">
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {favoriteProviders.map((provider, index) => (
                     <div key={index} className="p-4 border rounded-lg">

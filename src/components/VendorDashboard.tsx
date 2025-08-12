@@ -8,9 +8,9 @@ import { LoadingSpinner, PageLoader, CardLoader } from '@/components/ui/LoadingS
 import { ErrorDisplay, NetworkError } from '@/components/ui/ErrorDisplay'
 import { StatusMessage, SuccessMessage } from '@/components/ui/StatusMessage'
 import { DataWrapper, APIWrapper } from '@/components/ui/AsyncWrapper'
-import { 
-  Calendar, 
-  Clock, 
+import {
+  Calendar,
+  Clock,
   MapPin, 
   Star, 
   TrendingUp, 
@@ -21,6 +21,8 @@ import {
   XCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
+import { vendorDashboardSteps, vendorDashboardTourId } from '@/tours/dashboardNavigation'
 
 interface VendorStats {
   totalBookings: number
@@ -72,6 +74,7 @@ export default function VendorDashboard() {
   const profileData = useAsyncData<VendorProfile>()
   const statsData = useAsyncData<VendorStats>()
   const bookingsData = useAsyncData<RecentBooking[]>()
+  const { startTour, hasCompletedTour } = useGuidedTour()
 
   // Load vendor profile
   const loadVendorProfile = useCallback(async () => {
@@ -216,6 +219,12 @@ export default function VendorDashboard() {
     }
   }, [vendorId, loadVendorStats, loadRecentBookings])
 
+  useEffect(() => {
+    if (!hasCompletedTour(vendorDashboardTourId)) {
+      startTour(vendorDashboardTourId, vendorDashboardSteps)
+    }
+  }, [hasCompletedTour, startTour])
+
   // Helper functions
   const formatCurrency = (cents: number) => {
     return `$${(cents / 100).toFixed(2)}`
@@ -298,11 +307,18 @@ export default function VendorDashboard() {
                   Verified
                 </div>
               )}
-              
+
               <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                 <Star className="w-4 h-4" />
                 {vendorProfile.rating} ({vendorProfile.total_reviews} reviews)
               </div>
+
+              <button
+                className="px-3 py-1 border rounded text-sm text-gray-700"
+                data-tour="settings-menu"
+              >
+                Settings
+              </button>
             </div>
           </div>
         </div>
@@ -342,7 +358,7 @@ export default function VendorDashboard() {
           className="mb-8"
         >
           {(stats) => (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-tour="stats-cards">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -428,7 +444,7 @@ export default function VendorDashboard() {
           className="mb-8"
         >
           {(bookings) => (
-            <div className="bg-white rounded-lg shadow-sm border">
+            <div className="bg-white rounded-lg shadow-sm border" data-tour="recent-bookings">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900">Recent Bookings</h2>
               </div>
@@ -518,7 +534,7 @@ export default function VendorDashboard() {
         </DataWrapper>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6" data-tour="quick-actions">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

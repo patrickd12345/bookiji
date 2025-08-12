@@ -6,12 +6,13 @@ import { Calendar, Clock, Coins, CreditCard, AlertCircle, CheckCircle, Loader2 }
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import TourButton from '@/components/TourButton'
 import { LoadingSpinner, InlineLoader } from '@/components/ui/LoadingSpinner'
 import { ErrorDisplay, ValidationError } from '@/components/ui/ErrorDisplay'
 import { StatusMessage, SuccessMessage } from '@/components/ui/StatusMessage'
 import { FormWrapper, DataWrapper } from '@/components/ui/AsyncWrapper'
 import { useAsyncOperation } from '@/hooks/useAsyncState'
+import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
+import { customerBookingSteps, customerBookingTourId } from '@/tours/customerBooking'
 
 interface BookingFormProps {
   vendorId: string
@@ -45,6 +46,7 @@ export default function BookingForm({
   servicePriceCents,
   onBookingComplete
 }: BookingFormProps) {
+  const { startTour, hasCompletedTour } = useGuidedTour()
   // Form state
   const [selectedDate, setSelectedDate] = useState("")
   const [selectedTime, setSelectedTime] = useState("")
@@ -62,10 +64,16 @@ export default function BookingForm({
   const creditsOperation = useAsyncOperation<UserCredits>()
   const slotsOperation = useAsyncOperation<TimeSlot[]>()
   const bookingOperation = useAsyncOperation<any>()
-  
+
   // Format price for display
   const priceDisplayDollars = (servicePriceCents / 100).toFixed(2)
   const canAffordWithCredits = credits ? credits.balance_cents >= servicePriceCents : false
+
+  useEffect(() => {
+    if (!hasCompletedTour(customerBookingTourId)) {
+      startTour(customerBookingTourId, customerBookingSteps)
+    }
+  }, [hasCompletedTour, startTour])
   
   const loadUserCredits = useCallback(async () => {
     try {
@@ -181,6 +189,9 @@ export default function BookingForm({
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="mb-2" data-tour="provider-selection">
+        <span className="text-sm text-gray-600">Provider: {vendorName}</span>
+      </div>
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Book {serviceName}</h2>
       
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -197,6 +208,7 @@ export default function BookingForm({
               min={new Date().toISOString().split('T')[0]}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
+              data-tour="date-picker"
             />
           </div>
           
@@ -210,6 +222,7 @@ export default function BookingForm({
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
               disabled={!selectedDate}
+              data-tour="time-picker"
             >
               <option value="">Select a date first</option>
               {availableSlots.map((slot) => (
@@ -276,7 +289,7 @@ export default function BookingForm({
         </div>
 
         {/* Payment Method */}
-        <div>
+        <div data-tour="payment-form">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Payment Method
           </label>
@@ -331,6 +344,7 @@ export default function BookingForm({
           type="submit"
           disabled={bookingOperation.loading || !selectedDate || !selectedTime || !customerName || !customerEmail}
           className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          data-tour="submit-booking"
         >
           {bookingOperation.loading ? (
             <InlineLoader text="Creating booking..." />

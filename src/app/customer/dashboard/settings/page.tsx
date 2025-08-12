@@ -1,14 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../../../../hooks/useAuth'
+import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
+import { settingsConfigurationSteps, settingsConfigurationTourId } from '@/tours/settingsConfiguration'
 
 export default function DashboardSettings() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const { startTour, hasCompletedTour } = useGuidedTour()
 
-  const [tab, setTab] = useState<'profile' | 'notifications' | 'preferences'>('profile')
+  const [tab, setTab] = useState<'profile' | 'notifications' | 'preferences' | 'security'>('profile')
 
   if (loading) {
     return (
@@ -24,6 +27,12 @@ export default function DashboardSettings() {
     return null
   }
 
+  useEffect(() => {
+    if (!hasCompletedTour(settingsConfigurationTourId)) {
+      startTour(settingsConfigurationTourId, settingsConfigurationSteps)
+    }
+  }, [hasCompletedTour, startTour])
+
   return (
     <div className="min-h-screen bg-gray-50 py-10">
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow p-6">
@@ -31,10 +40,10 @@ export default function DashboardSettings() {
 
         {/* Tab nav */}
         <div className="flex space-x-4 border-b mb-6">
-          {['profile', 'notifications', 'preferences'].map((t) => (
+          {['profile', 'notifications', 'preferences', 'security'].map((t) => (
             <button
               key={t}
-              onClick={() => setTab(t as 'profile' | 'notifications' | 'preferences')}
+              onClick={() => setTab(t as 'profile' | 'notifications' | 'preferences' | 'security')}
               className={`pb-2 border-b-2 transition-colors ${
                 tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'
               }`}
@@ -46,20 +55,26 @@ export default function DashboardSettings() {
 
         {/* Panels */}
         {tab === 'profile' && (
-          <div>
+          <div data-tour="profile-info">
             <p className="text-sm text-gray-600 mb-4">Profile editing coming soon.</p>
           </div>
         )}
 
         {tab === 'notifications' && (
-          <div>
+          <div data-tour="notifications">
             <p className="text-sm text-gray-600 mb-4">Notification preferences coming soon.</p>
           </div>
         )}
 
         {tab === 'preferences' && (
-          <div>
+          <div data-tour="preferences">
             <p className="text-sm text-gray-600 mb-4">General preferences coming soon.</p>
+          </div>
+        )}
+
+        {tab === 'security' && (
+          <div data-tour="security">
+            <p className="text-sm text-gray-600 mb-4">Security settings coming soon.</p>
           </div>
         )}
       </div>
