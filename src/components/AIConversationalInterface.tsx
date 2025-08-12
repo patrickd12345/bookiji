@@ -4,10 +4,12 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAsyncOperation } from '@/hooks/useAsyncState'
 import { LoadingSpinner, InlineLoader } from '@/components/ui/LoadingSpinner'
-import { ErrorDisplay, NetworkError } from '@/components/ui/ErrorDisplay'
-import { StatusMessage, InfoMessage } from '@/components/ui/StatusMessage'
+import { NetworkError } from '@/components/ui/ErrorDisplay'
+import { InfoMessage } from '@/components/ui/StatusMessage'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
+import { aiChatTutorialSteps, aiChatTutorialTourId } from '@/tours/aiChatTutorial'
 
 interface Message {
   id: string
@@ -39,12 +41,19 @@ export default function AIConversationalInterface({
   const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const { startTour, hasCompletedTour } = useGuidedTour()
 
   // Use the new async operation hook for AI chat
   const aiChat = useAsyncOperation<string>({
     autoReset: true,
     resetDelay: 3000
   })
+
+  useEffect(() => {
+    if (!hasCompletedTour(aiChatTutorialTourId)) {
+      startTour(aiChatTutorialTourId, aiChatTutorialSteps)
+    }
+  }, [hasCompletedTour, startTour])
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -156,6 +165,18 @@ export default function AIConversationalInterface({
         </div>
         
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="text-xs" data-tour="settings">
+            Settings
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs"
+            data-tour="booking-button"
+            onClick={() => onMessageSent?.('')}
+          >
+            Book Service
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -169,7 +190,7 @@ export default function AIConversationalInterface({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4" data-tour="response-display">
         <AnimatePresence>
           {messages.map((message) => (
             <motion.div
@@ -278,10 +299,15 @@ export default function AIConversationalInterface({
 
       {/* Input Area */}
       <div className="border-t p-4">
+        <div className="mb-2 text-xs text-gray-500" data-tour="example-queries">
+          Try questions like "Book a haircut tomorrow" or "Find a spa near me".
+        </div>
         <form onSubmit={handleSubmit} className="flex gap-3">
           <div className="flex-1 relative">
             <textarea
               ref={inputRef}
+              id="aiChatInput"
+              data-tour="chat-input"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
