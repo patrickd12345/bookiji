@@ -6,6 +6,7 @@ import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import MainNavigation from '@/components/MainNavigation'
 import Script from 'next/script'
 import { ConsentManager } from '@/components/ConsentManager'
+import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider'
 
 // @ts-nocheck
 
@@ -99,20 +100,21 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
         {/* Google AdSense loader script */}
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="corporate"
-          enableSystem
-          disableTransitionOnChange
-          themes={["corporate", "light", "dark", "system", "pastel", "ocean", "sunset", "forest", "cyberpunk", "cupcake", "midnight"]}
-        >
-          <div className="fixed top-4 right-4 z-50">
-            <ThemeSwitcher />
-          </div>
-          <MainNavigation />
-          <main className="min-h-screen pt-16">
-            {children}
-          </main>
+        <GuidedTourProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="corporate"
+            enableSystem
+            disableTransitionOnChange
+            themes={["corporate", "light", "dark", "system", "pastel", "ocean", "sunset", "forest", "cyberpunk", "cupcake", "midnight"]}
+          >
+            <div className="fixed top-4 right-4 z-50">
+              <ThemeSwitcher />
+            </div>
+            <MainNavigation />
+            <main className="min-h-screen pt-16">
+              {children}
+            </main>
           
           <footer className="bg-muted border-t border-border py-8 px-4">
             <div className="max-w-6xl mx-auto">
@@ -153,8 +155,9 @@ export default function RootLayout({
               </div>
             </div>
           </footer>
-    
+
         </ThemeProvider>
+        </GuidedTourProvider>
         <ConsentManager />
       </body>
     </html>

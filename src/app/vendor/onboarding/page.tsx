@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { theme, combineClasses } from '@/config/theme';
+import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider';
+import { vendorOnboardingSteps, vendorOnboardingTourId } from '@/tours/vendorOnboarding';
 
 export default function VendorOnboardingPage() {
   const router = useRouter();
+  const { startTour, hasCompletedTour } = useGuidedTour();
   const [formData, setFormData] = useState({
     businessName: '',
     serviceType: '',
@@ -20,6 +23,12 @@ export default function VendorOnboardingPage() {
 
   const [showCustomServiceInput, setShowCustomServiceInput] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!hasCompletedTour(vendorOnboardingTourId)) {
+      startTour(vendorOnboardingTourId, vendorOnboardingSteps);
+    }
+  }, [hasCompletedTour, startTour]);
 
   const serviceTypes = [
     'Hair & Beauty',
@@ -390,6 +399,7 @@ export default function VendorOnboardingPage() {
 
                 <button
                   type="submit"
+                  id="submitApplication"
                   disabled={isSubmitting}
                   className={combineClasses(
                     'w-full py-4 font-semibold rounded-xl',
