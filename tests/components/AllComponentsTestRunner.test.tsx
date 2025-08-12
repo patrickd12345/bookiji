@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render } from '@testing-library/react'
+import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider'
 
 // Mock all external dependencies
 vi.mock('@/hooks/useAuth', () => ({
@@ -9,6 +10,15 @@ vi.mock('@/hooks/useAuth', () => ({
     canBookServices: true,
     canOfferServices: false,
     loading: false
+  })
+}))
+
+vi.mock('@/hooks/useAsyncState', () => ({
+  useAsyncOperation: () => ({
+    run: vi.fn(),
+    isLoading: false,
+    error: null,
+    data: null
   })
 }))
 
@@ -107,6 +117,18 @@ global.fetch = vi.fn(() =>
     json: () => Promise.resolve({ ok: true, data: [] })
   })
 ) as unknown as typeof fetch
+
+// Mock scrollIntoView to prevent test errors
+Object.defineProperty(window, 'scrollIntoView', {
+  writable: true,
+  value: vi.fn(),
+});
+
+// Mock scrollIntoView on HTMLElement prototype to prevent test errors
+Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+  writable: true,
+  value: vi.fn(),
+});
 
 // Mock complex components
 vi.mock('@/components/RealAIChat', () => ({
@@ -303,7 +325,11 @@ describe('ALL COMPONENTS TEST SUITE', () => {
 
   describe('AI Components', () => {
     it('AIConversationalInterface renders without crashing', () => {
-      expect(() => render(<AIConversationalInterface />)).not.toThrow()
+      expect(() => render(
+        <GuidedTourProvider>
+          <AIConversationalInterface />
+        </GuidedTourProvider>
+      )).not.toThrow()
     })
 
     it('AIRadiusScaling renders without crashing', () => {
@@ -453,17 +479,19 @@ describe('ALL COMPONENTS TEST SUITE', () => {
     it('all components can be rendered together in a complex layout', () => {
       expect(() => {
         render(
-          <div>
-            <Card>
-              <Label>Test Label</Label>
-              <Input placeholder="Test Input" />
-              <Button>Test Button</Button>
-            </Card>
-            <SimpleTourButton onClick={vi.fn()} />
-            <HelpBanner />
-            <LocaleSelector />
-            <AsyncWarning operation="general" />
-          </div>
+          <GuidedTourProvider>
+            <div>
+              <Card>
+                <Label>Test Label</Label>
+                <Input placeholder="Test Input" />
+                <Button>Test Button</Button>
+              </Card>
+              <SimpleTourButton onClick={vi.fn()} />
+              <HelpBanner />
+              <LocaleSelector />
+              <AsyncWarning operation="general" />
+            </div>
+          </GuidedTourProvider>
         )
       }).not.toThrow()
     })

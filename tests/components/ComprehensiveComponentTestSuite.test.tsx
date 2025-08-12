@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent } from '@testing-library/react'
+import { render } from '@testing-library/react'
+import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider'
 
 // Mock all external dependencies
 vi.mock('@/hooks/useAuth', () => ({
@@ -9,6 +11,15 @@ vi.mock('@/hooks/useAuth', () => ({
     canBookServices: true,
     canOfferServices: false,
     loading: false
+  })
+}))
+
+vi.mock('@/hooks/useAsyncState', () => ({
+  useAsyncOperation: () => ({
+    run: vi.fn(),
+    isLoading: false,
+    error: null,
+    data: null
   })
 }))
 
@@ -108,6 +119,18 @@ vi.mock('@/components/RealAIChat', () => ({
     </div>
   )
 }))
+
+// Mock scrollIntoView to prevent test errors
+Object.defineProperty(window, 'scrollIntoView', {
+  writable: true,
+  value: vi.fn(),
+});
+
+// Mock scrollIntoView on HTMLElement prototype to prevent test errors
+Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+  writable: true,
+  value: vi.fn(),
+});
 
 vi.mock('@/components/GuidedTourManager', () => ({
   default: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => (
@@ -402,7 +425,11 @@ describe('Comprehensive Component Test Suite', () => {
 
     describe('AIConversationalInterface', () => {
       it('renders without crashing', () => {
-        expect(() => render(<AIConversationalInterface />)).not.toThrow()
+        expect(() => render(
+          <GuidedTourProvider>
+            <AIConversationalInterface />
+          </GuidedTourProvider>
+        )).not.toThrow()
       })
     })
   })
@@ -520,7 +547,7 @@ describe('Comprehensive Component Test Suite', () => {
     it('renders multiple components efficiently', () => {
       const startTime = performance.now()
       
-      render(
+      const { container } = render(
         <div>
           {Array.from({ length: 20 }, (_, i) => (
             <Button key={i}>Button {i}</Button>
@@ -538,7 +565,10 @@ describe('Comprehensive Component Test Suite', () => {
       
       // Should render 30 components quickly (less than 200ms)
       expect(renderTime).toBeLessThan(200)
-      expect(screen.getAllByRole('button')).toHaveLength(20)
+      
+      // Count buttons only within our test container, not from mocks
+      const testButtons = container.querySelectorAll('button')
+      expect(testButtons).toHaveLength(20)
     })
   })
 
@@ -579,18 +609,20 @@ describe('Comprehensive Component Test Suite', () => {
     it('all components can be used together in a complex layout', () => {
       expect(() => {
         render(
-          <div>
-            <Card>
-              <CardTitle>Dashboard</CardTitle>
-              <CardContent>
-                <Label htmlFor="search">Search</Label>
-                <Input id="search" placeholder="Search..." />
-                <Button>Search</Button>
-              </CardContent>
-            </Card>
-            <SimpleTourButton onClick={vi.fn()} />
-            <HelpBanner />
-          </div>
+          <GuidedTourProvider>
+            <div>
+              <Card>
+                <CardTitle>Dashboard</CardTitle>
+                <CardContent>
+                  <Label htmlFor="search">Search</Label>
+                  <Input id="search" placeholder="Search..." />
+                  <Button>Search</Button>
+                </CardContent>
+              </Card>
+              <SimpleTourButton onClick={vi.fn()} />
+              <HelpBanner />
+            </div>
+          </GuidedTourProvider>
         )
       }).not.toThrow()
     })
