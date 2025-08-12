@@ -59,6 +59,8 @@ export default function BookingForm({
   const [paymentMethod, setPaymentMethod] = useState<"credits" | "card">("card")
   const [credits, setCredits] = useState<UserCredits | null>(null)
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
+  const [requestBroadcasted, setRequestBroadcasted] = useState(false)
+  const [serviceRequestId, setServiceRequestId] = useState<string | null>(null)
   
   // Use the new async operation hooks
   const creditsOperation = useAsyncOperation<UserCredits>()
@@ -106,6 +108,33 @@ export default function BookingForm({
     }
   }, [creditsOperation, servicePriceCents])
 
+  const createServiceRequest = useCallback(
+    async (date: string) => {
+      try {
+        const response = await fetch("/api/service-requests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            vendor_id: vendorId,
+            service_name: serviceName,
+            date
+          })
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setRequestBroadcasted(true)
+          if (data?.id || data?.requestId) {
+            setServiceRequestId(data.id || data.requestId)
+          }
+        }
+      } catch (error) {
+        console.error("Failed to create service request:", error)
+      }
+    },
+    [serviceName, vendorId]
+  )
+
   const loadAvailableSlots = useCallback(async (date: string) => {
     if (!date) return
 
@@ -123,11 +152,17 @@ export default function BookingForm({
 
       if (result.success && result.data) {
         setAvailableSlots(result.data)
+        if (result.data.length === 0) {
+          await createServiceRequest(date)
+        } else {
+          setRequestBroadcasted(false)
+          setServiceRequestId(null)
+        }
       }
     } catch (error) {
       console.error("Failed to load available slots:", error)
     }
-  }, [slotsOperation, vendorId])
+  }, [slotsOperation, vendorId, createServiceRequest])
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
@@ -231,6 +266,17 @@ export default function BookingForm({
                 </option>
               ))}
             </select>
+            {requestBroadcasted && (
+              <p className="mt-2 text-sm text-yellow-700">
+                No openings today—request broadcast to nearby vendors.
+                <a
+                  href={serviceRequestId ? `/service-requests/${serviceRequestId}` : '/service-requests'}
+                  className="ml-1 underline text-blue-600"
+                >
+                  Track your pending request
+                </a>
+              </p>
+            )}
           </div>
         </div>
 
