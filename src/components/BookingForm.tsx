@@ -1,15 +1,9 @@
 ﻿'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import { Calendar, Clock, Coins, CreditCard, AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { LoadingSpinner, InlineLoader } from '@/components/ui/LoadingSpinner'
-import { ErrorDisplay, ValidationError } from '@/components/ui/ErrorDisplay'
-import { StatusMessage, SuccessMessage } from '@/components/ui/StatusMessage'
-import { FormWrapper, DataWrapper } from '@/components/ui/AsyncWrapper'
+import { InlineLoader } from '@/components/ui/LoadingSpinner'
+import { ValidationError } from '@/components/ui/ErrorDisplay'
+import { SuccessMessage } from '@/components/ui/StatusMessage'
 import { useAsyncOperation } from '@/hooks/useAsyncState'
 import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
 import { customerBookingSteps, customerBookingTourId } from '@/tours/customerBooking'
@@ -42,7 +36,6 @@ export default function BookingForm({
   vendorId,
   vendorName,
   serviceName,
-  serviceDuration,
   servicePriceCents,
   onBookingComplete
 }: BookingFormProps) {
@@ -65,7 +58,7 @@ export default function BookingForm({
   // Use the new async operation hooks
   const creditsOperation = useAsyncOperation<UserCredits>()
   const slotsOperation = useAsyncOperation<TimeSlot[]>()
-  const bookingOperation = useAsyncOperation<any>()
+  const bookingOperation = useAsyncOperation<{ success: boolean; bookingId?: string; error?: string }>()
 
   // Format price for display
   const priceDisplayDollars = (servicePriceCents / 100).toFixed(2)

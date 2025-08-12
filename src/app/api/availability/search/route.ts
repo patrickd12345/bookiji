@@ -32,6 +32,64 @@ export async function POST(req: NextRequest) {
 
     if ((slots?.length || 0) === 0 && serviceDetails && desiredDateTime && customerLocation) {
       try {
+        // Calculate optimal radius based on provider density
+        const calculateRadiusZone = async (lat: number, lng: number) => {
+          // Get counts at different radii to determine density
+          const [twoKm, fiveKm] = await Promise.all([
+            supabase.rpc('get_providers_within_radius', {
+              p_latitude: lat,
+              p_longitude: lng,
+              p_radius_km: 2
+            }),
+            supabase.rpc('get_providers_within_radius', {
+              p_latitude: lat,
+              p_longitude: lng,
+              p_radius_km: 5
+            })
+          ]);
+
+          const twoKmCount = twoKm.data?.length || 0;
+          const fiveKmCount = fiveKm.data?.length || 0;
+
+          if (twoKmCount >= 8) {
+            return { radius: 2, density: 'dense' };
+          } else if (fiveKmCount >= 4) {
+            return { radius: 5, density: 'medium' };
+          } else {
+            return { radius: 10, density: 'sparse' };
+          }
+        };
+
+        // Get optimal radius for this location
+        const radiusZone = await calculateRadiusZone(customerLocation.lat, customerLocation.lng);
+        const optimalRadius = radiusZone.radius;
+
+        // Try AI-powered radius scaling for even better optimization
+        let recommendedRadius = optimalRadius;
+        try {
+          const aiRadiusResponse = await fetch(`${req.nextUrl.origin}/api/ai-radius-scaling`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              service: serviceDetails,
+              location: customerLocation,
+              providerDensity: radiusZone.density,
+              currentRadius: optimalRadius
+            })
+          });
+
+          if (aiRadiusResponse.ok) {
+            const aiData = await aiRadiusResponse.json();
+            if (aiData.success && aiData.recommendedRadius) {
+              recommendedRadius = aiData.recommendedRadius;
+            }
+          }
+        } catch (aiError) {
+          console.log('AI radius scaling failed, using density-based radius:', aiError);
+          // Fall back to density-based radius
+        }
+
+        // Create service request
         await supabase.from('service_requests').insert({
           service_details: serviceDetails,
           desired_datetime: desiredDateTime,
@@ -40,16 +98,17 @@ export async function POST(req: NextRequest) {
           status: 'pending'
         })
 
+        // Find vendors within the optimal dynamic radius
         const { data: providers } = await supabase.rpc('get_providers_within_radius', {
           p_latitude: customerLocation.lat,
           p_longitude: customerLocation.lng,
-          p_radius_km: 10
+          p_radius_km: recommendedRadius
         })
 
         const notificationUrl = new URL('/api/notifications/send', req.url)
 
         await Promise.all(
-          (providers || []).map((p: any) =>
+          (providers || []).map((p: { user_id?: string; id?: string }) =>
             fetch(notificationUrl.toString(), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -58,18 +117,24 @@ export async function POST(req: NextRequest) {
                 recipient: p.user_id || p.id,
                 template: 'admin_alert',
                 data: {
-                  message: `New service request for ${serviceDetails} at ${desiredDateTime}`
+                  message: `New service request for ${serviceDetails} at ${desiredDateTime} within ${recommendedRadius}km`
                 }
               })
             }).catch((err) => console.error('Failed to send notification', err))
           )
         )
+
+        return NextResponse.json({ 
+          success: true, 
+          broadcasted: true,
+          radiusUsed: recommendedRadius,
+          providerDensity: radiusZone.density,
+          providersNotified: providers?.length || 0
+        })
       } catch (requestError) {
         console.error('Failed to create service request:', requestError)
         return NextResponse.json({ success: true, broadcasted: false })
       }
-
-      return NextResponse.json({ success: true, broadcasted: true })
     }
 
     return NextResponse.json({ success: true, slots: slots || [] })

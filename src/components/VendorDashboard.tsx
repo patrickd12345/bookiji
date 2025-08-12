@@ -4,10 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabaseClient'
 import { useAsyncData } from '@/hooks/useAsyncState'
-import { LoadingSpinner, PageLoader, CardLoader } from '@/components/ui/LoadingSpinner'
-import { ErrorDisplay, NetworkError } from '@/components/ui/ErrorDisplay'
-import { StatusMessage, SuccessMessage } from '@/components/ui/StatusMessage'
-import { DataWrapper, APIWrapper } from '@/components/ui/AsyncWrapper'
+import { PageLoader } from '@/components/ui/LoadingSpinner'
+import { NetworkError } from '@/components/ui/ErrorDisplay'
+import { DataWrapper } from '@/components/ui/AsyncWrapper'
 import {
   Calendar,
   Clock,
@@ -522,7 +521,7 @@ export default function VendorDashboard() {
                     {booking.customer_review && (
                       <div className="mt-3 pl-14">
                         <p className="text-sm text-gray-600 italic">
-                          "{booking.customer_review}"
+                          &quot;{booking.customer_review}&quot;
                         </p>
                       </div>
                     )}

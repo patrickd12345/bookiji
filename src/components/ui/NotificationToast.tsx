@@ -57,12 +57,19 @@ const notificationConfig = {
 
 export function NotificationToast({ 
   notification, 
-  onDismiss, 
-  position = 'top-right' 
+  onDismiss
 }: NotificationToastProps) {
   const [isVisible, setIsVisible] = useState(true)
   const config = notificationConfig[notification.type]
   const Icon = config.icon
+
+  const handleDismiss = useCallback(() => {
+    setIsVisible(false)
+    setTimeout(() => {
+      onDismiss(notification.id)
+      notification.onDismiss?.()
+    }, 300)
+  }, [notification.id, notification.onDismiss, onDismiss])
 
   useEffect(() => {
     if (notification.duration && notification.duration > 0) {
@@ -72,15 +79,7 @@ export function NotificationToast({
 
       return () => clearTimeout(timer)
     }
-  }, [notification.duration])
-
-  const handleDismiss = useCallback(() => {
-    setIsVisible(false)
-    setTimeout(() => {
-      onDismiss(notification.id)
-      notification.onDismiss?.()
-    }, 300)
-  }, [notification.id, notification.onDismiss, onDismiss])
+  }, [notification.duration, handleDismiss])
 
   const handleAction = useCallback(() => {
     notification.action?.onClick()
@@ -261,19 +260,17 @@ export function QuickNotification({
   type, 
   message, 
   duration = 4000,
-  onDismiss,
-  className = '' 
+  onDismiss
 }: {
   type: 'success' | 'error' | 'info' | 'warning'
   message: string
   duration?: number
   onDismiss?: () => void
-  className?: string
 }) {
   const { addNotification } = useNotifications()
   
   useEffect(() => {
-    const id = addNotification({
+    addNotification({
       type,
       message,
       duration,

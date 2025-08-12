@@ -1,7 +1,7 @@
 import React from 'react'
 import { LoadingSpinner, PageLoader, CardLoader } from './LoadingSpinner'
-import { ErrorDisplay, NetworkError, ValidationError, SystemError } from './ErrorDisplay'
-import { StatusMessage, SuccessMessage, InfoMessage, WarningMessage } from './StatusMessage'
+import { ErrorDisplay } from './ErrorDisplay'
+import { SuccessMessage } from './StatusMessage'
 import { cn } from '@/lib/utils'
 
 interface AsyncWrapperProps {

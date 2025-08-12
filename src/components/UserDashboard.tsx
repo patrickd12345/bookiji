@@ -1,40 +1,33 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabaseClient'
-import { Notification, NotificationResponse, NotificationError } from '@/types/notification'
+import { NotificationResponse, NotificationError } from '@/types/notification'
 import { 
   User, 
   Calendar, 
-  CreditCard, 
   MapPin, 
-  Settings, 
-  Bell, 
   Star, 
   Coins,
   Plus,
   Search,
   Filter,
-  ChevronRight,
   Clock,
   CheckCircle,
   AlertCircle,
-  Heart,
   Phone,
   Mail,
   Shield,
   Award,
-  TrendingUp,
   Zap
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { NotificationList } from './NotificationList'
 import { useRouter } from 'next/navigation'
-import { PageLoader, CardLoader, InlineLoader } from '@/components/ui/LoadingSpinner'
-import { ErrorDisplay, NetworkError } from '@/components/ui/ErrorDisplay'
-import { SuccessMessage, InfoMessage } from '@/components/ui/StatusMessage'
+import { PageLoader } from '@/components/ui/LoadingSpinner'
+import { NetworkError } from '@/components/ui/ErrorDisplay'
+import { SuccessMessage } from '@/components/ui/StatusMessage'
 import { useAsyncData } from '@/hooks/useAsyncState'
 import { cn } from '@/lib/utils'
 import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
@@ -91,25 +84,7 @@ interface CreditTransaction {
   date: string
 }
 
-interface DatabaseProvider {
-  business_name: string;
-  avatar_url: string;
-  rating: number;
-  total_reviews: number;
-  specialties: string[];
-  location: {
-    lat: number;
-    lng: number;
-    address?: string;
-  };
-}
 
-interface DatabaseFavorite {
-  id: string;
-  distance?: number;
-  last_booked?: string;
-  provider: DatabaseProvider;
-}
 
 interface Provider {
   id: string;
@@ -125,12 +100,6 @@ interface Provider {
     lng: number;
     address?: string;
   };
-}
-
-interface NotificationState {
-  data: Notification[];
-  isLoading: boolean;
-  error: string | null;
 }
 
 export default function UserDashboard() {

@@ -13,6 +13,12 @@ export default function DashboardSettings() {
 
   const [tab, setTab] = useState<'profile' | 'notifications' | 'preferences' | 'security'>('profile')
 
+  useEffect(() => {
+    if (!hasCompletedTour(settingsConfigurationTourId)) {
+      startTour(settingsConfigurationTourId, settingsConfigurationSteps)
+    }
+  }, [hasCompletedTour, startTour])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -26,12 +32,6 @@ export default function DashboardSettings() {
     router.push('/login')
     return null
   }
-
-  useEffect(() => {
-    if (!hasCompletedTour(settingsConfigurationTourId)) {
-      startTour(settingsConfigurationTourId, settingsConfigurationSteps)
-    }
-  }, [hasCompletedTour, startTour])
 
   return (
     <div className="min-h-screen bg-gray-50 py-10">

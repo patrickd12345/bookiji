@@ -300,7 +300,7 @@ export default function AIConversationalInterface({
       {/* Input Area */}
       <div className="border-t p-4">
         <div className="mb-2 text-xs text-gray-500" data-tour="example-queries">
-          Try questions like "Book a haircut tomorrow" or "Find a spa near me".
+          Try questions like &quot;Book a haircut tomorrow&quot; or &quot;Find a spa near me&quot;.
         </div>
         <form onSubmit={handleSubmit} className="flex gap-3">
           <div className="flex-1 relative">
