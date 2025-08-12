@@ -32,6 +32,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { NotificationList } from './NotificationList'
 import { useRouter } from 'next/navigation'
+import { PageLoader, CardLoader, InlineLoader } from '@/components/ui/LoadingSpinner'
+import { ErrorDisplay, NetworkError } from '@/components/ui/ErrorDisplay'
+import { SuccessMessage, InfoMessage } from '@/components/ui/StatusMessage'
+import { useAsyncData } from '@/hooks/useAsyncState'
+import { cn } from '@/lib/utils'
 
 interface UserProfile {
   id: string
@@ -132,19 +137,17 @@ export default function UserDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [credits, setCredits] = useState<CreditBalance | null>(null)
   const [favoriteProviders, setFavoriteProviders] = useState<Provider[]>([])
-  const [notificationState, setNotificationState] = useState<NotificationState>({
-    data: [],
-    isLoading: false,
-    error: null
-  })
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('all')
   const router = useRouter()
 
+  // Use the new async state hook for notifications
+  const notifications = useAsyncData<NotificationResponse['notifications']>({
+    autoReset: true,
+    resetDelay: 5000
+  })
+
   const loadNotifications = useCallback(async (): Promise<void> => {
-    setNotificationState(prev => ({ ...prev, isLoading: true, error: null }))
-    
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch('/api/notifications', {
@@ -156,357 +159,88 @@ export default function UserDashboard() {
       }
       
       const data = await response.json() as NotificationResponse
-      setNotificationState({
-        data: data.notifications,
-        isLoading: false,
-        error: null
-      })
+      notifications.setData(data.notifications)
     } catch (error) {
       console.error('Failed to load notifications:', error)
-      setNotificationState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to load notifications'
-      }))
+      notifications.setError(error instanceof Error ? error.message : 'Failed to load notifications')
     }
-  }, [])
+  }, [notifications])
 
   // Load user data (profile, bookings, credits, favorites) in parallel
-  const loadUserData = useCallback(async () => {
-    setLoading(true)
-    try {
-      const {
-        data: { session }
-      } = await supabase.auth.getSession()
-      if (!session) {
-        throw new Error('No session found')
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.user) {
+          router.push('/login')
+          return
+        }
+
+        // Load all data in parallel
+        const [profileResult, bookingsResult, creditsResult, favoritesResult] = await Promise.allSettled([
+          supabase
+            .from('user_role_summary')
+            .select('*, beta_status')
+            .eq('user_id', session.user.id)
+            .maybeSingle(),
+          supabase
+            .from('bookings')
+            .select('*')
+            .eq('customer_id', session.user.id)
+            .order('created_at', { ascending: false }),
+          fetch('/api/credits/balance').then(res => res.ok ? res.json() : null),
+          supabase
+            .from('favorite_providers')
+            .select('provider_id, providers(*)')
+            .eq('user_id', session.user.id)
+        ])
+
+        // Handle profile
+        if (profileResult.status === 'fulfilled' && profileResult.value.data) {
+          setUserProfile(profileResult.value.data as UserProfile)
+        }
+
+        // Handle bookings
+        if (bookingsResult.status === 'fulfilled' && bookingsResult.value.data) {
+          setBookings(bookingsResult.value.data as Booking[])
+        }
+
+        // Handle credits
+        if (creditsResult.status === 'fulfilled' && creditsResult.value?.success) {
+          setCredits(creditsResult.value.credits)
+        }
+
+        // Handle favorites
+        if (favoritesResult.status === 'fulfilled' && favoritesResult.value.data) {
+          const providers = favoritesResult.value.data
+            .map(fp => fp.providers)
+            .filter(Boolean) as unknown as Provider[]
+          setFavoriteProviders(providers)
+        }
+
+        // Load notifications
+        loadNotifications()
+      } catch (error) {
+        console.error('Error loading user data:', error)
       }
-
-      await Promise.all([
-        loadUserProfile(session.user.id),
-        loadUserBookings(session.user.id),
-        loadUserCredits(session.user.id),
-        loadFavoriteProviders(session.user.id)
-      ])
-    } catch (error) {
-      console.error('Failed to load user data:', error)
-    } finally {
-      setLoading(false)
     }
-  }, [])
 
-  useEffect(() => {
     loadUserData()
-    loadNotifications()
-  }, [loadUserData, loadNotifications])
+  }, [router, loadNotifications])
 
-  // Removed unused markAsRead function
-
-  const refreshNotifications = useCallback(() => {
-    loadNotifications()
-  }, [loadNotifications])
-
-  // Set up real-time notifications for the current user
-  useEffect(() => {
-    let channel: ReturnType<typeof supabase.channel> | null = null
-    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
-
-    const subscribe = async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser()
-
-      const userId = user?.id
-
-      // If we don't have a user (e.g., not logged in) we can early-return
-      if (!userId) return
-
-      channel = supabase
-        .channel('notifications')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${userId}`
-          },
-          (payload) => {
-            setNotificationState((prev) => ({
-              ...prev,
-              data: [payload.new as Notification, ...prev.data]
-            }))
-          }
-        )
-        .subscribe((status) => {
-          if (status === 'CHANNEL_ERROR') {
-            console.error('Notifications channel error')
-            alert('Real-time connection lost. Reconnecting...')
-            attemptReconnect()
-          } else if (status === 'CLOSED') {
-            console.warn('Notifications channel closed')
-            alert('Real-time connection closed. Reconnecting...')
-            attemptReconnect()
-          }
-        })
-    }
-
-    const attemptReconnect = () => {
-      if (reconnectTimeout) return
-      reconnectTimeout = setTimeout(() => {
-        reconnectTimeout = null
-        if (channel) {
-          supabase.removeChannel(channel)
-          channel = null
-        }
-        subscribe()
-      }, 5000)
-    }
-
-    subscribe()
-
-    return () => {
-      if (channel) supabase.removeChannel(channel)
-      if (reconnectTimeout) clearTimeout(reconnectTimeout)
-    }
-  }, [])
-
-  const loadUserProfile = async (userId: string) => {
-    try {
-      // Get user profile
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (profileError) throw profileError
-
-      // Get user stats
-      const { data: bookingsStats, error: bookingsError } = await supabase
-        .from('bookings')
-        .select('id, price_cents')
-        .eq('user_id', userId)
-
-      if (bookingsError) throw bookingsError
-
-      const totalBookings = bookingsStats?.length || 0
-      const totalSpentCents = bookingsStats?.reduce((sum, booking) => sum + (booking.price_cents || 0), 0) || 0
-
-      // Get favorites count
-      const { count: favoritesCount, error: favoritesError } = await supabase
-        .from('favorite_providers')
-        .select('id', { count: 'exact' })
-        .eq('user_id', userId)
-
-      if (favoritesError) throw favoritesError
-
-      // Get average rating
-      const { data: ratings, error: ratingsError } = await supabase
-        .from('reviews')
-        .select('rating')
-        .eq('user_id', userId)
-
-      if (ratingsError) throw ratingsError
-
-      const averageRating = ratings && ratings.length > 0
-        ? ratings.reduce((sum, review) => sum + review.rating, 0) / ratings.length
-        : 0
-
-      setUserProfile({
-        id: userId,
-        name: profile?.full_name || 'User',
-        email: profile?.email || '',
-        phone: profile?.phone || '',
-        avatar_url: profile?.avatar_url,
-        member_since: profile?.created_at || new Date().toISOString(),
-        verification_status: profile?.is_verified ? 'verified' : 'unverified',
-        preferences: profile?.preferences || {
-          notifications: true,
-          marketing_emails: false,
-          sms_alerts: true
-        },
-        stats: {
-          total_bookings: totalBookings,
-          total_spent_cents: totalSpentCents,
-          favorite_providers: favoritesCount || 0,
-          average_rating_given: Number(averageRating.toFixed(1))
-        }
-      })
-    } catch (error) {
-      console.error('Error loading user profile:', error)
-      // Set default values for new users
-      setUserProfile({
-        id: userId,
-        name: 'New User',
-        email: '',
-        member_since: new Date().toISOString(),
-        verification_status: 'unverified',
-        preferences: {
-          notifications: true,
-          marketing_emails: false,
-          sms_alerts: true
-        },
-        stats: {
-          total_bookings: 0,
-          total_spent_cents: 0,
-          favorite_providers: 0,
-          average_rating_given: 0
-        }
-      })
-    }
-  }
-
-  const loadUserBookings = async (userId: string) => {
-    try {
-      const { data: bookings, error } = await supabase
-        .from('bookings')
-        .select(`
-          id,
-          service_name,
-          provider:provider_id (
-            name:business_name,
-            avatar_url
-          ),
-          scheduled_for,
-          duration_minutes,
-          status,
-          price_cents,
-          location,
-          notes,
-          reviews (
-            rating,
-            comment
-          )
-        `)
-        .eq('user_id', userId)
-        .order('scheduled_for', { ascending: true })
-
-      if (error) throw error
-
-      setBookings(bookings.map(booking => ({
-        id: booking.id,
-        service_name: booking.service_name,
-        provider_name: Array.isArray(booking.provider)
-          ? (booking.provider[0] as unknown as DatabaseProvider)?.business_name || 'Unknown Provider'
-          : (booking.provider as unknown as DatabaseProvider)?.business_name || 'Unknown Provider',
-        provider_avatar: Array.isArray(booking.provider)
-          ? (booking.provider[0] as unknown as DatabaseProvider)?.avatar_url
-          : (booking.provider as unknown as DatabaseProvider)?.avatar_url,
-        date: new Date(booking.scheduled_for).toISOString().split('T')[0],
-        time: new Date(booking.scheduled_for).toTimeString().slice(0, 5),
-        duration_minutes: booking.duration_minutes,
-        status: booking.status,
-        price_cents: booking.price_cents,
-        location: booking.location,
-        notes: booking.notes,
-        rating: booking.reviews?.[0]?.rating,
-        review: booking.reviews?.[0]?.comment
-      })))
-    } catch (error) {
-      console.error('Error loading bookings:', error)
-      setBookings([])
-    }
-  }
-
-  const loadUserCredits = async (userId: string) => {
-    try {
-      // Get current balance
-      const { data: balance, error: balanceError } = await supabase
-        .from('credit_balances')
-        .select('balance_cents')
-        .eq('user_id', userId)
-        .single()
-
-      if (balanceError) throw balanceError
-
-      // Get recent transactions
-      const { data: transactions, error: transactionsError } = await supabase
-        .from('credit_transactions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(10)
-
-      if (transactionsError) throw transactionsError
-
-      setCredits({
-        balance_cents: balance?.balance_cents || 0,
-        balance_dollars: (balance?.balance_cents || 0) / 100,
-        recent_transactions: transactions.map(tx => ({
-          id: tx.id,
-          amount_cents: tx.amount_cents,
-          type: tx.type,
-          description: tx.description,
-          date: new Date(tx.created_at).toISOString()
-        }))
-      })
-    } catch (error) {
-      console.error('Error loading credits:', error)
-      setCredits({
-        balance_cents: 0,
-        balance_dollars: 0,
-        recent_transactions: []
-      })
-    }
-  }
-
-  const loadFavoriteProviders = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('favorites')
-        .select(`
-          id,
-          distance,
-          last_booked,
-          provider:providers (
-            business_name,
-            avatar_url,
-            rating,
-            total_reviews,
-            specialties,
-            location
-          )
-        `)
-        .eq('user_id', userId)
-      
-      if (error) throw error
-
-      // First cast to unknown, then to our type to handle the type mismatch
-      const favorites = (data as unknown) as DatabaseFavorite[]
-      
-      const providersData: Provider[] = favorites.map(fav => ({
-        id: fav.id,
-        business_name: fav.provider.business_name,
-        avatar_url: fav.provider.avatar_url,
-        rating: fav.provider.rating,
-        total_reviews: fav.provider.total_reviews,
-        specialties: fav.provider.specialties,
-        distance: fav.distance,
-        last_booked: fav.last_booked,
-        location: fav.provider.location
-      }))
-
-      setFavoriteProviders(providersData)
-    } catch (error) {
-      console.error('Error loading favorites:', error)
-      setFavoriteProviders([])
-    }
-  }
-
-  const filteredBookings = bookings.filter(booking => {
-    const matchesSearch = booking.service_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         booking.provider_name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesFilter = filterStatus === 'all' || booking.status === filterStatus
-    return matchesSearch && matchesFilter
-  })
-
+  // Helper functions
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'upcoming': return 'bg-blue-100 text-blue-800'
-      case 'completed': return 'bg-green-100 text-green-800'
-      case 'cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+    switch (status.toLowerCase()) {
+      case 'confirmed':
+        return 'bg-green-100 text-green-800'
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'cancelled':
+        return 'bg-red-100 text-red-800'
+      case 'completed':
+        return 'bg-blue-100 text-blue-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
@@ -522,247 +256,174 @@ export default function UserDashboard() {
     return `$${(Math.abs(cents) / 100).toFixed(2)}`
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your dashboard...</p>
-        </motion.div>
-      </div>
-    )
+  if (!userProfile) {
+    return <PageLoader text="Loading your dashboard..." />
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      {/* Mobile-First Header */}
+      {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                <User className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900">My Dashboard</h1>
-                {userProfile && (
-                  <p className="text-sm text-gray-500">Welcome back, {userProfile.name.split(' ')[0]}!</p>
-                )}
-              </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Welcome back, {userProfile.name.split(' ')[0]}! 👋
+              </h1>
+              <p className="mt-1 text-gray-600">
+                Manage your bookings, credits, and favorite providers
+              </p>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <button 
-                  className="p-2 text-gray-400 hover:text-gray-600 relative"
-                  onClick={refreshNotifications}
-                  disabled={notificationState.isLoading}
-                >
-                  <Bell className={`w-5 h-5 ${notificationState.isLoading ? 'animate-pulse' : ''}`} />
-                  {notificationState.data.filter(n => !n.read).length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
-                  )}
-                </button>
-                <div className="absolute top-full right-0 mt-2 w-96 z-50">
-                  {notificationState.error ? (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-                      {notificationState.error}
-                    </div>
-                  ) : (
-                    <NotificationList />
-                  )}
-                </div>
-              </div>
+            {/* Notifications */}
+            <div className="relative">
               <button
-                onClick={() => router.push('/dashboard/settings')}
-                className="p-2 rounded-full hover:bg-gray-100"
+                onClick={loadNotifications}
+                className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                disabled={notifications.loading}
               >
-                <Settings className="w-5 h-5 text-gray-600" />
+                <span className="text-2xl">🔔</span>
+                {notifications.data && notifications.data.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {notifications.data.length}
+                  </span>
+                )}
               </button>
+              
+              {/* Notifications dropdown */}
+              {notifications.data && notifications.data.length > 0 && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-10">
+                  <div className="p-4">
+                    <h3 className="font-medium text-gray-900 mb-3">Recent Notifications</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {notifications.data.slice(0, 5).map((notification, index) => (
+                        <div key={index} className="text-sm text-gray-600 p-2 hover:bg-gray-50 rounded">
+                          {notification.message}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Mobile Tab Navigation */}
-        <div className="bg-white rounded-2xl shadow-sm p-2 mb-8">
-          <div className="flex space-x-1 overflow-x-auto">
-            {[
-              { id: 'overview', label: 'Overview', icon: TrendingUp },
-              { id: 'bookings', label: 'Bookings', icon: Calendar },
-              { id: 'credits', label: 'Credits', icon: Coins },
-              { id: 'favorites', label: 'Favorites', icon: Heart },
-              { id: 'profile', label: 'Profile', icon: User }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as 'overview' | 'bookings' | 'credits' | 'favorites' | 'profile')}
-                className={`flex items-center space-x-2 px-4 py-3 rounded-xl transition-all whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span className="text-sm font-medium">{tab.label}</span>
-              </button>
-            ))}
+        {/* Status Messages */}
+        {notifications.error && (
+          <NetworkError 
+            error={notifications.error} 
+            onRetry={loadNotifications}
+            className="mb-6"
+          />
+        )}
+        
+        {notifications.success && (
+          <SuccessMessage 
+            message="Notifications loaded successfully"
+            className="mb-6"
+            autoDismiss
+          />
+        )}
+
+        {/* Tabs */}
+        <div className="bg-white rounded-lg shadow-sm border mb-8">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8 px-6">
+              {[
+                { id: 'overview', label: 'Overview', icon: '📊' },
+                { id: 'bookings', label: 'Bookings', icon: '📅' },
+                { id: 'credits', label: 'Credits', icon: '💰' },
+                { id: 'favorites', label: 'Favorites', icon: '❤️' },
+                { id: 'profile', label: 'Profile', icon: '👤' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={cn(
+                    'py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2',
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  )}
+                >
+                  <span>{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
           </div>
-        </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {/* Overview Tab */}
-            {activeTab === 'overview' && userProfile && (
-              <div className="space-y-8">
+          {/* Tab Content */}
+          <div className="p-6">
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
                 {/* Quick Stats */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-white rounded-2xl p-6 shadow-sm"
-                  >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-600">Total Bookings</p>
-                        <p className="text-2xl font-bold text-gray-900">{userProfile.stats.total_bookings}</p>
+                        <p className="text-blue-100">Total Bookings</p>
+                        <p className="text-3xl font-bold">{bookings.length}</p>
                       </div>
-                      <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                        <Calendar className="w-6 h-6 text-blue-600" />
-                      </div>
+                      <span className="text-4xl">📅</span>
                     </div>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-white rounded-2xl p-6 shadow-sm"
-                  >
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-600">Total Spent</p>
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(userProfile.stats.total_spent_cents)}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                        <CreditCard className="w-6 h-6 text-green-600" />
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-white rounded-2xl p-6 shadow-sm"
-                    data-tour="credit-balance"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">Credits Balance</p>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {credits ? `$${credits.balance_dollars}` : '---'}
+                        <p className="text-green-100">Credits Balance</p>
+                        <p className="text-3xl font-bold">
+                          ${credits ? (credits.balance_cents / 100).toFixed(2) : '0.00'}
                         </p>
                       </div>
-                      <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                        <Coins className="w-6 h-6 text-yellow-600" />
-                      </div>
+                      <span className="text-4xl">💰</span>
                     </div>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-white rounded-2xl p-6 shadow-sm"
-                  >
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-pink-500 to-rose-600 text-white p-6 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-600">Avg Rating Given</p>
-                        <p className="text-2xl font-bold text-gray-900">{userProfile.stats.average_rating_given}</p>
+                        <p className="text-pink-100">Favorite Providers</p>
+                        <p className="text-3xl font-bold">{favoriteProviders.length}</p>
                       </div>
-                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                        <Star className="w-6 h-6 text-purple-600" />
-                      </div>
+                      <span className="text-4xl">❤️</span>
                     </div>
-                  </motion.div>
+                  </div>
                 </div>
 
                 {/* Recent Activity */}
-                <div className="grid lg:grid-cols-2 gap-8">
-                  {/* Upcoming Bookings */}
-                  <div className="bg-white rounded-2xl shadow-sm p-6" data-tour="upcoming-bookings">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold text-gray-900">Upcoming Bookings</h3>
-                      <button
-                        onClick={() => setActiveTab('bookings')}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                      >
-                        View All
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      {bookings.filter(b => b.status === 'upcoming').slice(0, 2).map((booking) => (
-                        <motion.div
-                          key={booking.id}
-                          whileHover={{ scale: 1.02 }}
-                          className="flex items-center space-x-4 p-4 border border-gray-100 rounded-xl hover:border-blue-200 transition-colors cursor-pointer"
-                        >
-                          <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                            <Calendar className="w-6 h-6 text-gray-600" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{booking.service_name}</p>
-                            <p className="text-sm text-gray-600">{booking.provider_name}</p>
-                            <p className="text-sm text-blue-600">{formatDate(booking.date)} at {booking.time}</p>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-gray-400" />
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Favorite Providers */}
-                  <div className="bg-white rounded-2xl shadow-sm p-6" data-tour="favorites">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold text-gray-900">Favorite Providers</h3>
-                      <button
-                        onClick={() => setActiveTab('favorites')}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                      >
-                        View All
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      {favoriteProviders.slice(0, 2).map((provider) => (
-                        <motion.div
-                          key={provider.id}
-                          whileHover={{ scale: 1.02 }}
-                          className="flex items-center space-x-4 p-4 border border-gray-100 rounded-xl hover:border-blue-200 transition-colors cursor-pointer"
-                        >
-                          <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{provider.business_name}</p>
-                            <div className="flex items-center space-x-2">
-                              <div className="flex items-center">
-                                <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                                <span className="text-sm text-gray-600 ml-1">{provider.rating}</span>
-                              </div>
-                              <span className="text-sm text-gray-400">•</span>
-                              <span className="text-sm text-gray-600">{provider.distance} mi</span>
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
+                  {bookings.length > 0 ? (
+                    <div className="space-y-3">
+                      {bookings.slice(0, 3).map((booking) => (
+                        <div key={booking.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">📋</span>
+                            <div>
+                              <p className="font-medium text-gray-900">{booking.service_name}</p>
+                              <p className="text-sm text-gray-500">
+                                {new Date(booking.date).toLocaleDateString()}
+                              </p>
                             </div>
                           </div>
-                          <ChevronRight className="w-5 h-5 text-gray-400" />
-                        </motion.div>
+                          <span className={cn(
+                            'px-2 py-1 text-xs font-medium rounded-full',
+                            getStatusColor(booking.status)
+                          )}>
+                            {booking.status}
+                          </span>
+                        </div>
                       ))}
                     </div>
-                  </div>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No recent activity</p>
+                  )}
                 </div>
               </div>
             )}
@@ -802,7 +463,12 @@ export default function UserDashboard() {
 
                 {/* Bookings List */}
                 <div className="space-y-4">
-                  {filteredBookings.map((booking) => (
+                  {bookings.filter(booking => {
+                    const matchesSearch = booking.service_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                         booking.provider_name.toLowerCase().includes(searchQuery.toLowerCase())
+                    const matchesFilter = filterStatus === 'all' || booking.status === filterStatus
+                    return matchesSearch && matchesFilter
+                  }).map((booking) => (
                     <motion.div
                       key={booking.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -1020,8 +686,8 @@ export default function UserDashboard() {
                 </div>
               </div>
             )}
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        </div>
       </div>
     </div>
   )
