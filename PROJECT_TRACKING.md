@@ -199,6 +199,191 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 
 ---
 
+## 📋 **COMPREHENSIVE PROJECT TRACKING - PRE-LAUNCH PHASE PLANNING**
+
+### **🎯 P0 — Pre-Launch Must-Haves (Blockers to Public Beta)**
+
+#### **1. Outbound Notifications (Email/SMS) That Actually Send**
+- [ ] **Goal:** Users reliably receive sign-up, password reset, booking confirmations/changes/cancellations
+- [ ] **Work:** Wire up email (e.g., SendGrid/Resend) and SMS (e.g., Twilio) providers behind `/api/notifications/send` API
+- [ ] **Work:** Add retry + dead-letter (Supabase Queue/Edge Function cron; exponential backoff, max attempts 5)
+- [ ] **Work:** Create transactional templates: Verify Email, Password Reset, Booking Created, Booking Updated, Booking Cancelled, Review Reminder
+- [ ] **Work:** Hook templates to booking lifecycle events
+- [ ] **Acceptance:** Triggering each event produces provider log + provider response code stored
+- [ ] **Acceptance:** Email/SMS received within 30s in sandbox; 99% success over 100 trial sends
+- [ ] **Acceptance:** If provider returns 4xx/5xx, message is retried then moved to DLQ with operator alert
+
+#### **2. $1 Commitment Fee: Refund Path & Status Machine**
+- [ ] **Goal:** The micro-deposit promise is real and predictable
+- [ ] **Work:** Define booking state machine: requested → accepted → confirmed → completed | no_show | cancelled
+- [ ] **Work:** On completed, auto-refund $1 (Stripe Refund API)
+- [ ] **Work:** On no_show, skip refund
+- [ ] **Work:** On cancelled, business rule: auto-refund if cancelled ≥X hours before
+- [ ] **Work:** Admin dashboard button: override refund/no-refund with reason code (audited)
+- [ ] **Acceptance:** E2E happy path: book → complete → refund posted in Stripe test mode within 1 min
+- [ ] **Acceptance:** Idempotency keys ensure multiple webhooks/clicks don't double-refund
+- [ ] **Acceptance:** Audit trail shows who/what changed states
+
+#### **3. Help Center MVP Content (Self-Serve)**
+- [ ] **Goal:** Users can answer the top 10 questions without support tickets
+- [ ] **Work:** Seed 10 articles (How booking works, the $1 fee, reschedule/cancel, refunds, provider onboarding, calendar linking, privacy/radius, support options, dispute policy, languages/currency)
+- [ ] **Work:** Link Help Center from nav + relevant screens (checkout tooltip for $1)
+- [ ] **Acceptance:** Help search returns seeded articles; tours link to the right articles
+- [ ] **Acceptance:** "No articles found" is gone
+
+#### **4. Role Clarity & First-Run Tours Polish**
+- [ ] **Goal:** Customers and providers know exactly what to do on first visit
+- [ ] **Work:** Registration step: choose role(s). If both, show role switch control in header
+- [ ] **Work:** Add "Replay tour" link in user menu; store completion per tour key
+- [ ] **Work:** Add 2–3 short tooltips (ℹ️) on $1 fee, privacy radius, broadcast system
+- [ ] **Acceptance:** Fresh account: correct tour auto-starts; replay works; tooltips present
+- [ ] **Acceptance:** Five-person hallway test: all can complete a booking without help
+
+#### **5. Security & Data Protections (Quick Wins)**
+- [ ] **Goal:** Reasonable default hardening for day-1
+- [ ] **Work:** Verify Supabase RLS for all user-owned tables; add negative tests for cross-tenant access
+- [ ] **Work:** Secrets from env only; no hardcoded keys; lock CSP headers; secure cookies; rate-limit public APIs
+- [ ] **Work:** Backups: daily DB backup job; restore drill doc
+- [ ] **Acceptance:** RLS test suite passes; .env.example complete; OWASP top-10 quick scan shows no trivial misses
+
+---
+
+### **🚀 P1 — Launch Polish (First 1–2 Weeks After Beta Opens)**
+
+#### **6. Provider ↔ Customer Communication Baseline**
+- [ ] **Goal:** They can coordinate without leaving the platform
+- [ ] **Work:** Option A (fast): Show masked email relay + phone (click-to-call) after confirmation
+- [ ] **Work:** Option B (richer): Per-booking message thread using Supabase Realtime; notifications on new messages
+- [ ] **Acceptance:** A: Replies via relay appear in both inboxes; bounce handling logged
+- [ ] **Acceptance:** B: Messages persist; realtime updates within 2s; notify via email on unread
+
+#### **7. Interactive Map v1 (Privacy-Respecting)**
+- [ ] **Goal:** Replace "Coming soon" with real discovery
+- [ ] **Work:** Mapbox/Leaflet with jittered centroid + radius ring; cluster markers; search by area
+- [ ] **Work:** Respect privacy mode: never reveal precise address until booking confirmation
+- [ ] **Acceptance:** Search returns consistent providers as list view; no exact lat/long leaked pre-booking
+
+#### **8. Analytics You Can Act On**
+- [ ] **Goal:** See funnel leakage and errors fast
+- [ ] **Work:** Confirm funnel events fired client/server; add critical path dashboards (visit → search → time select → $1 auth → confirmed)
+- [ ] **Work:** Add error monitoring (Sentry) + alert channel (Slack/Email) for P0 endpoints and notification DLQ
+- [ ] **Acceptance:** Dashboards show conversion by day; alerts fire on 5xx rate spikes, send failures >2%/10min
+
+#### **9. Documentation Reality Check**
+- [ ] **Goal:** Docs match product truth
+- [ ] **Work:** Update README/marketing to reflect what is truly live (map v1, chat messaging state, heatmaps "later")
+- [ ] **Work:** Add "What's next" roadmap section users can see
+- [ ] **Acceptance:** No claims of features that aren't shipped; changelog started
+
+---
+
+### **📈 P2 — Experience & Scale (Next 30–45 Days)**
+
+#### **10. Dispute & No-Show Process (Policy + Tooling)**
+- [ ] **Goal:** Clear, fair, defensible outcomes
+- [ ] **Work:** Publish policy page; add "Report an issue" on booking detail → creates dispute ticket with category
+- [ ] **Work:** Admin triage view; canned resolutions (refund, credit, warning)
+- [ ] **Acceptance:** Dispute SLAs measured; outcomes logged; customers notified
+
+#### **11. Notifications 2.0**
+- [ ] **Goal:** Bulletproof comms across channels
+- [ ] **Work:** Per-user channel prefs; batching windows; quiet hours; digest for non-critical items
+- [ ] **Work:** Web push (PWA) for on-site users
+- [ ] **Acceptance:** Channel matrix honored; opt-out works; push registered + received
+
+#### **12. i18n Completeness Pass**
+- [ ] **Goal:** No stray English strings in supported locales
+- [ ] **Work:** Extract audit, fill missing 5–10% strings; RTL visual pass
+- [ ] **Acceptance:** Smoke tour in FR/ES/AR completes without English fallback
+
+#### **13. Performance & Cost Guardrails**
+- [ ] **Goal:** Keep it fast and cheap
+- [ ] **Work:** Cache static geo/PPP data; index search queries; lazy-load maps; prefetch common routes
+- [ ] **Work:** AI assistant: queue + timeouts; fallbacks; monitoring for latency
+- [ ] **Acceptance:** P95 TTFB < 300ms on SSR routes; P95 interactive map paint < 2.5s on 4G
+
+---
+
+### **🌟 P3 — Differentiators & Nice-to-Haves (60–90 Days)**
+
+- [ ] **Voice input in chat** (Web Speech API + debounce + manual confirm)
+- [ ] **Image attachments to describe jobs** (auto-summarize to booking fields)
+- [ ] **Heatmap visualizations for admin analytics**
+- [ ] **Loyalty/credits & referrals surfaced in UI** (only if already implemented server-side)
+- [ ] **Provider catalog depth: rich profiles, portfolios, tags, minimums**
+
+---
+
+### **🔧 Cross-Cutting: How We Build & Prove It**
+
+#### **Engineering Checklists (Apply to Every Item Above)**
+- [ ] **Feature flag new surfaces;** dark-launch to internal users first
+- [ ] **Typesafe DTOs at API boundary;** Zod validation on inputs
+- [ ] **Idempotency keys for mutating endpoints** (payments, refunds, messaging)
+- [ ] **Telemetry: log user_id, booking_id, correlation_id on every server action**
+
+#### **E2E Tests (Playwright) For:**
+- [ ] **Sign-up (verify email), book, reschedule, cancel, complete → refund, leave review**
+
+#### **QA Scenarios (Write These as Playwright Specs)**
+- [ ] **"New customer → completes first booking"** (happy path)
+- [ ] **"Provider without Google Calendar → sets hours → receives broadcast → accepts"**
+- [ ] **"Cancel inside/outside policy boundary → correct refund rule triggered"**
+- [ ] **"Notification provider outage → retries → DLQ → operator alerted"**
+- [ ] **"Role duality: same account toggles customer/provider and flows remain correct"**
+- [ ] **"i18n FR/ES: all critical paths succeed; numbers/currency format localized"**
+
+#### **Observability & On-Call SLOs:**
+- [ ] **99.9% success rate on booking create; 99% notifications delivered <60s**
+- [ ] **Alerts: 5xx >0.5%/5min; DLQ size > 20; Stripe webhook failures; map tile errors > 2%/5min**
+- [ ] **Runbooks: notification failure, refund stuck, RLS access denied, Supabase rate-limit**
+
+#### **Legal & Policy (Publish Before GA)**
+- [ ] **Terms of Service, Privacy Policy** (PIPEDA/GDPR basics)
+- [ ] **Refund/No-Show policy, Cookie notice**
+- [ ] **Data retention windows; how to request deletion; contact & SLA**
+
+#### **Go-Live Checklist (Day-0)**
+- [ ] **Domain + TLS; env vars loaded in prod; Stripe live keys; email/SMS live keys**
+- [ ] **Staging freeze lifted; feature flags set; admin logins verified**
+- [ ] **Backup taken; restore tested last 7 days; maintenance window posted**
+- [ ] **Beta feedback form linked in header/footer; help center populated**
+
+#### **Concrete Issue Seeds (Copy/Paste into Your Tracker)**
+
+**P0: Notifications—wire up providers & retries**
+- [ ] Implement SendGrid/Resend + Twilio adapters with retries & DLQ
+- [ ] Create templates (Verify, Reset, Booking lifecycle, Review reminder)
+- [ ] Hook up booking events to send pipeline
+- [ ] Tests: unit (provider OK/error), integration (end-to-end in sandbox)
+
+**P0: Refund automation & state machine**
+- [ ] Add status machine and transitions; admin override UI + audit
+- [ ] Implement refund on completed; policy-based on cancelled
+- [ ] Tests: idempotency; double webhook; partial refund guard
+
+**P0: Help Center seed**
+- [ ] Write & publish 10 starter articles; wire contextual links in UI
+- [ ] Add search; confirm 404s are handled
+
+**P0: Role clarity + tours**
+- [ ] Role selection at signup; header role switcher
+- [ ] "Replay Tour" action + storage; add 3 tooltips
+- [ ] Hallway test script + results
+
+**P0: Security/RLS hardening**
+- [ ] RLS negative tests; rate-limit; CSP/cookies; env audit
+- [ ] DB backup job + restore drill doc
+
+#### **What You'll Measure to Know You're "Ready"**
+- [ ] **≥95% of first-time users complete a booking without human help** (from tour start to confirmation)
+- [ ] **Notification delivery success ≥99% daily; median delivery <10s**
+- [ ] **Refund success (when due) 100%; zero double-refunds**
+- [ ] **Support ticket volume ≤3% of bookings; top 3 categories addressed by new help docs within a week**
+- [ ] **Crash-free sessions ≥99.5%; P95 interactive time ≤2.5s on mobile**
+
+---
+
 ## 📅 **TIMELINE SUMMARY**
 
 ### **✅ COMPLETED (Development Phase)**

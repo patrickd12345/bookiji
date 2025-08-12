@@ -91,6 +91,7 @@
     "msw": "^2.3.0",
     "openai": "^4.34.0",
     "postcss": "^8.4.31",
+    "supabase": "^2.34.3",
     "supertest": "^6.3.3",
     "tailwindcss": "^3.3.0",
     "typescript": "^5",
