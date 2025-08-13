@@ -14,6 +14,7 @@ export interface RefundOptions {
   force?: boolean
   reason?: string
   adminId?: string
+  idempotencyKey?: string
 }
 
 export interface StateTransitionResult {
