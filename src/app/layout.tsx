@@ -1,5 +1,4 @@
-﻿import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { ThemeSwitcher } from '@/components/ThemeSwitcher'
@@ -7,6 +6,7 @@ import MainNavigation from '@/components/MainNavigation'
 import Script from 'next/script'
 import { ConsentManager } from '@/components/ConsentManager'
 import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider'
+import Link from 'next/link'
 import '@/lib/observability/init'
 
 // @ts-nocheck
@@ -49,8 +49,6 @@ if (ADSENSE_APPROVAL_MODE) {
   }
 }
 
-const inter = Inter({ subsets: ['latin'] })
-
 export const metadata: Metadata = {
   other: {
     'google-adsense-account': 'ca-pub-2311249346490347',
@@ -74,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="font-sans" suppressHydrationWarning>
       <head>
         <meta name="google-adsense-account" content="ca-pub-2311249346490347" />
         <meta name="google-site-verification" content="ca-pub-2311249346490347" />
@@ -99,7 +97,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
+      <body className="min-h-screen bg-background text-foreground">
         {/* Google AdSense loader script */}
         <GuidedTourProvider>
           <ThemeProvider
@@ -107,7 +105,7 @@ export default function RootLayout({
             defaultTheme="corporate"
             enableSystem
             disableTransitionOnChange
-            themes={["corporate", "light", "dark", "system", "pastel", "ocean", "sunset", "forest", "cyberpunk", "cupcake", "midnight"]}
+            themes={["corporate","light","dark","system","pastel","ocean","sunset","forest","cyberpunk","cupcake","midnight"]}
           >
             <div className="fixed top-4 right-4 z-50">
               <ThemeSwitcher />
@@ -127,27 +125,27 @@ export default function RootLayout({
                   </p>
                 </div>
                                   <div>
-                    <h3 className="font-semibold mb-3 text-foreground">Learn More</h3>
+                  <h3 className="font-semibold mb-3 text-foreground">Learn More</h3>
                     <ul className="space-y-2 text-sm">
-                      <li><a href="/about" className="text-muted-foreground hover:text-foreground">About Us</a></li>
-                      <li><a href="/how-it-works" className="text-muted-foreground hover:text-foreground">How It Works</a></li>
-                      <li><a href="/faq" className="text-muted-foreground hover:text-foreground">FAQ</a></li>
-                      <li><a href="/blog" className="text-muted-foreground hover:text-foreground">Blog</a></li>
+                      <li><Link href="/about" className="text-muted-foreground hover:text-foreground">About Us</Link></li>
+                      <li><Link href="/how-it-works" className="text-muted-foreground hover:text-foreground">How It Works</Link></li>
+                      <li><Link href="/faq" className="text-muted-foreground hover:text-foreground">FAQ</Link></li>
+                      <li><Link href="/blog" className="text-muted-foreground hover:text-foreground">Blog</Link></li>
                     </ul>
                   </div>
                 <div>
                   <h3 className="font-semibold mb-3 text-foreground">Support</h3>
                   <ul className="space-y-2 text-sm">
-                    <li><a href="/help" className="text-muted-foreground hover:text-foreground">Help Center</a></li>
-                    <li><a href="/help/tickets" className="text-muted-foreground hover:text-foreground">Contact Support</a></li>
+                    <li><Link href="/help" className="text-muted-foreground hover:text-foreground">Help Center</Link></li>
+                    <li><Link href="/help/tickets" className="text-muted-foreground hover:text-foreground">Contact Support</Link></li>
                   </ul>
                 </div>
                 <div>
                   <h3 className="font-semibold mb-3 text-foreground">Legal</h3>
                   <ul className="space-y-2 text-sm">
-                    <li><a href="/terms" className="text-muted-foreground hover:text-foreground">Terms of Service</a></li>
-                    <li><a href="/privacy" className="text-muted-foreground hover:text-foreground">Privacy Policy</a></li>
-                    <li><a href="/compliance" className="text-muted-foreground hover:text-foreground">AdSense Compliance</a></li>
+                    <li><Link href="/terms" className="text-muted-foreground hover:text-foreground">Terms of Service</Link></li>
+                    <li><Link href="/privacy" className="text-muted-foreground hover:text-foreground">Privacy Policy</Link></li>
+                    <li><Link href="/compliance" className="text-muted-foreground hover:text-foreground">AdSense Compliance</Link></li>
                   </ul>
                 </div>
               </div>

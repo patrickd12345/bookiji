@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function ResetPage() {
   const params = useSearchParams();
@@ -37,7 +38,7 @@ export default function ResetPage() {
     return (
       <div className="p-4 space-y-2">
         <p>Password updated.</p>
-        <a href="/login" className="text-blue-600 underline">Log in</a>
+        <Link href="/login" className="text-blue-600 underline">Log in</Link>
       </div>
     );
 

@@ -20,8 +20,16 @@ export default function ChooseRolePage() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
-    await supabase.from('profiles').update({ roles }).eq('id', user.id);
-    if (roles.length === 1 && roles[0] === 'provider') {
+
+    const newRoles = roles.includes('customer') && roles.includes('provider')
+      ? ['customer', 'provider']
+      : roles;
+
+    await supabase
+      .from('profiles')
+      .upsert({ id: user.id, roles: newRoles }, { onConflict: 'id' });
+
+    if (newRoles.length === 1 && newRoles[0] === 'provider') {
       router.push('/vendor/onboarding');
     } else {
       router.push('/customer/dashboard');

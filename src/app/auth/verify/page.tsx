@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 export default function VerifyPage() {
   const params = useSearchParams();
@@ -29,18 +30,18 @@ export default function VerifyPage() {
     verify();
   }, [token]);
 
-  if (status === 'loading') return <p>Verifying...</p>;
+  if (status === 'loading') return <p>Verifying</p>;
   if (status === 'success')
     return (
       <div>
         <p>Verification successful.</p>
-        <a href="/login" className="text-blue-600 underline">Log in</a>
+        <Link href="/login" className="text-blue-600 underline">Log in</Link>
       </div>
     );
   return (
     <div>
       <p>Verification failed.</p>
-      <a href="/login" className="text-blue-600 underline">Back to login</a>
+      <Link href="/login" className="text-blue-600 underline">Back to login</Link>
     </div>
   );
 }

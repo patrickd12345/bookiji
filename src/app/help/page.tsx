@@ -1,7 +1,10 @@
+"use client";
+
 import HelpSearch from '@/components/HelpSearch';
 import HelpArticleCard from '@/components/HelpArticleCard';
 import HelpCategoryFilter from '@/components/HelpCategoryFilter';
 import { helpArticles, HelpArticle } from '@/lib/helpArticles';
+import { useState, useCallback } from 'react';
 
 export default function HelpCenterPage() {
   const articles: HelpArticle[] = helpArticles;
@@ -13,9 +16,6 @@ export default function HelpCenterPage() {
     </div>
   );
 }
-
-'use client';
-import { useState, useCallback } from 'react';
 
 function ClientSide({ articles }: { articles: HelpArticle[] }) {
   const [results, setResults] = useState<HelpArticle[]>(articles);
