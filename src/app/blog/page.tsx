@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function BlogPage() {
   const blogPosts = [
     {
@@ -80,12 +82,12 @@ export default function BlogPage() {
                   day: 'numeric' 
                 })}
               </span>
-              <a 
+              <Link
                 href={`/blog/${blogPosts[0].slug}`}
                 className="bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
               >
                 Read More
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -111,12 +113,12 @@ export default function BlogPage() {
               <p className="text-gray-600 mb-4 line-clamp-3">
                 {post.excerpt}
               </p>
-              <a 
+              <Link
                 href={`/blog/${post.slug}`}
                 className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
               >
                 Read More →
-              </a>
+              </Link>
             </div>
           </article>
         ))}

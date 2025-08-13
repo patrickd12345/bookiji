@@ -275,20 +275,20 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
               // Logged in - show dashboard CTAs based on capabilities
               <>
                 {canBookServices && (
-                  <a href="/customer/dashboard">
+                  <Link href="/customer/dashboard">
                     <Button className="h-10 px-8 text-lg flex flex-col items-start gap-1">
                       <span>Book an Appointment</span>
                       <span className="text-xs text-gray-500">(Customer)</span>
                     </Button>
-                  </a>
+                  </Link>
                 )}
                 {canOfferServices && (
-                  <a href="/vendor/dashboard">
+                  <Link href="/vendor/dashboard">
                     <Button variant="outline" className="h-10 px-8 text-lg flex flex-col items-start gap-1">
                       <span>Offer Your Services</span>
                       <span className="text-xs text-gray-500">(Provider)</span>
                     </Button>
-                  </a>
+                  </Link>
                 )}
                 {/* Fallback CTAs if user lacks capabilities */}
                 {!canBookServices && !canOfferServices && (

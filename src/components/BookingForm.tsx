@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { InlineLoader } from '@/components/ui/LoadingSpinner'
 import { ValidationError } from '@/components/ui/ErrorDisplay'
 import { SuccessMessage } from '@/components/ui/StatusMessage'
@@ -262,12 +263,12 @@ export default function BookingForm({
             {requestBroadcasted && (
               <p className="mt-2 text-sm text-yellow-700">
                 No openings today—request broadcast to nearby vendors.
-                <a
+                <Link
                   href={serviceRequestId ? `/service-requests/${serviceRequestId}` : '/service-requests'}
                   className="ml-1 underline text-blue-600"
                 >
                   Track your pending request
-                </a>
+                </Link>
               </p>
             )}
           </div>

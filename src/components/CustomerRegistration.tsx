@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { useUIStore } from '@/stores/uiStore';
 import { theme, combineClasses } from '@/config/theme';
 import type { RegistrationForm } from '@/types/global.d';
@@ -208,7 +209,7 @@ export default function CustomerRegistration() {
                 required
               />
               <label htmlFor="agreeToTerms" className="ml-3 block text-sm text-gray-600">
-                I agree to the <a href="#" className="text-blue-600 hover:underline">terms and conditions</a>
+                I agree to the <Link href="/terms" className="text-blue-600 hover:underline">terms and conditions</Link>
               </label>
             </div>
 
