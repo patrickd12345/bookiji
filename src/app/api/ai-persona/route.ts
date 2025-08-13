@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       BOOKIJI_PROMPTS.personaResponse(message, persona || 'general', service, userHistory)
     )
 
-    console.log('👤 AI Persona Response:', aiResponse.substring(0, 100) + '...')
+    console.log('👤 AI Persona Response:', aiResponse.substring(0, 100) + '…')
 
     return NextResponse.json({
       success: true,

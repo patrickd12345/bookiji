@@ -15,7 +15,7 @@ interface BookingRequest {
 }
 
 // Accepts dependencies as an argument for future extensibility (e.g., database, email, etc.)
-export function makeBookingsCreateHandler(/* deps: { ... } */) {
+export function makeBookingsCreateHandler() {
   return async function POST(request: NextRequest) {
     try {
       const bookingData: BookingRequest = await request.json()

@@ -56,7 +56,7 @@ export default function TestCalendarPage() {
           disabled={isLoading}
           className="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
         >
-          {isLoading ? 'Syncing...' : 'Fetch Free/Busy Info'}
+          {isLoading ? 'Syncing' : 'Fetch Free/Busy Info'}
         </button>
 
         {error && (

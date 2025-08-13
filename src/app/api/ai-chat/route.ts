@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     )
 
     const responseTime = Date.now() - startTime
-    console.log(`🤖 AI Response (${responseTime}ms):`, aiResponse.substring(0, 100) + '...')
+    console.log(`🤖 AI Response (${responseTime}ms):`, aiResponse.substring(0, 100) + '…')
 
     return NextResponse.json({
       success: true,

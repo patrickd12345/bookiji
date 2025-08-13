@@ -63,7 +63,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-        <span className="ml-3 text-gray-600">Loading dashboard...</span>
+        <span className="ml-3 text-gray-600">Loading dashboard</span>
       </div>
     )
   }

@@ -128,11 +128,11 @@ export default function MyTicketsPage() {
         .subscribe((status) => {
           if (status === 'CHANNEL_ERROR') {
             console.error('Support chat channel error')
-            alert('Chat connection lost. Reconnecting...')
+            alert('Chat connection lost. Reconnecting')
             attemptReconnect()
           } else if (status === 'CLOSED') {
             console.warn('Support chat channel closed')
-            alert('Chat connection closed. Reconnecting...')
+            alert('Chat connection closed. Reconnecting')
             attemptReconnect()
           }
         })
@@ -181,7 +181,7 @@ export default function MyTicketsPage() {
         <p className="text-lg text-gray-600 mb-8">
           Need help? Create a support ticket and we&apos;ll get back to you as soon as possible.
         </p>
-        {loading && <p>Loading…</p>}
+        {loading && <p>Loading</p>}
         {!loading && tickets.length === 0 && (
           <p className="text-gray-500">You have no support tickets yet.</p>
         )}

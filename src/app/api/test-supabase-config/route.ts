@@ -42,8 +42,8 @@ export async function GET() {
       
       return NextResponse.json({
         success: true,
-        supabaseUrl: supabaseUrl.substring(0, 20) + '...',
-        supabaseAnonKey: supabaseAnonKey.substring(0, 20) + '...',
+        supabaseUrl: supabaseUrl.substring(0, 20) + '…',
+        supabaseAnonKey: supabaseAnonKey.substring(0, 20) + '…',
         authCheck: !error,
         currentUser: !!user,
         message: 'Supabase is configured correctly!'

@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default function HelpArticleCard({ article, highlight }: Props) {
-  let preview = article.content.replace(/<[^>]+>/g, '').slice(0, 120) + '...';
+  let preview = article.content.replace(/<[^>]+>/g, '').slice(0, 120) + '…';
   if (highlight) {
     const reg = new RegExp(`(${highlight})`, 'ig');
     preview = preview.replace(reg, '<mark>$1</mark>');
