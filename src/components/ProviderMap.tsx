@@ -1,6 +1,24 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
+import type * as GeoJSON from 'geojson';
+
+function createCircle(lng: number, lat: number, radiusMeters = 200) {
+  const points = 32;
+  const coords: [number, number][] = [];
+  for (let i = 0; i < points; i++) {
+    const angle = (i / points) * Math.PI * 2;
+    const dx = (radiusMeters / 111320) * Math.cos(angle);
+    const dy = (radiusMeters / 110540) * Math.sin(angle);
+    coords.push([lng + dx, lat + dy]);
+  }
+  coords.push(coords[0]);
+  return {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: [coords] },
+    properties: {},
+  } as GeoJSON.Feature<GeoJSON.Polygon>;
+}
 
 interface Provider {
   id: string;
@@ -52,26 +70,64 @@ export default function ProviderMap() {
       zoom: 9,
     });
 
-    const toPlot = providers.length > 50
-      ? [{ id: 'cluster', latitude: 40.73061, longitude: -73.935242, cluster: providers.length }]
-      : providers;
+    const features = providers.map(p => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [p.longitude, p.latitude] },
+      properties: {},
+    }));
 
-    toPlot.forEach(p => {
-      new mapboxgl.Marker().setLngLat([p.longitude, p.latitude]).addTo(map);
-      map.addSource(`provider-${p.id}`, {
+    if (providers.length > 50) {
+      map.addSource('providers', {
         type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: { type: 'Point', coordinates: [p.longitude, p.latitude] }
-        }
+        data: { type: 'FeatureCollection', features },
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 50,
       });
       map.addLayer({
-        id: `provider-${p.id}-radius`,
-        source: `provider-${p.id}`,
+        id: 'clusters',
         type: 'circle',
-        paint: { 'circle-radius': 50, 'circle-color': 'rgba(0,0,255,0.1)' }
+        source: 'providers',
+        filter: ['has', 'point_count'],
+        paint: { 'circle-color': '#51bbd6', 'circle-radius': 20 },
       });
-    });
+      map.addLayer({
+        id: 'cluster-count',
+        type: 'symbol',
+        source: 'providers',
+        filter: ['has', 'point_count'],
+        layout: { 'text-field': '{point_count_abbreviated}', 'text-size': 12 },
+      });
+      map.addLayer({
+        id: 'unclustered',
+        type: 'circle',
+        source: 'providers',
+        filter: ['!', ['has', 'point_count']],
+        paint: { 'circle-color': '#11b4da', 'circle-radius': 8 },
+      });
+    } else {
+      features.forEach(f => {
+        new mapboxgl.Marker().setLngLat(f.geometry.coordinates as [number, number]).addTo(map);
+      });
+      const circles = providers.map(p => createCircle(p.longitude, p.latitude));
+      map.addSource('privacy-radius', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: circles },
+      });
+      map.addLayer({
+        id: 'privacy-fill',
+        type: 'fill',
+        source: 'privacy-radius',
+        paint: { 'fill-color': 'rgba(0,0,255,0.1)' },
+      });
+      map.addLayer({
+        id: 'privacy-line',
+        type: 'line',
+        source: 'privacy-radius',
+        paint: { 'line-color': 'rgba(0,0,255,0.3)', 'line-width': 1 },
+      });
+    }
+
     return () => map.remove();
   }, [token, providers]);
 

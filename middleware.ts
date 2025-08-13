@@ -7,37 +7,33 @@ export const securityHeaders: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin'
 };
+const RL_WINDOW_MS = 60_000;
+const RL_MAX = 60;
+const rlStore: Map<string, number[]> = new Map();
 
-const WINDOW_MS = 60 * 1000;
-const MAX_REQUESTS = 60;
-const hits = new Map<string, number[]>();
-
-function getIp(req: NextRequest): string {
-  return (
-    req.ip ||
-    req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-    // @ts-ignore - socket may exist in some environments
-    req.socket?.remoteAddress ||
-    'unknown'
-  );
+function getClientIp(req: NextRequest) {
+  const xf = req.headers.get('x-forwarded-for');
+  if (xf) return xf.split(',')[0].trim();
+  // @ts-ignore runtime-dependent; fallback ok
+  const ip = (req as any)?.ip || (req as any)?.socket?.remoteAddress;
+  return ip ? String(ip) : 'unknown';
 }
 
-function rateLimit(ip: string): boolean {
+function recordHit(ip: string) {
   const now = Date.now();
-  const timestamps = hits.get(ip) || [];
-  const windowStart = now - WINDOW_MS;
-  const recent = timestamps.filter((ts) => ts > windowStart);
-  recent.push(now);
-  hits.set(ip, recent);
-  return recent.length <= MAX_REQUESTS;
+  const arr = rlStore.get(ip) ?? [];
+  const fresh = arr.filter(t => now - t < RL_WINDOW_MS);
+  fresh.push(now);
+  rlStore.set(ip, fresh);
+  return fresh.length;
 }
 
-export function middleware(req: NextRequest) {
-  const ip = getIp(req);
-  const pathname = req.nextUrl.pathname;
-
-  if (pathname.startsWith('/api/') && pathname !== '/api/health') {
-    if (!rateLimit(ip)) {
+export function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  if (path.startsWith('/api/') && path !== '/api/health') {
+    const ip = getClientIp(request);
+    const count = recordHit(ip);
+    if (count > RL_MAX) {
       const res = NextResponse.json({ error: 'Too many requests' }, { status: 429 });
       Object.entries(securityHeaders).forEach(([k, v]) => res.headers.set(k, v));
       return res;
@@ -47,10 +43,6 @@ export function middleware(req: NextRequest) {
   const res = NextResponse.next();
   Object.entries(securityHeaders).forEach(([k, v]) => res.headers.set(k, v));
   return res;
-}
-
-export function resetRateLimits() {
-  hits.clear();
 }
 
 export const config = {
