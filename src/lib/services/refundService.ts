@@ -1,0 +1,70 @@
+import { supabase } from '@/lib/supabaseClient'
+import { stripe } from '@/lib/stripe'
+import { type RefundOptions, type RefundStatus } from '@/types/booking'
+
+export async function processRefund(
+  bookingId: string,
+  options: RefundOptions = {}
+): Promise<{ status: RefundStatus; amount?: number; transactionId?: string; error?: string }> {
+  try {
+    const { data: booking, error: fetchError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .single()
+
+    if (fetchError || !booking) {
+      throw new Error(fetchError?.message || 'Booking not found')
+    }
+
+    if (!booking.payment_intent_id) {
+      throw new Error('No payment intent found')
+    }
+
+    await supabase
+      .from('bookings')
+      .update({
+        refund_status: 'processing',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', bookingId)
+
+    const refund = await stripe.refunds.create(
+      {
+        payment_intent: booking.payment_intent_id,
+        reason: 'requested_by_customer',
+        metadata: {
+          booking_id: bookingId,
+          admin_override: options.force ? 'true' : 'false',
+          reason: options.reason || ''
+        }
+      },
+      { idempotencyKey: `booking-refund-${bookingId}` }
+    )
+
+    await supabase
+      .from('bookings')
+      .update({
+        refund_status: 'completed',
+        refund_amount_cents: refund.amount,
+        refund_transaction_id: refund.id,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', bookingId)
+
+    return { status: 'completed', amount: refund.amount, transactionId: refund.id }
+  } catch (error) {
+    console.error('Refund processing error:', error)
+
+    await supabase
+      .from('bookings')
+      .update({
+        refund_status: 'failed',
+        refund_error: error instanceof Error ? error.message : 'Refund processing failed',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', bookingId)
+
+    return { status: 'failed', error: error instanceof Error ? error.message : 'Refund processing failed' }
+  }
+}

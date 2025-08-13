@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabaseClient'
-import { bookingStateMachine, type BookingStatus } from '@/lib/bookingStateMachine'
+import { bookingStateMachine } from '@/lib/services/bookingStateMachine'
+import type { BookingStatus } from '@/types/booking'
 import type { Database } from '@/types/supabase'
 
 export type Booking = Database['public']['Tables']['bookings']['Row']
@@ -24,7 +25,7 @@ export class BookingService {
       .from('bookings')
       .insert({
         ...booking,
-        status: 'pending',
+        status: 'requested',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
