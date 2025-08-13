@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic'
 import { SimpleThemeToggle } from '@/components/SimpleThemeToggle'
+import Link from 'next/link'
 
 // GuidedTourManager is a client component; dynamic import keeps the server bundle lean
 const GuidedTourManager = dynamic(() => import('../../../components/GuidedTourManager'))
@@ -112,15 +113,15 @@ export default function DashboardPage() {
             <div className="bg-white rounded-lg shadow-sm p-6" data-tour="support-access">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Support</h2>
               <div className="space-y-3">
-                <a href="/help/tickets" className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded">
+                <Link href="/help/tickets" className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded">
                   Contact Support
-                </a>
-                <a href="/faq" className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded">
+                </Link>
+                <Link href="/faq" className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded">
                   FAQ
-                </a>
-                <a href="/help" className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded">
+                </Link>
+                <Link href="/help" className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded">
                   Help Center
-                </a>
+                </Link>
               </div>
             </div>
           </div>

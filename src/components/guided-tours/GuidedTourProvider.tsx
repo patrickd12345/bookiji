@@ -28,7 +28,7 @@ export function GuidedTourProvider({ children }: { children: ReactNode }) {
       const { helpArticleSlug, ...rest } = step;
       if (helpArticleSlug) {
         const text = Array.isArray(rest.text) ? rest.text.join(' ') : rest.text || '';
-        const link = `<a href="/help/${helpArticleSlug}" target="_blank" class="shepherd-help-link">Learn more</a>`;
+        const link = `<a href="/help/${helpArticleSlug}" target="_blank" rel="noreferrer" class="shepherd-help-link">Learn more</a>`;
         rest.text = text + ' ' + link;
       }
       tour.addStep(rest);
