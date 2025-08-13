@@ -15,6 +15,7 @@ export default function MainNavigation() {
   const pathname = usePathname() ?? '';
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [roles, setRoles] = useState<string[]>([]);
   const [isBetaUser, setIsBetaUser] = useState(false);
   const { t } = useI18n();
   const router = useRouter();
@@ -28,15 +29,19 @@ export default function MainNavigation() {
     setIsLoggedIn(!!session);
 
     if (session) {
-      // Check user role
       const { data: profile } = await supabase
-        .from('user_role_summary')
+        .from('profiles')
         .select('roles, beta_status')
-        .eq('user_id', session.user.id)
+        .eq('id', session.user.id)
         .single();
 
       if (profile) {
-        setUserRole(profile.roles[0]);
+        const r = (profile.roles || []).map((role: string) =>
+          role === 'provider' ? 'vendor' : role
+        );
+        setRoles(r);
+        const defaultRole = r.includes('customer') ? 'customer' : r[0] || null;
+        setUserRole(defaultRole);
         setIsBetaUser(!!profile.beta_status);
       }
     }
@@ -78,6 +83,25 @@ export default function MainNavigation() {
                     >
                       {t('nav.vendor_portal')}
                     </Link>
+                  )}
+
+                  {roles.length > 1 && (
+                    <select
+                      data-testid="role-switcher"
+                      value={userRole ?? ''}
+                      onChange={(e) => {
+                        const role = e.target.value;
+                        setUserRole(role);
+                        router.push(role === 'vendor' ? '/vendor/dashboard' : '/customer/dashboard');
+                      }}
+                      className="px-2 py-1 border rounded"
+                    >
+                      {roles.map((r) => (
+                        <option key={r} value={r}>
+                          {r.charAt(0).toUpperCase() + r.slice(1)}
+                        </option>
+                      ))}
+                    </select>
                   )}
 
                   <NotificationBell />

@@ -24,13 +24,16 @@ export default function ProviderMap() {
         if (filters.minRating) params.set('min_rating', String(filters.minRating));
         const res = await fetch(`/api/search/providers?${params.toString()}`);
         const data = await res.json().catch(() => ({ providers: [] }));
-        const jittered = (data.providers || []).map((p: any) => ({
-          id: p.id,
-          latitude: p.latitude + (Math.random() - 0.5) * 0.01,
-          longitude: p.longitude + (Math.random() - 0.5) * 0.01,
-          category: p.category,
-          rating: p.rating,
-        }));
+        const jittered = (data.providers || []).map((p: any) => {
+          const offset = () => (Math.random() * 0.0015 + 0.0015) * (Math.random() < 0.5 ? -1 : 1);
+          return {
+            id: p.id,
+            latitude: p.latitude + offset(),
+            longitude: p.longitude + offset(),
+            category: p.category,
+            rating: p.rating,
+          };
+        });
         setProviders(jittered);
       } catch {
         setProviders([]);
@@ -40,7 +43,7 @@ export default function ProviderMap() {
   }, [filters]);
 
   useEffect(() => {
-    if (!token || !mapRef.current) return;
+    if (typeof window === 'undefined' || !token || !mapRef.current) return;
     mapboxgl.accessToken = token;
     const map = new mapboxgl.Map({
       container: mapRef.current,
@@ -48,8 +51,26 @@ export default function ProviderMap() {
       center: [-73.935242, 40.73061],
       zoom: 9,
     });
-    providers.forEach(p => {
+
+    const toPlot = providers.length > 50
+      ? [{ id: 'cluster', latitude: 40.73061, longitude: -73.935242, cluster: providers.length }]
+      : providers;
+
+    toPlot.forEach(p => {
       new mapboxgl.Marker().setLngLat([p.longitude, p.latitude]).addTo(map);
+      map.addSource(`provider-${p.id}`, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [p.longitude, p.latitude] }
+        }
+      });
+      map.addLayer({
+        id: `provider-${p.id}-radius`,
+        source: `provider-${p.id}`,
+        type: 'circle',
+        paint: { 'circle-radius': 50, 'circle-color': 'rgba(0,0,255,0.1)' }
+      });
     });
     return () => map.remove();
   }, [token, providers]);

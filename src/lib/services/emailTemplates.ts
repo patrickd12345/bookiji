@@ -7,17 +7,19 @@ interface EmailTemplate {
   html: string;
 }
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
 export function getEmailTemplate(template: string, data: TemplateData): EmailTemplate {
   switch (template) {
     case 'verify_email':
       return {
         subject: 'Verify your email',
-        html: `<p>Hi ${data.name}, click the link to verify your email.</p>`
+        html: `<p>Hi ${data.name || ''}, <a href="${BASE_URL}/auth/verify?token=${data.token}">Verify Email</a></p>`
       };
     case 'password_reset':
       return {
         subject: 'Reset your password',
-        html: `<p>Hi ${data.name}, use the following link to reset your password.</p>`
+        html: `<p>Hi ${data.name || ''}, <a href="${BASE_URL}/auth/reset?token=${data.token}">Reset Password</a></p>`
       };
     case 'booking_created':
       return {

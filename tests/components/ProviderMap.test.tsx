@@ -2,10 +2,17 @@ import { render, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ProviderMap from '@/components/ProviderMap';
 
+var MapMock = vi.fn(function () {
+  this.addSource = vi.fn();
+  this.addLayer = vi.fn();
+  this.remove = vi.fn();
+});
+var MarkerMock = vi.fn(function () {
+  return { setLngLat: vi.fn().mockReturnThis(), addTo: vi.fn().mockReturnThis() };
+});
 vi.mock('mapbox-gl', () => ({
-  default: { Map: class { constructor(){} remove(){} }, Marker: class { setLngLat(){return this;} addTo(){return this;} } },
-  Map: class { constructor(){} remove(){} },
-  Marker: class { setLngLat(){return this;} addTo(){return this;} }
+  __esModule: true,
+  default: { Map: MapMock, Marker: MarkerMock },
 }));
 
 describe('ProviderMap', () => {
@@ -30,6 +37,7 @@ describe('ProviderMap', () => {
     const { findAllByTestId, getByTestId } = render(<ProviderMap />);
     const markers = await findAllByTestId('marker');
     expect(markers.length).toBe(2);
+    expect(MapMock).toHaveBeenCalled();
 
     (fetch as any).mockResolvedValue({
       json: async () => ({ providers: [
