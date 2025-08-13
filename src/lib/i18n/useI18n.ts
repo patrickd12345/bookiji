@@ -16,6 +16,7 @@ let localeChangeListeners: ((locale: string) => void)[] = []
 
 // 📚 Loaded translations cache
 const translationCache: Record<string, Record<string, string>> = {}
+const missingKeyWarnings = new Set<string>()
 
 async function loadTranslations(locale: string): Promise<Record<string, string>> {
   if (translationCache[locale]) return translationCache[locale]
@@ -161,17 +162,23 @@ export function useI18n(initialLocale?: string): I18nHook {
 
   // 🗣️ TRANSLATE FUNCTION
   const t = useCallback((key: string, variables?: Record<string, string>): string => {
-    let text = (translations as Record<string,string>)[key] || (baseTranslations as Record<string,string>)[key] || key
-    
-    // Replace variables in the format {{variable}}
+    let text = (translations as Record<string,string>)[key]
+    if (text === undefined) {
+      if (process.env.NODE_ENV !== 'production' && !missingKeyWarnings.has(key)) {
+        console.warn(`Missing translation for key "${key}" in locale ${currentLocale}; falling back to en-US`)
+        missingKeyWarnings.add(key)
+      }
+      text = (baseTranslations as Record<string,string>)[key] || key
+    }
+
     if (variables) {
-      Object.entries(variables).forEach(([key, value]) => {
-        text = text.replace(new RegExp(`{{${key}}}`, 'g'), value)
+      Object.entries(variables).forEach(([vKey, value]) => {
+        text = text.replace(new RegExp(`{{${vKey}}}`, 'g'), value)
       })
     }
-    
+
     return text
-  }, [translations])
+  }, [translations, currentLocale])
 
   return {
     locale: currentLocale,

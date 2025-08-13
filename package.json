@@ -13,7 +13,9 @@
     "context": "node startup-context.js",
     "test": "vitest run",
     "ai:test": "node scripts/ai-test-loop.mjs",
-    "maintenance:calendar": "node scripts/setup-maintenance-calendar.mjs"
+    "maintenance:calendar": "node scripts/setup-maintenance-calendar.mjs",
+    "i18n:check": "node scripts/check-i18n.mjs",
+    "prebuild": "npm run i18n:check"
   },
   "dependencies": {
     "@formspree/react": "^3.0.0",
@@ -48,6 +50,7 @@
     "lucide-react": "^0.358.0",
     "mapbox-gl": "^3.6.0",
     "next": "15.3.3",
+    "@sentry/nextjs": "^8.3.0",
     "next-auth": "^4.24.7",
     "next-themes": "^0.4.6",
     "node-fetch": "^3.3.2",

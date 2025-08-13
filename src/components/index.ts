@@ -20,8 +20,10 @@ export { default as AIRadiusScaling } from './AIRadiusScaling'
 export { default as RealAIChat } from './RealAIChat'
 export { default as RealTimeBookingChat } from './RealTimeBookingChat'
 export { default as LLMQuoteGenerator } from './LLMQuoteGenerator'
+export { default as BookingMessages } from './BookingMessages'
 
 // Map Components
+export { default as ProviderMap } from './ProviderMap'
 export { default as MapAbstraction } from './MapAbstraction'
 export { default as MapAbstractionAI } from './MapAbstractionAI'
 export { default as SimpleMap } from './SimpleMap'
