@@ -115,7 +115,7 @@ export default function BookVendorPage() {
           customerId: user?.id ?? null,
           service: selectedService.name,
           providerId: vendorId,
-          location: 'TBD',
+          location: '',
           date: selectedDate,
           time: selectedTime
         })
