@@ -7,6 +7,7 @@ import MainNavigation from '@/components/MainNavigation'
 import Script from 'next/script'
 import { ConsentManager } from '@/components/ConsentManager'
 import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider'
+import '@/lib/observability/init'
 
 // @ts-nocheck
 

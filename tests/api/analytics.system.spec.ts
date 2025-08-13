@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GET } from '@/app/api/analytics/system/route'
+import { GET as healthGET } from '@/app/api/health/route'
 
 // Set up environment variables for testing
 beforeEach(() => {
@@ -45,5 +46,12 @@ describe('GET /api/analytics/system', () => {
     expect(data.metrics).toHaveProperty('totalEvents')
     expect(data.metrics).toHaveProperty('eventCounts')
     expect(data.metrics).toHaveProperty('lastUpdated')
+  })
+
+  it('health endpoint returns OK', async () => {
+    const res = await healthGET()
+    const data = await res.json()
+    expect(res.status).toBe(200)
+    expect(data.status).toBe('ok')
   })
 })

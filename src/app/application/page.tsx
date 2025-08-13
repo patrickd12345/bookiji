@@ -2,47 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { theme, combineClasses } from '@/config/theme';
-import MapAbstraction from '@/components/MapAbstraction';
-import { supabase } from '@/lib/supabaseClient';
+import ProviderMap from '@/components/ProviderMap';
 
 
 export default function ApplicationPage() {
   const [query, setQuery] = useState('');
   const [showAvailableNow, setShowAvailableNow] = useState(true);
-  const [markers, setMarkers] = useState<Array<{ id: string; lat: number; lng: number; label: string }>>([]);
-  const [loading, setLoading] = useState(true);
-  // Remove unused applications and setApplications
-  // const [applications, setApplications] = useState<ApplicationData[]>([]);
-
-  useEffect(() => {
-    async function fetchLocations() {
-      setLoading(true);
-      // Fetch provider locations and join with users for business name
-      const { data, error } = await supabase
-        .from('provider_locations')
-        .select('id, latitude, longitude, vendor_id, is_active, users:vendor_id (full_name)')
-        .eq('is_active', true);
-      if (error) {
-        setMarkers([]);
-        setLoading(false);
-        return;
-      }
-      // Map to marker format for MapAbstraction
-      const mapped = (data || []).map((loc: unknown) => {
-        const location = loc as { id: string; latitude: string; longitude: string; vendor_id: string; users: { full_name: string } | null };
-        return {
-          id: location.id,
-          lat: parseFloat(location.latitude),
-          lng: parseFloat(location.longitude),
-          label: location.users?.full_name || 'Provider',
-        };
-      });
-      setMarkers(mapped);
-      setLoading(false);
-    }
-    fetchLocations();
-  }, []);
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Nav */}
@@ -61,11 +26,7 @@ export default function ApplicationPage() {
       {/* Hero Booking Section */}
       <main className="flex flex-col items-center flex-1 py-8">
         {/* Map with provider markers */}
-        {loading ? (
-          <div className="w-full h-[600px] flex items-center justify-center text-xl text-gray-500">Loading map...</div>
-        ) : (
-          <MapAbstraction markers={markers} />
-        )}
+        <ProviderMap />
         {/* Toggle for Available Now / All Bookings */}
         <div className="flex items-center gap-4 mt-8 mb-4">
           <span className={showAvailableNow ? 'font-semibold text-blue-600' : 'text-gray-500'}>Available Now</span>
