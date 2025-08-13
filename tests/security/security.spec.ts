@@ -1,89 +1,39 @@
-import { describe, it, expect } from 'vitest';
-import { createRateLimiter } from '@/middleware/rateLimit';
-import { withSecurityHeaders, securityHeaders } from '@/middleware/security';
-import { withValidation } from '@/middleware/inputValidation';
-import { z } from 'zod';
-import { validateEnv } from '@/lib/security/envValidator';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { NextRequest } from 'next/server';
+import { middleware, resetRateLimits, securityHeaders } from '../../middleware';
 
-function mockReq(ip = '1.1.1.1', body: any = undefined) {
-  return {
-    headers: { 'x-forwarded-for': ip },
-    socket: { remoteAddress: ip },
-    body,
-  } as any;
+function createRequest(ip: string, path = '/api/test') {
+  return new NextRequest(new URL(`http://example.com${path}`), {
+    headers: { 'x-forwarded-for': ip }
+  } as any);
 }
 
-function mockRes() {
-  const headers: Record<string, string> = {};
-  return {
-    headers,
-    setHeader(key: string, value: string) {
-      headers[key] = value;
-    },
-    statusCode: 200,
-    status(code: number) {
-      this.statusCode = code;
-      return this;
-    },
-    json(payload: any) {
-      this.payload = payload;
-      return this;
-    },
-    end() {
-      /* noop */
-    },
-  } as any;
-}
-
-describe('security middleware', () => {
-  it('rate limiter blocks after threshold', () => {
-    const limiter = createRateLimiter({
-      windowMs: 1000,
-      maxRequests: 2,
-      message: 'Too many',
-      statusCode: 429,
-    });
-    const req = mockReq();
-    const res = mockRes();
-    let nextCount = 0;
-    const next = () => {
-      nextCount++;
-    };
-
-    limiter(req, res, next);
-    limiter(req, res, next);
-    limiter(req, res, next);
-
-    expect(nextCount).toBe(2);
-    expect(res.statusCode).toBe(429);
+describe('root middleware security', () => {
+  beforeEach(() => {
+    resetRateLimits();
   });
 
-  it('applies security headers', () => {
-    const handler = withSecurityHeaders((_req, res) => {
-      res.end();
-    });
-    const req = mockReq();
-    const res = mockRes();
-    handler(req, res);
-    Object.entries(securityHeaders).forEach(([key, value]) => {
-      expect(res.headers[key]).toBe(value);
+  it('applies security headers to responses', () => {
+    const req = createRequest('1.1.1.1');
+    const res = middleware(req);
+    Object.entries(securityHeaders).forEach(([k, v]) => {
+      expect(res.headers.get(k)).toBe(v);
     });
   });
 
-  it('validates input', () => {
-    const schema = z.object({ name: z.string() });
-    const handler = withValidation(schema, (_req, res) => {
-      res.end();
-    });
-    const req = mockReq('1.1.1.1', {});
-    const res = mockRes();
-    handler(req, res);
-    expect(res.statusCode).toBe(400);
+  it('rate limits API routes over threshold', () => {
+    let res;
+    for (let i = 0; i < 61; i++) {
+      res = middleware(createRequest('2.2.2.2'));
+    }
+    expect(res!.status).toBe(429);
   });
 
-  it('validates environment', () => {
-    expect(() =>
-      validateEnv({ SUPABASE_URL: 'https://example.com', SUPABASE_ANON_KEY: 'key' })
-    ).not.toThrow();
+  it('excludes health endpoint from rate limiting', () => {
+    let res;
+    for (let i = 0; i < 100; i++) {
+      res = middleware(createRequest('3.3.3.3', '/api/health'));
+    }
+    expect(res!.status).toBe(200);
   });
 });

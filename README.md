@@ -2,6 +2,13 @@
 
 **Status:** 🎉 **DEVELOPMENT COMPLETED - READY FOR PRODUCTION** | **All Systems Operational** | **Domain:** [bookiji.com](https://bookiji.com)
 
+### Feature Status
+- Guided tours: customer booking, vendor onboarding, dashboard, and settings tours **live**
+- Map v1: **coming soon**
+- Messaging: **coming soon**
+- Stripe idempotency & refund logic: **done**
+- CSP & rate limiting middleware: **done**
+
 ---
 
 ## 🎯 **WHAT IS BOOKIJI?**
@@ -26,7 +33,12 @@ Bookiji is the world's first **AI-powered, privacy-first, real-time booking plat
 ## 🚀 **CURRENT STATUS: DEVELOPMENT COMPLETED - READY FOR PRODUCTION**
 
 ### ✅ **Production Metrics**
-- **100% Test Coverage** (247/247 tests passing) ✅
+- **Vitest:** 256 tests passing (100%) ✅
+
+```
+Test Files  30 passed (30)
+Tests       256 passed (256)
+```
 - **Domain Acquired** (bookiji.com) ✅
 - **Complete Feature Set** (All major features implemented) ✅
 - **International Support** (37 countries, 27 currencies) ✅
