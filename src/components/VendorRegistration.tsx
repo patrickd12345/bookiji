@@ -340,7 +340,7 @@ export default function VendorRegistration({ onSuccess }: { onSuccess?: () => vo
           </p>
           <div className="bg-blue-50 rounded-lg p-4">
             <p className="text-sm text-blue-700">
-              Redirecting to your dashboard...
+              Redirecting to your dashboard
             </p>
           </div>
         </div>
@@ -465,7 +465,7 @@ export default function VendorRegistration({ onSuccess }: { onSuccess?: () => vo
                         className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                           errors.business_description ? 'border-red-300' : 'border-gray-300'
                         }`}
-                        placeholder="Describe your business, services, and what makes you unique..."
+                        placeholder="Describe your business, services, and what makes you unique."
                       />
                       {errors.business_description && (
                         <p className="text-red-600 text-sm mt-1">{errors.business_description}</p>
@@ -650,7 +650,7 @@ export default function VendorRegistration({ onSuccess }: { onSuccess?: () => vo
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    Submitting...
+                    Submitting
                   </>
                 ) : (
                   <>

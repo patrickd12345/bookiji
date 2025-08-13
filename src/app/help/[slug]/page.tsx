@@ -2,9 +2,7 @@ import { helpArticles } from '@/lib/helpArticles';
 import HelpArticle from '@/components/HelpArticle';
 import { notFound } from 'next/navigation';
 
-interface Params { params: { slug: string } }
-
-export default function ArticlePage({ params }: Params) {
+export default function ArticlePage({ params }: any) {
   const article = helpArticles.find(a => a.slug === params.slug);
   if (!article) return notFound();
   return (

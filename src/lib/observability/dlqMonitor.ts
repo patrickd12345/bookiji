@@ -11,15 +11,15 @@ export async function checkDlqAndAlert() {
       alerted = true;
       if (process.env.ALERT_WEBHOOK_URL) {
         try {
+          const payload = {
+            size,
+            overThresholdSince: new Date(overThresholdSince).toISOString(),
+            now: new Date().toISOString(),
+          };
           await fetch(process.env.ALERT_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              queue: 'notification-dlq',
-              size,
-              overThresholdSince: new Date(overThresholdSince).toISOString(),
-              timestamp: new Date().toISOString(),
-            }),
+            body: JSON.stringify(payload),
           });
         } catch (err) {
           console.error('Failed to send alert', err);
@@ -34,5 +34,5 @@ export async function checkDlqAndAlert() {
 
 export function startDlqMonitor() {
   if (typeof window !== 'undefined') return;
-  setInterval(checkDlqAndAlert, 60_000);
+  void setInterval(checkDlqAndAlert, 60_000);
 }
