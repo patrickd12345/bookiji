@@ -1,7 +1,32 @@
--- Enhance booking state machine
--- Add state transition validation and audit trail
+-- Enhance booking state machine - CORRECTED VERSION
+-- Based on actual database schema analysis
+-- Adds missing payment and refund fields to existing bookings table
 
--- Add state transition audit table
+-- Step 1: Add missing payment fields (CRITICAL for Stripe integration)
+ALTER TABLE public.bookings 
+ADD COLUMN IF NOT EXISTS payment_intent_id TEXT,
+ADD COLUMN IF NOT EXISTS payment_status TEXT CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded')) DEFAULT 'pending';
+
+-- Step 2: Add refund tracking fields
+ALTER TABLE public.bookings 
+ADD COLUMN IF NOT EXISTS refund_status TEXT CHECK (refund_status IN ('pending', 'processing', 'completed', 'failed', 'skipped')) DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS refund_amount_cents INTEGER DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS refund_transaction_id TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS refund_error TEXT DEFAULT NULL;
+
+-- Step 3: Add admin override fields
+ALTER TABLE public.bookings 
+ADD COLUMN IF NOT EXISTS admin_override BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS admin_override_reason TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS admin_override_by UUID REFERENCES public.users(id) DEFAULT NULL;
+
+-- Step 4: Add cancellation tracking fields
+ALTER TABLE public.bookings 
+ADD COLUMN IF NOT EXISTS cancellation_reason TEXT DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS refunded_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+
+-- Step 5: Create state transition audit table
 CREATE TABLE IF NOT EXISTS public.booking_state_changes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     booking_id UUID REFERENCES public.bookings(id) ON DELETE CASCADE,
@@ -17,17 +42,7 @@ CREATE TABLE IF NOT EXISTS public.booking_state_changes (
 CREATE INDEX IF NOT EXISTS idx_booking_state_changes_booking_id ON public.booking_state_changes(booking_id);
 CREATE INDEX IF NOT EXISTS idx_booking_state_changes_created_at ON public.booking_state_changes(created_at);
 
--- Add refund tracking fields to bookings
-ALTER TABLE public.bookings 
-    ADD COLUMN IF NOT EXISTS refund_status TEXT CHECK (refund_status IN ('pending', 'processing', 'completed', 'failed', 'skipped')) DEFAULT NULL,
-    ADD COLUMN IF NOT EXISTS refund_amount_cents INTEGER DEFAULT NULL,
-    ADD COLUMN IF NOT EXISTS refund_transaction_id TEXT DEFAULT NULL,
-    ADD COLUMN IF NOT EXISTS refund_error TEXT DEFAULT NULL,
-    ADD COLUMN IF NOT EXISTS admin_override BOOLEAN DEFAULT false,
-    ADD COLUMN IF NOT EXISTS admin_override_reason TEXT DEFAULT NULL,
-    ADD COLUMN IF NOT EXISTS admin_override_by UUID REFERENCES public.users(id) DEFAULT NULL;
-
--- Create function to validate state transitions
+-- Step 6: Create function to validate state transitions
 CREATE OR REPLACE FUNCTION validate_booking_state_transition()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -74,7 +89,8 @@ BEGIN
         jsonb_build_object(
             'admin_override', NEW.admin_override,
             'admin_override_reason', NEW.admin_override_reason,
-            'refund_status', NEW.refund_status
+            'refund_status', NEW.refund_status,
+            'payment_status', NEW.payment_status
         )
     );
 
@@ -82,7 +98,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for state transitions
+-- Step 7: Create trigger for state transitions
 DROP TRIGGER IF EXISTS booking_state_transition_trigger ON public.bookings;
 CREATE TRIGGER booking_state_transition_trigger
     BEFORE UPDATE OF status ON public.bookings
@@ -90,7 +106,7 @@ CREATE TRIGGER booking_state_transition_trigger
     WHEN (OLD.status IS DISTINCT FROM NEW.status)
     EXECUTE FUNCTION validate_booking_state_transition();
 
--- Create function to handle refund status updates
+-- Step 8: Create function to handle refund status updates
 CREATE OR REPLACE FUNCTION handle_booking_refund_status()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -115,7 +131,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for refund status handling
+-- Step 9: Create trigger for refund status handling
 DROP TRIGGER IF EXISTS booking_refund_status_trigger ON public.bookings;
 CREATE TRIGGER booking_refund_status_trigger
     BEFORE UPDATE OF status ON public.bookings
@@ -123,7 +139,7 @@ CREATE TRIGGER booking_refund_status_trigger
     WHEN (OLD.status IS DISTINCT FROM NEW.status)
     EXECUTE FUNCTION handle_booking_refund_status();
 
--- Add RLS policies
+-- Step 10: Add RLS policies for new table
 ALTER TABLE public.booking_state_changes ENABLE ROW LEVEL SECURITY;
 
 -- Allow read access to booking state changes for involved parties and admins
@@ -150,7 +166,7 @@ CREATE POLICY booking_state_changes_insert ON public.booking_state_changes
     FOR INSERT
     WITH CHECK (true);  -- Controlled by trigger
 
--- Add function to check cancellation time
+-- Step 11: Create function to check cancellation time
 CREATE OR REPLACE FUNCTION is_cancellation_refundable(booking_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
@@ -172,3 +188,25 @@ BEGIN
     RETURN hours_before >= 24;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Step 12: Add helpful comments to document the new fields
+COMMENT ON COLUMN public.bookings.payment_intent_id IS 'Stripe payment intent ID for tracking payments and refunds';
+COMMENT ON COLUMN public.bookings.payment_status IS 'Current payment status: pending, paid, failed, refunded';
+COMMENT ON COLUMN public.bookings.refund_status IS 'Refund processing status: pending, processing, completed, failed, skipped';
+COMMENT ON COLUMN public.bookings.refund_amount_cents IS 'Amount refunded in cents';
+COMMENT ON COLUMN public.bookings.refund_transaction_id IS 'Stripe refund transaction ID';
+COMMENT ON COLUMN public.bookings.admin_override IS 'Whether this booking was modified by admin override';
+COMMENT ON COLUMN public.bookings.admin_override_reason IS 'Reason for admin override action';
+COMMENT ON COLUMN public.bookings.cancellation_reason IS 'Reason for booking cancellation';
+COMMENT ON COLUMN public.bookings.cancelled_at IS 'Timestamp when booking was cancelled';
+COMMENT ON COLUMN public.bookings.refunded_at IS 'Timestamp when refund was processed';
+
+-- Step 13: Create indexes for new fields to improve query performance
+CREATE INDEX IF NOT EXISTS idx_bookings_payment_intent_id ON public.bookings(payment_intent_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_refund_status ON public.bookings(refund_status);
+CREATE INDEX IF NOT EXISTS idx_bookings_admin_override ON public.bookings(admin_override);
+CREATE INDEX IF NOT EXISTS idx_bookings_cancelled_at ON public.bookings(cancelled_at);
+
+-- Migration completed successfully!
+-- This migration safely adds all missing fields needed for the refund system
+-- and admin override functionality without affecting existing data.
