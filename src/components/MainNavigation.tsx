@@ -82,7 +82,18 @@ export default function MainNavigation() {
 
                   <NotificationBell />
 
-                  <Link 
+                  <Link
+                    href="/help"
+                    className={`px-3 py-2 rounded-md text-sm font-medium ${
+                      pathname.startsWith('/help')
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    Help
+                  </Link>
+
+                  <Link
                     href="/settings"
                     className={`px-3 py-2 rounded-md text-sm font-medium ${
                       pathname.startsWith('/settings')
@@ -129,6 +140,12 @@ export default function MainNavigation() {
                     <span>Offer Your Services</span>
                     <span className="text-xs text-gray-500">(Provider)</span>
                   </button>
+                  <Link
+                    href="/help"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    Help
+                  </Link>
                   <Link
                     href="/login"
                     className="px-3 py-2 rounded-md text-sm font-medium text-primary hover:opacity-80"
