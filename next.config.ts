@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { securityHeaders } from './src/middleware/security';
 
 const nextConfig: NextConfig = {
   eslint: {
@@ -9,7 +10,18 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizeCss: true,
-  }
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: Object.entries(securityHeaders).map(([key, value]) => ({
+          key,
+          value,
+        })),
+      },
+    ];
+  },
 };
 
 export default nextConfig;
