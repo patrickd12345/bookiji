@@ -2,11 +2,7 @@ import { helpArticles } from '@/lib/helpArticles'
 import HelpArticle from '@/components/HelpArticle'
 import { notFound } from 'next/navigation'
 
-type PageProps = {
-  params: { slug: string }
-}
-
-export default function ArticlePage({ params }: PageProps) {
+export default function ArticlePage({ params }: { params: { slug: string } }) {
   const article = helpArticles.find(a => a.slug === params.slug)
   if (!article) {
     notFound()

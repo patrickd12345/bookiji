@@ -45,7 +45,7 @@ export default function UnansweredPage() {
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
       <h1 className="text-2xl font-bold mb-6">Unanswered Customer Questions</h1>
-      {loading && <p className="text-sm text-gray-500">Loading...</p>}
+      {loading && <p className="text-sm text-gray-500">Loading</p>}
       <Card className="p-4">
         <table className="w-full text-sm">
           <thead>
