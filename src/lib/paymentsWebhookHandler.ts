@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getStripeOrThrow } from '../../lib/stripe'
+import { getStripeOrThrow } from '@/lib/stripe'
 import { supabase } from '@/lib/supabaseClient'
 import { trackPaymentSuccess, trackPaymentFailure, PaymentMetadata } from '@/lib/analytics'
 import Stripe from 'stripe'

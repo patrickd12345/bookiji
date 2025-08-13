@@ -109,7 +109,7 @@ const serviceCategories = [
   'Other'
 ];
 
-export default function VendorRegistration() {
+export default function VendorRegistration({ onSuccess }: { onSuccess?: () => void }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<VendorFormData>({
     business_name: '',
@@ -302,9 +302,12 @@ export default function VendorRegistration() {
 
       if (result.success) {
         setSubmitStatus('success');
-        // Redirect to verification page or dashboard
         setTimeout(() => {
-          window.location.href = '/vendor/dashboard?welcome=true';
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            window.location.href = '/vendor/dashboard';
+          }
         }, 3000);
       } else {
         throw new Error(result.error || 'Registration failed');
@@ -617,7 +620,6 @@ export default function VendorRegistration() {
                 </div>
               )}
 
-              {/* More steps would continue here... */}
               
             </motion.div>
           </AnimatePresence>

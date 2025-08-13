@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import type { Stripe } from '@stripe/stripe-js'
 import { motion } from 'framer-motion'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { getStripe } from '../../lib/stripe'
+import { getStripe } from '@/lib/stripe'
 
 interface StripePaymentProps {
   clientSecret: string

@@ -23,10 +23,15 @@ export async function GET(
   }
 
   const limit = parseInt(request.nextUrl.searchParams.get('limit') ?? '50');
-  const { data, error } = await supabase
+  const before = request.nextUrl.searchParams.get('before');
+  let query = supabase
     .from('booking_messages')
     .select('*')
-    .eq('booking_id', params.id)
+    .eq('booking_id', params.id);
+  if (before) {
+    query = query.lt('created_at', before);
+  }
+  const { data, error } = await query
     .order('created_at', { ascending: true })
     .limit(limit);
 

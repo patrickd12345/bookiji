@@ -1,15 +1,14 @@
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
 
 export default function ResetPage() {
   const params = useSearchParams();
   const token = params.get('token');
-  const router = useRouter();
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,18 +16,30 @@ export default function ResetPage() {
       setError('Invalid token');
       return;
     }
-    const { error: verifyError } = await supabase.auth.verifyOtp({ token, type: 'recovery', email: '' });
-    if (verifyError) {
-      setError('Verification failed');
-      return;
+    try {
+      const res = await fetch('/api/auth/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, newPassword: password }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setDone(true);
+      } else {
+        setError(data.error || 'Reset failed');
+      }
+    } catch {
+      setError('Reset failed');
     }
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-    if (updateError) {
-      setError('Update failed');
-      return;
-    }
-    router.push('/login');
   };
+
+  if (done)
+    return (
+      <div className="p-4 space-y-2">
+        <p>Password updated.</p>
+        <a href="/login" className="text-blue-600 underline">Log in</a>
+      </div>
+    );
 
   return (
     <form onSubmit={handleSubmit} className="p-4 space-y-4">

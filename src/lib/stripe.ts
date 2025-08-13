@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import { loadStripe } from '@stripe/stripe-js'
 import { supabase } from '@/lib/supabaseClient'
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -9,6 +10,18 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-06-20',
   typescript: true,
 })
+
+export const getStripe = () => {
+  const pk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  return pk ? loadStripe(pk) : null
+}
+
+export const getStripeOrThrow = () => {
+  if (!stripe) {
+    throw new Error('Stripe not configured')
+  }
+  return stripe
+}
 
 export async function createCommitmentFeePaymentIntent(amount: number, currency: string = 'usd', idempotencyKey?: string) {
   return stripe.paymentIntents.create(
