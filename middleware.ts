@@ -1,7 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const csp = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  // Mapbox JS
+  "script-src 'self' https://api.mapbox.com",
+  // Mapbox injects styles; allowing unsafe-inline for styles only
+  "style-src 'self' 'unsafe-inline' https://api.mapbox.com",
+  // Tiles, sprites, images
+  "img-src 'self' data: blob: https://api.mapbox.com https://*.tiles.mapbox.com",
+  // XHR/WebSocket to Mapbox APIs/telemetry
+  "connect-src 'self' https://api.mapbox.com https://events.mapbox.com",
+  // Dedicated worker for map rendering
+  "worker-src 'self' blob:",
+  // For older worker fallbacks
+  "child-src blob:"
+].join('; ');
+
 export const securityHeaders: Record<string, string> = {
-  "Content-Security-Policy": "default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self';",
+  'Content-Security-Policy': csp,
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
