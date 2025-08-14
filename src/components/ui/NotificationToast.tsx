@@ -20,7 +20,7 @@ export interface Notification {
 
 interface NotificationToastProps {
   notification: Notification
-  onDismiss: (id: string) => void
+  onDismissAction: (id: string) => void
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center'
 }
 
@@ -57,7 +57,7 @@ const notificationConfig = {
 
 export function NotificationToast({ 
   notification, 
-  onDismiss
+  onDismissAction
 }: NotificationToastProps) {
   const [isVisible, setIsVisible] = useState(true)
   const config = notificationConfig[notification.type]
@@ -66,10 +66,10 @@ export function NotificationToast({
   const handleDismiss = useCallback(() => {
     setIsVisible(false)
     setTimeout(() => {
-      onDismiss(notification.id)
+      onDismissAction(notification.id)
       notification.onDismiss?.()
     }, 300)
-  }, [notification.id, notification.onDismiss, onDismiss])
+  }, [notification.id, notification.onDismiss, onDismissAction])
 
   useEffect(() => {
     if (notification.duration && notification.duration > 0) {
@@ -147,14 +147,14 @@ export function NotificationToast({
 // Notification container that manages multiple notifications
 interface NotificationContainerProps {
   notifications: Notification[]
-  onDismiss: (id: string) => void
+  onDismissAction: (id: string) => void
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center'
   maxNotifications?: number
 }
 
 export function NotificationContainer({
   notifications,
-  onDismiss,
+  onDismissAction,
   position = 'top-right',
   maxNotifications = 5
 }: NotificationContainerProps) {
@@ -178,7 +178,7 @@ export function NotificationContainer({
         <NotificationToast
           key={notification.id}
           notification={notification}
-          onDismiss={onDismiss}
+          onDismissAction={onDismissAction}
           position={position}
         />
       ))}

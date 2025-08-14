@@ -363,7 +363,7 @@ interface FormFieldProps {
   name: string
   label: string
   value: any
-  onChange: (value: any) => void
+  onChangeAction: (value: any) => void
   onBlur?: () => void
   rules?: ValidationRule
   errors?: string[]
@@ -379,7 +379,7 @@ export function FormField({
   name,
   label,
   value,
-  onChange,
+  onChangeAction,
   onBlur,
   rules,
   errors = [],
@@ -395,7 +395,7 @@ export function FormField({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const newValue = type === 'number' ? Number(e.target.value) : e.target.value
-    onChange(newValue)
+    onChangeAction(newValue)
   }
 
   const renderInput = () => {

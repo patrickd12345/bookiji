@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { getAuthenticatedUserId } from '@/app/api/_utils/auth'
 import '@/app/api/_utils/observability'
 
-function json(data: any, status = 200) {
+function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } })
 }
 
