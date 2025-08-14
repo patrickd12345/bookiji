@@ -1,36 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const securityHeaders: Record<string, string> = {
-  "Content-Security-Policy": "default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self';",
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  'X-Frame-Options': 'DENY',
-  'X-Content-Type-Options': 'nosniff',
-  'Referrer-Policy': 'strict-origin-when-cross-origin'
+const securityHeaders: Record<string, string> = {
+  // Tight but Mapbox-friendly
+  "Content-Security-Policy": [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "script-src 'self' https://api.mapbox.com",
+    "style-src 'self' 'unsafe-inline' https://api.mapbox.com",
+    "img-src 'self' data: blob: https://api.mapbox.com https://*.tiles.mapbox.com",
+    "connect-src 'self' https://api.mapbox.com https://events.mapbox.com",
+    "font-src 'self' data:",
+    "worker-src 'self' blob:",
+    "frame-src 'self'",
+  ].join('; '),
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "no-referrer",
 };
 
-const WINDOW_MS = 60 * 1000;
-const MAX_REQUESTS = 60;
-const hits = new Map<string, { count: number; reset: number }>();
+// Sliding-window rate limiter for /api/* (except /api/health)
+const RL_WINDOW_MS = 60_000;
+const RL_MAX = 60;
+const rlStore: Map<string, number[]> = new Map();
 
-function rateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = hits.get(ip) || { count: 0, reset: now + WINDOW_MS };
-  if (now > entry.reset) {
-    entry.count = 0;
-    entry.reset = now + WINDOW_MS;
-  }
-  entry.count += 1;
-  hits.set(ip, entry);
-  return entry.count <= MAX_REQUESTS;
+function getClientIp(req: NextRequest) {
+  const xf = req.headers.get('x-forwarded-for');
+  if (xf) return xf.split(',')[0].trim();
+  // @ts-ignore - environment dependent
+  const ip = (req as any)?.ip || (req as any)?.socket?.remoteAddress;
+  return ip ? String(ip) : 'unknown';
 }
 
-export function middleware(req: NextRequest) {
-  const ip = req.ip ?? 'unknown';
-  const pathname = req.nextUrl.pathname;
+function recordHit(ip: string) {
+  const now = Date.now();
+  const arr = rlStore.get(ip) ?? [];
+  const fresh = arr.filter(t => now - t < RL_WINDOW_MS);
+  fresh.push(now);
+  rlStore.set(ip, fresh);
+  return fresh.length;
+}
 
-  if (pathname.startsWith('/api') && pathname !== '/api/health') {
-    if (!rateLimit(ip)) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+export function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+
+  if (path.startsWith('/api/') && path !== '/api/health') {
+    const ip = getClientIp(request);
+    const count = recordHit(ip);
+    if (count > RL_MAX) {
+      const res = NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+      Object.entries(securityHeaders).forEach(([k, v]) => res.headers.set(k, v));
+      return res;
     }
   }
 
@@ -39,11 +61,5 @@ export function middleware(req: NextRequest) {
   return res;
 }
 
-export function resetRateLimits() {
-  hits.clear();
-}
-
-export const config = {
-  matcher: '/:path*'
-};
+export const config = { matcher: '/:path*' };
 
