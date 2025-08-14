@@ -1,34 +1,131 @@
 'use client'
-import { useEffect, useState } from 'react'
+
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function VerifyPage() {
-  const params = useSearchParams()
-  const token = params?.get('token')
-  const [status, setStatus] = useState<'loading'|'ok'|'fail'>('loading')
-  const [msg, setMsg] = useState('Verifying…')
+  const [verificationStatus, setVerificationStatus] = useState<'verifying' | 'verified' | 'failed' | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+  const token = searchParams?.get('token')
 
   useEffect(() => {
-    async function run() {
-      if (!token) { setStatus('fail'); setMsg('Missing token'); return }
-      try {
-        const r = await fetch('/api/auth/verify', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token }) })
-        const j = await r.json().catch(() => ({}))
-        if (r.ok && j.ok !== false) { setStatus('ok'); setMsg('Email verified. You can sign in now.') }
-        else { setStatus('fail'); setMsg(j.error || 'Verification failed') }
-      } catch {
-        setStatus('fail'); setMsg('Verification failed')
-      }
+    if (!token) {
+      setVerificationStatus('failed')
+      setError('No verification token provided')
+      return
     }
-    run()
+
+    verifyToken(token)
   }, [token])
 
+  const verifyToken = async (verificationToken: string) => {
+    try {
+      setVerificationStatus('verifying')
+      
+      const response = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token: verificationToken }),
+      })
+
+      if (response.ok) {
+        setVerificationStatus('verified')
+      } else {
+        const errorData = await response.json()
+        setVerificationStatus('failed')
+        setError(errorData.error || 'Verification failed')
+      }
+    } catch (err) {
+      setVerificationStatus('failed')
+      setError('Network error occurred during verification')
+    }
+  }
+
+  if (verificationStatus === 'verifying') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Verifying Email</CardTitle>
+            <CardDescription>
+              Please wait while we verify your email address...
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (verificationStatus === 'verified') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-green-600">Email Verified!</CardTitle>
+            <CardDescription>
+              Your email has been successfully verified. You can now log in to your account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button asChild className="w-full">
+              <Link href="/login">
+                Continue to Login
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (verificationStatus === 'failed') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-red-600">Verification Failed</CardTitle>
+            <CardDescription>
+              {error || 'Unable to verify your email address. The link may be expired or invalid.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button asChild className="w-full">
+              <Link href="/login">
+                Return to Login
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/register">
+                Create New Account
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
-    <div className="p-6 space-y-2">
-      <h1 className="text-xl font-semibold">Verify your email</h1>
-      <p>{msg}</p>
-      {status !== 'loading' && <Link href="/login" className="text-blue-600 underline">Go to login</Link>}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Email Verification</CardTitle>
+          <CardDescription>
+            Processing verification request...
+          </CardDescription>
+        </CardHeader>
+      </Card>
     </div>
   )
 }

@@ -1,38 +1,128 @@
-import { getDeadLetterQueueSize } from '@/lib/services/notificationQueue'
+interface DLQPayload {
+  size: number
+  overThresholdSince: string | null
+  now: string
+}
 
-let overThresholdSince: number | null = null
-let alerted = false
+interface AlertWebhookPayload {
+  alert: 'DLQ_THRESHOLD_EXCEEDED'
+  message: string
+  details: DLQPayload
+  timestamp: string
+}
 
-export async function checkDlqAndAlert() {
-  const size = getDeadLetterQueueSize()
-  const now = Date.now()
+class DLQMonitor {
+  private overThresholdStart: Date | null = null
+  private readonly THRESHOLD_SIZE = 20
+  private readonly THRESHOLD_DURATION_MS = 10 * 60 * 1000 // 10 minutes
 
-  if (size > 20) {
-    if (!overThresholdSince) overThresholdSince = now
-    if (!alerted && now - overThresholdSince > 10 * 60 * 1000) {
-      alerted = true
-      const url = process.env.ALERT_WEBHOOK_URL
-      if (url) {
-        const payload = {
-          size,
-          overThresholdSince: new Date(overThresholdSince).toISOString(),
-          now: new Date(now).toISOString(),
+  async checkDLQSize(): Promise<DLQPayload> {
+    try {
+      // Get current DLQ size from your queue system
+      const size = await this.getCurrentDLQSize()
+      const now = new Date()
+      
+      // Check if we're over threshold
+      if (size > this.THRESHOLD_SIZE) {
+        if (!this.overThresholdStart) {
+          this.overThresholdStart = now
         }
-        try {
-          await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-        } catch (e) {
-          console.error('DLQ alert failed', e)
+        
+        // Check if we've been over threshold for the required duration
+        const overThresholdSince = this.overThresholdStart.toISOString()
+        const timeOverThreshold = now.getTime() - this.overThresholdStart.getTime()
+        
+        if (timeOverThreshold > this.THRESHOLD_DURATION_MS) {
+          await this.sendAlert({ size, overThresholdSince, now: now.toISOString() })
         }
+        
+        return { size, overThresholdSince, now: now.toISOString() }
+      } else {
+        // Reset threshold tracking if we're back under
+        this.overThresholdStart = null
+        return { size, overThresholdSince: null, now: now.toISOString() }
       }
+    } catch (error) {
+      console.error('Error checking DLQ size:', error)
+      return { size: 0, overThresholdSince: null, now: new Date().toISOString() }
     }
-  } else {
-    overThresholdSince = null
-    alerted = false
+  }
+
+  private async getCurrentDLQSize(): Promise<number> {
+    try {
+      // This should be implemented based on your specific queue system
+      // For example, if using Redis, SQS, or a database table
+      
+      // Example for a database-based DLQ:
+      // const { count } = await supabase
+      //   .from('dead_letter_queue')
+      //   .select('*', { count: 'exact', head: true })
+      // return count || 0
+      
+      // Placeholder implementation
+      return 0
+    } catch (error) {
+      console.error('Error getting DLQ size:', error)
+      return 0
+    }
+  }
+
+  private async sendAlert(payload: DLQPayload): Promise<void> {
+    const webhookUrl = process.env.ALERT_WEBHOOK_URL
+    
+    if (!webhookUrl) {
+      console.warn('ALERT_WEBHOOK_URL not configured, skipping alert')
+      return
+    }
+
+    try {
+      const alertPayload: AlertWebhookPayload = {
+        alert: 'DLQ_THRESHOLD_EXCEEDED',
+        message: `DLQ size ${payload.size} has exceeded threshold ${this.THRESHOLD_SIZE} for more than ${this.THRESHOLD_DURATION_MS / 60000} minutes`,
+        details: payload,
+        timestamp: new Date().toISOString()
+      }
+
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Bookiji-DLQMonitor/1.0'
+        },
+        body: JSON.stringify(alertPayload)
+      })
+
+      if (!response.ok) {
+        throw new Error(`Webhook request failed with status ${response.status}`)
+      }
+
+      console.log('DLQ alert sent successfully')
+    } catch (error) {
+      console.error('Failed to send DLQ alert:', error)
+    }
+  }
+
+  // Method to manually trigger a check
+  async runCheck(): Promise<void> {
+    const payload = await this.checkDLQSize()
+    console.log('DLQ Monitor check completed:', payload)
+  }
+
+  // Method to get current status without triggering alerts
+  async getStatus(): Promise<DLQPayload> {
+    const size = await this.getCurrentDLQSize()
+    const now = new Date()
+    
+    return {
+      size,
+      overThresholdSince: this.overThresholdStart?.toISOString() || null,
+      now: now.toISOString()
+    }
   }
 }
 
-export function startDlqMonitor() {
-  if (typeof window !== 'undefined') return
-  // fire-and-forget
-  void setInterval(checkDlqAndAlert, 60_000)
-}
+// Export singleton instance
+export const dlqMonitor = new DLQMonitor()
+
+// Export types for external use
+export type { DLQPayload, AlertWebhookPayload }

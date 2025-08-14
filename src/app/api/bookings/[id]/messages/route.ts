@@ -1,69 +1,126 @@
-import { NextRequest } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
-import { getAuthenticatedUserId } from '@/app/api/_utils/auth'
-import '@/app/api/_utils/observability'
+import { NextRequest, NextResponse } from 'next/server'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } })
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: bookingId } = await params
+    const supabase = createRouteHandlerClient({ cookies })
+    
+    // Get current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check if user is a participant in this booking
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .select('customer_id, provider_id')
+      .eq('id', bookingId)
+      .single()
+
+    if (bookingError || !booking) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
+
+    if (booking.customer_id !== user.id && booking.provider_id !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    // Get query parameters
+    const { searchParams } = new URL(request.url)
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const before = searchParams.get('before')
+
+    // Build query
+    let query = supabase
+      .from('booking_messages')
+      .select('*')
+      .eq('booking_id', bookingId)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (before) {
+      query = query.lt('created_at', before)
+    }
+
+    const { data: messages, error: messagesError } = await query
+
+    if (messagesError) {
+      return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 })
+    }
+
+    return NextResponse.json({ messages: messages || [] })
+  } catch (error) {
+    console.error('Error in GET /api/bookings/[id]/messages:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await getAuthenticatedUserId(request)
-  if (!userId) return json({ error: 'Unauthorized' }, 401)
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: bookingId } = await params
+    const supabase = createRouteHandlerClient({ cookies })
+    
+    // Get current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-  const { id } = await params
-  const { data: booking, error: berr } = await supabase
-    .from('bookings')
-    .select('customer_id,provider_id')
-    .eq('id', id)
-    .single()
+    // Check if user is a participant in this booking
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .select('customer_id, provider_id')
+      .eq('id', bookingId)
+      .single()
 
-  if (berr || !booking) return json({ error: 'Booking not found' }, 404)
-  if (![booking.customer_id, booking.provider_id].includes(userId)) return json({ error: 'Forbidden' }, 403)
+    if (bookingError || !booking) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
 
-  const url = new URL(request.url)
-  const limit = Math.max(1, Math.min(100, Number(url.searchParams.get('limit') || 50)))
-  const before = url.searchParams.get('before')
+    if (booking.customer_id !== user.id && booking.provider_id !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
-  let q = supabase
-    .from('booking_messages')
-    .select('*')
-    .eq('booking_id', id)
-    .order('created_at', { ascending: false })
-    .limit(limit)
+    // Parse request body
+    const body = await request.json()
+    const { body: messageBody } = body
 
-  if (before) q = q.lt('created_at', before)
+    if (!messageBody || typeof messageBody !== 'string') {
+      return NextResponse.json({ error: 'Message body is required' }, { status: 400 })
+    }
 
-  const { data, error } = await q
-  if (error) return json({ error: error.message }, 500)
-  return json({ messages: data ?? [] })
-}
+    // Determine sender type
+    const senderType = booking.customer_id === user.id ? 'customer' : 'provider'
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await getAuthenticatedUserId(request)
-  if (!userId) return json({ error: 'Unauthorized' }, 401)
-  const body = await request.json().catch(() => ({}))
-  const text = (body?.body ?? '').trim()
-  if (!text) return json({ error: 'Body required' }, 400)
+    // Insert message
+    const { data: message, error: insertError } = await supabase
+      .from('booking_messages')
+      .insert({
+        booking_id: bookingId,
+        sender_id: user.id,
+        sender_type: senderType,
+        body: messageBody,
+      })
+      .select()
+      .single()
 
-  const { id } = await params
-  const { data: booking } = await supabase
-    .from('bookings')
-    .select('customer_id,provider_id')
-    .eq('id', id)
-    .single()
+    if (insertError) {
+      console.error('Error inserting message:', insertError)
+      return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
+    }
 
-  if (!booking) return json({ error: 'Booking not found' }, 404)
-  const sender_type = booking.customer_id === userId ? 'customer' : booking.provider_id === userId ? 'provider' : null
-  if (!sender_type) return json({ error: 'Forbidden' }, 403)
-
-  const { data, error } = await supabase.from('booking_messages').insert({
-    booking_id: id,
-    sender_id: userId,
-    sender_type,
-    body: text,
-  }).select('*').single()
-
-  if (error) return json({ error: error.message }, 500)
-  return json({ message: data }, 201)
+    return NextResponse.json(message, { status: 201 })
+  } catch (error) {
+    console.error('Error in POST /api/bookings/[id]/messages:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

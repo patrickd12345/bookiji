@@ -1,65 +1,103 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
 
-const securityHeaders: Record<string, string> = {
-  // Tight but Mapbox-friendly
-  "Content-Security-Policy": [
-    "default-src 'self'",
-    "base-uri 'self'",
-    "object-src 'none'",
-    "frame-ancestors 'none'",
-    "script-src 'self' https://api.mapbox.com",
-    "style-src 'self' 'unsafe-inline' https://api.mapbox.com",
-    "img-src 'self' data: blob: https://api.mapbox.com https://*.tiles.mapbox.com",
-    "connect-src 'self' https://api.mapbox.com https://events.mapbox.com",
-    "font-src 'self' data:",
-    "worker-src 'self' blob:",
-    "frame-src 'self'",
-  ].join('; '),
-  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
-  "Referrer-Policy": "no-referrer",
-};
+// In-memory rate limiter storage
+const rateLimitMap = new Map<string, number[]>()
 
-// Sliding-window rate limiter for /api/* (except /api/health)
-const RL_WINDOW_MS = 60_000;
-const RL_MAX = 60;
-const rlStore: Map<string, number[]> = new Map();
+// Rate limit configuration
+const MAX_REQUESTS = 60
+const WINDOW_MS = 60 * 1000 // 60 seconds
 
-function getClientIp(req: NextRequest) {
-  const xf = req.headers.get('x-forwarded-for');
-  if (xf) return xf.split(',')[0].trim();
-  // @ts-ignore - environment dependent
-  const ip = (req as any)?.ip || (req as any)?.socket?.remoteAddress;
-  return ip ? String(ip) : 'unknown';
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const windowStart = now - WINDOW_MS
+  
+  // Get existing timestamps for this IP
+  const timestamps = rateLimitMap.get(ip) || []
+  
+  // Filter timestamps within current window
+  const validTimestamps = timestamps.filter(timestamp => timestamp > windowStart)
+  
+  // Check if limit exceeded
+  if (validTimestamps.length >= MAX_REQUESTS) {
+    return true
+  }
+  
+  // Add current timestamp and update map
+  validTimestamps.push(now)
+  rateLimitMap.set(ip, validTimestamps)
+  
+  return false
 }
 
-function recordHit(ip: string) {
-  const now = Date.now();
-  const arr = rlStore.get(ip) ?? [];
-  const fresh = arr.filter(t => now - t < RL_WINDOW_MS);
-  fresh.push(now);
-  rlStore.set(ip, fresh);
-  return fresh.length;
+function getClientIP(request: NextRequest): string {
+  // Try various headers for IP detection
+  const forwarded = request.headers.get('x-forwarded-for')
+  const realIP = request.headers.get('x-real-ip')
+  const cfConnectingIP = request.headers.get('cf-connecting-ip')
+  
+  if (forwarded) {
+    return forwarded.split(',')[0].trim()
+  }
+  if (realIP) {
+    return realIP
+  }
+  if (cfConnectingIP) {
+    return cfConnectingIP
+  }
+  
+  // Fallback to connection remote address
+  return 'unknown'
 }
 
 export function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-
-  if (path.startsWith('/api/') && path !== '/api/health') {
-    const ip = getClientIp(request);
-    const count = recordHit(ip);
-    if (count > RL_MAX) {
-      const res = NextResponse.json({ error: 'Too many requests' }, { status: 429 });
-      Object.entries(securityHeaders).forEach(([k, v]) => res.headers.set(k, v));
-      return res;
-    }
+  const { pathname } = request.nextUrl
+  
+  // Skip rate limiting for health check
+  if (pathname === '/api/health') {
+    return NextResponse.next()
   }
-
-  const res = NextResponse.next();
-  Object.entries(securityHeaders).forEach(([k, v]) => res.headers.set(k, v));
-  return res;
+  
+  // Apply rate limiting to all API routes
+  if (pathname.startsWith('/api/')) {
+    const clientIP = getClientIP(request)
+    
+    if (isRateLimited(clientIP)) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Too many requests' }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-RateLimit-Limit': MAX_REQUESTS.toString(),
+            'X-RateLimit-Window': WINDOW_MS.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(Date.now() + WINDOW_MS).toISOString(),
+            // Security headers
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'X-XSS-Protection': '1; mode=block',
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
+            'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+          }
+        }
+      )
+    }
+    
+    // Add rate limit headers to successful responses
+    const response = NextResponse.next()
+    response.headers.set('X-RateLimit-Limit', MAX_REQUESTS.toString())
+    response.headers.set('X-RateLimit-Window', WINDOW_MS.toString())
+    
+    return response
+  }
+  
+  return NextResponse.next()
 }
 
-export const config = { matcher: '/:path*' };
+export const config = {
+  matcher: [
+    '/api/:path*',
+    '/((?!_next/static|_next/image|favicon.ico).*)'
+  ]
+}
 

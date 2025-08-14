@@ -2,53 +2,126 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { useAuth } from '../../../hooks/useAuth'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function ChooseRolePage() {
-  const [roles, setRoles] = useState<Array<'customer' | 'provider'>>([])
-  const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { user, isAuthenticated } = useAuth()
   const router = useRouter()
 
-  function toggle(role: 'customer'|'provider') {
-    setRoles(prev => prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role])
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Authentication Required</CardTitle>
+            <CardDescription>
+              Please log in to choose your role
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => router.push('/login')}
+              className="w-full"
+            >
+              Go to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
-    if (roles.length === 0) { setError('Select at least one role'); return }
-    setBusy(true)
+  const handleRoleToggle = (role: string) => {
+    setSelectedRoles(prev => 
+      prev.includes(role) 
+        ? prev.filter(r => r !== role)
+        : [...prev, role]
+    )
+  }
 
-    const { data: { user }, error: uerr } = await supabase.auth.getUser()
-    if (uerr || !user) { setBusy(false); setError('You must be signed in'); return }
+  const handleSubmit = async () => {
+    if (selectedRoles.length === 0) return
+    
+    setIsSubmitting(true)
+    
+    try {
+      const response = await fetch('/api/user/roles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ roles: selectedRoles }),
+      })
 
-    const { error: perr } = await supabase
-      .from('profiles')
-      .upsert({ id: user.id, roles }, { onConflict: 'id' })
-
-    setBusy(false)
-    if (perr) { setError(perr.message || 'Failed to save roles'); return }
-
-    if (roles.length === 1 && roles[0] === 'provider') router.replace('/vendor/onboarding')
-    else router.replace('/customer/dashboard')
+      if (response.ok) {
+        // Redirect based on selected roles
+        if (selectedRoles.includes('provider') && selectedRoles.includes('customer')) {
+          router.push('/customer/dashboard')
+        } else if (selectedRoles.includes('provider')) {
+          router.push('/vendor/onboarding')
+        } else {
+          router.push('/customer/dashboard')
+        }
+      } else {
+        throw new Error('Failed to update roles')
+      }
+    } catch (error) {
+      console.error('Error updating roles:', error)
+      setIsSubmitting(false)
+    }
   }
 
   return (
-    <form onSubmit={onSubmit} className="p-6 max-w-md mx-auto space-y-4">
-      <h1 className="text-xl font-semibold">Choose your role</h1>
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-      <label className="flex items-center gap-2">
-        <input type="checkbox" checked={roles.includes('customer')} onChange={() => toggle('customer')} />
-        <span>Customer</span>
-      </label>
-      <label className="flex items-center gap-2">
-        <input type="checkbox" checked={roles.includes('provider')} onChange={() => toggle('provider')} />
-        <span>Provider</span>
-      </label>
-      <button disabled={busy} className="px-4 py-2 rounded bg-black text-white">
-        {busy ? 'Saving…' : 'Continue'}
-      </button>
-    </form>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Choose Your Role</CardTitle>
+          <CardDescription>
+            Select how you want to use Bookiji
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="customer"
+                checked={selectedRoles.includes('customer')}
+                onChange={() => handleRoleToggle('customer')}
+                className="h-4 w-4 text-blue-600 rounded border-gray-300"
+              />
+              <label htmlFor="customer" className="text-sm font-medium text-gray-700">
+                Customer
+              </label>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="provider"
+                checked={selectedRoles.includes('provider')}
+                onChange={() => handleRoleToggle('provider')}
+                className="h-4 w-4 text-blue-600 rounded border-gray-300"
+              />
+              <label htmlFor="provider" className="text-sm font-medium text-gray-700">
+                Service Provider
+              </label>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={selectedRoles.length === 0 || isSubmitting}
+            className="w-full"
+          >
+            {isSubmitting ? 'Setting up...' : 'Continue'}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

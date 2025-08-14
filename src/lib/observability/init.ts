@@ -1,4 +1,4 @@
-import { startDlqMonitor } from './dlqMonitor';
+import { dlqMonitor } from './dlqMonitor';
 
 let initialized = false;
 
@@ -14,7 +14,10 @@ export async function initObservability() {
       // Sentry not installed; ignore
     }
   }
-  startDlqMonitor();
+  // Start DLQ monitoring
+  if (typeof window === 'undefined') {
+    setInterval(() => dlqMonitor.runCheck(), 60000); // Check every minute
+  }
 }
 
 initObservability();
