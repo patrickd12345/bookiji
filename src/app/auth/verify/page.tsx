@@ -34,12 +34,15 @@ export default function VerifyPage() {
         body: JSON.stringify({ token: verificationToken }),
       })
 
-      if (response.ok) {
+      const responseData = await response.json()
+
+      if (response.ok && responseData.success) {
         setVerificationStatus('verified')
+        // Store verification success in localStorage for session management
+        localStorage.setItem('emailVerified', 'true')
       } else {
-        const errorData = await response.json()
         setVerificationStatus('failed')
-        setError(errorData.error || 'Verification failed')
+        setError(responseData.error || responseData.message || 'Verification failed')
       }
     } catch (err) {
       setVerificationStatus('failed')

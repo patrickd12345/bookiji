@@ -49,7 +49,24 @@ export default function ChooseRolePage() {
     setIsSubmitting(true)
     
     try {
-      const response = await fetch('/api/user/roles', {
+      // First, upsert the user profile with roles
+      const profileResponse = await fetch('/api/user/onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          roles: selectedRoles,
+          onboarding_completed: true 
+        }),
+      })
+
+      if (!profileResponse.ok) {
+        throw new Error('Failed to update profile')
+      }
+
+      // Update user roles in the profiles table
+      const rolesResponse = await fetch('/api/user/roles', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +74,7 @@ export default function ChooseRolePage() {
         body: JSON.stringify({ roles: selectedRoles }),
       })
 
-      if (response.ok) {
+      if (rolesResponse.ok) {
         // Redirect based on selected roles
         if (selectedRoles.includes('provider') && selectedRoles.includes('customer')) {
           router.push('/customer/dashboard')

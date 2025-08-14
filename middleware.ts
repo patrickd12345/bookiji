@@ -54,7 +54,9 @@ export function middleware(request: NextRequest) {
   
   // Skip rate limiting for health check
   if (pathname === '/api/health') {
-    return NextResponse.next()
+    const response = NextResponse.next()
+    addSecurityHeaders(response)
+    return response
   }
   
   // Apply rate limiting to all API routes
@@ -62,7 +64,7 @@ export function middleware(request: NextRequest) {
     const clientIP = getClientIP(request)
     
     if (isRateLimited(clientIP)) {
-      return new NextResponse(
+      const response = new NextResponse(
         JSON.stringify({ error: 'Too many requests' }),
         {
           status: 429,
@@ -72,26 +74,36 @@ export function middleware(request: NextRequest) {
             'X-RateLimit-Window': WINDOW_MS.toString(),
             'X-RateLimit-Remaining': '0',
             'X-RateLimit-Reset': new Date(Date.now() + WINDOW_MS).toISOString(),
-            // Security headers
-            'X-Content-Type-Options': 'nosniff',
-            'X-Frame-Options': 'DENY',
-            'X-XSS-Protection': '1; mode=block',
-            'Referrer-Policy': 'strict-origin-when-cross-origin',
-            'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
           }
         }
       )
+      addSecurityHeaders(response)
+      return response
     }
     
     // Add rate limit headers to successful responses
     const response = NextResponse.next()
+    addSecurityHeaders(response)
     response.headers.set('X-RateLimit-Limit', MAX_REQUESTS.toString())
     response.headers.set('X-RateLimit-Window', WINDOW_MS.toString())
+    response.headers.set('X-RateLimit-Remaining', String(MAX_REQUESTS - (rateLimitMap.get(clientIP)?.length || 0)))
     
     return response
   }
   
-  return NextResponse.next()
+  // Apply security headers to all other routes
+  const response = NextResponse.next()
+  addSecurityHeaders(response)
+  return response
+}
+
+function addSecurityHeaders(response: NextResponse) {
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
 }
 
 export const config = {

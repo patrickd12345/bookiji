@@ -54,6 +54,22 @@ export default function ResetPage() {
       return
     }
 
+    // Additional password validation
+    if (!/[A-Z]/.test(newPassword)) {
+      setError('Password must contain at least one uppercase letter')
+      return
+    }
+
+    if (!/[a-z]/.test(newPassword)) {
+      setError('Password must contain at least one lowercase letter')
+      return
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+      setError('Password must contain at least one number')
+      return
+    }
+
     setIsSubmitting(true)
     setError(null)
 
@@ -69,12 +85,16 @@ export default function ResetPage() {
         }),
       })
 
-      if (response.ok) {
+      const responseData = await response.json()
+
+      if (response.ok && responseData.success) {
         setStatus('success')
+        // Clear sensitive data from state
+        setNewPassword('')
+        setConfirmPassword('')
       } else {
-        const errorData = await response.json()
         setStatus('error')
-        setError(errorData.error || 'Failed to reset password')
+        setError(responseData.error || responseData.message || 'Failed to reset password')
       }
     } catch (err) {
       setStatus('error')

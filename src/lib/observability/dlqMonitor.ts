@@ -83,22 +83,45 @@ class DLQMonitor {
         timestamp: new Date().toISOString()
       }
 
+      const webhookBody = {
+        ...alertPayload,
+        metadata: {
+          environment: process.env.NODE_ENV || 'development',
+          service: 'bookiji-booking-platform',
+          component: 'dead-letter-queue-monitor',
+          threshold: this.THRESHOLD_SIZE,
+          duration_minutes: this.THRESHOLD_DURATION_MS / 60000,
+          alert_id: `dlq-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        },
+        recommendations: [
+          'Check queue processing workers',
+          'Review error logs for failed message processing',
+          'Verify downstream service availability',
+          'Consider scaling up processing capacity'
+        ]
+      }
+
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': 'Bookiji-DLQMonitor/1.0'
+          'User-Agent': 'Bookiji-DLQMonitor/1.0',
+          'X-Alert-Source': 'bookiji-dlq-monitor',
+          'X-Alert-Version': '1.0.0'
         },
-        body: JSON.stringify(alertPayload)
+        body: JSON.stringify(webhookBody)
       })
 
       if (!response.ok) {
-        throw new Error(`Webhook request failed with status ${response.status}`)
+        const errorText = await response.text()
+        throw new Error(`Webhook request failed with status ${response.status}: ${errorText}`)
       }
 
-      console.log('DLQ alert sent successfully')
+      console.log('DLQ alert sent successfully to webhook')
     } catch (error) {
       console.error('Failed to send DLQ alert:', error)
+      // Log additional context for debugging
+      console.error('Webhook URL:', webhookUrl)
     }
   }
 
