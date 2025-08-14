@@ -1,9 +1,9 @@
 /// <reference types="vitest" />
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { BookingEngine } from '../../lib/bookingEngine'
+import { BookingEngine } from '../../src/lib/bookingEngine'
 
 // Mock the Stripe helper
-vi.mock('../../lib/stripe', () => ({
+vi.mock('../../src/lib/stripe', () => ({
   createCommitmentFeePaymentIntent: async () => ({
     success: true,
     paymentIntent: {

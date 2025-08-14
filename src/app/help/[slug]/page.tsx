@@ -2,8 +2,8 @@ import { helpArticles } from '@/lib/helpArticles'
 import HelpArticle from '@/components/HelpArticle'
 import { notFound } from 'next/navigation'
 
-export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
+export default async function ArticlePage({ params }: { params: { slug: string } }) {
+  const { slug } = params
   const article = helpArticles.find(a => a.slug === slug)
   if (!article) notFound()
   return (

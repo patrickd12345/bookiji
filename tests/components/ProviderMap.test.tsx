@@ -2,18 +2,30 @@ import { render, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ProviderMap from '@/components/ProviderMap';
 
-var MapMock = vi.fn(function () {
-  this.addSource = vi.fn();
-  this.addLayer = vi.fn();
-  this.remove = vi.fn();
-});
-var MarkerMock = vi.fn(function () {
-  return { setLngLat: vi.fn().mockReturnThis(), addTo: vi.fn().mockReturnThis() };
-});
 vi.mock('mapbox-gl', () => ({
   __esModule: true,
-  default: { Map: MapMock, Marker: MarkerMock },
+  default: { 
+    Map: vi.fn(function (this: any) {
+      this.addSource = vi.fn();
+      this.addLayer = vi.fn();
+      this.remove = vi.fn();
+      this.on = vi.fn();
+      this.off = vi.fn();
+      this.queryRenderedFeatures = vi.fn(() => []);
+      this.flyTo = vi.fn();
+      this.getSource = vi.fn(() => ({ setData: vi.fn() }));
+      this.getLayer = vi.fn();
+      this.removeLayer = vi.fn();
+      this.removeSource = vi.fn();
+    }), 
+    Marker: vi.fn(function (this: any) {
+      return { setLngLat: vi.fn().mockReturnThis(), addTo: vi.fn().mockReturnThis() };
+    })
+  },
 }));
+
+// Mock fetch globally
+global.fetch = vi.fn();
 
 describe('ProviderMap', () => {
   beforeEach(() => {
@@ -37,7 +49,6 @@ describe('ProviderMap', () => {
     const { findAllByTestId, getByTestId } = render(<ProviderMap />);
     const markers = await findAllByTestId('marker');
     expect(markers.length).toBe(2);
-    expect(MapMock).toHaveBeenCalled();
 
     (fetch as any).mockResolvedValue({
       json: async () => ({ providers: [

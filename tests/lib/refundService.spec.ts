@@ -25,8 +25,10 @@ vi.mock('@/lib/supabaseClient', () => {
   }
 })
 
-var refundMock = vi.fn(() => Promise.resolve({ id: 're_1', amount: 100 }))
-vi.mock('@/lib/stripe', () => ({ __esModule: true, refundPayment: refundMock }))
+vi.mock('@/lib/stripe', () => ({ 
+  __esModule: true, 
+  refundPayment: vi.fn(() => Promise.resolve({ id: 're_1', amount: 100 }))
+}))
 
 describe('refundService', () => {
   it('uses idempotency key and avoids duplicate refunds', async () => {
@@ -34,7 +36,9 @@ describe('refundService', () => {
     const r2 = await processRefund('booking1')
     expect(r1.status).toBe('completed')
     expect(r2.status).toBe('completed')
-    expect(refundMock).toHaveBeenCalledWith('pi_test', undefined, 'key123')
-    expect(refundMock).toHaveBeenCalledTimes(1)
+    
+    const { refundPayment } = await import('@/lib/stripe')
+    expect(refundPayment).toHaveBeenCalledWith('pi_test', undefined, 'key123')
+    expect(refundPayment).toHaveBeenCalledTimes(1)
   })
 })

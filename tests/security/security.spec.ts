@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { middleware, resetRateLimits, securityHeaders } from '../../middleware';
+import { middleware, resetRateLimits, securityHeaders } from '../../src/middleware';
 
 function createRequest(ip: string, path = '/api/test') {
   return new NextRequest(new URL(`http://example.com${path}`), {
