@@ -3,10 +3,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { getAuthenticatedUserId } from '@/app/api/_utils/auth';
 import '@/app/api/_utils/observability';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, context: any) {
+  const { params } = context as { params: { id: string } };
   const userId = await getAuthenticatedUserId(request);
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
@@ -23,10 +21,15 @@ export async function GET(
   }
 
   const limit = parseInt(request.nextUrl.searchParams.get('limit') ?? '50');
-  const { data, error } = await supabase
+  const before = request.nextUrl.searchParams.get('before');
+  let query = supabase
     .from('booking_messages')
     .select('*')
-    .eq('booking_id', params.id)
+    .eq('booking_id', params.id);
+  if (before) {
+    query = query.lt('created_at', before);
+  }
+  const { data, error } = await query
     .order('created_at', { ascending: true })
     .limit(limit);
 
@@ -37,10 +40,8 @@ export async function GET(
   return Response.json({ messages: data || [] });
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, context: any) {
+  const { params } = context as { params: { id: string } };
   const userId = await getAuthenticatedUserId(request);
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });

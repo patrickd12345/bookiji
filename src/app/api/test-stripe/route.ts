@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { stripe } from '../../../../lib/stripe'
+import { stripe } from '@/lib/stripe'
 
 export async function GET() {
   try {

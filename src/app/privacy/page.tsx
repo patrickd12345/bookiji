@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function PrivacyPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -221,9 +223,9 @@ export default function PrivacyPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">13. AdSense Compliance</h2>
           <p className="text-gray-700 leading-relaxed">
-            We maintain full compliance with Google AdSense policies. For detailed information about 
-            our compliance measures, please see our 
-            <a href="/compliance" className="text-blue-600 hover:text-blue-800 underline">AdSense Compliance Audit</a>.
+            We maintain full compliance with Google AdSense policies. For detailed information about
+            our compliance measures, please see our
+            <Link href="/compliance" className="text-blue-600 hover:text-blue-800 underline">AdSense Compliance Audit</Link>.
           </p>
         </section>
       </div>
@@ -234,12 +236,12 @@ export default function PrivacyPage() {
           We&apos;re committed to ensuring your privacy and security at every step. 
           If you have any questions or concerns, we&apos;re here to help.
         </p>
-        <a 
-          href="/help" 
+        <Link
+          href="/help"
           className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
         >
           Contact Privacy Team
-        </a>
+        </Link>
       </div>
     </div>
   )

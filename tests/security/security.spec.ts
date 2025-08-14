@@ -23,10 +23,12 @@ describe('root middleware security', () => {
 
   it('rate limits API routes over threshold', () => {
     let res;
-    for (let i = 0; i < 61; i++) {
+    for (let i = 0; i < 60; i++) {
       res = middleware(createRequest('2.2.2.2'));
+      expect(res.status).toBe(200);
     }
-    expect(res!.status).toBe(429);
+    res = middleware(createRequest('2.2.2.2'));
+    expect(res.status).toBe(429);
   });
 
   it('excludes health endpoint from rate limiting', () => {

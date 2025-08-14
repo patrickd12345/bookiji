@@ -82,7 +82,7 @@ class BookingStateMachine {
       let refundResult
       if (!options.skipRefund && updatedBooking.commitment_fee_paid) {
         if (newStatus === 'completed') {
-          refundResult = await processRefund(bookingId)
+          refundResult = await processRefund(bookingId, { idempotencyKey: booking.idempotency_key })
         } else if (newStatus === 'cancelled') {
           const { data: isRefundable } = await supabase.rpc('is_cancellation_refundable', {
             booking_id: bookingId
@@ -91,7 +91,8 @@ class BookingStateMachine {
             refundResult = await processRefund(bookingId, {
               force: options.adminOverride,
               reason: options.reason,
-              adminId: options.adminId
+              adminId: options.adminId,
+              idempotencyKey: booking.idempotency_key
             })
           } else {
             refundResult = { status: 'skipped' as RefundStatus, error: 'Cancellation too close to appointment time' }

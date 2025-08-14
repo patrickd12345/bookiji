@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { registerTour } from '@/lib/guidedTourRegistry'
 import { useAutoTour } from '@/lib/useAutoTour'
+import { ADSENSE_APPROVAL_MODE } from '@/lib/adsense'
 
 interface Ticket {
   id: string
@@ -81,7 +82,7 @@ export default function MyTicketsPage() {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       // Skip auth check during AdSense approval
-      if (!session?.user?.id && process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE !== 'true') {
+      if (!session?.user?.id && !ADSENSE_APPROVAL_MODE) {
         // redirect to login
         window.location.href = '/login?redirect=/help/tickets'
         return
@@ -128,11 +129,11 @@ export default function MyTicketsPage() {
         .subscribe((status) => {
           if (status === 'CHANNEL_ERROR') {
             console.error('Support chat channel error')
-            alert('Chat connection lost. Reconnecting...')
+            alert('Chat connection lost. Reconnecting')
             attemptReconnect()
           } else if (status === 'CLOSED') {
             console.warn('Support chat channel closed')
-            alert('Chat connection closed. Reconnecting...')
+            alert('Chat connection closed. Reconnecting')
             attemptReconnect()
           }
         })
@@ -181,7 +182,7 @@ export default function MyTicketsPage() {
         <p className="text-lg text-gray-600 mb-8">
           Need help? Create a support ticket and we&apos;ll get back to you as soon as possible.
         </p>
-        {loading && <p>Loading…</p>}
+        {loading && <p>Loading</p>}
         {!loading && tickets.length === 0 && (
           <p className="text-gray-500">You have no support tickets yet.</p>
         )}

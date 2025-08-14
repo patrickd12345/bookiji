@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../../../../hooks/useAuth'
 import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
+import { ADSENSE_APPROVAL_MODE } from "@/lib/adsense"
 import { settingsConfigurationSteps, settingsConfigurationTourId } from '@/tours/settingsConfiguration'
 
 export default function DashboardSettings() {
@@ -28,7 +29,7 @@ export default function DashboardSettings() {
   }
 
   // Skip auth check during AdSense approval
-  if (!user && process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE !== 'true') {
+  if (!user && !ADSENSE_APPROVAL_MODE) {
     router.push('/login')
     return null
   }

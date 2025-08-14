@@ -1,4 +1,5 @@
 import SmartFAQ from '@/components/SmartFAQ'
+import Link from 'next/link'
 
 export default function FAQPage() {
   return (
@@ -102,18 +103,18 @@ export default function FAQPage() {
           Can&apos;t find what you&apos;re looking for? Our support team is here to help!
         </p>
         <div className="space-x-4">
-          <a 
-            href="/help" 
+          <Link
+            href="/help"
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Contact Support
-          </a>
-          <a 
-            href="/help/tickets" 
+          </Link>
+          <Link
+            href="/help/tickets"
             className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
           >
             Submit a Ticket
-          </a>
+          </Link>
         </div>
       </div>
     </div>

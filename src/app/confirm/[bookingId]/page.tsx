@@ -54,7 +54,7 @@ export default function ConfirmationPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading confirmation...</div>
+        <div className="text-lg">Loading confirmation</div>
       </div>
     )
   }

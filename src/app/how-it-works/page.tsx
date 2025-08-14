@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function HowItWorksPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -185,18 +187,18 @@ export default function HowItWorksPage() {
           Join thousands of satisfied customers and providers using Bookiji today!
         </p>
         <div className="space-x-4">
-          <a 
-            href="/register" 
+          <Link
+            href="/register"
             className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
           >
             Book a Service
-          </a>
-          <a 
-            href="/vendor/onboarding" 
+          </Link>
+          <Link
+            href="/vendor/onboarding"
             className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
           >
             Become a Provider
-          </a>
+          </Link>
         </div>
       </section>
     </div>

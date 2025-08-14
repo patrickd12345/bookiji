@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { VendorCalendar, VendorAnalytics, GuidedTourManager } from '@/components'
 import { registerTour } from '@/lib/guidedTourRegistry'
@@ -348,9 +349,9 @@ export default function VendorDashboard() {
                     <p className="text-sm text-blue-700">
                       <strong>Choose one:</strong> Either use the native calendar below OR set up Google Calendar sync.
                     </p>
-                    <a href="/vendor/schedule" className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                    <Link href="/vendor/schedule" className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
                       🔗 Set Up Google Calendar
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>

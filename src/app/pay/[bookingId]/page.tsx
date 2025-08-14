@@ -63,7 +63,7 @@ function PaymentForm({ clientSecret, bookingId }: { clientSecret: string, bookin
       <div className="text-center py-8">
         <div className="text-green-600 text-6xl mb-4">✓</div>
         <h2 className="text-2xl font-bold text-green-600 mb-2">Payment Successful!</h2>
-        <p className="text-gray-600">Redirecting to confirmation...</p>
+        <p className="text-gray-600">Redirecting to confirmation</p>
       </div>
     )
   }
@@ -100,7 +100,7 @@ function PaymentForm({ clientSecret, bookingId }: { clientSecret: string, bookin
         disabled={!stripe || loading}
         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-shadow"
       >
-        {loading ? 'Processing...' : 'Pay $1.00 Commitment Fee'}
+        {loading ? 'Processing' : 'Pay $1.00 Commitment Fee'}
       </button>
 
       <p className="text-sm text-gray-500 text-center">
@@ -143,7 +143,7 @@ export default function PaymentPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading payment details...</div>
+        <div className="text-lg">Loading payment details</div>
       </div>
     )
   }

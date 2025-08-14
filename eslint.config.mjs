@@ -22,6 +22,7 @@ const eslintConfig = [
       "prefer-const": "warn",
       "react-hooks/rules-of-hooks": "warn",
       "prefer-rest-params": "warn",
+      "@next/next/no-html-link-for-pages": "off",
     },
   },
 ];

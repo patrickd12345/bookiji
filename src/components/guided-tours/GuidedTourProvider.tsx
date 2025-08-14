@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import Shepherd from 'shepherd.js';
 import 'shepherd.js/dist/css/shepherd.css';
 
@@ -16,6 +17,8 @@ interface TourContextValue {
 const TourContext = createContext<TourContextValue | undefined>(undefined);
 
 export function GuidedTourProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
+
   const startTour = (tourId: string, steps: StepOption[]) => {
     const tour = new Shepherd.Tour({
       defaultStepOptions: {
@@ -27,9 +30,16 @@ export function GuidedTourProvider({ children }: { children: ReactNode }) {
     steps.forEach(step => {
       const { helpArticleSlug, ...rest } = step;
       if (helpArticleSlug) {
-        const text = Array.isArray(rest.text) ? rest.text.join(' ') : rest.text || '';
-        const link = `<a href="/help/${helpArticleSlug}" target="_blank" class="shepherd-help-link">Learn more</a>`;
-        rest.text = text + ' ' + link;
+        const baseText = Array.isArray(rest.text) ? rest.text.join(' ') : rest.text || '';
+        const container = document.createElement('span');
+        container.textContent = baseText + ' ';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = 'Learn more';
+        button.className = 'underline text-blue-600 hover:text-blue-700';
+        button.addEventListener('click', () => router.push(`/help/${helpArticleSlug}`));
+        container.appendChild(button);
+        rest.text = container;
       }
       tour.addStep(rest);
     });

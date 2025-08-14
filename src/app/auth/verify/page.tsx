@@ -1,0 +1,47 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+
+export default function VerifyPage() {
+  const params = useSearchParams();
+  const token = params.get('token');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+
+  useEffect(() => {
+    async function verify() {
+      if (!token) {
+        setStatus('error');
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+        const data = await res.json();
+        setStatus(data.ok ? 'success' : 'error');
+      } catch {
+        setStatus('error');
+      }
+    }
+    verify();
+  }, [token]);
+
+  if (status === 'loading') return <p>Verifying</p>;
+  if (status === 'success')
+    return (
+      <div>
+        <p>Verification successful.</p>
+        <Link href="/login" className="text-blue-600 underline">Log in</Link>
+      </div>
+    );
+  return (
+    <div>
+      <p>Verification failed.</p>
+      <Link href="/login" className="text-blue-600 underline">Back to login</Link>
+    </div>
+  );
+}

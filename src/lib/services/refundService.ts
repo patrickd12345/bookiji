@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabaseClient'
-import { stripe } from '@/lib/stripe'
+import { refundPayment } from '@/lib/stripe'
 import { type RefundOptions, type RefundStatus } from '@/types/booking'
 
 export async function processRefund(
@@ -21,6 +21,14 @@ export async function processRefund(
       throw new Error('No payment intent found')
     }
 
+    if (booking.refund_status === 'completed') {
+      return {
+        status: 'completed',
+        amount: booking.refund_amount_cents || undefined,
+        transactionId: booking.refund_transaction_id || undefined,
+      }
+    }
+
     await supabase
       .from('bookings')
       .update({
@@ -29,17 +37,10 @@ export async function processRefund(
       })
       .eq('id', bookingId)
 
-    const refund = await stripe.refunds.create(
-      {
-        payment_intent: booking.payment_intent_id,
-        reason: 'requested_by_customer',
-        metadata: {
-          booking_id: bookingId,
-          admin_override: options.force ? 'true' : 'false',
-          reason: options.reason || ''
-        }
-      },
-      { idempotencyKey: `booking-refund-${bookingId}` }
+    const refund = await refundPayment(
+      booking.payment_intent_id,
+      undefined,
+      options.idempotencyKey || booking.idempotency_key || undefined
     )
 
     await supabase

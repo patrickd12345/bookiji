@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { addCredits, getCreditPackages } from './database'
 import { CreditPackage } from '../types/global.d'
-import { stripe as defaultStripe } from '../../lib/stripe'
+import { stripe as defaultStripe } from '@/lib/stripe'
 
 export interface CreditsPurchaseRequest {
   userId: string

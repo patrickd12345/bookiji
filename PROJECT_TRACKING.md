@@ -250,18 +250,15 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 
 ### **🚀 P1 — Launch Polish (First 1–2 Weeks After Beta Opens)**
 
-#### **6. Provider ↔ Customer Communication Baseline**
-- [ ] **Goal:** They can coordinate without leaving the platform
-- [ ] **Work:** Option A (fast): Show masked email relay + phone (click-to-call) after confirmation
-- [ ] **Work:** Option B (richer): Per-booking message thread using Supabase Realtime; notifications on new messages
-- [ ] **Acceptance:** A: Replies via relay appear in both inboxes; bounce handling logged
-- [ ] **Acceptance:** B: Messages persist; realtime updates within 2s; notify via email on unread
+#### **6. Provider ↔ Customer Communication Baseline** ✅
+- [x] **Goal:** They can coordinate without leaving the platform
+- [x] **Implementation:** Per-booking message thread using Supabase Realtime with email notifications on unread
+- [x] **Acceptance:** Messages persist and update in real time (≤2s)
 
-#### **7. Interactive Map v1 (Privacy-Respecting)**
-- [ ] **Goal:** Replace "Coming soon" with real discovery
-- [ ] **Work:** Mapbox/Leaflet with jittered centroid + radius ring; cluster markers; search by area
-- [ ] **Work:** Respect privacy mode: never reveal precise address until booking confirmation
-- [ ] **Acceptance:** Search returns consistent providers as list view; no exact lat/long leaked pre-booking
+#### **7. Interactive Map v1 (Privacy-Respecting)** ✅
+- [x] **Goal:** Replace "Coming soon" with real discovery
+- [x] **Implementation:** Mapbox-based view with jittered centroids, radius rings, and cluster markers
+- [x] **Acceptance:** Privacy mode respected; search returns providers consistent with list view
 
 #### **8. Analytics You Can Act On**
 - [ ] **Goal:** See funnel leakage and errors fast

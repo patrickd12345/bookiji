@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Elements } from '@stripe/react-stripe-js'
-import { getStripe } from '../../lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import StripePayment from './StripePayment'
 
 interface CreditPackage {

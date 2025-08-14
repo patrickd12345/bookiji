@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function AboutPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -87,18 +89,18 @@ export default function AboutPage() {
             Join the booking revolution today and experience the difference.
           </p>
           <div className="space-x-4">
-            <a 
-              href="/register" 
+            <Link
+              href="/register"
               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Sign Up Now
-            </a>
-            <a 
-              href="/vendor/onboarding" 
+            </Link>
+            <Link
+              href="/vendor/onboarding"
               className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
             >
               Become a Provider
-            </a>
+            </Link>
           </div>
         </section>
       </div>

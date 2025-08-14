@@ -28,8 +28,8 @@ export async function POST(request: Request) {
 
     if (authError) {
       console.error('Auth registration error:', authError)
-      return NextResponse.json({ 
-        error: authError.message 
+      return NextResponse.json({
+        error: authError.message
       }, { status: 400 })
     }
 
@@ -57,6 +57,20 @@ export async function POST(request: Request) {
 
     // Credit referrer if there is a pending referral for this email
     await referralService.completeReferral(email, authData.user.id, role)
+
+    try {
+      const token = authData.session?.access_token || ''
+      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/notifications/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'email',
+          recipient: email,
+          template: 'verify_email',
+          data: { name: full_name, token }
+        })
+      })
+    } catch {}
 
     console.log('✅ User registered successfully:', authData.user.id)
 
