@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 export default function ChooseRolePage() {
   const [roles, setRoles] = useState<string[]>([]);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   const toggleRole = (role: string) => {
@@ -19,7 +20,10 @@ export default function ChooseRolePage() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setError('You must be signed in to continue');
+      return;
+    }
 
     const newRoles = roles.includes('customer') && roles.includes('provider')
       ? ['customer', 'provider']
@@ -39,6 +43,7 @@ export default function ChooseRolePage() {
   return (
     <form onSubmit={handleSubmit} className="p-4 space-y-4">
       <h1 className="text-xl font-semibold">Choose your role</h1>
+      {error && <p className="text-red-600 text-sm">{error}</p>}
       <label className="flex items-center gap-2">
         <input
           type="checkbox"
