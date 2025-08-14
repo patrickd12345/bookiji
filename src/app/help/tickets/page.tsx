@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { registerTour } from '@/lib/guidedTourRegistry'
 import { useAutoTour } from '@/lib/useAutoTour'
+import { ADSENSE_APPROVAL_MODE } from '@/lib/adsense'
 
 interface Ticket {
   id: string
@@ -81,7 +82,7 @@ export default function MyTicketsPage() {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       // Skip auth check during AdSense approval
-      if (!session?.user?.id && process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE !== 'true') {
+      if (!session?.user?.id && !ADSENSE_APPROVAL_MODE) {
         // redirect to login
         window.location.href = '/login?redirect=/help/tickets'
         return

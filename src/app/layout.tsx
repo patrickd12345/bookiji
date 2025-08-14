@@ -8,11 +8,11 @@ import { ConsentManager } from '@/components/ConsentManager'
 import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider'
 import Link from 'next/link'
 import '@/lib/observability/init'
+import { ADSENSE_APPROVAL_MODE } from '@/lib/adsense'
 
 // @ts-nocheck
 
 // TEMPORARY: Disable console logging for AdSense approval
-const ADSENSE_APPROVAL_MODE = true // Set to false after approval
 
 // Suppress console logging during AdSense approval
 if (ADSENSE_APPROVAL_MODE) {

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { ADSENSE_APPROVAL_MODE } from '@/lib/adsense'
 
 interface Service {
   id: string
@@ -102,7 +103,7 @@ export default function BookVendorPage() {
     }
 
     // Skip auth check during AdSense approval
-    if (!user && process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE !== 'true') {
+    if (!user && !ADSENSE_APPROVAL_MODE) {
       alert('Please log in to book an appointment')
       return
     }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { ollamaService, BOOKIJI_PROMPTS } from '../../../../lib/ollama'
+import { ADSENSE_APPROVAL_MODE } from "@/lib/adsense"
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
-    if (process.env.NODE_ENV === 'development' && !process.env.ADSENSE_APPROVAL_MODE) {
+    if (process.env.NODE_ENV === 'development' && !ADSENSE_APPROVAL_MODE) {
       console.log('🗺️ AI Radius Scaling Request:', { service, location, providerDensity, currentRadius })
     }
 
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
     const radiusMatch = aiResponse.match(/(\d+(?:\.\d+)?)\s*km/i)
     const recommendedRadius = radiusMatch ? parseFloat(radiusMatch[1]) : 5
 
-    if (process.env.NODE_ENV === 'development' && !process.env.ADSENSE_APPROVAL_MODE) {
+    if (process.env.NODE_ENV === 'development' && !ADSENSE_APPROVAL_MODE) {
       console.log('🗺️ AI Radius Recommendation:', recommendedRadius, 'km')
     }
 
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
-    if (process.env.NODE_ENV === 'development' && !process.env.ADSENSE_APPROVAL_MODE) {
+    if (process.env.NODE_ENV === 'development' && !ADSENSE_APPROVAL_MODE) {
       console.error('❌ AI Radius Scaling error:', error)
     }
     return NextResponse.json({ 
