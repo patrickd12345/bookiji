@@ -4,8 +4,8 @@
 
 ### Feature Status
 - Guided tours: customer booking, vendor onboarding, dashboard, and settings tours **live**
-- Map v1: **coming soon**
-- Messaging: **coming soon**
+- Map v1: **live**
+- Messaging: **live**
 - Stripe idempotency & refund logic: **done**
 - CSP & rate limiting middleware: **done**
 
