@@ -1,27 +1,17 @@
-import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { getSupabaseConfig } from '@/config/supabase'
 import { getAuthenticatedUserId } from '../../_utils/auth'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const userId = await getAuthenticatedUserId(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value
-          }
-        }
-      }
-    )
+    const config = getSupabaseConfig()
+    const supabase = createClient(config.url, config.publishableKey)
 
     const { data, error } = await supabase
       .from('service_requests')

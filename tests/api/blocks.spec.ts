@@ -17,9 +17,9 @@ vi.mock('../../src/lib/supabaseClient', () => {
 
 // Mock next/headers
 vi.mock('next/headers', () => ({
-  cookies: () => ({
-    get: () => ({ value: 'mock-cookie' })
-  })
+  cookies: vi.fn(() => ({
+    get: vi.fn(() => ({ value: 'mock-cookie' }))
+  }))
 }))
 
 // Mock @supabase/ssr
@@ -57,7 +57,6 @@ vi.mock('@supabase/ssr', () => ({
 }))
 
 // Helper function for getting mock (unused but kept for potential future use)
-const getMock = () => (globalThis as Record<string, unknown>).__SB_FROM_INT__ as ReturnType<typeof vi.fn>
 
 describe('Blocks API endpoints', () => {
   beforeEach(() => {
@@ -114,7 +113,8 @@ async function createBlock(request: NextRequest) {
 }
 
 async function listBlocks() {
-  return await GET()
+  const mockRequest = { url: 'http://localhost:3000/api/blocks/list' } as NextRequest
+  return await GET(mockRequest)
 }
 
 async function deleteBlock(request: NextRequest) {

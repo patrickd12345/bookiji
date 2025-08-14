@@ -1,34 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getSupabaseConfig } from '@/config/supabase'
 
-function createSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl) {
-    throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_URL')
-  }
-
-  if (!supabaseAnonKey) {
-    throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_ANON_KEY')
-  }
-
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true
-    }
-  })
-}
-
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url)
-  const funnel = searchParams.get('funnel') || 'booking'
-
-  const supabase = createSupabaseClient()
-
+export async function GET(request: NextRequest) {
   try {
+    const config = getSupabaseConfig()
+    const supabase = createClient(config.url, config.publishableKey)
+
+    const { searchParams } = new URL(request.url)
+    const funnel = searchParams.get('funnel') || 'booking'
+
     const { data, error } = await supabase
       .from('conversion_funnels')
       .select('step_name')

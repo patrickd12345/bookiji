@@ -1,22 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getSupabaseConfig } from '@/config/supabase'
 
 type SupabaseClient = ReturnType<typeof createClient>
 
 // Lazy Supabase client creation to avoid build-time errors
 function createSupabaseClient(): SupabaseClient {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl) {
-    throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_URL')
-  }
-
-  if (!supabaseAnonKey) {
-    throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_ANON_KEY')
-  }
-
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  const config = getSupabaseConfig()
+  
+  return createClient(config.url, config.publishableKey, {
     auth: {
       autoRefreshToken: true,
       persistSession: true,

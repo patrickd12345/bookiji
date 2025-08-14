@@ -1,22 +1,24 @@
+import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
 import { getAuthenticatedUserId } from '../../_utils/auth'
+import { getSupabaseConfig } from '@/config/supabase'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
+    const cookieStore = await cookies()
+    const config = getSupabaseConfig()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      config.url,
+      config.publishableKey,
       {
         cookies: {
           get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
+            return cookieStore.get(name)?.value
+          }
+        }
       }
-    );
+    )
     
     const userId = await getAuthenticatedUserId(request)
     if (!userId) {

@@ -1,15 +1,17 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import type { Notification } from '@/types/notification'
 import { getAuthenticatedUserId } from '../_utils/auth'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { getSupabaseConfig } from '@/config/supabase'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()
+    const config = getSupabaseConfig()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      config.url,
+      config.publishableKey,
       {
         cookies: {
           get(name) {
@@ -51,12 +53,13 @@ export async function GET(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
     const cookieStore = await cookies()
+    const config = getSupabaseConfig()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      config.url,
+      config.publishableKey,
       {
         cookies: {
           get(name) {
@@ -100,7 +103,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error in delete notification route:', error)
+    console.error('Error in notifications DELETE route:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

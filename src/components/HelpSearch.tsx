@@ -4,22 +4,22 @@ import { useEffect, useState } from 'react';
 import { searchArticles, HelpArticle } from '@/lib/helpArticles';
 
 interface Props {
-  onResults: (articles: HelpArticle[]) => void;
+  onResultsAction: (articles: HelpArticle[]) => void;
   onQueryChange?: (q: string) => void;
   category?: string;
 }
 
-export default function HelpSearch({ onResults, onQueryChange, category }: Props) {
+export default function HelpSearch({ onResultsAction, onQueryChange, category }: Props) {
   const [query, setQuery] = useState('');
 
   useEffect(() => {
     const handle = setTimeout(() => {
       const results = searchArticles(query, category);
-      onResults(results);
+      onResultsAction(results);
       onQueryChange?.(query);
     }, 200);
     return () => clearTimeout(handle);
-  }, [query, category, onResults, onQueryChange]);
+  }, [query, category, onResultsAction, onQueryChange]);
 
   return (
     <input

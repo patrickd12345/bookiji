@@ -1,31 +1,30 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { getSupabaseConfig } from '@/config/supabase'
 
 export async function GET() {
   try {
     console.log('🔧 Testing Supabase Configuration...')
     
-    // Check environment variables
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const config = getSupabaseConfig()
+    const supabase = createClient(config.url, config.publishableKey)
     
-    console.log('1️⃣ Environment variables:')
-    console.log(`   SUPABASE_URL: ${supabaseUrl ? '✅ Set' : '❌ Missing'}`)
-    console.log(`   SUPABASE_ANON_KEY: ${supabaseAnonKey ? '✅ Set' : '❌ Missing'}`)
+    console.log('1️⃣ Supabase configuration:')
+    console.log(`   URL: ${config.url ? '✅ Set' : '❌ Missing'}`)
+    console.log(`   Publishable Key: ${config.publishableKey ? '✅ Set' : '❌ Missing'}`)
     
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!config.url || !config.publishableKey) {
       return NextResponse.json({ 
-        error: 'Missing Supabase environment variables. Please check your .env.local file.',
-        supabaseUrl: !!supabaseUrl,
-        supabaseAnonKey: !!supabaseAnonKey
+        error: 'Missing Supabase configuration. Please check your .env.local file.',
+        url: !!config.url,
+        publishableKey: !!config.publishableKey
       }, { status: 500 })
     }
     
     // Test basic Supabase client creation
     console.log('2️⃣ Testing Supabase client creation...')
-    const { createClient } = await import('@supabase/supabase-js')
     
     try {
-      const supabase = createClient(supabaseUrl, supabaseAnonKey)
       console.log('   Supabase client created: ✅')
       
       // Test basic auth check
@@ -42,8 +41,8 @@ export async function GET() {
       
       return NextResponse.json({
         success: true,
-        supabaseUrl: supabaseUrl.substring(0, 20) + '…',
-        supabaseAnonKey: supabaseAnonKey.substring(0, 20) + '…',
+        supabaseUrl: config.url.substring(0, 20) + '…',
+        publishableKey: config.publishableKey.substring(0, 20) + '…',
         authCheck: !error,
         currentUser: !!user,
         message: 'Supabase is configured correctly!'

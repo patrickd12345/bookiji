@@ -1,22 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { getSupabaseConfig } from '@/config/supabase'
 import { cookies } from 'next/headers';
 import { BlockUserRequest } from '@/types/global';
 
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
+    const config = getSupabaseConfig()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      config.url,
+      config.publishableKey,
       {
         cookies: {
           get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
+            return cookieStore.get(name)?.value
+          }
+        }
       }
-    );
+    )
 
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

@@ -2,14 +2,25 @@ import Stripe from 'stripe'
 import { loadStripe } from '@stripe/stripe-js'
 import { supabase } from '@/lib/supabaseClient'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing STRIPE_SECRET_KEY environment variable')
+// Create a function to get Stripe instance instead of creating it at module load
+let _stripe: Stripe | null = null
+
+export function getStripeInstance(): Stripe | null {
+  if (!_stripe && process.env.STRIPE_SECRET_KEY) {
+    try {
+      _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: '2024-06-20',
+        typescript: true,
+      })
+    } catch (error) {
+      console.warn('Failed to initialize Stripe:', error)
+      return null
+    }
+  }
+  return _stripe
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-06-20',
-  typescript: true,
-})
+export const stripe = getStripeInstance()
 
 export const getStripe = () => {
   const pk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
@@ -17,14 +28,16 @@ export const getStripe = () => {
 }
 
 export const getStripeOrThrow = () => {
-  if (!stripe) {
-    throw new Error('Stripe not configured')
+  const instance = getStripeInstance()
+  if (!instance) {
+    throw new Error('Stripe not configured - missing STRIPE_SECRET_KEY environment variable')
   }
-  return stripe
+  return instance
 }
 
 export async function createCommitmentFeePaymentIntent(amount: number, currency: string = 'usd', idempotencyKey?: string) {
-  return stripe.paymentIntents.create(
+  const instance = getStripeOrThrow()
+  return instance.paymentIntents.create(
     {
       amount,
       currency,
@@ -35,8 +48,9 @@ export async function createCommitmentFeePaymentIntent(amount: number, currency:
 }
 
 export async function createBookingPaymentIntent(amount: number, bookingId: string, customerId?: string, idempotencyKey?: string) {
+  const instance = getStripeOrThrow()
   const key = idempotencyKey || `booking-${bookingId}`
-  const intent = await stripe.paymentIntents.create(
+  const intent = await instance.paymentIntents.create(
     {
       amount,
       currency: 'usd',
@@ -52,7 +66,8 @@ export async function createBookingPaymentIntent(amount: number, bookingId: stri
 }
 
 export async function refundPayment(paymentIntentId: string, amount?: number, idempotencyKey?: string) {
-  return stripe.refunds.create(
+  const instance = getStripeOrThrow()
+  return instance.refunds.create(
     { payment_intent: paymentIntentId, amount },
     idempotencyKey ? { idempotencyKey } : undefined
   )

@@ -1,8 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { google } from 'googleapis'
 import { CalendarProvider } from '@/lib/calendar-adapters/types'
+import { getSupabaseConfig } from '@/config/supabase'
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -10,11 +11,12 @@ const oauth2Client = new google.auth.OAuth2(
   `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`
 )
 
-export async function POST(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { code, email } = await request.json()
+    const config = getSupabaseConfig()
     
     // Exchange code for tokens
+    const { code, email } = await request.json()
     const { tokens } = await oauth2Client.getToken(code)
     const { access_token, refresh_token, expiry_date } = tokens
 
@@ -25,8 +27,8 @@ export async function POST(request: Request) {
 
     const cookieStore = await cookies();
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      config.url,
+      config.publishableKey,
       {
         cookies: {
           get(name) {

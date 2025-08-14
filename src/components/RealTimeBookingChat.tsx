@@ -268,17 +268,43 @@ export default function RealTimeBookingChat() {
             <button
               onClick={(evt: MouseEvent<HTMLButtonElement>) => {
                 evt.preventDefault();
-                alert('🎤 Voice input coming soon!');
+                // Show voice input info
+                const voiceInfo = document.createElement('div');
+                voiceInfo.className = 'fixed top-4 right-4 bg-blue-500 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm';
+                voiceInfo.innerHTML = `
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-xl">🎤</span>
+                    <strong>Voice Input</strong>
+                  </div>
+                  <p class="text-sm">Voice input will be available in the next update. For now, you can type your requests or use the quick prompts below.</p>
+                  <button onclick="this.parentElement.remove()" class="mt-2 text-xs underline">Close</button>
+                `;
+                document.body.appendChild(voiceInfo);
+                setTimeout(() => voiceInfo.remove(), 5000);
               }}
-              className="p-2 hover:bg-muted rounded-full">
+              className="p-2 hover:bg-muted rounded-full transition-colors"
+              title="Voice input coming soon">
               <span className="text-xl">🎤</span>
             </button>
             <button
               onClick={(evt: MouseEvent<HTMLButtonElement>) => {
                 evt.preventDefault();
-                alert('📷 Image attachment coming soon!');
+                // Show image attachment info
+                const imageInfo = document.createElement('div');
+                imageInfo.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm';
+                imageInfo.innerHTML = `
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-xl">📷</span>
+                    <strong>Image Attachment</strong>
+                  </div>
+                  <p class="text-sm">Image attachments will be available soon. You can describe what you need or use our AI chat to get recommendations.</p>
+                  <button onclick="this.parentElement.remove()" class="mt-2 text-xs underline">Close</button>
+                `;
+                document.body.appendChild(imageInfo);
+                setTimeout(() => imageInfo.remove(), 5000);
               }}
-              className="p-2 hover:bg-muted rounded-full">
+              className="p-2 hover:bg-muted rounded-full transition-colors"
+              title="Image attachment coming soon">
               <span className="text-xl">📷</span>
             </button>
           </div>

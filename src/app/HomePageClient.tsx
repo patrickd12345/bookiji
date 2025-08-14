@@ -32,6 +32,8 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
   } = useAuth()
   const [showTour, setShowTour] = useState(false)
   const [showAIChat, setShowAIChat] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showDemo, setShowDemo] = useState(false)
 
   // Sync initial server locale on mount
   useEffect(() => {
@@ -39,6 +41,40 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
       setLocale(initialLocale)
     }
   }, [initialLocale, setLocale])
+
+  // Handle search functionality
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      // For now, redirect to search results or open AI chat with the query
+      setShowAIChat(true)
+      // You can implement actual search functionality here
+      console.log('Searching for:', searchQuery)
+    }
+  }
+
+  // Handle demo functionality
+  const handleDemo = () => {
+    setShowDemo(true)
+    // You can implement actual demo functionality here
+    console.log('Opening demo')
+  }
+
+  // Handle quick actions
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case 'search':
+        setShowAIChat(true)
+        break
+      case 'demo':
+        handleDemo()
+        break
+      case 'tour':
+        setShowTour(true)
+        break
+      default:
+        console.log('Unknown action:', action)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card to-muted/30">
@@ -72,11 +108,15 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
                 <input
                   type="text"
                   placeholder="What service do you need?"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   className="flex-1 px-6 py-4 text-lg border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground placeholder-muted-foreground"
                 />
                 <button 
-                  onClick={() => setShowAIChat(true)}
-                  className="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-all duration-200"
+                  onClick={handleSearch}
+                  disabled={!searchQuery.trim()}
+                  className="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Search
                 </button>
@@ -114,8 +154,8 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
                 Get Started
               </Link>
               <button 
-                onClick={() => setShowTour(true)}
-                className="px-8 py-4 border-2 border-border text-foreground font-semibold rounded-lg hover:border-muted-foreground transition-all duration-200 text-lg"
+                onClick={handleDemo}
+                className="px-8 py-4 border-2 border-border text-foreground font-semibold rounded-lg hover:border-muted-foreground transition-all duration-200 text-lg hover:bg-muted/50"
               >
                 Watch Demo
               </button>
@@ -324,6 +364,70 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
             </div>
             <div className="p-6">
               <RealAIChat />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Demo Modal */}
+      {showDemo && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-900">Bookiji Platform Demo</h2>
+              <button 
+                onClick={() => setShowDemo(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="text-center">
+                <div className="w-24 h-24 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">🎬</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-4">Experience Bookiji in Action</h3>
+                <p className="text-gray-600 mb-6">
+                  Watch how easy it is to book services with our AI-powered platform. 
+                  From finding providers to completing payments in seconds.
+                </p>
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">🎯 Step 1: Find Your Service</h4>
+                    <p className="text-sm text-gray-600">Use our AI chat or search to find exactly what you need</p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">📍 Step 2: Choose Location</h4>
+                    <p className="text-sm text-gray-600">Our smart radius system finds nearby providers while protecting privacy</p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">💳 Step 3: $1 Commitment</h4>
+                    <p className="text-sm text-gray-600">Pay just $1 to confirm your booking - no hidden fees</p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">✅ Step 4: Instant Confirmation</h4>
+                    <p className="text-sm text-gray-600">Get immediate confirmation and provider details</p>
+                  </div>
+                </div>
+                <div className="mt-8 flex gap-4 justify-center">
+                  <button 
+                    onClick={() => {
+                      setShowDemo(false)
+                      setShowTour(true)
+                    }}
+                    className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    Start Interactive Tour
+                  </button>
+                  <button 
+                    onClick={() => setShowDemo(false)}
+                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

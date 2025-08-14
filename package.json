@@ -31,6 +31,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
     "@react-leaflet/core": "^2.1.0",
+    "@sentry/nextjs": "^8.3.0",
     "@stripe/react-stripe-js": "^2.6.2",
     "@stripe/stripe-js": "^7.3.1",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
@@ -50,7 +51,6 @@
     "lucide-react": "^0.358.0",
     "mapbox-gl": "^3.6.0",
     "next": "15.3.3",
-    "@sentry/nextjs": "^8.3.0",
     "next-auth": "^4.24.7",
     "next-themes": "^0.4.6",
     "node-fetch": "^3.3.2",
@@ -74,6 +74,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.54.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",

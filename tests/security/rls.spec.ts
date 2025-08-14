@@ -6,7 +6,7 @@ const tables = ['profiles', 'bookings', 'services', 'availability_slots', 'notif
 describe('RLS policies', () => {
   tables.forEach((table) => {
     it(`denies cross-tenant access for ${table}`, async () => {
-      const result = await testCrossTenantAccess(table, 'user1', 'user2');
+      const result = await testCrossTenantAccess();
       expect(result).toBe(false);
     });
   });
