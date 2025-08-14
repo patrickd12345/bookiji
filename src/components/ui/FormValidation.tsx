@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ValidationError } from './ErrorDisplay'
 import { cn } from '@/lib/utils'
 
@@ -365,7 +365,6 @@ interface FormFieldProps {
   value: any
   onChangeAction: (value: any) => void
   onBlur?: () => void
-  rules?: ValidationRule
   errors?: string[]
   touched?: boolean
   type?: 'text' | 'email' | 'password' | 'tel' | 'url' | 'number' | 'date' | 'textarea'
@@ -381,7 +380,6 @@ export function FormField({
   value,
   onChangeAction,
   onBlur,
-  rules,
   errors = [],
   touched = false,
   type = 'text',

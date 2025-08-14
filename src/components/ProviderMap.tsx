@@ -41,8 +41,8 @@ export default function ProviderMap() {
         if (filters.category) params.set('category', filters.category);
         if (filters.minRating) params.set('min_rating', String(filters.minRating));
         const res = await fetch(`/api/search/providers?${params.toString()}`);
-        const data = await res.json().catch(() => ({ providers: [] }));
-        const jittered = (data.providers || []).map((p: any) => {
+        const data = await res.json().catch(() => ({ providers: [] as Provider[] }));
+        const jittered = (data.providers || []).map((p: Provider) => {
           const offset = () => (Math.random() * 0.0015 + 0.0015) * (Math.random() < 0.5 ? -1 : 1);
           return {
             id: p.id,

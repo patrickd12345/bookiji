@@ -11,7 +11,7 @@ export function withValidation<T>(schema: ZodSchema<T>, handler: NextApiHandler)
         schema.parse(req.body);
       }
       return handler(req, res);
-    } catch (err) {
+    } catch {
       res.status(400).json({ error: 'Invalid input' });
     }
   };

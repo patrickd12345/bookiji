@@ -69,7 +69,7 @@ export function NotificationToast({
       onDismissAction(notification.id)
       notification.onDismiss?.()
     }, 300)
-  }, [notification.id, notification.onDismiss, onDismissAction])
+  }, [notification, onDismissAction])
 
   useEffect(() => {
     if (notification.duration && notification.duration > 0) {
@@ -84,7 +84,7 @@ export function NotificationToast({
   const handleAction = useCallback(() => {
     notification.action?.onClick()
     handleDismiss()
-  }, [notification.action, handleDismiss])
+  }, [notification, handleDismiss])
 
   return (
     <AnimatePresence>

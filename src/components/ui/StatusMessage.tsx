@@ -123,7 +123,7 @@ export function SuccessMessage({
   message: string
   title?: string
   className?: string
-  [key: string]: any
+  [key: string]: unknown
 }) {
   return (
     <StatusMessage
@@ -145,7 +145,7 @@ export function InfoMessage({
   message: string
   title?: string
   className?: string
-  [key: string]: any
+  [key: string]: unknown
 }) {
   return (
     <StatusMessage
@@ -167,7 +167,7 @@ export function WarningMessage({
   message: string
   title?: string
   className?: string
-  [key: string]: any
+  [key: string]: unknown
 }) {
   return (
     <StatusMessage
@@ -190,7 +190,7 @@ export function ToastMessage({
   type: 'success' | 'info' | 'warning'
   message: string
   className?: string
-  [key: string]: any
+  [key: string]: unknown
 }) {
   return (
     <StatusMessage

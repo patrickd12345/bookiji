@@ -7,13 +7,13 @@ interface AsyncState<T> {
   success: boolean
 }
 
-interface UseAsyncStateOptions {
-  initialData?: any
+interface UseAsyncStateOptions<T> {
+  initialData?: T | null
   autoReset?: boolean
   resetDelay?: number
 }
 
-export function useAsyncState<T = any>(options: UseAsyncStateOptions = {}) {
+export function useAsyncState<T = unknown>(options: UseAsyncStateOptions<T> = {}) {
   const { initialData = null, autoReset = false, resetDelay = 3000 } = options
   
   const [state, setState] = useState<AsyncState<T>>({
@@ -112,7 +112,7 @@ export function useAsyncState<T = any>(options: UseAsyncStateOptions = {}) {
 }
 
 // Specialized hooks for common use cases
-export function useAsyncOperation<T = any>(options?: UseAsyncStateOptions) {
+export function useAsyncOperation<T = unknown>(options?: UseAsyncStateOptions<T>) {
   const state = useAsyncState<T>(options)
   
   const run = useCallback(async <R>(
@@ -128,7 +128,7 @@ export function useAsyncOperation<T = any>(options?: UseAsyncStateOptions) {
   }
 }
 
-export function useAsyncData<T = any>(options?: UseAsyncStateOptions) {
+export function useAsyncData<T = unknown>(options?: UseAsyncStateOptions<T>) {
   const state = useAsyncState<T>(options)
   
   const fetch = useCallback(async <R>(
@@ -144,7 +144,7 @@ export function useAsyncData<T = any>(options?: UseAsyncStateOptions) {
   }
 }
 
-export function useAsyncMutation<T = any>(options?: UseAsyncStateOptions) {
+export function useAsyncMutation<T = unknown>(options?: UseAsyncStateOptions<T>) {
   const state = useAsyncState<T>(options)
   
   const mutate = useCallback(async <R>(
