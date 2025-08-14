@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { supabase } from '../src/lib/supabaseClient'
+import { ADSENSE_APPROVAL_MODE } from '../src/lib/adsense'
 
 interface UserProfile {
   user_id: string
@@ -38,7 +39,7 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   // Temporary bypass for AdSense approval
-  const isAdSenseApprovalMode = process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE === 'true'
+  const isAdSenseApprovalMode = ADSENSE_APPROVAL_MODE
 
   const fetchUserProfile = async (userId: string) => {
     try {

@@ -1,6 +1,8 @@
 // 🌍 PPP (Purchasing Power Parity) Calculation System
 // Uses real World Bank data to calculate fair fees based on actual purchasing power
 
+import { ADSENSE_APPROVAL_MODE } from './adsense'
+
 export interface PPPData {
   countryCode: string
   currencyCode: string
@@ -208,7 +210,7 @@ export function validatePPPCalculations() {
 }
 
 // 🧪 Test the PPP system
-if (typeof window === 'undefined' && process.env.NODE_ENV === 'development' && !process.env.ADSENSE_APPROVAL_MODE) { // Only run in development and not during AdSense approval
+if (typeof window === 'undefined' && process.env.NODE_ENV === 'development' && !ADSENSE_APPROVAL_MODE) { // Only run in development and not during AdSense approval
   console.log('🧪 Testing PPP Calculations:')
   console.log('Customer Fees:')
   console.log(`US: $${getPPPCustomerFee('usd') / 100}`)

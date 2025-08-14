@@ -1,8 +1,9 @@
 // 📊 Bookiji Analytics & User Journey Tracking
 // Post-launch optimization and conversion analytics
 
+import { ADSENSE_APPROVAL_MODE } from './adsense'
+
 // TEMPORARY: Disable console logging for AdSense approval
-const ADSENSE_APPROVAL_MODE = true // Set to false after approval
 
 // Suppress console logging during AdSense approval
 if (ADSENSE_APPROVAL_MODE && typeof window !== 'undefined') {

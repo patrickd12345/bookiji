@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { ADSENSE_APPROVAL_MODE } from '@/lib/adsense'
 
 export default function AdminLayout({
   children,
@@ -58,7 +59,7 @@ export default function AdminLayout({
   }
 
   // Skip auth check during AdSense approval
-  if (!isAuthenticated && process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE !== 'true') {
+  if (!isAuthenticated && !ADSENSE_APPROVAL_MODE) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
