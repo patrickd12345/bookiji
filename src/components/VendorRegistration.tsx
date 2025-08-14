@@ -219,55 +219,39 @@ export default function VendorRegistration({ onSuccess }: { onSuccess?: () => vo
     }
   };
 
-  // const addService = () => {
-  //   const newService: ServiceOffering = {
-  //     id: `service_${Date.now()}`,
-  //     name: '',
-  //     description: '',
-  //     category: formData.service_categories[0] || '',
-  //     duration_minutes: 60,
-  //     price_cents: 5000, // $50.00
-  //     deposit_required: false,
-  //     deposit_percentage: 20
-  //   };
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     services: [...prev.services, newService]
-  //   }));
-  // };
+  const addService = () => {
+    const newService: ServiceOffering = {
+      id: `service_${Date.now()}`,
+      name: '',
+      description: '',
+      category: formData.service_categories[0] || '',
+      duration_minutes: 60,
+      price_cents: 5000,
+      deposit_required: false,
+      deposit_percentage: 20,
+    };
+    setFormData(prev => ({
+      ...prev,
+      services: [...prev.services, newService],
+    }));
+  };
 
-  // const updateService = (serviceId: string, updates: Partial<ServiceOffering>) => {
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     services: prev.services.map(service =>
-  //       service.id === serviceId ? { ...service, ...updates } : service
-  //   //   ))
-  //   // }));
-  // };
+  const updateService = (serviceId: string, updates: Partial<ServiceOffering>) => {
+    setFormData(prev => ({
+      ...prev,
+      services: prev.services.map(service =>
+        service.id === serviceId ? { ...service, ...updates } : service
+      ),
+    }));
+  };
 
-  // const removeService = (serviceId: string) => {
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     services: prev.services.filter(service => service.id !== serviceId)
-  //   }));
-  // };
+  const removeService = (serviceId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      services: prev.services.filter(service => service.id !== serviceId),
+    }));
+  };
 
-  // const handleDayHoursChange = (day: keyof WeeklyHours, updates: Partial<DayHours>) => {
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     operating_hours: {
-  //       ...prev.operating_hours,
-  //       [day]: { ...prev.operating_hours[day], ...updates }
-  //   //   }
-  //   // }));
-  // };
-
-  // const handleImageUpload = (files: FileList | null) => {
-  //   if (files) {
-  //     const newImages = Array.from(files).slice(0, 5); // Max 5 images
-  //     setBusinessImages(prev => [...prev, ...newImages].slice(0, 5));
-  //   }
-  // };
 
   const handleSubmit = async () => {
     if (!validateStep(currentStep)) return;
@@ -620,6 +604,184 @@ export default function VendorRegistration({ onSuccess }: { onSuccess?: () => vo
                 </div>
               )}
 
+              {currentStep === 3 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <Building2 className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-gray-900">Location & Service Area</h2>
+                    <p className="text-gray-600">Where is your business located?</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Address *</label>
+                      <input
+                        type="text"
+                        value={formData.business_address}
+                        onChange={e => handleInputChange('business_address', e.target.value)}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.business_address ? 'border-red-300' : 'border-gray-300'}`}
+                        placeholder="123 Main St"
+                      />
+                      {errors.business_address && <p className="text-red-600 text-sm mt-1">{errors.business_address}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                      <input
+                        type="text"
+                        value={formData.city}
+                        onChange={e => handleInputChange('city', e.target.value)}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.city ? 'border-red-300' : 'border-gray-300'}`}
+                      />
+                      {errors.city && <p className="text-red-600 text-sm mt-1">{errors.city}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">State *</label>
+                      <input
+                        type="text"
+                        value={formData.state}
+                        onChange={e => handleInputChange('state', e.target.value)}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.state ? 'border-red-300' : 'border-gray-300'}`}
+                      />
+                      {errors.state && <p className="text-red-600 text-sm mt-1">{errors.state}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code *</label>
+                      <input
+                        type="text"
+                        value={formData.zip_code}
+                        onChange={e => handleInputChange('zip_code', e.target.value)}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.zip_code ? 'border-red-300' : 'border-gray-300'}`}
+                      />
+                      {errors.zip_code && <p className="text-red-600 text-sm mt-1">{errors.zip_code}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Service Radius (km)</label>
+                      <input
+                        type="number"
+                        value={formData.service_radius}
+                        onChange={e => handleInputChange('service_radius', Number(e.target.value))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex items-center mt-6">
+                      <input
+                        type="checkbox"
+                        checked={formData.mobile_service}
+                        onChange={e => handleInputChange('mobile_service', e.target.checked)}
+                        className="mr-2 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">I offer mobile services</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 4 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <Building2 className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-gray-900">Services & Pricing</h2>
+                    <p className="text-gray-600">List the services you provide</p>
+                  </div>
+                  {formData.services.map(service => (
+                    <div key={service.id} className="border p-4 rounded-lg space-y-2">
+                      <input
+                        type="text"
+                        value={service.name}
+                        onChange={e => updateService(service.id, { name: e.target.value })}
+                        placeholder="Service name"
+                        className="w-full border px-2 py-1 rounded"
+                      />
+                      <input
+                        type="number"
+                        value={service.duration_minutes}
+                        onChange={e => updateService(service.id, { duration_minutes: Number(e.target.value) })}
+                        placeholder="Duration (min)"
+                        className="w-full border px-2 py-1 rounded"
+                      />
+                      <input
+                        type="number"
+                        value={service.price_cents / 100}
+                        onChange={e => updateService(service.id, { price_cents: Number(e.target.value) * 100 })}
+                        placeholder="Price ($)"
+                        className="w-full border px-2 py-1 rounded"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeService(service.id)}
+                        className="text-sm text-red-600"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addService}
+                    className="px-4 py-2 bg-blue-600 text-white rounded"
+                  >
+                    Add Service
+                  </button>
+                  {errors.services && <p className="text-red-600 text-sm">{errors.services}</p>}
+                </div>
+              )}
+
+              {currentStep === 5 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <Building2 className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-gray-900">Business Details</h2>
+                    <p className="text-gray-600">A few more details</p>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">License Number</label>
+                      <input
+                        type="text"
+                        value={formData.license_number}
+                        onChange={e => handleInputChange('license_number', e.target.value)}
+                        className="w-full border px-4 py-2 rounded"
+                      />
+                    </div>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.insurance_verified}
+                        onChange={e => handleInputChange('insurance_verified', e.target.checked)}
+                        className="mr-2 text-blue-600 focus:ring-blue-500"
+                      />
+                      Insurance verified
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 6 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <Building2 className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-gray-900">Final Details</h2>
+                  </div>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.marketing_consent}
+                      onChange={e => handleInputChange('marketing_consent', e.target.checked)}
+                      className="mr-2 text-blue-600 focus:ring-blue-500"
+                    />
+                    I agree to receive marketing emails
+                  </label>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Referral Source</label>
+                    <input
+                      type="text"
+                      value={formData.referral_source}
+                      onChange={e => handleInputChange('referral_source', e.target.value)}
+                      className="w-full border px-4 py-2 rounded"
+                    />
+                  </div>
+                </div>
+              )}
+
               
             </motion.div>
           </AnimatePresence>
@@ -665,4 +827,4 @@ export default function VendorRegistration({ onSuccess }: { onSuccess?: () => vo
       </div>
     </div>
   );
-} 
+}

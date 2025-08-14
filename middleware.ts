@@ -21,10 +21,10 @@ const csp = [
 
 export const securityHeaders: Record<string, string> = {
   'Content-Security-Policy': csp,
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
   'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
-  'Referrer-Policy': 'strict-origin-when-cross-origin'
+  'Referrer-Policy': 'no-referrer'
 };
 const RL_WINDOW_MS = 60_000;
 const RL_MAX = 60;
