@@ -26,7 +26,7 @@ function ClientSide({ articles }: { articles: HelpArticle[] }) {
 
   return (
     <div>
-      <HelpSearch onResultsAction={handleResults} category={category} onQueryChange={setQuery} />
+      <HelpSearch onResults={handleResults} category={category} onQueryChange={setQuery} />
       <HelpCategoryFilter onSelect={setCategory} />
       {results.length === 0 && <p>No results found.</p>}
       <div className="grid md:grid-cols-2 gap-4">

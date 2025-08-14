@@ -2,7 +2,6 @@ import { supabase } from '@/lib/supabaseClient'
 import {
   type BookingStatus,
   type RefundStatus,
-  type RefundOptions,
   type StateTransitionResult
 } from '@/types/booking'
 import { processRefund } from './refundService'

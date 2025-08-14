@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function ChooseRolePage() {
-  const [roles, setRoles] = useState<string[]>([])
+  const [roles, setRoles] = useState<Array<'customer' | 'provider'>>([])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const router = useRouter()
@@ -25,8 +25,7 @@ export default function ChooseRolePage() {
 
     const { error: perr } = await supabase
       .from('profiles')
-      .update({ roles })
-      .eq('id', user.id)
+      .upsert({ id: user.id, roles }, { onConflict: 'id' })
 
     setBusy(false)
     if (perr) { setError(perr.message || 'Failed to save roles'); return }

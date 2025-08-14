@@ -21,7 +21,6 @@ export async function checkDlqAndAlert() {
         try {
           await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
         } catch (e) {
-          // eslint-disable-next-line no-console
           console.error('DLQ alert failed', e)
         }
       }
