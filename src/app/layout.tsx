@@ -2,6 +2,8 @@
 import './globals.css'
 import MainNavigation from '@/components/MainNavigation'
 import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import '@/lib/observability/init'
 
 export const metadata: Metadata = {
@@ -19,12 +21,25 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="font-sans">
-      <body className="min-h-screen bg-white text-gray-900">
-        <GuidedTourProvider>
-          <MainNavigation />
-          <main>{children}</main>
-        </GuidedTourProvider>
+    <html lang="en" suppressHydrationWarning className="font-sans">
+      <head>
+        <meta name="color-scheme" content="light dark" />
+      </head>
+      <body className="min-h-screen bg-background text-foreground">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <GuidedTourProvider>
+            <MainNavigation />
+            <div className="fixed top-4 right-4 z-50">
+              <ThemeSwitcher />
+            </div>
+            <main>{children}</main>
+          </GuidedTourProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
