@@ -1,41 +1,27 @@
-import Shepherd from 'shepherd.js';
+import Shepherd from 'shepherd.js'
 
-export const customerBookingTourId = 'customer-booking';
+export const customerBookingTourId = 'customer-booking'
 
-export const customerBookingSteps: (Shepherd.Step.StepOptions & { helpArticleSlug?: string })[] = [
+interface TourStep {
+  id: string
+  text: string
+  helpArticleSlug?: string
+  attachTo?: { element: string; on: string }
+  buttons?: Array<{ text: string; action: () => void }>
+}
+
+export const customerBookingSteps: TourStep[] = [
   {
     id: 'welcome',
-    text: "Let's book your service step-by-step",
+    text: 'Learn how to book services on Bookiji.',
     helpArticleSlug: 'how-booking-works',
-    buttons: [
-      { text: 'Next', action: () => Shepherd.activeTour?.next() }
-    ]
+    buttons: [{ text: 'Next', action: () => Shepherd.activeTour?.next() }]
   },
   {
-    id: 'service-search',
-    text: 'Start by searching for a service using our AI assistant.',
-    attachTo: { element: '#aiChatInput', on: 'bottom' },
-    helpArticleSlug: 'how-booking-works',
-    buttons: [
-      { text: 'Back', action: () => Shepherd.activeTour?.back() },
-      { text: 'Next', action: () => Shepherd.activeTour?.next() }
-    ]
-  },
-  {
-    id: 'date-selection',
-    text: 'Pick a date for your appointment.',
-    attachTo: { element: '[data-tour="date-picker"]', on: 'top' },
-    helpArticleSlug: 'reschedule-cancel',
-    buttons: [
-      { text: 'Back', action: () => Shepherd.activeTour?.back() },
-      { text: 'Next', action: () => Shepherd.activeTour?.next() }
-    ]
-  },
-  {
-    id: 'time-selection',
-    text: 'Choose a time that works for you.',
-    attachTo: { element: '[data-tour="time-picker"]', on: 'top' },
-    helpArticleSlug: 'reschedule-cancel',
+    id: 'search',
+    text: 'Search for services and providers in your area.',
+    attachTo: { element: '[data-tour="search"]', on: 'top' },
+    helpArticleSlug: 'search-providers',
     buttons: [
       { text: 'Back', action: () => Shepherd.activeTour?.back() },
       { text: 'Next', action: () => Shepherd.activeTour?.next() }
@@ -43,19 +29,29 @@ export const customerBookingSteps: (Shepherd.Step.StepOptions & { helpArticleSlu
   },
   {
     id: 'provider-selection',
-    text: 'Review the provider details here.',
-    attachTo: { element: '[data-tour="provider-selection"]', on: 'top' },
-    helpArticleSlug: 'provider-onboarding',
+    text: 'Choose your preferred provider from the list.',
+    attachTo: { element: '[data-tour="provider-list"]', on: 'top' },
+    helpArticleSlug: 'choose-provider',
     buttons: [
       { text: 'Back', action: () => Shepherd.activeTour?.back() },
       { text: 'Next', action: () => Shepherd.activeTour?.next() }
     ]
   },
   {
-    id: 'payment',
-    text: 'Select your preferred payment method.',
-    attachTo: { element: '[data-tour="payment-form"]', on: 'top' },
-     helpArticleSlug: 'the-1-commitment-fee',
+    id: 'service-selection',
+    text: 'Select the specific service you need.',
+    attachTo: { element: '[data-tour="service-options"]', on: 'top' },
+    helpArticleSlug: 'select-service',
+    buttons: [
+      { text: 'Back', action: () => Shepherd.activeTour?.back() },
+      { text: 'Next', action: () => Shepherd.activeTour?.next() }
+    ]
+  },
+  {
+    id: 'date-time',
+    text: 'Pick your preferred date and time slot.',
+    attachTo: { element: '[data-tour="calendar"]', on: 'top' },
+    helpArticleSlug: 'select-time',
     buttons: [
       { text: 'Back', action: () => Shepherd.activeTour?.back() },
       { text: 'Next', action: () => Shepherd.activeTour?.next() }
@@ -63,12 +59,12 @@ export const customerBookingSteps: (Shepherd.Step.StepOptions & { helpArticleSlu
   },
   {
     id: 'confirmation',
-    text: 'Submit your booking when everything looks good.',
-    attachTo: { element: '[data-tour="submit-booking"]', on: 'top' },
-    helpArticleSlug: 'refunds-no-shows',
+    text: 'Review and confirm your booking details.',
+    attachTo: { element: '[data-tour="confirmation"]', on: 'top' },
+    helpArticleSlug: 'confirm-booking',
     buttons: [
       { text: 'Back', action: () => Shepherd.activeTour?.back() },
       { text: 'Done', action: () => Shepherd.activeTour?.complete() }
     ]
   }
-];
+]

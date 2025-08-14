@@ -5,7 +5,17 @@ import { useRouter } from 'next/navigation';
 import Shepherd from 'shepherd.js';
 import 'shepherd.js/dist/css/shepherd.css';
 
-interface StepOption extends Shepherd.Step.StepOptions {
+interface StepOption {
+  id?: string;
+  text?: string | HTMLElement | (string | HTMLElement)[];
+  title?: string;
+  buttons?: any[];
+  classes?: string;
+  highlightClass?: string;
+  scrollTo?: boolean;
+  modalOverlayOpeningPadding?: number;
+  modalOverlayOpeningRadius?: number;
+  popperOptions?: any;
   helpArticleSlug?: string;
 }
 
@@ -41,7 +51,7 @@ export function GuidedTourProvider({ children }: { children: ReactNode }) {
         container.appendChild(button);
         rest.text = container;
       }
-      tour.addStep(rest);
+      tour.addStep(rest as any);
     });
 
     const markComplete = () => {

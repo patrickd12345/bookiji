@@ -1,47 +1,42 @@
-import Shepherd from 'shepherd.js';
+import Shepherd from 'shepherd.js'
 
-export const vendorOnboardingTourId = 'vendor-onboarding';
+export const vendorOnboardingTourId = 'vendor-onboarding'
 
-export const vendorOnboardingSteps: (Shepherd.Step.StepOptions & { helpArticleSlug?: string })[] = [
+interface TourStep {
+  id: string
+  text: string
+  helpArticleSlug?: string
+  attachTo?: { element: string; on: string }
+  buttons?: Array<{ text: string; action: () => void }>
+}
+
+export const vendorOnboardingSteps: TourStep[] = [
   {
     id: 'welcome',
-    text: 'Welcome! This short tour will guide you through the provider registration form.',
+    text: 'Welcome to Bookiji! Let\'s get you set up.',
     helpArticleSlug: 'provider-onboarding',
     buttons: [
-      {
-        text: 'Next',
-        action: () => Shepherd.activeTour?.next()
-      }
+      { text: 'Next', action: () => Shepherd.activeTour?.next() }
     ]
   },
   {
-    id: 'business-name',
-    text: 'Enter your business name here.',
-    attachTo: { element: '#businessName', on: 'bottom' },
-    helpArticleSlug: 'provider-onboarding',
+    id: 'business-info',
+    text: 'Fill in your business information here.',
+    attachTo: { element: '[data-tour="business-info"]', on: 'top' },
+    helpArticleSlug: 'business-setup',
     buttons: [
       { text: 'Back', action: () => Shepherd.activeTour?.back() },
       { text: 'Next', action: () => Shepherd.activeTour?.next() }
     ]
   },
   {
-    id: 'service-type',
-    text: 'Select the service type that best fits your business.',
-    attachTo: { element: '#serviceType', on: 'bottom' },
-    helpArticleSlug: 'provider-onboarding',
-    buttons: [
-      { text: 'Back', action: () => Shepherd.activeTour?.back() },
-      { text: 'Next', action: () => Shepherd.activeTour?.next() }
-    ]
-  },
-  {
-    id: 'submit',
-    text: 'When you\'re ready, submit your application here.',
-    attachTo: { element: '#submitApplication', on: 'top' },
-    helpArticleSlug: 'provider-onboarding',
+    id: 'services',
+    text: 'Add the services you offer.',
+    attachTo: { element: '[data-tour="services"]', on: 'top' },
+    helpArticleSlug: 'service-setup',
     buttons: [
       { text: 'Back', action: () => Shepherd.activeTour?.back() },
       { text: 'Done', action: () => Shepherd.activeTour?.complete() }
     ]
   }
-];
+]

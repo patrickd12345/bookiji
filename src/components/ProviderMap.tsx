@@ -71,8 +71,8 @@ export default function ProviderMap() {
     });
 
     const features = providers.map(p => ({
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [p.longitude, p.latitude] },
+      type: 'Feature' as const,
+      geometry: { type: 'Point' as const, coordinates: [p.longitude, p.latitude] },
       properties: {},
     }));
 

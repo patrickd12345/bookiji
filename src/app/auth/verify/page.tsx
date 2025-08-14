@@ -1,47 +1,34 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+'use client'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 
 export default function VerifyPage() {
-  const params = useSearchParams();
-  const token = params.get('token');
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const params = useSearchParams()
+  const token = params?.get('token')
+  const [status, setStatus] = useState<'loading'|'ok'|'fail'>('loading')
+  const [msg, setMsg] = useState('Verifying…')
 
   useEffect(() => {
-    async function verify() {
-      if (!token) {
-        setStatus('error');
-        return;
-      }
+    async function run() {
+      if (!token) { setStatus('fail'); setMsg('Missing token'); return }
       try {
-        const res = await fetch('/api/auth/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token }),
-        });
-        const data = await res.json();
-        setStatus(data.ok ? 'success' : 'error');
+        const r = await fetch('/api/auth/verify', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token }) })
+        const j = await r.json().catch(() => ({}))
+        if (r.ok && j.ok !== false) { setStatus('ok'); setMsg('Email verified. You can sign in now.') }
+        else { setStatus('fail'); setMsg(j.error || 'Verification failed') }
       } catch {
-        setStatus('error');
+        setStatus('fail'); setMsg('Verification failed')
       }
     }
-    verify();
-  }, [token]);
+    run()
+  }, [token])
 
-  if (status === 'loading') return <p>Verifying</p>;
-  if (status === 'success')
-    return (
-      <div>
-        <p>Verification successful.</p>
-        <Link href="/login" className="text-blue-600 underline">Log in</Link>
-      </div>
-    );
   return (
-    <div>
-      <p>Verification failed.</p>
-      <Link href="/login" className="text-blue-600 underline">Back to login</Link>
+    <div className="p-6 space-y-2">
+      <h1 className="text-xl font-semibold">Verify your email</h1>
+      <p>{msg}</p>
+      {status !== 'loading' && <Link href="/login" className="text-blue-600 underline">Go to login</Link>}
     </div>
-  );
+  )
 }

@@ -64,8 +64,7 @@ export async function POST(request: Request) {
       console.log(`✅ ${type} notification sent to ${recipient}`)
       return NextResponse.json({
         success: true,
-        message: `${type} notification sent successfully`,
-        notification_id: result.id
+        message: `${type} notification sent successfully`
       })
     } else {
       throw new Error(result.error || `Failed to send ${type} notification`)

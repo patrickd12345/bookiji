@@ -1,69 +1,77 @@
-import Shepherd from 'shepherd.js';
+import Shepherd from 'shepherd.js'
 
-export const vendorDashboardTourId = 'vendor-dashboard';
-export const customerDashboardTourId = 'customer-dashboard';
+export const vendorDashboardTourId = 'vendor-dashboard'
+export const customerDashboardTourId = 'customer-dashboard'
 
-export const vendorDashboardSteps: (Shepherd.Step.StepOptions & { helpArticleSlug?: string })[] = [
+interface TourStep {
+  id: string
+  text: string
+  helpArticleSlug?: string
+  attachTo?: { element: string; on: string }
+  buttons?: Array<{ text: string; action: () => void }>
+}
+
+export const vendorDashboardSteps: TourStep[] = [
   {
     id: 'welcome',
-    text: 'Your business command center',
-    helpArticleSlug: 'provider-onboarding',
+    text: 'Welcome to your vendor dashboard!',
+    helpArticleSlug: 'vendor-dashboard',
     buttons: [{ text: 'Next', action: () => Shepherd.activeTour?.next() }]
   },
   {
-    id: 'stats',
-    text: 'Track your performance with these statistics.',
-    attachTo: { element: '[data-tour="stats-cards"]', on: 'top' },
-    helpArticleSlug: 'provider-onboarding',
+    id: 'bookings-overview',
+    text: 'View and manage all your bookings here.',
+    attachTo: { element: '[data-tour="bookings"]', on: 'bottom' },
+    helpArticleSlug: 'manage-bookings',
     buttons: [
       { text: 'Back', action: () => Shepherd.activeTour?.back() },
       { text: 'Next', action: () => Shepherd.activeTour?.next() }
     ]
   },
   {
-    id: 'recent-bookings',
-    text: 'Manage your recent bookings here.',
-    attachTo: { element: '[data-tour="recent-bookings"]', on: 'top' },
-    helpArticleSlug: 'reschedule-cancel',
+    id: 'calendar',
+    text: 'Set your availability and manage your schedule.',
+    attachTo: { element: '[data-tour="calendar"]', on: 'top' },
+    helpArticleSlug: 'calendar-management',
     buttons: [
       { text: 'Back', action: () => Shepherd.activeTour?.back() },
       { text: 'Next', action: () => Shepherd.activeTour?.next() }
     ]
   },
   {
-    id: 'quick-actions',
-    text: 'Access quick actions for common tasks.',
-    attachTo: { element: '[data-tour="quick-actions"]', on: 'top' },
-    helpArticleSlug: 'provider-onboarding',
-    buttons: [
-      { text: 'Back', action: () => Shepherd.activeTour?.back() },
-      { text: 'Next', action: () => Shepherd.activeTour?.next() }
-    ]
-  },
-  {
-    id: 'settings',
-    text: 'Manage your account settings here.',
-    attachTo: { element: '[data-tour="settings-menu"]', on: 'left' },
-    helpArticleSlug: 'support-options',
+    id: 'earnings',
+    text: 'Track your earnings and payment history.',
+    attachTo: { element: '[data-tour="earnings"]', on: 'left' },
+    helpArticleSlug: 'earnings-tracking',
     buttons: [
       { text: 'Back', action: () => Shepherd.activeTour?.back() },
       { text: 'Done', action: () => Shepherd.activeTour?.complete() }
     ]
   }
-];
+]
 
-export const customerDashboardSteps: (Shepherd.Step.StepOptions & { helpArticleSlug?: string })[] = [
+export const customerDashboardSteps: TourStep[] = [
   {
     id: 'welcome',
-    text: 'Your personal booking hub',
-    helpArticleSlug: 'how-booking-works',
+    text: 'Welcome to your customer dashboard!',
+    helpArticleSlug: 'customer-dashboard',
     buttons: [{ text: 'Next', action: () => Shepherd.activeTour?.next() }]
   },
   {
-    id: 'upcoming-bookings',
-    text: 'Check your upcoming bookings here.',
-    attachTo: { element: '[data-tour="upcoming-bookings"]', on: 'top' },
-    helpArticleSlug: 'reschedule-cancel',
+    id: 'bookings',
+    text: 'View and manage all your upcoming bookings.',
+    attachTo: { element: '[data-tour="bookings"]', on: 'bottom' },
+    helpArticleSlug: 'manage-bookings',
+    buttons: [
+      { text: 'Back', action: () => Shepherd.activeTour?.back() },
+      { text: 'Next', action: () => Shepherd.activeTour?.next() }
+    ]
+  },
+  {
+    id: 'search',
+    text: 'Find new services and providers in your area.',
+    attachTo: { element: '[data-tour="search"]', on: 'top' },
+    helpArticleSlug: 'search-providers',
     buttons: [
       { text: 'Back', action: () => Shepherd.activeTour?.back() },
       { text: 'Next', action: () => Shepherd.activeTour?.next() }
@@ -71,32 +79,12 @@ export const customerDashboardSteps: (Shepherd.Step.StepOptions & { helpArticleS
   },
   {
     id: 'favorites',
-    text: 'Your saved providers appear in this section.',
-    attachTo: { element: '[data-tour="favorites"]', on: 'top' },
-    helpArticleSlug: 'how-booking-works',
-    buttons: [
-      { text: 'Back', action: () => Shepherd.activeTour?.back() },
-      { text: 'Next', action: () => Shepherd.activeTour?.next() }
-    ]
-  },
-  {
-    id: 'history',
-    text: 'View your booking history here.',
-    attachTo: { element: '[data-tour="booking-history"]', on: 'top' },
-    helpArticleSlug: 'how-booking-works',
-    buttons: [
-      { text: 'Back', action: () => Shepherd.activeTour?.back() },
-      { text: 'Next', action: () => Shepherd.activeTour?.next() }
-    ]
-  },
-  {
-    id: 'profile',
-    text: 'Manage your profile settings.',
-    attachTo: { element: '[data-tour="profile-settings"]', on: 'left' },
-    helpArticleSlug: 'support-options',
+    text: 'Save your favorite providers for quick access.',
+    attachTo: { element: '[data-tour="favorites"]', on: 'left' },
+    helpArticleSlug: 'favorite-providers',
     buttons: [
       { text: 'Back', action: () => Shepherd.activeTour?.back() },
       { text: 'Done', action: () => Shepherd.activeTour?.complete() }
     ]
   }
-];
+]

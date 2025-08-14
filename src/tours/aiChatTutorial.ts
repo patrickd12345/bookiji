@@ -1,8 +1,16 @@
-import Shepherd from 'shepherd.js';
+import Shepherd from 'shepherd.js'
 
-export const aiChatTutorialTourId = 'ai-chat-tutorial';
+export const aiChatTutorialTourId = 'ai-chat-tutorial'
 
-export const aiChatTutorialSteps: (Shepherd.Step.StepOptions & { helpArticleSlug?: string })[] = [
+interface TourStep {
+  id: string
+  text: string
+  helpArticleSlug?: string
+  attachTo?: { element: string; on: string }
+  buttons?: Array<{ text: string; action: () => void }>
+}
+
+export const aiChatTutorialSteps: TourStep[] = [
   {
     id: 'welcome',
     text: 'Learn how to use AI-powered booking',
@@ -61,4 +69,4 @@ export const aiChatTutorialSteps: (Shepherd.Step.StepOptions & { helpArticleSlug
       { text: 'Done', action: () => Shepherd.activeTour?.complete() }
     ]
   }
-];
+]

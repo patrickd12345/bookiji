@@ -1,38 +1,39 @@
-import { getDeadLetterQueueSize } from '@/lib/services/notificationQueue';
+import { getDeadLetterQueueSize } from '@/lib/services/notificationQueue'
 
-let overThresholdSince: number | null = null;
-let alerted = false;
+let overThresholdSince: number | null = null
+let alerted = false
 
 export async function checkDlqAndAlert() {
-  const size = getDeadLetterQueueSize();
+  const size = getDeadLetterQueueSize()
+  const now = Date.now()
+
   if (size > 20) {
-    if (!overThresholdSince) overThresholdSince = Date.now();
-    if (!alerted && Date.now() - overThresholdSince > 10 * 60 * 1000) {
-      alerted = true;
-      if (process.env.ALERT_WEBHOOK_URL) {
+    if (!overThresholdSince) overThresholdSince = now
+    if (!alerted && now - overThresholdSince > 10 * 60 * 1000) {
+      alerted = true
+      const url = process.env.ALERT_WEBHOOK_URL
+      if (url) {
+        const payload = {
+          size,
+          overThresholdSince: new Date(overThresholdSince).toISOString(),
+          now: new Date(now).toISOString(),
+        }
         try {
-          const payload = {
-            size,
-            overThresholdSince: new Date(overThresholdSince).toISOString(),
-            now: new Date().toISOString(),
-          };
-          await fetch(process.env.ALERT_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-        } catch (err) {
-          console.error('Failed to send alert', err);
+          await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error('DLQ alert failed', e)
         }
       }
     }
   } else {
-    overThresholdSince = null;
-    alerted = false;
+    overThresholdSince = null
+    alerted = false
   }
 }
 
 export function startDlqMonitor() {
-  if (typeof window !== 'undefined') return;
-  void setInterval(checkDlqAndAlert, 60_000);
+  if (typeof window !== 'undefined') return
+  // fire-and-forget
+  void setInterval(checkDlqAndAlert, 60_000)
 }
