@@ -1,10 +1,10 @@
 // Simple test to see actual PPP calculation results
-const { 
+import { 
   getPPPCustomerFee, 
   getPPPVendorFee, 
   calculatePPPAdjustedAmount,
   getPPPData 
-} = require('./src/lib/ppp.ts')
+} from './src/lib/ppp.ts'
 
 console.log('🧪 Testing PPP Calculations:')
 

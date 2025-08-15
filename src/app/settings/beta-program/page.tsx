@@ -19,15 +19,26 @@ export default function BetaProgram() {
       return;
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('beta_status')
-      .eq('id', session.user.id)
-      .single();
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('beta_status')
+        .eq('id', session.user.id)
+        .single();
 
-    if (profile?.beta_status) {
-      setBetaEnabled(true);
-      setBetaType(profile.beta_status.type);
+      if (error) {
+        console.warn('Could not fetch beta_status (column may not exist):', error.message);
+        // beta_status column doesn't exist, so beta features are not available
+        setBetaEnabled(false);
+        setBetaType(null);
+      } else if (profile?.beta_status) {
+        setBetaEnabled(true);
+        setBetaType(profile.beta_status.type);
+      }
+    } catch (error) {
+      console.warn('Error checking beta status:', error);
+      setBetaEnabled(false);
+      setBetaType(null);
     }
     setLoading(false);
   }, [router]);
@@ -39,33 +50,51 @@ export default function BetaProgram() {
   const handleBetaToggle = async (enabled: boolean) => {
     setBetaEnabled(enabled);
     if (!enabled) {
-      // Opt out of beta
-      await supabase
-        .from('profiles')
-        .update({ 
-          beta_status: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', (await supabase.auth.getSession()).data.session?.user.id);
-      setBetaType(null);
+      try {
+        // Opt out of beta
+        const { error } = await supabase
+          .from('profiles')
+          .update({ 
+            beta_status: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', (await supabase.auth.getSession()).data.session?.user.id);
+        
+        if (error) {
+          console.warn('Could not update beta_status (column may not exist):', error.message);
+          // Don't fail the UI, just log the warning
+        }
+        setBetaType(null);
+      } catch (error) {
+        console.warn('Error updating beta status:', error);
+      }
     }
   };
 
   const handleBetaTypeChange = async (type: 'early_access' | 'public_beta') => {
     setBetaType(type);
-    await supabase
-      .from('profiles')
-      .update({ 
-        beta_status: {
-          type,
-          joined_at: new Date().toISOString(),
-          features: type === 'early_access' 
-            ? ['all']
-            : ['core_features', 'ui_improvements']
-        },
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', (await supabase.auth.getSession()).data.session?.user.id);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          beta_status: {
+            type,
+            joined_at: new Date().toISOString(),
+            features: type === 'early_access' 
+              ? ['all']
+              : ['core_features', 'ui_improvements']
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', (await supabase.auth.getSession()).data.session?.user.id);
+      
+      if (error) {
+        console.warn('Could not update beta_status (column may not exist):', error.message);
+        // Don't fail the UI, just log the warning
+      }
+    } catch (error) {
+      console.warn('Error updating beta status:', error);
+    }
   };
 
   if (loading) {
@@ -83,10 +112,17 @@ export default function BetaProgram() {
           <div>
             <h2 className="text-xl font-semibold">Beta Updates</h2>
             <p className="text-gray-600">Get early access to new features and help shape the future of Bookiji</p>
+            {!betaEnabled && (
+              <p className="text-sm text-amber-600 mt-2">
+                ⚠️ Beta features are currently not available in your database schema. 
+                Contact support to enable beta program features.
+              </p>
+            )}
           </div>
           <Switch 
             checked={betaEnabled}
             onCheckedChange={handleBetaToggle}
+            disabled={!betaEnabled} // Disable if beta features not available
           />
         </div>
 

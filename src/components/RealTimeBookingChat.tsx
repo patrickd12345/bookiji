@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, type MouseEvent, type KeyboardEvent } from 'react'
+import React, { useState, type MouseEvent, type KeyboardEvent, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { BookingPaymentModal } from './BookingPaymentModal'
 import { Zap } from 'lucide-react'
+import { useI18n } from '@/lib/i18n/useI18n'
 
 interface Message {
   id: string
@@ -28,19 +29,25 @@ interface BookingResult {
 }
 
 export default function RealTimeBookingChat() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'Hi! I\'m Bookiji, your AI booking assistant. I can help you find and book any service. What are you looking for?',
-      timestamp: new Date()
-    }
-  ])
+  const { t } = useI18n()
+  const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [currentBooking, setCurrentBooking] = useState<{ id: string; service: string; provider: string; date: string; time: string; customerId: string } | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const customerId = '550e8400-e29b-41d4-a716-446655440000' // Proper UUID format
+
+  // Initialize messages after component mounts to avoid hydration mismatch
+  useEffect(() => {
+    setMessages([
+      {
+        id: '1',
+        role: 'assistant',
+        content: t('chat.greeting'),
+        timestamp: new Date()
+      }
+    ])
+  }, [])
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isTyping) return
@@ -261,8 +268,8 @@ export default function RealTimeBookingChat() {
             <Zap className="w-4 h-4 text-primary-foreground" />
           </div>
           <div className="flex-1">
-            <h2 className="font-semibold text-foreground">Real-Time Booking Assistant</h2>
-            <p className="text-sm text-muted-foreground">AI-powered booking with instant payment</p>
+            <h2 className="font-semibold text-foreground">{t('chat.header')}</h2>
+            <p className="text-sm text-muted-foreground">{t('chat.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -283,7 +290,8 @@ export default function RealTimeBookingChat() {
                 setTimeout(() => voiceInfo.remove(), 5000);
               }}
               className="p-2 hover:bg-muted rounded-full transition-colors"
-              title="Voice input coming soon">
+              title={t('chat.voice_tooltip')}
+              suppressHydrationWarning>
               <span className="text-xl">🎤</span>
             </button>
             <button
@@ -291,7 +299,7 @@ export default function RealTimeBookingChat() {
                 evt.preventDefault();
                 // Show image attachment info
                 const imageInfo = document.createElement('div');
-                imageInfo.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm';
+                imageInfo.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 max-h-sm';
                 imageInfo.innerHTML = `
                   <div class="flex items-center gap-2 mb-2">
                     <span class="text-xl">📷</span>
@@ -304,7 +312,8 @@ export default function RealTimeBookingChat() {
                 setTimeout(() => imageInfo.remove(), 5000);
               }}
               className="p-2 hover:bg-muted rounded-full transition-colors"
-              title="Image attachment coming soon">
+              title={t('chat.image_tooltip')}
+              suppressHydrationWarning>
               <span className="text-xl">📷</span>
             </button>
           </div>
@@ -364,43 +373,49 @@ export default function RealTimeBookingChat() {
             value={inputMessage}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Try: Book a haircut for tomorrow at 2 PM"
+            placeholder={t('chat.input_placeholder')}
             className="flex-1 px-4 py-3 bg-muted border-0 rounded-xl focus:ring-2 focus:ring-primary placeholder:text-muted-foreground"
             disabled={isTyping}
+            suppressHydrationWarning
           />
           <button 
             onClick={handleSendMessage}
             disabled={isTyping || !inputMessage.trim()}
             className="px-4 py-3 bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            suppressHydrationWarning
           >
-            Send
+            {t('chat.send')}
           </button>
         </div>
 
         <div className="mt-4 flex gap-2 flex-wrap">
           <button 
-            onClick={() => handleQuickPrompt('Book a haircut for today')}
+            onClick={() => handleQuickPrompt(t('chat.quick_1'))}
             className="px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-full text-sm text-muted-foreground transition-colors"
+            suppressHydrationWarning
           >
-            Book a haircut for today
+            {t('chat.quick_1')}
           </button>
           <button 
-            onClick={() => handleQuickPrompt('I need a massage tomorrow')}
+            onClick={() => handleQuickPrompt(t('chat.quick_2'))}
             className="px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-full text-sm text-muted-foreground transition-colors"
+            suppressHydrationWarning
           >
-            I need a massage tomorrow
+            {t('chat.quick_2')}
           </button>
           <button 
-            onClick={() => handleQuickPrompt('Book a cleaning service')}
+            onClick={() => handleQuickPrompt(t('chat.quick_3'))}
             className="px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-full text-sm text-muted-foreground transition-colors"
+            suppressHydrationWarning
           >
-            Book a cleaning service
+            {t('chat.quick_3')}
           </button>
           <button 
-            onClick={() => handleQuickPrompt('What services are available?')}
+            onClick={() => handleQuickPrompt(t('chat.quick_4'))}
             className="px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-full text-sm text-muted-foreground transition-colors"
+            suppressHydrationWarning
           >
-            What services are available?
+            {t('chat.quick_4')}
           </button>
         </div>
       </div>

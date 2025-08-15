@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useThemeStore } from '@/stores/themeStore'
+import { useTheme } from 'next-themes'
 import type { Theme } from '@/types'
 
 const THEMES = [
@@ -10,24 +10,21 @@ const THEMES = [
   { id: 'dark', label: 'Dark', icon: '🌙' },
   { id: 'pastel', label: 'Pastel', icon: '🎨' },
   { id: 'cyberpunk', label: 'Cyberpunk', icon: '🤖' },
-  { id: 'candycrush', label: 'Candy Crush', icon: '🍬' }
+  { id: 'ocean', label: 'Ocean', icon: '🌊' },
+  { id: 'sunset', label: 'Sunset', icon: '🌅' },
+  { id: 'forest', label: 'Forest', icon: '🌲' },
+  { id: 'cupcake', label: 'Cupcake', icon: '🍭' },
+  { id: 'midnight', label: 'Midnight', icon: '🌙' }
 ] as const
 
 export default function ThemeSelector() {
   const [mounted, setMounted] = useState(false)
-  const { theme, setTheme } = useThemeStore()
+  const { theme, setTheme } = useTheme()
 
   // Only show the component after it's mounted to prevent hydration mismatch
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  // Keep the DOM attribute in sync with store value (handles rehydration as well)
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-theme', theme)
-    }
-  }, [theme])
 
   const handleThemeChange = async (newTheme: Theme) => {
     try {

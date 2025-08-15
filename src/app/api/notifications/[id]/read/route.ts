@@ -4,8 +4,9 @@ import { cookies } from 'next/headers'
 import { getAuthenticatedUserId } from '../../../_utils/auth'
 import { getSupabaseConfig } from '@/config/supabase'
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const cookieStore = await cookies()
     const config = getSupabaseConfig()
     const supabase = createServerClient(
@@ -31,10 +32,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     // Update the notification
     const { error: updateError } = await supabase
       .from('notifications')
-
       .update({ read: true, read_at: new Date().toISOString() })
-
-      .eq('id', new URL(request.url).pathname.split('/')[3])
+      .eq('id', id)
       .eq('user_id', userId)
 
     if (updateError) throw updateError

@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-export default function VerifyPage() {
+function VerifyPageContent() {
   const [verificationStatus, setVerificationStatus] = useState<'verifying' | 'verified' | 'failed' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const searchParams = useSearchParams()
@@ -44,7 +44,7 @@ export default function VerifyPage() {
         setVerificationStatus('failed')
         setError(responseData.error || responseData.message || 'Verification failed')
       }
-    } catch (err) {
+    } catch {
       setVerificationStatus('failed')
       setError('Network error occurred during verification')
     }
@@ -130,5 +130,24 @@ export default function VerifyPage() {
         </CardHeader>
       </Card>
     </div>
+  )
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Loading...</CardTitle>
+            <CardDescription>
+              Please wait while we load the verification page...
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    }>
+      <VerifyPageContent />
+    </Suspense>
   )
 }

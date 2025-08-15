@@ -113,8 +113,7 @@ async function createBlock(request: NextRequest) {
 }
 
 async function listBlocks() {
-  const mockRequest = { url: 'http://localhost:3000/api/blocks/list' } as NextRequest
-  return await GET(mockRequest)
+  return await GET()
 }
 
 async function deleteBlock(request: NextRequest) {

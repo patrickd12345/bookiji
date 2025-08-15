@@ -38,8 +38,7 @@ vi.mock('@supabase/supabase-js', () => {
 
 describe('GET /api/analytics/system', () => {
   it('returns aggregated system metrics', async () => {
-    const mockRequest = { url: 'http://localhost:3000/api/analytics/system' } as NextRequest
-    const res = await GET(mockRequest)
+    const res = await GET()
     const data = await res.json()
 
     expect(res.status).toBe(200)

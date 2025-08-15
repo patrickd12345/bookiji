@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useI18n } from '@/lib/i18n/useI18n'
 import { Zap } from 'lucide-react';
 
 interface BigActionButtonProps {
@@ -8,6 +9,7 @@ interface BigActionButtonProps {
 }
 
 export default function BigActionButton({ onStartTour }: BigActionButtonProps) {
+  const { t } = useI18n()
   const handleClick = () => {
     if (onStartTour) {
       try {
@@ -41,10 +43,11 @@ export default function BigActionButton({ onStartTour }: BigActionButtonProps) {
         style={{
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
         }}
-        title="Explore Bookiji features"
+        title={t('cta.explore_features')}
+        suppressHydrationWarning
       >
         <Zap className="w-6 h-6" />
-        <span className="font-extrabold">See it in ACTION!</span>
+        <span className="font-extrabold">{t('cta.see_it_action')}</span>
         <Zap className="w-6 h-6" />
       </button>
     </div>

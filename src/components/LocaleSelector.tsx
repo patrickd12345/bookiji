@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { Globe, ChevronDown, Check } from 'lucide-react'
-import { useI18n, SUPPORTED_LOCALES } from '@/lib/i18n/useI18n'
+import { useI18n } from '@/lib/i18n/useI18n'
+import { SUPPORTED_LOCALES } from '@/lib/i18n/config'
 
 interface LocaleSelectorProps {
   className?: string
@@ -40,11 +41,13 @@ export default function LocaleSelector({
 
   if (variant === 'icon-only') {
     return (
-      <div className="relative">
+      <div className="relative z-50">
         <button
+          type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={`p-2 rounded-lg hover:bg-gray-100 transition-colors ${className}`}
-          title="Change language"
+          title={t('locale.change_language')}
+          suppressHydrationWarning
         >
           <Globe size={20} className="text-gray-600" />
         </button>
@@ -59,6 +62,7 @@ export default function LocaleSelector({
                   className={`w-full text-left px-3 py-2 rounded-md hover:bg-gray-50 flex items-center justify-between ${
                     locale === localeInfo.code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
                   }`}
+                  suppressHydrationWarning
                 >
                   <div className="flex items-center">
                     {showFlag && (
@@ -82,10 +86,12 @@ export default function LocaleSelector({
 
   if (variant === 'compact') {
     return (
-      <div className="relative">
+      <div className="relative z-50">
         <button
+          type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors ${className}`}
+          suppressHydrationWarning
         >
           {showFlag && (
             <span className="text-lg">{getFlagEmoji(currentLocaleInfo.country)}</span>
@@ -104,6 +110,7 @@ export default function LocaleSelector({
                   className={`w-full text-left px-3 py-2 rounded-md hover:bg-gray-50 flex items-center justify-between ${
                     locale === localeInfo.code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
                   }`}
+                  suppressHydrationWarning
                 >
                   <div className="flex items-center">
                     {showFlag && (
@@ -127,10 +134,12 @@ export default function LocaleSelector({
 
   // Full variant
   return (
-    <div className="relative">
+    <div className="relative z-50">
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-3 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors min-w-[200px] ${className}`}
+        suppressHydrationWarning
       >
         <Globe size={20} className="text-gray-600" />
         <div className="flex items-center gap-2 flex-1">
@@ -155,6 +164,7 @@ export default function LocaleSelector({
                 className={`w-full text-left px-3 py-3 rounded-md hover:bg-gray-50 flex items-center justify-between ${
                   locale === localeInfo.code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
                 }`}
+                suppressHydrationWarning
               >
                 <div className="flex items-center">
                   {showFlag && (

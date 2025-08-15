@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useI18n } from '@/lib/i18n/useI18n'
 import { motion } from 'framer-motion'
 
 interface AIRadiusScalingProps {
@@ -19,6 +20,7 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
   const [radiusRecommendation, setRadiusRecommendation] = useState<RadiusRecommendation | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { t } = useI18n()
 
   const getProviderDensity = (location: string): 'dense' | 'medium' | 'sparse' => {
     // Simple logic - in a real app, this would be based on actual provider data
@@ -54,13 +56,14 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
         }),
       })
 
+      // Accept 200 with success flag OR graceful fallback body
       if (!response.ok) {
-        throw new Error('Failed to get radius recommendation')
+        throw new Error(`Failed to get radius recommendation (${response.status})`)
       }
 
       const data = await response.json()
       
-      if (data.success) {
+      if (data && data.recommendedRadius) {
         setRadiusRecommendation({
           recommendedRadius: data.recommendedRadius,
           explanation: data.explanation,
@@ -68,7 +71,7 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
         })
         onRadiusChangeAction(data.recommendedRadius)
       } else {
-        throw new Error(data.error || 'Failed to get radius recommendation')
+        throw new Error(data?.error || 'Failed to get radius recommendation')
       }
     } catch (error) {
       console.error('Radius scaling error:', error)
@@ -91,8 +94,8 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
           <span className="text-white text-sm">🗺️</span>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-900">AI-Powered Map Protection</h3>
-          <p className="text-sm text-gray-500">Protecting vendor privacy with intelligent radius scaling</p>
+          <h3 className="font-semibold text-gray-900">{t('feature.map_protection.title')}</h3>
+          <p className="text-sm text-gray-500">{t('feature.map_protection.desc')}</p>
         </div>
       </div>
 
@@ -103,7 +106,7 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
           className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl"
         >
           <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm text-primary">Analyzing optimal search radius...</span>
+          <span className="text-sm text-primary">{t('radius.analyzing')}</span>
         </motion.div>
       )}
 
@@ -118,7 +121,7 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
             onClick={fetchRadiusRecommendation}
             className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
           >
-            Try again
+            {t('buttons.try_again')}
           </button>
         </motion.div>
       )}
@@ -131,7 +134,7 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
         >
           <div className="p-4 bg-accent/10 rounded-xl border border-accent/20">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">Recommended Radius</span>
+              <span className="text-sm font-medium text-foreground">{t('radius.recommended')}</span>
               <span className="text-lg font-bold text-accent">{radiusRecommendation.recommendedRadius} km</span>
             </div>
             <p className="text-sm text-muted-foreground">{radiusRecommendation.explanation}</p>
@@ -139,24 +142,21 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
 
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 bg-muted/50 rounded-lg">
-              <span className="text-xs text-gray-500 uppercase tracking-wide">Service</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">{t('label.service')}</span>
               <p className="text-sm font-medium text-gray-900">{service}</p>
             </div>
             <div className="p-3 bg-muted/50 rounded-lg">
-              <span className="text-xs text-gray-500 uppercase tracking-wide">Provider Density</span>
-              <p className="text-sm font-medium text-gray-900 capitalize">{radiusRecommendation.providerDensity}</p>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">{t('label.provider_density')}</span>
+              <p className="text-sm font-medium text-gray-900 capitalize">{t(`density.${radiusRecommendation.providerDensity}`)}</p>
             </div>
           </div>
 
           <div className="p-3 bg-primary/10 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-primary">🔒</span>
-              <span className="text-sm font-medium text-primary">Privacy Protection Active</span>
+              <span className="text-sm font-medium text-primary">{t('privacy.active')}</span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Vendors are shown as availability zones, not exact locations. 
-              This protects their privacy while helping you find nearby services.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('privacy.explainer')}</p>
           </div>
         </motion.div>
       )}
@@ -165,9 +165,10 @@ export default function AIRadiusScaling({ service, location, onRadiusChangeActio
         <button
           onClick={fetchRadiusRecommendation}
           disabled={isLoading}
-          className="w-full px-4 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          className="w-full px-4 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          suppressHydrationWarning
         >
-          {isLoading ? 'Analyzing...' : 'Refresh Radius Analysis'}
+          {t('radius.refresh')}
         </button>
       </div>
     </div>

@@ -1,10 +1,8 @@
 ﻿import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import MainNavigation from '@/components/MainNavigation'
 import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider'
+import MainNavigation from '@/components/MainNavigation'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
-import { ThemeSwitcher } from '@/components/ThemeSwitcher'
-import '@/lib/observability/init'
 
 export const metadata: Metadata = {
   title: 'Bookiji — Universal Booking Platform',
@@ -26,17 +24,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="color-scheme" content="light dark" />
       </head>
       <body className="min-h-screen bg-background text-foreground">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <ThemeProvider>
           <GuidedTourProvider>
             <MainNavigation />
-            <div className="fixed top-4 right-4 z-50">
-              <ThemeSwitcher />
-            </div>
             <main>{children}</main>
           </GuidedTourProvider>
         </ThemeProvider>

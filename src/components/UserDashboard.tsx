@@ -152,7 +152,7 @@ export default function UserDashboard() {
         const [profileResult, bookingsResult, creditsResult, favoritesResult] = await Promise.allSettled([
           supabase
             .from('user_role_summary')
-            .select('*, beta_status')
+            .select('*')
             .eq('user_id', session.user.id)
             .maybeSingle(),
           supabase

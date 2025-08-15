@@ -16,14 +16,24 @@ export async function POST(request: Request) {
       console.log('🗺️ AI Radius Scaling Request:', { service, location, providerDensity, currentRadius })
     }
 
-    // Generate AI-powered radius recommendation
-    const aiResponse = await ollamaService.generate(
-      BOOKIJI_PROMPTS.radiusScaling(providerDensity || 'medium', service)
-    )
-
-    // Parse the AI response to extract radius and explanation
-    const radiusMatch = aiResponse.match(/(\d+(?:\.\d+)?)\s*km/i)
-    const recommendedRadius = radiusMatch ? parseFloat(radiusMatch[1]) : 5
+    // Try AI-powered radius recommendation, gracefully fall back if unavailable
+    let recommendedRadius = 5
+    let explanation = 'Default radius applied.'
+    try {
+      const aiResponse = await ollamaService.generate(
+        BOOKIJI_PROMPTS.radiusScaling(providerDensity || 'medium', service)
+      )
+      const radiusMatch = aiResponse.match(/(\d+(?:\.\d+)?)\s*km/i)
+      recommendedRadius = radiusMatch ? parseFloat(radiusMatch[1]) : 5
+      explanation = aiResponse
+    } catch (aiError) {
+      // Fallback heuristic if AI is unavailable or fails
+      const density = (providerDensity || 'medium').toLowerCase()
+      if (density === 'dense') recommendedRadius = 3
+      else if (density === 'sparse') recommendedRadius = 10
+      else recommendedRadius = 5
+      explanation = `AI unavailable. Applied heuristic for ${density} areas.`
+    }
 
     if (process.env.NODE_ENV === 'development' && !ADSENSE_APPROVAL_MODE) {
       console.log('🗺️ AI Radius Recommendation:', recommendedRadius, 'km')
@@ -32,7 +42,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       success: true, 
       recommendedRadius,
-      explanation: aiResponse,
+      explanation,
       service,
       location,
       providerDensity: providerDensity || 'medium'
@@ -42,9 +52,17 @@ export async function POST(request: Request) {
     if (process.env.NODE_ENV === 'development' && !ADSENSE_APPROVAL_MODE) {
       console.error('❌ AI Radius Scaling error:', error)
     }
+    // Final safety fallback
+    const density = 'medium'
+    const recommendedRadius = 5
+    const explanation = 'Service temporarily unavailable. Using default radius.'
     return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Failed to generate radius recommendation',
-      success: false
-    }, { status: 500 })
+      success: true,
+      recommendedRadius,
+      explanation,
+      service: 'unknown',
+      location: 'unknown',
+      providerDensity: density
+    })
   }
 } 

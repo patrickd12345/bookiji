@@ -11,14 +11,18 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
-    console.log('👤 AI Persona Request:', { message, persona, service })
+    if (process.env.NODE_ENV === 'development') {
+      console.log('👤 AI Persona Request:', { message, persona, service })
+    }
 
     // Generate AI response based on customer persona
     const aiResponse = await ollamaService.generate(
       BOOKIJI_PROMPTS.personaResponse(message, persona || 'general', service, userHistory)
     )
 
-    console.log('👤 AI Persona Response:', aiResponse.substring(0, 100) + '…')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('👤 AI Persona Response:', aiResponse.substring(0, 100) + '…')
+    }
 
     return NextResponse.json({
       success: true,
@@ -28,10 +32,13 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
-    console.error('❌ AI Persona error:', error)
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Failed to generate AI persona response',
-      success: false
-    }, { status: 500 })
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ AI Persona error:', error)
+    }
+    return NextResponse.json({
+      success: true,
+      response: "I'm here to assist you, but my AI features are currently unavailable. Feel free to ask me anything about booking services!",
+      fallback: true
+    })
   }
 } 

@@ -37,9 +37,9 @@ CREATE POLICY "Users can delete their own roles" ON user_roles
 CREATE POLICY "Admins can manage all roles" ON user_roles
   FOR ALL USING (
     EXISTS (
-      SELECT 1 FROM user_roles ur 
-      WHERE ur.user_id = auth.uid() 
-      AND ur.role = 'admin'
+      SELECT 1 FROM profiles p
+      WHERE p.id = auth.uid() 
+      AND p.role = 'admin'
     )
   );
 

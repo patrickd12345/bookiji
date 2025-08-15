@@ -16,7 +16,6 @@ export default function ResetPage() {
   const [error, setError] = useState<string | null>(null)
   
   const params = useParams()
-  const router = useRouter()
   const token = params?.token as string
 
   if (!token) {
@@ -96,7 +95,7 @@ export default function ResetPage() {
         setStatus('error')
         setError(responseData.error || responseData.message || 'Failed to reset password')
       }
-    } catch (err) {
+    } catch {
       setStatus('error')
       setError('Network error occurred')
     } finally {

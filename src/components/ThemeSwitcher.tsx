@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Moon, Sun, Palette } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useI18n } from "@/lib/i18n/useI18n"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,8 +16,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function ThemeSwitcher() {
-  const { setTheme } = useTheme()
+  const { setTheme, theme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
+  const { t } = useI18n()
 
   React.useEffect(() => {
     setMounted(true)
@@ -30,56 +32,64 @@ export function ThemeSwitcher() {
     )
   }
 
+  const colorfulThemes = new Set(["corporate","pastel","ocean","sunset","forest","cyberpunk","cupcake","midnight"]) 
+  const isColorful = theme ? colorfulThemes.has(theme) : false
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <Palette className="absolute h-[1.2rem] w-[1.2rem] rotate-0 scale-0 transition-all [.pastel_&]:scale-100 [.ocean_&]:scale-100 [.sunset_&]:scale-100 [.forest_&]:scale-100 [.cyberpunk_&]:scale-100 [.cupcake_&]:scale-100 [.midnight_&]:scale-100" />
-          <span className="sr-only">Change theme</span>
+        <Button variant="outline" size="icon" aria-label={t('theme.change')} title={t('theme.change')}>
+          {isColorful ? (
+            <Palette className="h-[1.2rem] w-[1.2rem]" />
+          ) : (
+            <>
+              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            </>
+          )}
+          <span className="sr-only">{t('theme.change')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>🎨 Choose Theme</DropdownMenuLabel>
+        <DropdownMenuLabel>🎨 {t('theme.choose')}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         
         <DropdownMenuItem onClick={() => setTheme("corporate")} className="cursor-pointer">
-          🏢 Default
+          🏢 {t('theme.default')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer">
-          ☀️ Light
+          ☀️ {t('theme.light')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("dark")} className="cursor-pointer">
-          🌙 Dark
+          🌙 {t('theme.dark')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("system")} className="cursor-pointer">
-          💻 System
+          💻 {t('theme.system')}
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>🌈 Colorful Themes</DropdownMenuLabel>
+        <DropdownMenuLabel>🌈 {t('theme.colorful')}</DropdownMenuLabel>
         
         <DropdownMenuItem onClick={() => setTheme("pastel")} className="cursor-pointer">
-          🌸 Pastel
+          🌸 {t('theme.pastel')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("ocean")} className="cursor-pointer">
-          🌊 Ocean
+          🌊 {t('theme.ocean')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("sunset")} className="cursor-pointer">
-          🌅 Sunset
+          🌅 {t('theme.sunset')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("forest")} className="cursor-pointer">
-          🌲 Forest
+          🌲 {t('theme.forest')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("cyberpunk")} className="cursor-pointer">
-          🌆 Cyberpunk
+          🌆 {t('theme.cyberpunk')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("cupcake")} className="cursor-pointer">
-          🍭 Cupcake
+          🍭 {t('theme.cupcake')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("midnight")} className="cursor-pointer">
-          🌙 Midnight
+          🌙 {t('theme.midnight')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -90,6 +100,7 @@ export function ThemeSwitcher() {
 export function SimpleThemeToggle() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
+  const { t } = useI18n()
 
   React.useEffect(() => {
     setMounted(true)
@@ -98,7 +109,7 @@ export function SimpleThemeToggle() {
   const themes = ["corporate", "light", "dark", "pastel", "ocean", "sunset", "forest", "cyberpunk", "cupcake", "midnight"]
   
   const cycleTheme = () => {
-    const currentIndex = themes.indexOf(theme || "light")
+    const currentIndex = themes.indexOf(theme || "corporate")
     const nextIndex = (currentIndex + 1) % themes.length
     setTheme(themes[nextIndex])
   }
@@ -106,7 +117,7 @@ export function SimpleThemeToggle() {
   if (!mounted) {
     return (
       <Button variant="outline" className="px-4">
-        🎨 Theme
+        🎨 {t('theme.change')}
       </Button>
     )
   }
@@ -133,8 +144,8 @@ export function SimpleThemeToggle() {
       onClick={cycleTheme}
       className="px-4 gap-2"
     >
-      <span>{getThemeEmoji(theme || "light")}</span>
-      <span className="capitalize">{theme === "corporate" ? "Default" : theme || "light"}</span>
+      <span>{getThemeEmoji(theme || "corporate")}</span>
+      <span className="capitalize">{theme === "corporate" ? t('theme.default') : theme || "corporate"}</span>
     </Button>
   )
 } 

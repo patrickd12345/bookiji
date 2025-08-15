@@ -2,7 +2,24 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { I18nHook } from './types'
-import baseTranslations from '@/locales/en-US.json'
+import baseTranslations from '../../locales/en-US.json'
+import frFR from '../../locales/fr-FR.json'
+import deDE from '../../locales/de-DE.json'
+import esES from '../../locales/es-ES.json'
+import itIT from '../../locales/it-IT.json'
+import jaJP from '../../locales/ja-JP.json'
+import koKR from '../../locales/ko-KR.json'
+import zhCN from '../../locales/zh-CN.json'
+import ptBR from '../../locales/pt-BR.json'
+import hiIN from '../../locales/hi-IN.json'
+import thTH from '../../locales/th-TH.json'
+import viVN from '../../locales/vi-VN.json'
+import frCA from '../../locales/fr-CA.json'
+import esMX from '../../locales/es-MX.json'
+import enCA from '../../locales/en-CA.json'
+import enGB from '../../locales/en-GB.json'
+import enAU from '../../locales/en-AU.json'
+import deCH from '../../locales/de-CH.json'
 import { 
   SUPPORTED_LOCALES, 
   DEFAULT_LOCALE, 
@@ -14,21 +31,29 @@ import {
 // 🌍 GLOBAL I18N STATE (simple client-side state management)
 let localeChangeListeners: ((locale: string) => void)[] = []
 
-// 📚 Loaded translations cache
-const translationCache: Record<string, Record<string, string>> = {}
+// 📚 Missing key warnings cache
 const missingKeyWarnings = new Set<string>()
 
-async function loadTranslations(locale: string): Promise<Record<string, string>> {
-  if (translationCache[locale]) return translationCache[locale]
-  try {
-    const translations = (await import(`../../../locales/${locale}.json`)).default
-    translationCache[locale] = translations
-    return translations
-  } catch {
-    const fallback = (await import(`../../../locales/en-US.json`)).default
-    translationCache[locale] = fallback
-    return fallback
-  }
+// 🌍 STATIC TRANSLATIONS MAP
+const STATIC_TRANSLATIONS: Record<string, Record<string, string>> = {
+  'en-US': baseTranslations,
+  'fr-FR': frFR,
+  'de-DE': deDE,
+  'es-ES': esES,
+  'it-IT': itIT,
+  'ja-JP': jaJP,
+  'ko-KR': koKR,
+  'zh-CN': zhCN,
+  'pt-BR': ptBR,
+  'hi-IN': hiIN,
+  'th-TH': thTH,
+  'vi-VN': viVN,
+  'fr-CA': frCA,
+  'es-MX': esMX,
+  'en-CA': enCA,
+  'en-GB': enGB,
+  'en-AU': enAU,
+  'de-CH': deCH
 }
 
 // 🔄 LOCALE PERSISTENCE
@@ -42,23 +67,6 @@ function loadLocaleFromStorage(): string {
   if (typeof window !== 'undefined') {
     return localStorage.getItem('bookiji-locale') || DEFAULT_LOCALE
   }
-  return DEFAULT_LOCALE
-}
-
-// 🌐 AUTO-DETECT LOCALE ON FIRST VISIT
-function detectInitialLocale(): string {
-  // 1. Check localStorage first
-  const stored = loadLocaleFromStorage()
-  if (stored && SUPPORTED_LOCALES[stored]) {
-    return stored
-  }
-  
-  // 2. Detect from browser language
-  if (typeof navigator !== 'undefined') {
-    const detected = detectLocaleFromHeaders(navigator.language)
-    return detected.code
-  }
-  
   return DEFAULT_LOCALE
 }
 
@@ -86,24 +94,42 @@ function createTimeFormatter(locale: string, timeFormat: '12h' | '24h') {
   })
 }
 
-
 // 🪝 MAIN I18N HOOK
 export function useI18n(initialLocale?: string): I18nHook {
   const [currentLocale, setCurrentLocale] = useState<string>(() => {
+    // Always use the initialLocale on first render to ensure SSR consistency
     if (initialLocale && SUPPORTED_LOCALES[initialLocale]) {
       return initialLocale
     }
-    if (typeof window !== 'undefined') {
-      return detectInitialLocale()
-    }
     return DEFAULT_LOCALE
   })
-  const [translations, setTranslations] = useState<Record<string, string>>({})
+  
 
-  // Load translations when locale changes
+  // 🔄 DETECT AND SYNC CLIENT-SIDE LOCALE AFTER HYDRATION
   useEffect(() => {
-    loadTranslations(currentLocale).then(setTranslations)
-  }, [currentLocale])
+    // Only run on client after hydration
+    if (typeof window === 'undefined') return
+    
+    // Add a small delay to ensure hydration is complete
+    const timer = setTimeout(() => {
+      // Check if we should override the initial locale with stored preference
+      const storedLocale = loadLocaleFromStorage()
+      if (storedLocale && SUPPORTED_LOCALES[storedLocale] && storedLocale !== currentLocale) {
+        setCurrentLocale(storedLocale)
+        return
+      }
+      
+      // If no stored locale, detect from browser language
+      if (!storedLocale) {
+        const detected = detectLocaleFromHeaders(navigator.language)
+        if (detected.code !== currentLocale && SUPPORTED_LOCALES[detected.code]) {
+          setCurrentLocale(detected.code)
+        }
+      }
+    }, 100) // Small delay to ensure hydration is complete
+    
+    return () => clearTimeout(timer)
+  }, [currentLocale]) // Removed translations dependency to prevent unnecessary re-runs
 
   // 📡 SUBSCRIBE TO GLOBAL LOCALE CHANGES
   useEffect(() => {
@@ -120,52 +146,44 @@ export function useI18n(initialLocale?: string): I18nHook {
   // 🔄 UPDATE GLOBAL LOCALE
   const setLocale = useCallback((newLocale: string) => {
     if (!SUPPORTED_LOCALES[newLocale]) {
-      console.warn(`Locale ${newLocale} not supported, falling back to ${DEFAULT_LOCALE}`)
+      console.warn(`⚠️ Locale ${newLocale} not supported, falling back to ${DEFAULT_LOCALE}`)
       newLocale = DEFAULT_LOCALE
     }
     
     saveLocaleToStorage(newLocale)
+    setCurrentLocale(newLocale)
     
-    // Notify all components
-    localeChangeListeners.forEach(listener => listener(newLocale))
-  }, [])
-
-  // 📊 GET CURRENT LOCALE INFO
-  const localeInfo = getLocaleInfo(currentLocale)
-  const currencyInfo = getCurrencyInfo(localeInfo.currency)
-
-  // 💰 FORMAT CURRENCY
-  const formatCurrency = useCallback((amount: number) => {
-    const formatter = createCurrencyFormatter(currentLocale, localeInfo.currency)
-    // Convert from cents to main unit if needed
-    const displayAmount = currencyInfo.decimals > 0 
-      ? amount / Math.pow(10, currencyInfo.decimals)
-      : amount
-    return formatter.format(displayAmount)
-  }, [currentLocale, localeInfo.currency, currencyInfo.decimals])
-
-  // 📅 FORMAT DATE
-  const formatDate = useCallback((date: Date) => {
-    const formatter = createDateFormatter(currentLocale, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    // Notify all other components
+    localeChangeListeners.forEach(listener => {
+      try {
+        listener(newLocale)
+      } catch (error) {
+        console.error(`❌ Error in locale change listener:`, error)
+      }
     })
-    return formatter.format(date)
-  }, [currentLocale])
-
-  // 🕐 FORMAT TIME
-  const formatTime = useCallback((date: Date) => {
-    const formatter = createTimeFormatter(currentLocale, localeInfo.timeFormat)
-    return formatter.format(date)
-  }, [currentLocale, localeInfo.timeFormat])
+  }, [])
 
   // 🗣️ TRANSLATE FUNCTION
   const t = useCallback((key: string, variables?: Record<string, string>): string => {
-    let text = (translations as Record<string,string>)[key]
+    // Resolve messages directly from the static map using current locale
+    const messages = STATIC_TRANSLATIONS[currentLocale] || baseTranslations
+    let text = (messages as Record<string,string>)[key]
+
+    // Language-level fallback (e.g., fr-CA -> fr-FR, de-CH -> de-DE) if key missing
+    if (text === undefined) {
+      const langPrefix = currentLocale.split('-')[0]
+      const fallbackLocale = Object.keys(STATIC_TRANSLATIONS).find(
+        (code) => code !== currentLocale && code.startsWith(langPrefix + '-')
+      )
+      if (fallbackLocale) {
+        const fallbackMessages = STATIC_TRANSLATIONS[fallbackLocale]
+        text = (fallbackMessages as Record<string,string>)[key]
+      }
+    }
+
+    // Base fallback
     if (text === undefined) {
       if (process.env.NODE_ENV !== 'production' && !missingKeyWarnings.has(key)) {
-        console.warn(`Missing translation for key "${key}" in locale ${currentLocale}; falling back to en-US`)
         missingKeyWarnings.add(key)
       }
       text = (baseTranslations as Record<string,string>)[key] || key
@@ -178,26 +196,51 @@ export function useI18n(initialLocale?: string): I18nHook {
     }
 
     return text
-  }, [translations, currentLocale])
+  }, [currentLocale])
+
+  // 💰 CURRENCY FORMATTING
+  const formatCurrency = useCallback((amount: number, currency?: string): string => {
+    const currencyCode = currency || getLocaleInfo(currentLocale).currency
+    const formatter = createCurrencyFormatter(currentLocale, currencyCode)
+    return formatter.format(amount)
+  }, [currentLocale])
+
+  // 📅 DATE FORMATTING
+  const formatDate = useCallback((date: Date, options?: Intl.DateTimeFormatOptions): string => {
+    const defaultOptions: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      ...options
+    }
+    const formatter = createDateFormatter(currentLocale, defaultOptions)
+    return formatter.format(date)
+  }, [currentLocale])
+
+  // 🕐 TIME FORMATTING
+  const formatTime = useCallback((date: Date, timeFormat: '12h' | '24h' = '12h'): string => {
+    const formatter = createTimeFormatter(currentLocale, timeFormat)
+    return formatter.format(date)
+  }, [currentLocale])
+
+  // 🌍 LOCALE INFO
+  const localeInfo = getLocaleInfo(currentLocale)
 
   return {
+    // State
     locale: currentLocale,
     currency: localeInfo.currency,
     country: localeInfo.country,
+    
+    // Actions
+    setLocale,
+    
+    // Translation
     t,
+    
+    // Formatting
     formatCurrency,
     formatDate,
-    formatTime,
-    setLocale
+    formatTime
   }
 }
-
-// 🌐 SERVER-SIDE LOCALE DETECTION
-export function detectServerLocale(headers: Headers): string {
-  const acceptLanguage = headers.get('accept-language')
-  const detected = detectLocaleFromHeaders(acceptLanguage || undefined)
-  return detected.code
-}
-
-// 🔧 UTILITY EXPORTS
-export { SUPPORTED_LOCALES, getCurrencyInfo, getLocaleInfo } from './config'

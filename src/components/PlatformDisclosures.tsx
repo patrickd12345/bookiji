@@ -43,6 +43,7 @@ export function PlatformDisclosures() {
         <button
           onClick={() => setShowDetails(!showDetails)}
           className="text-blue-600 hover:underline text-sm"
+          suppressHydrationWarning
         >
           {showDetails ? 'Show Less' : 'Show More Details'}
         </button>
