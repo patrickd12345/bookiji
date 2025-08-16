@@ -6,7 +6,7 @@ import { referralService } from '@/lib/referrals'
 
 export async function POST(request: Request) {
   try {
-    const limited = limitRequest(request as unknown as Request, { windowMs: 60_000, max: 5 })
+    const limited = await limitRequest(request as unknown as Request, { windowMs: 60_000, max: 5 })
     if (limited) return limited
     const { email, password, full_name, role = 'customer' } = await request.json()
 

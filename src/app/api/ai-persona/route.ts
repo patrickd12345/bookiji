@@ -4,7 +4,7 @@ import { ollamaService, BOOKIJI_PROMPTS } from '../../../../lib/ollama'
 
 export async function POST(request: Request) {
   try {
-    const limited = limitRequest(request, { windowMs: 10_000, max: 10 })
+    const limited = await limitRequest(request, { windowMs: 10_000, max: 10 })
     if (limited) return limited
     const { message, userHistory, persona, service } = await request.json()
 

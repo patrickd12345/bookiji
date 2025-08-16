@@ -19,12 +19,12 @@ export function getClientIp(request: Request): string {
   return ip
 }
 
-export function limitRequest(request: Request, config: LimiterConfig): NextResponse | null | Promise<NextResponse | null> {
+export function limitRequest(request: Request, config: LimiterConfig): NextResponse | void | Promise<NextResponse | void> {
   // Dev convenience: do not rate-limit test-only endpoints
   try {
     const path = new URL(request.url).pathname
     if (process.env.NODE_ENV !== 'production' && path.startsWith('/api/test/')) {
-      return null
+      return undefined
     }
   } catch {}
   // Supabase-backed limiter (preferred in prod); falls back to memory when unavailable
@@ -41,7 +41,7 @@ export function limitRequest(request: Request, config: LimiterConfig): NextRespo
           const status = config.statusCode ?? 429
           return NextResponse.json({ error: 'Too many requests' }, { status })
         }
-        return null
+        return undefined
       })()
     }
   } catch {}
@@ -49,7 +49,7 @@ export function limitRequest(request: Request, config: LimiterConfig): NextRespo
 }
 
 
-function memoryFallback(request: Request, config: LimiterConfig): NextResponse | null {
+function memoryFallback(request: Request, config: LimiterConfig): NextResponse | void {
   const ip = getClientIp(request)
   const now = Date.now()
   const entry = ipHits.get(ip) || { count: 0, reset: now + config.windowMs }
@@ -70,7 +70,7 @@ function memoryFallback(request: Request, config: LimiterConfig): NextResponse |
     return NextResponse.json({ error: 'Too many requests' }, { status })
   }
 
-  return null
+  return undefined
 }
 
 

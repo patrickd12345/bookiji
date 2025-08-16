@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   const startTime = Date.now()
   
   try {
-    const limited = limitRequest(request, { windowMs: 10_000, max: 15 })
+    const limited = await limitRequest(request, { windowMs: 10_000, max: 15 })
     if (limited) return limited
     const { message } = await request.json()
 

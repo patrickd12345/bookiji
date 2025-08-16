@@ -57,7 +57,7 @@ interface AnalyticsResponse {
 // 📊 Analytics tracking endpoint for post-launch optimization
 export async function POST(request: NextRequest) {
   try {
-    const limited = limitRequest(request, { windowMs: 10_000, max: 30 })
+    const limited = await limitRequest(request, { windowMs: 10_000, max: 30 })
     if (limited) return limited
     const { event, properties } = await request.json()
     
@@ -330,7 +330,7 @@ async function sendRealTimeAlert(event: string, properties: EventProperties): Pr
 // Analytics data retrieval endpoints
 export async function GET(request: NextRequest): Promise<NextResponse<AnalyticsResponse>> {
   try {
-    const limited = limitRequest(request, { windowMs: 10_000, max: 60 })
+    const limited = await limitRequest(request, { windowMs: 10_000, max: 60 })
     if (limited) return limited as NextResponse<AnalyticsResponse>
     const supabase = createSupabaseClient()
     const { searchParams } = new URL(request.url)

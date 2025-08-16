@@ -5,7 +5,7 @@ import { ADSENSE_APPROVAL_MODE } from "@/lib/adsense"
 
 export async function POST(request: Request) {
   try {
-    const limited = limitRequest(request, { windowMs: 10_000, max: 20 })
+    const limited = await limitRequest(request, { windowMs: 10_000, max: 20 })
     if (limited) return limited
     const { service, location, providerDensity, currentRadius } = await request.json()
     

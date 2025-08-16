@@ -3,7 +3,7 @@ import { limitRequest } from '@/middleware/requestLimiter'
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
 
 export async function POST(req: NextRequest) {
-  const limited = limitRequest(req, { windowMs: 60_000, max: 5 })
+  const limited = await limitRequest(req, { windowMs: 60_000, max: 5 })
   if (limited) return limited
   const { token, newPassword } = await req.json().catch(() => ({}))
   if (!token || !newPassword) {
