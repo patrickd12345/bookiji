@@ -7,14 +7,15 @@ import { qaFromTranscript } from '@/lib/support/summarize';
 import { embed } from '@/lib/support/embeddings';
 import { searchKb } from '@/lib/support/rag';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const agent = await getAgentFromAuth(req);
   if (!agent?.roles?.includes('support_agent')) return NextResponse.json({ error:'forbidden' }, { status:403 });
 
   const { url, secretKey } = getSupabaseConfig() as { url: string; secretKey: string };
   const admin = createClient(url, secretKey, { auth: { persistSession:false } });
 
-  const { data, error } = await admin.from('support_tickets').select('*').eq('id', params.id).single();
+  const { data, error } = await admin.from('support_tickets').select('*').eq('id', id).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 404 });
   return NextResponse.json(data);
 }
@@ -105,7 +106,8 @@ async function maybeCreateKbSuggestion(
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const agent = await getAgentFromAuth(req);
   if (!agent?.roles?.includes('support_agent')) return NextResponse.json({ error:'forbidden' }, { status:403 });
 
@@ -117,9 +119,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const { url, secretKey } = getSupabaseConfig() as { url: string; secretKey: string };
   const admin = createClient(url, secretKey, { auth: { persistSession:false } });
 
-  const before = await admin.from('support_tickets').select('status,intent,subject').eq('id', params.id).single();
+  const before = await admin.from('support_tickets').select('status,intent,subject').eq('id', id).single();
   // apply update
-  const { data, error } = await admin.from('support_tickets').update(patch).eq('id', params.id).select('id,intent,subject,status').single();
+  const { data, error } = await admin.from('support_tickets').update(patch).eq('id', id).select('id,intent,subject,status').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   // If status transitioned to resolved → attempt suggestion
@@ -129,7 +131,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     // Immediate minimal suggestion to satisfy downstream flows
     await admin.from('kb_suggestions').insert({
-      ticket_id: params.id,
+      ticket_id: id,
       question: (subjectSafe || 'Support question').slice(0, 120),
       answer: 'Thanks for reaching out. Our team will add a definitive KB answer shortly.',
       intent: intentSafe,
@@ -138,17 +140,17 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     });
 
     try { 
-      await maybeCreateKbSuggestion(admin as any, params.id, intentSafe as any); 
-      console.info('support.kb_suggest.created', { ticket_id: params.id });
+      await maybeCreateKbSuggestion(admin as any, id, intentSafe as any); 
+      console.info('support.kb_suggest.created', { ticket_id: id });
     } catch (e) {
-      console.error('Failed to enrich KB suggestion', { ticket_id: params.id, error: e });
+      console.error('Failed to enrich KB suggestion', { ticket_id: id, error: e });
     }
 
     // Attach latest suggestion id for this ticket
     const latest = await admin
       .from('kb_suggestions')
       .select('id,status')
-      .eq('ticket_id', params.id)
+      .eq('ticket_id', id)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
