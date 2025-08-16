@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { getSupabaseConfig } from '@/config/supabase'
 
 type LimiterConfig = {
   windowMs: number
@@ -17,6 +19,25 @@ export function getClientIp(request: Request): string {
 }
 
 export function limitRequest(request: Request, config: LimiterConfig): NextResponse | null {
+  // Supabase-backed limiter (preferred in prod); falls back to memory when unavailable
+  try {
+    const { url, secretKey } = getSupabaseConfig() as { url: string; secretKey?: string }
+    if (url && secretKey) {
+      const s = createClient(url, secretKey, { auth: { persistSession: false } })
+      const ip = getClientIp(request)
+      const path = new URL(request.url).pathname
+      const windowSec = Math.floor(config.windowMs / 1000)
+      const bucket = `${ip}:${path}:${Math.floor(Date.now() / (config.windowMs))}`
+      // @ts-ignore RPC types are not generated here
+      return (async () => {
+        const { data, error } = await s.rpc('bump_hit', { p_bucket: bucket, window_seconds: windowSec })
+        if (!error && typeof data === 'number' && data > config.max) {
+          return NextResponse.json({ error: 'Too many requests' }, { status: config.statusCode })
+        }
+        return null
+      })() as unknown as NextResponse | null
+    }
+  } catch {}
   const ip = getClientIp(request)
   const now = Date.now()
   const entry = ipHits.get(ip) || { count: 0, reset: now + config.windowMs }

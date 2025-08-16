@@ -9,8 +9,7 @@ export async function GET(request?: Request) {
     // Test-mode override to stabilize RLS tests (best-effort)
     if (process.env.NODE_ENV === 'test') {
       try {
-        const h = await headers()
-        const testUser = h.get('x-test-user')
+        const testUser = request?.headers?.get('x-test-user') ?? (await headers()).get('x-test-user')
         if (testUser === 'unauth') {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }

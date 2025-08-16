@@ -111,10 +111,12 @@ async function sendEmail(recipient: string, template: string, data: Record<strin
         providerResponse: String(response.status)
       }
     } else {
+      // Production: require provider. In dev, allow mock.
       if (process.env.NODE_ENV === 'development') {
         console.log('📧 [mock] sending email:', { recipient, subject })
+        return { success: true, providerResponse: 'mock' }
       }
-      return { success: true, providerResponse: 'mock' }
+      return { success: false, error: 'Email provider not configured' }
     }
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
@@ -164,8 +166,9 @@ async function sendSMS(recipient: string, template: string, data: Record<string,
     } else {
       if (process.env.NODE_ENV === 'development') {
         console.log('📱 [mock] sending SMS:', { recipient, message })
+        return { success: true, providerResponse: 'mock' }
       }
-      return { success: true, providerResponse: 'mock' }
+      return { success: false, error: 'SMS provider not configured' }
     }
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
