@@ -9,6 +9,9 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    concurrency:
+      group: e2e-${{ github.ref }}
+      cancel-in-progress: true
 
     steps:
       - name: Checkout
@@ -31,16 +34,18 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm dlx playwright install --with-deps
 
+      - name: Prepare environment
+        run: |
+          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+          echo "SUPABASE_SECRET_KEY=${{ secrets.SUPABASE_SECRET_KEY }}" >> $GITHUB_ENV
+          echo "SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}" >> $GITHUB_ENV
+          echo "TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}" >> $GITHUB_ENV
+          echo "TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_ADSENSE_APPROVAL_MODE=true" >> $GITHUB_ENV
+          echo "ADSENSE_APPROVAL_MODE=true" >> $GITHUB_ENV
+
       - name: Run Playwright tests
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          NEXT_PUBLIC_ADSENSE_APPROVAL_MODE: 'true'
-          ADSENSE_APPROVAL_MODE: 'true'
         run: pnpm dlx playwright test --reporter=html
 
       - name: Upload Playwright report

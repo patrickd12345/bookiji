@@ -17,7 +17,7 @@ const sbMocks = vi.hoisted(() => ({
 // Mock Supabase createClient
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
-    from: (table: string) => ({
+    from: (_table: string) => ({
       insert: sbMocks.insert,
       upsert: sbMocks.upsert,
       select: () => ({
@@ -44,9 +44,9 @@ describe('POST /api/analytics/track', () => {
     )
 
     const res = await POST(req)
-    const data = await res.json()
+    const data = await res!.json()
 
-    expect(res.status).toBe(200)
+    expect(res!.status).toBe(200)
     expect(data.success).toBe(true)
   })
 
@@ -61,9 +61,9 @@ describe('POST /api/analytics/track', () => {
     )
 
     const res = await POST(req)
-    const data = await res.json()
+    const data = await res!.json()
 
-    expect(res.status).toBe(200)
+    expect(res!.status).toBe(200)
     expect(data.success).toBe(true)
   })
 })

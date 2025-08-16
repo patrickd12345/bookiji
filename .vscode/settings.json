@@ -18,5 +18,7 @@
     "typescript": "javascript",
     "typescriptreact": "javascript"
   },
-  "css.customData": [".vscode/css-data.json"]
+  "css.customData": [".vscode/css-data.json"],
+  "github-actions.workflows.validateContextAccess": false,
+  "github-actions.workflows.validate": false
 } 
