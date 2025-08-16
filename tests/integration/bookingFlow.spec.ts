@@ -209,9 +209,9 @@ describe('INTEGRATION: Core functionality tests', () => {
     }))
 
     const res = await aiChatRoute(req)
-    const data = await res.json()
+    const data = await res?.json()
 
-    expect(res.status).toBe(200)
+    expect(res?.status).toBe(200)
     expect(data).toHaveProperty('response')
     expect(typeof data.response).toBe('string')
     expect(data.response.length).toBeGreaterThan(0)
@@ -239,9 +239,9 @@ describe('INTEGRATION: Core functionality tests', () => {
     }))
 
     const res = await aiChatRoute(req)
-    const data = await res.json()
+    const data = await res?.json()
 
-    expect(res.status).toBe(400)
+    expect(res?.status).toBe(400)
     expect(data).toHaveProperty('error')
   })
 
@@ -257,45 +257,91 @@ describe('INTEGRATION: Core functionality tests', () => {
     }))
 
     const res = await aiChatRoute(req)
-    const data = await res.json()
+    const data = await res?.json()
 
-    expect(res.status).toBe(400)
+    expect(res?.status).toBe(400)
     expect(data).toHaveProperty('error')
   })
 
   it('AI chat handles empty message', async () => {
     const body = { 
-      message: ''
+      message: '', 
+      slotDetails: { vendorId: 'vendor123', startTime: '2024-03-15T10:00:00Z' }
     }
-    
-    const req = new NextRequest(new Request(`${BASE}/api/ai-chat`, {
+
+    const req = new Request('http://localhost:3000/api/ai-chat', {
       method: 'POST',
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json' }
-    }))
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
 
     const res = await aiChatRoute(req)
-    const data = await res.json()
+    const data = await res?.json()
 
-    expect(res.status).toBe(400)
+    expect(res?.status).toBe(400)
     expect(data).toHaveProperty('error')
   })
 
-  it('AI chat generates meaningful responses', async () => {
+  it('AI chat handles invalid message type', async () => {
     const body = { 
-      message: 'Find me a massage therapist near me'
+      message: 123 // Invalid type
     }
-    
-    const req = new NextRequest(new Request(`${BASE}/api/ai-chat`, {
+
+    const req = new Request('http://localhost:3000/api/ai-chat', {
       method: 'POST',
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json' }
-    }))
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
 
     const res = await aiChatRoute(req)
-    const data = await res.json()
+    const data = await res?.json()
 
-    expect(res.status).toBe(200)
+    expect(res?.status).toBe(400)
+    expect(data).toHaveProperty('error')
+  })
+
+  it('AI chat handles requests without slot details gracefully', async () => {
+    const body = { 
+      message: 'I want to book an appointment'
+    }
+
+    const req = new Request('http://localhost:3000/api/ai-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+
+    const res = await aiChatRoute(req)
+    const data = await res?.json()
+
+    expect(res?.status).toBe(200)
+    expect(data).toHaveProperty('response')
+    expect(data.success).toBe(true)
+    // Should return a fallback response when Ollama is unavailable
+    expect(data.fallback).toBe(true)
+  })
+
+  it('AI chat with booking slot context', async () => {
+    const body = { 
+      message: 'Can you help me book this appointment?',
+      slotDetails: {
+        vendorId: 'vendor123',
+        startTime: '2024-03-15T10:00:00Z',
+        duration: 60,
+        serviceName: 'Haircut'
+      }
+    }
+
+    const req = new Request('http://localhost:3000/api/ai-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+
+    const res = await aiChatRoute(req)
+    const data = await res?.json()
+
+    expect(res?.status).toBe(200)
     expect(data).toHaveProperty('response')
     expect(typeof data.response).toBe('string')
     expect(data.response.length).toBeGreaterThan(0)
