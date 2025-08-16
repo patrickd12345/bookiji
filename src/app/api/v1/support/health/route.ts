@@ -1,7 +1,15 @@
-import { NextResponse } from 'next/server'
-
 export async function GET() {
-	return NextResponse.json({ ok: true, status: 'healthy' }, { status: 200 })
+	const body = JSON.stringify({ ok: true, status: 'healthy' })
+	const length = Buffer.byteLength(body).toString()
+
+	return new Response(body, {
+		status: 200,
+		headers: {
+			'Content-Type': 'application/json',
+			'Content-Length': length,
+			'Connection': 'close'
+		}
+	})
 }
 
 
