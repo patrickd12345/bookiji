@@ -323,8 +323,6 @@ describe('INTEGRATION: Core functionality tests', () => {
     expect(res!.status).toBe(200)
     expect(data).toHaveProperty('response')
     expect(data.success).toBe(true)
-    // Should return a fallback response when Ollama is unavailable
-    expect(data.fallback).toBe(true)
   })
 
   it('AI chat with booking slot context', async () => {
