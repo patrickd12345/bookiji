@@ -52,6 +52,15 @@ function getClientIP(request: NextRequest): string {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  // Admin guard for /admin
+  if (pathname.startsWith('/admin')) {
+    const isAdminHeader = request.headers.get('x-user-role') === 'admin'
+    if (!isAdminHeader) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+  }
   
   // Skip rate limiting for health check
   if (pathname === '/api/health') {
