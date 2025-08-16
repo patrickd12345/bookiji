@@ -7,11 +7,13 @@ import { getSupabaseConfig } from '@/config/supabase'
 export async function GET(request: NextRequest) {
   try {
     if (process.env.NODE_ENV === 'test') {
-      const h = await headers()
-      const testUser = h.get('x-test-user')
-      if (testUser === 'unauth') {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
+      try {
+        const h = await headers()
+        const testUser = h.get('x-test-user')
+        if (testUser === 'unauth') {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+      } catch {}
     }
     const cookieStore = await cookies()
     const config = getSupabaseConfig()
@@ -62,11 +64,13 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     if (process.env.NODE_ENV === 'test') {
-      const h = await headers()
-      const testUser = h.get('x-test-user')
-      if (testUser === 'unauth') {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
+      try {
+        const h = await headers()
+        const testUser = h.get('x-test-user')
+        if (testUser === 'unauth') {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+      } catch {}
     }
     const cookieStore = await cookies()
     const config = getSupabaseConfig()
