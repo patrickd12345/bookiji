@@ -1,0 +1,503 @@
+openapi: 3.0.0
+info:
+  title: Bookiji Support System API
+  description: API for managing support tickets, knowledge base, and customer service operations
+  version: 1.0.0
+  contact:
+    name: Bookiji Support
+    email: support@bookiji.com
+
+servers:
+  - url: https://bookiji.com/api/v1/support
+    description: Production server
+  - url: http://localhost:3000/api/v1/support
+    description: Development server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    AdminApiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Admin API key for administrative operations
+
+  schemas:
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique ticket identifier
+        email:
+          type: string
+          format: email
+          description: Customer email address
+        subject:
+          type: string
+          description: Ticket subject line
+        body:
+          type: string
+          description: Ticket description
+        intent:
+          type: string
+          description: AI-classified intent
+        priority:
+          type: string
+          enum: [low, normal, high, urgent]
+          description: Ticket priority level
+        status:
+          type: string
+          enum: [open, waiting, in_progress, resolved, closed]
+          description: Current ticket status
+        created_at:
+          type: string
+          format: date-time
+          description: Ticket creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Message identifier
+        conversation_id:
+          type: string
+          format: uuid
+          description: Associated conversation ID
+        role:
+          type: string
+          enum: [user, assistant, system, agent]
+          description: Message sender role
+        text:
+          type: string
+          description: Message content
+        intent:
+          type: string
+          description: AI-classified intent
+        confidence:
+          type: number
+          format: float
+          description: AI confidence score
+        created_at:
+          type: string
+          format: date-time
+          description: Message timestamp
+
+    KBSuggestion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Suggestion identifier
+        ticket_id:
+          type: string
+          format: uuid
+          description: Associated ticket ID
+        question:
+          type: string
+          description: Customer question
+        answer:
+          type: string
+          description: Agent response
+        intent:
+          type: string
+          description: AI-classified intent
+        similarity_to_best:
+          type: number
+          format: float
+          description: Similarity to existing KB
+        status:
+          type: string
+          enum: [pending, approved, rejected, duplicate]
+          description: Review status
+        target_article_id:
+          type: string
+          format: uuid
+          description: Linked KB article ID
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+
+    SearchResult:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Result title
+        excerpt:
+          type: string
+          description: Content excerpt
+        url:
+          type: string
+          description: Result URL
+        confidence:
+          type: number
+          format: float
+          description: Search confidence score
+
+    DigestSummary:
+      type: object
+      properties:
+        summary:
+          type: string
+          description: Summary text
+        counts:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Counts by category/status
+
+paths:
+  /tickets:
+    get:
+      summary: List support tickets
+      description: Retrieve a list of support tickets with optional filtering
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: Filter by ticket status
+          schema:
+            type: string
+            enum: [open, waiting, in_progress, resolved, closed]
+        - name: intent
+          in: query
+          description: Filter by intent
+          schema:
+            type: string
+        - name: priority
+          in: query
+          description: Filter by priority
+          schema:
+            type: string
+            enum: [low, normal, high, urgent]
+        - name: limit
+          in: query
+          description: Maximum number of tickets to return
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: List of tickets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Ticket'
+        '403':
+          description: Forbidden - insufficient permissions
+        '500':
+          description: Internal server error
+
+  /tickets/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Ticket identifier
+
+    get:
+      summary: Get ticket details
+      description: Retrieve detailed information about a specific support ticket
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Ticket details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '403':
+          description: Forbidden - insufficient permissions
+        '404':
+          description: Ticket not found
+        '500':
+          description: Internal server error
+
+    patch:
+      summary: Update ticket
+      description: Update ticket status, priority, or other fields
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [open, waiting, in_progress, resolved, closed]
+                priority:
+                  type: string
+                  enum: [low, normal, high, urgent]
+      responses:
+        '200':
+          description: Updated ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          description: Invalid request data
+        '403':
+          description: Forbidden - insufficient permissions
+        '404':
+          description: Ticket not found
+        '500':
+          description: Internal server error
+
+  /tickets/{id}/messages:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Ticket identifier
+
+    get:
+      summary: Get ticket messages
+      description: Retrieve all messages for a specific support ticket
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+        '403':
+          description: Forbidden - insufficient permissions
+        '404':
+          description: Ticket not found
+        '500':
+          description: Internal server error
+
+    post:
+      summary: Add message to ticket
+      description: Add a new message to a support ticket conversation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: Message content
+                public:
+                  type: boolean
+                  description: Whether message is visible to customer
+                  default: true
+                sendEmail:
+                  type: boolean
+                  description: Whether to send email notification
+                  default: true
+      responses:
+        '200':
+          description: Message added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        '400':
+          description: Invalid request data
+        '403':
+          description: Forbidden - insufficient permissions
+        '404':
+          description: Ticket not found
+        '500':
+          description: Internal server error
+
+  /kb/suggestions:
+    get:
+      summary: List KB suggestions
+      description: Retrieve knowledge base suggestions for review
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: Filter by suggestion status
+          schema:
+            type: string
+            enum: [pending, approved, rejected, duplicate]
+            default: pending
+      responses:
+        '200':
+          description: List of suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/KBSuggestion'
+        '403':
+          description: Forbidden - insufficient permissions
+        '500':
+          description: Internal server error
+
+  /kb/suggestions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Suggestion identifier
+
+    patch:
+      summary: Review KB suggestion
+      description: Approve, reject, or link a knowledge base suggestion
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject, link]
+                  description: Action to take on suggestion
+                articleId:
+                  type: string
+                  format: uuid
+                  description: Target article ID for link action
+      responses:
+        '200':
+          description: Action completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  articleId:
+                    type: string
+                    format: uuid
+        '400':
+          description: Invalid request data
+        '403':
+          description: Forbidden - insufficient permissions
+        '404':
+          description: Suggestion not found
+        '500':
+          description: Internal server error
+
+  /search:
+    get:
+      summary: Search knowledge base
+      description: Search knowledge base articles using semantic similarity
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SearchResult'
+        '403':
+          description: Forbidden - insufficient permissions
+        '500':
+          description: Internal server error
+
+  /digest:
+    get:
+      summary: Get support digest
+      description: Retrieve summary statistics for support operations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: window
+          in: query
+          schema:
+            type: string
+            pattern: '^[0-9]+[hd]$'
+            default: '24h'
+          description: Time window (e.g., 24h, 7d)
+      responses:
+        '200':
+          description: Digest summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DigestSummary'
+        '403':
+          description: Forbidden - insufficient permissions
+        '500':
+          description: Internal server error
+
+tags:
+  - name: Tickets
+    description: Support ticket management
+  - name: Messages
+    description: Ticket conversation messages
+  - name: Knowledge Base
+    description: KB suggestions and management
+  - name: Search
+    description: Knowledge base search
+  - name: Analytics
+    description: Support system analytics and reporting

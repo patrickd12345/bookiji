@@ -12,10 +12,25 @@ export async function GET(req: Request) {
   const q = new URL(req.url).searchParams.get('q') ?? '';
   if (!q) return NextResponse.json({ results: [] });
 
-  const { url, secretKey } = getSupabaseConfig() as { url: string; secretKey: string };
-  const admin = createClient(url, secretKey, { auth: { persistSession:false } });
+  try {
+    const { url, secretKey } = getSupabaseConfig() as { url: string; secretKey: string };
+    
+    if (!url || !secretKey) {
+      throw new Error('Missing Supabase configuration');
+    }
+    
+    const admin = createClient(url, secretKey, { 
+      auth: { persistSession:false },
+      global: {
+        fetch: fetch.bind(globalThis)
+      }
+    });
 
-  const [vec] = await embed([q]);
-  const hits = await searchKb(admin, vec, 6, 0.60);
-  return NextResponse.json({ results: hits.map(h => ({ title: 'KB', excerpt: h.content, url: null, confidence: h.similarity })) });
+    const [vec] = await embed([q]);
+    const hits = await searchKb(admin, vec, 6, 0.60);
+    return NextResponse.json({ results: hits.map(h => ({ title: 'KB', excerpt: h.content, url: null, confidence: h.similarity })) });
+  } catch (e) {
+    console.error('Support search error:', e);
+    return NextResponse.json({ error: 'Search failed', details: String(e) }, { status: 500 });
+  }
 }

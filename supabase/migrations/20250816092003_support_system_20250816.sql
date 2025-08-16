@@ -70,7 +70,7 @@ create table if not exists public.kb_chunks (
   article_id uuid not null references public.kb_articles(id) on delete cascade,
   chunk_index int not null,
   content text not null,
-  embedding vector(384) not null
+  embedding vector(768) not null
 );
 
 create index if not exists kb_chunks_article_idx on public.kb_chunks(article_id);
@@ -78,7 +78,7 @@ create index if not exists kb_chunks_vector_idx on public.kb_chunks using ivffla
 
 -- Vector similarity search function
 create or replace function public.match_kb(
-  query_embedding vector(384),
+  query_embedding vector(768),
   match_count int = 6,
   min_sim float = 0.60
 ) returns table (
@@ -142,7 +142,26 @@ create policy "support_tickets_user_access" on public.support_tickets
     auth.uid() = user_id or 
     exists (
       select 1 from public.profiles p 
-      where p.id = auth.uid() and p.role = 'admin'
+      where p.id = auth.uid() and p.role in ('admin', 'support_agent')
+    )
+  );
+
+-- Support tickets: users can insert their own, agents can insert/update all
+drop policy if exists "support_tickets_agent_access" on public.support_tickets;
+create policy "support_tickets_agent_access" on public.support_tickets
+  for insert with check (
+    auth.uid() = user_id or 
+    exists (
+      select 1 from public.profiles p 
+      where p.id = auth.uid() and p.role in ('admin', 'support_agent')
+    )
+  );
+
+create policy "support_tickets_agent_update" on public.support_tickets
+  for update using (
+    exists (
+      select 1 from public.profiles p 
+      where p.id = auth.uid() and p.role in ('admin', 'support_agent')
     )
   );
 
@@ -153,7 +172,24 @@ create policy "support_conversations_user_access" on public.support_conversation
     auth.uid() = user_id or 
     exists (
       select 1 from public.profiles p 
-      where p.id = auth.uid() and p.role = 'admin'
+      where p.id = auth.uid() and p.role in ('admin', 'support_agent')
+    )
+  );
+
+-- Support conversations: agents can insert/update all
+create policy "support_conversations_agent_access" on public.support_conversations
+  for insert with check (
+    exists (
+      select 1 from public.profiles p 
+      where p.id = auth.uid() and p.role in ('admin', 'support_agent')
+    )
+  );
+
+create policy "support_conversations_agent_update" on public.support_conversations
+  for update using (
+    exists (
+      select 1 from public.profiles p 
+      where p.id = auth.uid() and p.role in ('admin', 'support_agent')
     )
   );
 
@@ -167,27 +203,60 @@ create policy "support_messages_user_access" on public.support_messages
     ) or
     exists (
       select 1 from public.profiles p 
-      where p.id = auth.uid() and p.role = 'admin'
+      where p.id = auth.uid() and p.role in ('admin', 'support_agent')
     )
   );
 
--- KB articles: public read access
+-- Support messages: agents can insert/update all
+create policy "support_messages_agent_access" on public.support_messages
+  for insert with check (
+    exists (
+      select 1 from public.profiles p 
+      where p.id = auth.uid() and p.role in ('admin', 'support_agent')
+    )
+  );
+
+create policy "support_messages_agent_update" on public.support_messages
+  for update using (
+    exists (
+      select 1 from public.profiles p 
+      where p.id = auth.uid() and p.role in ('admin', 'support_agent')
+    )
+  );
+
+-- KB articles: public read access, agents can manage
 drop policy if exists "kb_articles_public_read" on public.kb_articles;
 create policy "kb_articles_public_read" on public.kb_articles
   for select using (true);
 
--- KB chunks: public read access
+create policy "kb_articles_agent_manage" on public.kb_articles
+  for all using (
+    exists (
+      select 1 from public.profiles p 
+      where p.id = auth.uid() and p.role in ('admin', 'support_agent')
+    )
+  );
+
+-- KB chunks: public read access, agents can manage
 drop policy if exists "kb_chunks_public_read" on public.kb_chunks;
 create policy "kb_chunks_public_read" on public.kb_chunks
   for select using (true);
 
--- KB suggestions: only agents can view
-drop policy if exists "kb_suggestions_agent_access" on public.kb_suggestions;
-create policy "kb_suggestions_agent_access" on public.kb_suggestions
-  for select using (
+create policy "kb_chunks_agent_manage" on public.kb_chunks
+  for all using (
     exists (
       select 1 from public.profiles p 
-      where p.id = auth.uid() and p.role = 'admin'
+      where p.id = auth.uid() and p.role in ('admin', 'support_agent')
+    )
+  );
+
+-- KB suggestions: only agents can view and manage
+drop policy if exists "kb_suggestions_agent_access" on public.kb_suggestions;
+create policy "kb_suggestions_agent_access" on public.kb_suggestions
+  for all using (
+    exists (
+      select 1 from public.profiles p 
+      where p.id = auth.uid() and p.role in ('admin', 'support_agent')
     )
   );
 

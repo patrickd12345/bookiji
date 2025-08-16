@@ -11,6 +11,25 @@ async function appendChunk(admin: SupabaseClient, articleId: string, content: st
   await admin.from('kb_chunks').insert({ article_id: articleId, chunk_index: nextIdx, content, embedding: vec });
 }
 
+function generateSlug(question: string): string {
+  // Convert to lowercase and replace spaces/special chars with hyphens
+  let slug = question
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special characters except hyphens
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .substring(0, 60); // Limit length
+  
+  // Remove leading/trailing hyphens
+  slug = slug.replace(/^-+|-+$/g, '');
+  
+  // Add short hash for uniqueness
+  const hash = Math.random().toString(36).substring(2, 8);
+  
+  return `${slug}-${hash}`;
+}
+
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const agent = await getAgentFromAuth(req);
   if (!agent?.roles?.includes('support_agent')) return NextResponse.json({ error:'forbidden' }, { status:403 });
@@ -37,14 +56,15 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     return NextResponse.json({ ok: true, articleId });
   }
 
-  // default approve => create new article
+  // default approve => create new article with better slug
+  const slug = generateSlug(sug.question);
   const { data: art, error: e2 } = await admin.from('kb_articles')
-    .insert({ slug: `kb-${sug.id}`, title: sug.question, content: sug.answer })
+    .insert({ slug, title: sug.question, content: sug.answer })
     .select().single();
   if (e2) return NextResponse.json({ error: e2.message }, { status: 500 });
 
   await appendChunk(admin, art.id, sug.answer, (t)=>import('@/lib/support/embeddings').then(m=>m.embed(t)));
   await admin.from('kb_suggestions').update({ status:'approved', target_article_id: art.id }).eq('id', sug.id);
-  console.info('support.kb_suggest.approved', { suggestion_id: sug.id, article_id: art.id, new_article: true });
-  return NextResponse.json({ ok: true, articleId: art.id });
+  console.info('support.kb_suggest.approved', { suggestion_id: sug.id, article_id: art.id, new_article: true, slug });
+  return NextResponse.json({ ok: true, articleId: art.id, slug });
 }

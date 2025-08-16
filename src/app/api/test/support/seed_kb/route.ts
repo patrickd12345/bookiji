@@ -7,7 +7,12 @@ export async function POST() {
   if (process.env.NODE_ENV === 'production') return NextResponse.json({ error:'disabled' }, { status:403 });
 
   const { url, secretKey } = getSupabaseConfig() as { url: string; secretKey: string };
-  const admin = createClient(url, secretKey, { auth: { persistSession:false } });
+  const admin = createClient(url, secretKey, { 
+    auth: { persistSession:false },
+    global: {
+      fetch: fetch.bind(globalThis)
+    }
+  });
 
   const content = `You can reschedule a booking from your dashboard under "My Bookings" > "Reschedule". Changes allowed up to 24h before start time.`;
   const { data: existing } = await admin
@@ -28,12 +33,22 @@ export async function POST() {
   let vec: number[];
   try {
     [vec] = await embed([content]);
+    console.log('Embedding created with dimension:', vec.length);
   } catch (e) {
+    console.error('Embedding failed:', e);
     vec = new Array(384).fill(0);
   }
+  
   // upsert chunk 0 for idempotency
-  await admin.from('kb_chunks')
+  const chunkResult = await admin.from('kb_chunks')
     .upsert({ article_id: art.id, chunk_index: 0, content, embedding: vec }, { onConflict: 'article_id,chunk_index' });
+  
+  if (chunkResult.error) {
+    console.error('Chunk insertion failed:', chunkResult.error);
+    return NextResponse.json({ error: chunkResult.error.message }, { status: 500 });
+  }
+  
+  console.log('Chunk created successfully:', chunkResult.data);
 
   return NextResponse.json({ ok: true });
 }

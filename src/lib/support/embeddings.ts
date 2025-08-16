@@ -28,7 +28,7 @@ export async function embed(texts: string[]): Promise<number[][]> {
     } catch (error) {
       console.error('Embedding error:', error);
       // Return a fallback embedding (zero vector) if Ollama fails
-      embeddings.push(new Array(384).fill(0));
+      embeddings.push(new Array(768).fill(0));
     }
   }
   

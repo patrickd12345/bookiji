@@ -16,7 +16,17 @@ const RESTRICTED = /(refund|chargeback|id|verify|passport|fraud|legal|privacy|gd
 
 async function getAdmin() {
   const { url, secretKey } = getSupabaseConfig() as { url: string; secretKey: string };
-  return createClient(url, secretKey, { auth: { persistSession: false } });
+  
+  if (!url || !secretKey) {
+    throw new Error('Missing Supabase configuration');
+  }
+  
+  return createClient(url, secretKey, { 
+    auth: { persistSession: false },
+    global: {
+      fetch: fetch.bind(globalThis)
+    }
+  });
 }
 
 export async function POST(req: Request) {
@@ -28,21 +38,34 @@ export async function POST(req: Request) {
 
     const intent = classifyIntent(message);
     const admin = await getAdmin();
+    
     let vec: number[];
     try {
       [vec] = await embed([message]);
-    } catch {
-      vec = new Array(384).fill(0);
+    } catch (e) {
+      console.error('Embedding failed:', e);
+      vec = new Array(768).fill(0);
     }
-    const hits = await searchKb(admin, vec, 6, cfg.LOW);
-    const top = hits[0]?.similarity ?? 0;
+    
+    let hits: Hit[] = [];
+    let top = 0;
+    
+    try {
+      hits = await searchKb(admin, vec, 6, cfg.LOW);
+      top = hits[0]?.similarity ?? 0;
+    } catch (e) {
+      console.error('KB search failed:', e);
+      // If KB search fails, escalate the ticket
+      hits = [];
+      top = 0;
+    }
 
     const lastScores = (history as any[]).map(h => h.confidence).filter((x) => typeof x === 'number');
     const recent = [...lastScores.slice(-1), top];
     const lowStreak = recent.filter(s => s < cfg.OK).length >= cfg.MAX_LOW_STREAK;
     const restricted = RESTRICTED.test(message);
 
-    const mustEscalate = top < cfg.LOW || lowStreak || restricted;
+    const mustEscalate = top < cfg.LOW || lowStreak || restricted || hits.length === 0;
 
     if (!mustEscalate) {
       const answer = hits.slice(0,3).map((h,i)=>`${i+1}. ${h.content}`).join('\n');
@@ -58,12 +81,17 @@ export async function POST(req: Request) {
       priority: restricted ? 'high' : 'normal',
       status: 'open'
     }).select().single();
+    
     if (ticketIns.error) throw ticketIns.error;
     const ticket = ticketIns.data;
 
     if (email) {
-      await sendSupportEmail(process.env.SUPPORT_ESCALATION_EMAIL!,
-        `New ticket ${ticket.id}`, `User: ${email}\nIntent: ${intent}\nMessage: ${message}`);
+      try {
+        await sendSupportEmail(process.env.SUPPORT_ESCALATION_EMAIL!,
+          `New ticket ${ticket.id}`, `User: ${email}\nIntent: ${intent}\nMessage: ${message}`);
+      } catch (e) {
+        console.error('Failed to send support email:', e);
+      }
     }
 
     return NextResponse.json({

@@ -191,7 +191,7 @@ COMMENT ON COLUMN public.bookings.external_references IS 'External reference dat
 
 -- Step 17: Create a comprehensive view for admin dashboard
 CREATE OR REPLACE VIEW public.admin_bookings_view AS
-SELECT 
+SELECT
     b.*,
     c.full_name as customer_name,
     c.email as customer_email,
@@ -201,16 +201,15 @@ SELECT
     v.phone as vendor_phone,
     s.name as service_name,
     s.category as service_category,
-    s.price_cents as service_price_cents,
-    s.duration_minutes as service_duration_minutes_from_service,
-    p.role as customer_role,
-    pv.role as vendor_role
+    s.price as service_price,
+    s.duration as service_duration_from_service,
+    s.is_active as service_is_active,
+    b.service_location as service_location_type
 FROM public.bookings b
 LEFT JOIN public.users c ON b.customer_id = c.id
 LEFT JOIN public.users v ON b.vendor_id = v.id
 LEFT JOIN public.services s ON b.service_id = s.id
-LEFT JOIN public.profiles p ON c.id = p.id
-LEFT JOIN public.profiles pv ON v.id = pv.id;
+WHERE b.status != 'deleted';
 
 -- Step 18: Create a comprehensive view for analytics
 CREATE OR REPLACE VIEW public.booking_analytics_view AS
