@@ -7,7 +7,7 @@ export async function GET() {
 		headers: {
 			'Content-Type': 'text/plain',
 			'Content-Length': Buffer.byteLength(body).toString(),
-			'X-Deploy-Touch': 'ping-1'
+			'X-Deploy-Touch': 'ping-2'
 		}
 	})
 }

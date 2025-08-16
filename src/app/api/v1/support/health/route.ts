@@ -12,7 +12,7 @@ export async function GET() {
 		headers: {
 			'Content-Type': 'application/json',
 			'Content-Length': Buffer.byteLength(body).toString(),
-			'X-Deploy-Touch': 'health-1'
+			'X-Deploy-Touch': 'health-2'
 		}
 	})
 }
