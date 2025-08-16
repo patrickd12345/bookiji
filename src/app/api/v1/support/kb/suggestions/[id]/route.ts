@@ -30,7 +30,8 @@ function generateSlug(question: string): string {
   return `${slug}-${hash}`;
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const agent = await getAgentFromAuth(req);
   if (!agent?.roles?.includes('support_agent')) return NextResponse.json({ error:'forbidden' }, { status:403 });
 
@@ -40,7 +41,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const payload = await req.json();
   const { action, articleId }:{ action:'approve'|'reject'|'link', articleId?:string } = payload;
 
-  const { data: sug, error } = await admin.from('kb_suggestions').select('*').eq('id', params.id).single();
+  const { data: sug, error } = await admin.from('kb_suggestions').select('*').eq('id', id).single();
   if (error || !sug) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
   if (action === 'reject') {
