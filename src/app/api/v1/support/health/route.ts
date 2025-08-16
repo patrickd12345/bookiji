@@ -11,7 +11,8 @@ export async function GET() {
 		status: 200,
 		headers: {
 			'Content-Type': 'application/json',
-			'Content-Length': Buffer.byteLength(body).toString()
+			'Content-Length': Buffer.byteLength(body).toString(),
+			'X-Deploy-Touch': 'health-1'
 		}
 	})
 }
