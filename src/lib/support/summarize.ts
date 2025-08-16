@@ -28,12 +28,21 @@ A: ...`;
       headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
       body: JSON.stringify({ model: 'gpt-4o-mini', temperature: 0.2, messages })
     });
-    if (!r.ok) return fallbackQA(transcript);
     const j = await r.json();
     const out: string = j?.choices?.[0]?.message?.content ?? '';
     const m = /Q:\s*(.*)\nA:\s*([\s\S]*)/i.exec(out) || [];
-    const question = (m[1] || out).trim();
-    const answer = (m[2] || out).trim();
+    // Prefer extracted Q/A; if absent, attempt simple heuristics
+    let question = (m[1] || '').trim();
+    let answer = (m[2] || '').trim();
+    if (!question) {
+      // Use the first user question line if available
+      const firstUser = transcript.find(t => t.role === 'user')?.text || ''
+      question = firstUser.replace(/\s+/g, ' ').trim();
+    }
+    if (!answer) {
+      const lastAgent = [...transcript].reverse().find(t => t.role !== 'user')?.text || ''
+      answer = lastAgent.replace(/\s+/g, ' ').trim();
+    }
     if (!question || !answer) return fallbackQA(transcript);
     return { question, answer };
   } catch {

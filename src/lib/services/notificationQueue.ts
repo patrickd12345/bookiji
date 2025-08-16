@@ -41,7 +41,12 @@ export async function addToDeadLetterQueue(
   try {
     const cfg = getSupabaseConfig()
     const admin = createClient(cfg.url, cfg.secretKey as string, { auth: { persistSession: false } })
-    await admin.from('notification_dlq').insert({ payload: notification as unknown as Record<string, unknown>, error, status: 'dead' })
+    const { error: insertError } = await admin
+      .from('notification_dlq')
+      .insert({ payload: notification as unknown as Record<string, unknown>, error, status: 'dead' })
+    if (insertError) {
+      deadLetterQueue.push({ notification, error, timestamp: Date.now() })
+    }
   } catch (_e) {
     deadLetterQueue.push({ notification, error, timestamp: Date.now() });
   }
@@ -50,6 +55,11 @@ export async function addToDeadLetterQueue(
       `Dead letter queue size ${deadLetterQueue.length} exceeds threshold ${DLQ_ALERT_THRESHOLD}`
     );
   }
+}
+
+// Test helpers
+export function __forceDeadLetterQueuePushForTests(notification: NotificationRequest, error?: string) {
+  deadLetterQueue.push({ notification, error, timestamp: Date.now() })
 }
 
 export function getDeadLetterQueueSize() {

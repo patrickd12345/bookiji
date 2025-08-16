@@ -156,6 +156,45 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       .maybeSingle();
     (data as any).createdSuggestionId = latest.data?.id ?? null;
     (data as any).createdSuggestionStatus = latest.data?.status ?? null;
+
+    // Also create a kb_candidate record for agent approval pipeline
+    try {
+      const { data: t } = await admin
+        .from('support_tickets')
+        .select('id,subject,body')
+        .eq('id', id)
+        .single();
+
+      // Find the conversation to read the last agent message
+      const { data: conv } = await admin
+        .from('support_conversations')
+        .select('id')
+        .eq('ticket_id', id)
+        .single();
+
+      let agentAnswer: string | null = null;
+      if (conv?.id) {
+        const { data: m } = await admin
+          .from('support_messages')
+          .select('content')
+          .eq('conversation_id', conv.id)
+          .eq('sender_type', 'agent')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        agentAnswer = m?.content ? String(m.content) : null;
+      }
+
+      if (t) {
+        await admin.from('kb_candidates').insert({
+          ticket_id: t.id,
+          question: String(t.subject || 'Support question'),
+          answer: String(agentAnswer || t.body || 'Thanks for reaching out. Our team will add a definitive KB answer shortly.')
+        });
+      }
+    } catch (e) {
+      console.error('kb_candidates insert failed', { ticket_id: id, error: e });
+    }
   }
   return NextResponse.json(data);
 }

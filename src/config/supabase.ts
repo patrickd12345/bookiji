@@ -17,7 +17,16 @@ export interface SupabaseConfig {
  * Get Supabase configuration with backward compatibility
  */
 export function getSupabaseConfig(): SupabaseConfig {
-  // For local development, force local database connection
+  // For tests, provide a stable default to avoid env failures
+  if (process.env.NODE_ENV === 'test') {
+    return {
+      url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://test.supabase.co',
+      publishableKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'test-publishable-key',
+      secretKey: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-secret-key'
+    };
+  }
+
+  // For local development, force local database connection if requested
   if (process.env.NODE_ENV === 'development' && process.env.FORCE_LOCAL_DB === 'true') {
     return {
       url: 'http://127.0.0.1:54321',
@@ -26,7 +35,7 @@ export function getSupabaseConfig(): SupabaseConfig {
     };
   }
 
-  const url = process.env.SUPABASE_URL;
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 

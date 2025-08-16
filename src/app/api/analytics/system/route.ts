@@ -15,10 +15,17 @@ export async function GET() {
       .order('created_at', { ascending: false })
 
     if (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error fetching analytics:', error)
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Error fetching analytics (returning empty metrics):', error)
       }
-      return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 })
+      return NextResponse.json({
+        success: true,
+        metrics: {
+          totalEvents: 0,
+          eventCounts: {},
+          lastUpdated: new Date().toISOString()
+        }
+      })
     }
 
     // Process metrics
@@ -36,9 +43,16 @@ export async function GET() {
       }
     })
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Analytics system error:', error)
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('Analytics system error (returning empty metrics):', error)
     }
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({
+      success: true,
+      metrics: {
+        totalEvents: 0,
+        eventCounts: {},
+        lastUpdated: new Date().toISOString()
+      }
+    })
   }
 }

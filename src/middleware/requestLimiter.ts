@@ -35,13 +35,17 @@ export function limitRequest(request: Request, config: LimiterConfig): NextRespo
       const ip = getClientIp(request)
       const windowSec = Math.floor(config.windowMs / 1000)
       return (async () => {
-        const { data, error } = await s.rpc('bump_rate_limit', { p_ip: ip, p_window_seconds: windowSec, p_max: config.max })
-        if (error) return memoryFallback(request, config)
-        if (data === false) {
-          const status = config.statusCode ?? 429
-          return NextResponse.json({ error: 'Too many requests' }, { status })
+        try {
+          const { data, error } = await s.rpc('bump_rate_limit', { p_ip: ip, p_window_seconds: windowSec, p_max: config.max })
+          if (error) return memoryFallback(request, config)
+          if (data === false) {
+            const status = config.statusCode ?? 429
+            return NextResponse.json({ error: 'Too many requests' }, { status })
+          }
+          return undefined
+        } catch {
+          return memoryFallback(request, config)
         }
-        return undefined
       })()
     }
   } catch {}
