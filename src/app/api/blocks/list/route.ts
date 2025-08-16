@@ -4,7 +4,7 @@ import { getSupabaseConfig } from '@/config/supabase'
 import { cookies, headers } from 'next/headers';
 import { BlockListResponse } from '@/types/global';
 
-export async function GET(request?: Request) {
+export async function GET(request: Request) {
   try {
     // Test-mode override to stabilize RLS tests (best-effort)
     if (process.env.NODE_ENV === 'test') {

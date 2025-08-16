@@ -113,7 +113,7 @@ async function createBlock(request: NextRequest) {
 }
 
 async function listBlocks() {
-  return await GET()
+  return await GET(new Request(`${BASE_URL}/api/blocks/list`))
 }
 
 async function deleteBlock(request: NextRequest) {
