@@ -490,6 +490,52 @@ paths:
         '500':
           description: Internal server error
 
+  /ping:
+    get:
+      summary: Ping
+      description: Connectivity test endpoint returning plain text "pong"
+      responses:
+        '200':
+          description: Pong response
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: pong
+
+  /health:
+    get:
+      summary: Health (JSON)
+      description: Returns a JSON object indicating service health
+      responses:
+        '200':
+          description: Health status as JSON
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  status:
+                    type: string
+              example:
+                ok: true
+                status: healthy
+
+  /health-alt:
+    get:
+      summary: Health (text/plain JSON string)
+      description: Returns a JSON string but with text/plain content-type
+      responses:
+        '200':
+          description: Health status as plain text JSON
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: '{"ok":true,"status":"healthy"}'
+
 tags:
   - name: Tickets
     description: Support ticket management
