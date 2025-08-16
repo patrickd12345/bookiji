@@ -79,28 +79,33 @@ export default function HomePageClient({ initialLocale }: HomePageClientProps) {
       {/* Language Selector */}
       <div className="absolute top-4 left-4">
         <LocaleSelector variant="icon-only" />
-        {/* Debug: Show current locale and test button */}
-        <div className="mt-2 text-xs text-gray-500 bg-white px-2 py-1 rounded border">
-          Current: {locale}
-        </div>
-        <button 
-          onClick={() => setLocale('fr-FR')} 
-          className="mt-2 text-xs bg-blue-500 text-white px-2 py-1 rounded"
-          suppressHydrationWarning
-        >
-          Test French
-        </button>
-        {/* Debug: Show translated welcome message */}
-        <div className="mt-2 text-sm bg-green-50 px-2 py-1 rounded border border-green-200">
-          Welcome: {t('welcome')}
-        </div>
-        {/* Database Diagnostics Link */}
-        <Link 
-          href="/simple-test" 
-          className="mt-2 text-xs bg-amber-500 text-white px-2 py-1 rounded block text-center hover:bg-amber-600 transition-colors"
-        >
-          🔍 Database Diagnostics
-        </Link>
+        
+        {process.env.NODE_ENV === 'development' && (
+          <>
+            {/* Debug: Show current locale and test button */}
+            <div className="mt-2 text-xs text-gray-500 bg-white px-2 py-1 rounded border">
+              Current: {locale}
+            </div>
+            <button 
+              onClick={() => setLocale('fr-FR')} 
+              className="mt-2 text-xs bg-blue-500 text-white px-2 py-1 rounded"
+              suppressHydrationWarning
+            >
+              Test French
+            </button>
+            {/* Debug: Show translated welcome message */}
+            <div className="mt-2 text-sm bg-green-50 px-2 py-1 rounded border border-green-200">
+              Welcome: {t('welcome')}
+            </div>
+            {/* Database Diagnostics Link */}
+            <Link 
+              href="/simple-test" 
+              className="mt-2 text-xs bg-amber-500 text-white px-2 py-1 rounded block text-center hover:bg-amber-600 transition-colors"
+            >
+              🔍 Database Diagnostics
+            </Link>
+          </>
+        )}
       </div>
       
       {/* Guided Tour Button */}

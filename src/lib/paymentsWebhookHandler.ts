@@ -120,8 +120,21 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
 
     // Send notifications
     try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL 
+        ? `https://${process.env.NEXT_PUBLIC_BASE_URL}` 
+        : process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}` 
+          : '';
+
+      if (!baseUrl) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('⚠️ Missing baseUrl for notifications');
+        }
+        return;
+      }
+
       // Send payment success notification to customer
-      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL}/api/notifications/send`, {
+      await fetch(`${baseUrl}/api/notifications/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -131,7 +144,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       })
 
       // Send booking confirmation to customer
-      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL}/api/notifications/send`, {
+      await fetch(`${baseUrl}/api/notifications/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -141,7 +154,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       })
 
       // Send provider alert
-      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL}/api/notifications/send`, {
+      await fetch(`${baseUrl}/api/notifications/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

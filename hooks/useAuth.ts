@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js'
-import { supabase } from '../src/lib/supabaseClient'
+import { supabase } from '@/lib/supabaseClient'
 import { ADSENSE_APPROVAL_MODE } from '../src/lib/adsense'
 
 interface UserProfile {
@@ -47,57 +47,37 @@ export function useAuth() {
   // Test database connection and table existence
   const testDatabaseConnection = async () => {
     try {
-      console.log('Testing database connection...')
+      if (process.env.NODE_ENV !== 'development') return true;
+      
+      console.log('Testing database connection...');
       
       // Test basic connection with error handling for 500 errors
       try {
         const { error: testError } = await supabase
           .from('profiles')
           .select('id')
-          .limit(1)
+          .limit(1);
         
         if (testError) {
           if (testError.code === '500' || testError.message.includes('500')) {
-            console.error('❌ Server error (500) accessing profiles table - table may be corrupted or have broken RLS policies')
-            return false
+            console.error('❌ Server error (500) accessing profiles table');
+            return false;
           }
-          console.error('Database connection test failed:', testError)
-          return false
+          console.error('Database connection test failed:', testError);
+          return false;
         }
         
-        console.log('✅ Database connection successful, profiles table accessible')
+        console.log('✅ Database connection successful, profiles table accessible');
+        return true;
       } catch (error) {
-        console.error('❌ Exception testing profiles table access:', error)
-        return false
+        console.error('❌ Exception testing profiles table access:', error);
+        return false;
       }
-      
-      // Test user_role_summary view (but don't fail if it has missing columns)
-      try {
-        const { error: viewError } = await supabase
-          .from('user_role_summary')
-          .select('user_id')
-          .limit(1)
-        
-        if (viewError) {
-          if (viewError.code === '500' || viewError.message.includes('500')) {
-            console.warn('⚠️ Server error (500) accessing user_role_summary view - view may be corrupted')
-          } else {
-            console.warn('user_role_summary view has issues (may be missing columns):', viewError.message)
-          }
-          // Don't fail the connection test, just log the warning
-        } else {
-          console.log('✅ user_role_summary view accessible')
-        }
-      } catch (viewError) {
-        console.warn('user_role_summary view test failed, but continuing:', viewError)
-      }
-      
-      return true
     } catch (error) {
-      console.error('Exception testing database connection:', error)
-      return false
+      console.error('Exception testing database connection:', error);
+      return false;
     }
-  }
+  };
 
   const fetchUserProfile = async (userId: string) => {
     // Guard against redundant rapid re-fetches for the same user
@@ -266,24 +246,23 @@ export function useAuth() {
   }
 
   useEffect(() => {
-    // If in AdSense approval mode, bypass authentication
     if (isAdSenseApprovalMode) {
-      console.log('AdSense approval mode enabled, bypassing authentication')
-      setLoading(false)
-      return
+      setLoading(false);
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      testDatabaseConnection().then(isConnected => {
+        if (!isConnected) {
+          console.error('Database connection failed, authentication may not work properly');
+        }
+      });
     }
 
     console.log('Setting up authentication listeners...')
 
     // Timeout fallback that will be cleared as soon as loading completes
     let fallback: ReturnType<typeof setTimeout> | null = null
-
-    // Test database connection first
-    testDatabaseConnection().then(isConnected => {
-      if (!isConnected) {
-        console.error('Database connection failed, authentication may not work properly')
-      }
-    })
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
