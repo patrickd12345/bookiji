@@ -202,7 +202,7 @@ SELECT
     s.name as service_name,
     s.category as service_category,
     s.price_cents as service_price_cents,
-    s.duration_minutes as service_duration_minutes,
+    s.duration_minutes as service_duration_minutes_from_service,
     p.role as customer_role,
     pv.role as vendor_role
 FROM public.bookings b

@@ -209,9 +209,10 @@ describe('INTEGRATION: Core functionality tests', () => {
     }))
 
     const res = await aiChatRoute(req)
-    const data = await res.json()
+    expect(res).toBeTruthy()
+    const data = await res!.json()
 
-    expect(res.status).toBe(200)
+    expect(res!.status).toBe(200)
     expect(data).toHaveProperty('response')
     expect(typeof data.response).toBe('string')
     expect(data.response.length).toBeGreaterThan(0)
@@ -239,9 +240,10 @@ describe('INTEGRATION: Core functionality tests', () => {
     }))
 
     const res = await aiChatRoute(req)
-    const data = await res.json()
+    expect(res).toBeTruthy()
+    const data = await res!.json()
 
-    expect(res.status).toBe(400)
+    expect(res!.status).toBe(400)
     expect(data).toHaveProperty('error')
   })
 
@@ -257,9 +259,10 @@ describe('INTEGRATION: Core functionality tests', () => {
     }))
 
     const res = await aiChatRoute(req)
-    const data = await res.json()
+    expect(res).toBeTruthy()
+    const data = await res!.json()
 
-    expect(res.status).toBe(400)
+    expect(res!.status).toBe(400)
     expect(data).toHaveProperty('error')
   })
 
@@ -275,9 +278,10 @@ describe('INTEGRATION: Core functionality tests', () => {
     }))
 
     const res = await aiChatRoute(req)
-    const data = await res.json()
+    expect(res).toBeTruthy()
+    const data = await res!.json()
 
-    expect(res.status).toBe(400)
+    expect(res!.status).toBe(400)
     expect(data).toHaveProperty('error')
   })
 
@@ -293,9 +297,10 @@ describe('INTEGRATION: Core functionality tests', () => {
     }))
 
     const res = await aiChatRoute(req)
-    const data = await res.json()
+    expect(res).toBeTruthy()
+    const data = await res!.json()
 
-    expect(res.status).toBe(200)
+    expect(res!.status).toBe(200)
     expect(data).toHaveProperty('response')
     expect(typeof data.response).toBe('string')
     expect(data.response.length).toBeGreaterThan(0)

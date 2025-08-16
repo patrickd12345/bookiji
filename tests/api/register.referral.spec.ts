@@ -44,9 +44,10 @@ describe('POST /api/auth/register with referral', () => {
     })
 
     const res = await POST(req)
-    const data = await res.json()
+    expect(res).toBeTruthy()
+    const data = await res!.json()
 
-    expect(res.status).toBe(200)
+    expect(res!.status).toBe(200)
     expect(data.success).toBe(true)
     expect(completeReferralMock).toHaveBeenCalledWith('new@example.com', 'new-user', 'customer')
   })

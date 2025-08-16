@@ -14,23 +14,47 @@ CREATE TABLE external_calendar_systems (
     CONSTRAINT uq_name_type UNIQUE (name, type)
 );
 
--- Add system_type to provider_google_calendar and rename it to provider_calendars
-ALTER TABLE provider_google_calendar RENAME TO provider_calendars;
-ALTER TABLE provider_calendars 
-    ADD COLUMN system_type calendar_system_type NOT NULL DEFAULT 'google',
-    ADD COLUMN system_id UUID REFERENCES external_calendar_systems(id),
-    ADD COLUMN system_specific_data JSONB;
+-- Add system_type to provider_google_calendar and rename it to provider_calendars (only if source table exists)
+DO $$
+BEGIN
+  IF to_regclass('public.provider_google_calendar') IS NOT NULL THEN
+    ALTER TABLE provider_google_calendar RENAME TO provider_calendars;
+    ALTER TABLE provider_calendars 
+        ADD COLUMN IF NOT EXISTS system_type calendar_system_type NOT NULL DEFAULT 'google',
+        ADD COLUMN IF NOT EXISTS system_id UUID REFERENCES external_calendar_systems(id),
+        ADD COLUMN IF NOT EXISTS system_specific_data JSONB;
 
--- Update the trigger for the renamed table
-DROP TRIGGER IF EXISTS set_timestamp ON provider_google_calendar;
-CREATE TRIGGER set_timestamp
-    BEFORE UPDATE ON provider_calendars
-    FOR EACH ROW
-    EXECUTE PROCEDURE trigger_set_timestamp();
+    -- Update the trigger for the renamed table
+    IF EXISTS (
+      SELECT 1 FROM pg_trigger t
+      JOIN pg_class c ON c.oid = t.tgrelid
+      WHERE t.tgname = 'set_timestamp' AND c.relname = 'provider_google_calendar'
+    ) THEN
+      DROP TRIGGER IF EXISTS set_timestamp ON provider_google_calendar;
+    END IF;
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_trigger t
+      JOIN pg_class c ON c.oid = t.tgrelid
+      WHERE t.tgname = 'set_timestamp' AND c.relname = 'provider_calendars'
+    ) THEN
+      CREATE TRIGGER set_timestamp
+          BEFORE UPDATE ON provider_calendars
+          FOR EACH ROW
+          EXECUTE PROCEDURE trigger_set_timestamp();
+    END IF;
 
--- Add indexes for better query performance
-CREATE INDEX idx_provider_calendars_system_type ON provider_calendars(system_type);
-CREATE INDEX idx_provider_calendars_system_id ON provider_calendars(system_id);
+    -- Add indexes for better query performance
+    CREATE INDEX IF NOT EXISTS idx_provider_calendars_system_type ON provider_calendars(system_type);
+    CREATE INDEX IF NOT EXISTS idx_provider_calendars_system_id ON provider_calendars(system_id);
+
+    -- Add comments
+    COMMENT ON TABLE provider_calendars IS 'Stores calendar integration details for providers across different systems';
+    COMMENT ON COLUMN provider_calendars.system_type IS 'The type of calendar system being used';
+    COMMENT ON COLUMN provider_calendars.system_id IS 'Reference to the external calendar system configuration';
+    COMMENT ON COLUMN provider_calendars.system_specific_data IS 'Additional data specific to the calendar system type';
+  END IF;
+END
+$$;
 
 -- Add comments
 COMMENT ON TABLE external_calendar_systems IS 'Defines different external calendar systems that can be integrated';
@@ -38,11 +62,6 @@ COMMENT ON COLUMN external_calendar_systems.type IS 'The type of calendar system
 COMMENT ON COLUMN external_calendar_systems.api_endpoint IS 'Base API endpoint for the calendar system';
 COMMENT ON COLUMN external_calendar_systems.api_version IS 'API version being used';
 COMMENT ON COLUMN external_calendar_systems.auth_type IS 'Authentication type (oauth2, api_key, etc.)';
-
-COMMENT ON TABLE provider_calendars IS 'Stores calendar integration details for providers across different systems';
-COMMENT ON COLUMN provider_calendars.system_type IS 'The type of calendar system being used';
-COMMENT ON COLUMN provider_calendars.system_id IS 'Reference to the external calendar system configuration';
-COMMENT ON COLUMN provider_calendars.system_specific_data IS 'Additional data specific to the calendar system type';
 
 -- Insert default calendar systems
 INSERT INTO external_calendar_systems (name, type, api_endpoint, api_version, auth_type) VALUES

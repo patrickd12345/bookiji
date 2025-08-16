@@ -46,6 +46,11 @@ CREATE TABLE IF NOT EXISTS public.services (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Ensure newer columns exist on services for downstream views/migrations
+ALTER TABLE IF EXISTS public.services 
+  ADD COLUMN IF NOT EXISTS price_cents INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS duration_minutes INTEGER NOT NULL DEFAULT 60;
+
 -- Ensure `is_active` column exists (older installations lacked it)
 DO $$
 BEGIN

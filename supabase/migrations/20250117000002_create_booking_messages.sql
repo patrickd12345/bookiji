@@ -9,18 +9,19 @@ create table if not exists public.booking_messages (
 
 alter table public.booking_messages enable row level security;
 
+drop policy if exists "booking_messages_access" on public.booking_messages;
 create policy "booking_messages_access" on public.booking_messages
   using (
     exists (
       select 1 from bookings b
       where b.id = booking_messages.booking_id
-        and (b.customer_id = auth.uid() or b.provider_id = auth.uid())
+        and (b.customer_id = auth.uid() or b.vendor_id = auth.uid())
     ) or auth.role() = 'service_role'
   )
   with check (
     exists (
       select 1 from bookings b
       where b.id = booking_messages.booking_id
-        and (b.customer_id = auth.uid() or b.provider_id = auth.uid())
+        and (b.customer_id = auth.uid() or b.vendor_id = auth.uid())
     ) or auth.role() = 'service_role'
   );

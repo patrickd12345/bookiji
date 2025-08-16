@@ -50,12 +50,14 @@ CREATE POLICY "Customers manage own requests" ON service_requests
     WITH CHECK (auth.uid() = customer_id);
 
 -- Add policy for service details search (public read for matching)
-CREATE POLICY IF NOT EXISTS "Public service details search" ON service_requests
+DROP POLICY IF EXISTS "Public service details search" ON service_requests;
+CREATE POLICY "Public service details search" ON service_requests
     FOR SELECT
     USING (status = 'pending');
 
 -- Add policy for vendors to update status when responding
-CREATE POLICY IF NOT EXISTS "Vendors can respond to requests" ON service_requests
+DROP POLICY IF EXISTS "Vendors can respond to requests" ON service_requests;
+CREATE POLICY "Vendors can respond to requests" ON service_requests
     FOR UPDATE
     USING (
         EXISTS (

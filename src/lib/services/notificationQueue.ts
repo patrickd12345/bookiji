@@ -42,7 +42,7 @@ export async function addToDeadLetterQueue(
     const cfg = getSupabaseConfig()
     const admin = createClient(cfg.url, cfg.secretKey as string, { auth: { persistSession: false } })
     await admin.from('notification_dlq').insert({ payload: notification as unknown as Record<string, unknown>, error, status: 'dead' })
-  } catch (e) {
+  } catch (_e) {
     deadLetterQueue.push({ notification, error, timestamp: Date.now() });
   }
   if (deadLetterQueue.length > DLQ_ALERT_THRESHOLD) {
@@ -68,3 +68,14 @@ export function clearProviderLogs() {
   providerLogs.length = 0;
 }
 
+// Support email function
+export async function sendSupportEmail(
+  to: string,
+  subject: string,
+  body: string
+) {
+  // In production, integrate with your email provider
+  // For now, just log the email
+  console.log(`[SUPPORT EMAIL] To: ${to}, Subject: ${subject}, Body: ${body}`);
+  return { success: true };
+}

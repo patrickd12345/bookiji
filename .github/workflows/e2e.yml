@@ -50,10 +50,10 @@ jobs:
         run: pnpm -s lint || true
 
       - name: Typecheck
-        run: pnpm -s typecheck || true
+        run: pnpm -s type-check || true
 
       - name: Run Playwright tests
-        run: pnpm dlx playwright test --reporter=html
+        run: pnpm dlx @playwright/test test --reporter=html
 
       - name: Upload Playwright report
         if: always()

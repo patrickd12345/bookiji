@@ -1,5 +1,6 @@
 -- Add beta_status to user_role_summary view
-CREATE OR REPLACE VIEW user_role_summary AS
+DROP VIEW IF EXISTS user_role_summary;
+CREATE VIEW user_role_summary AS
 SELECT
   p.id AS user_id,
   p.email,

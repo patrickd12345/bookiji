@@ -3,27 +3,32 @@ ALTER TABLE public.services DROP CONSTRAINT IF EXISTS services_vendor_id_fkey;
 ALTER TABLE public.availability_slots DROP CONSTRAINT IF EXISTS availability_slots_vendor_id_fkey;
 ALTER TABLE public.provider_locations DROP CONSTRAINT IF EXISTS provider_locations_vendor_id_fkey;
 
--- Migrate vendors to users table
-INSERT INTO public.users (id, email, role, full_name, phone, created_at, updated_at)
-SELECT 
-    id,
-    email,
-    'vendor',
-    full_name,
-    phone,
-    created_at AT TIME ZONE 'UTC',
-    updated_at AT TIME ZONE 'UTC'
-FROM public.vendors
-ON CONFLICT (id) DO UPDATE
-SET 
-    email = EXCLUDED.email,
-    role = 'vendor',
-    full_name = EXCLUDED.full_name,
-    phone = EXCLUDED.phone,
-    updated_at = EXCLUDED.updated_at;
+-- Migrate vendors to users table (conditional - table may not exist)
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'vendors') THEN
+        INSERT INTO public.users (id, email, role, full_name, phone, created_at, updated_at)
+        SELECT 
+            id,
+            email,
+            'vendor',
+            full_name,
+            phone,
+            created_at AT TIME ZONE 'UTC',
+            updated_at AT TIME ZONE 'UTC'
+        FROM public.vendors
+        ON CONFLICT (id) DO UPDATE
+        SET 
+            email = EXCLUDED.email,
+            role = 'vendor',
+            full_name = EXCLUDED.full_name,
+            phone = EXCLUDED.phone,
+            updated_at = EXCLUDED.updated_at;
 
--- Now drop the vendors table
-DROP TABLE IF EXISTS public.vendors;
+        -- Now drop the vendors table
+        DROP TABLE IF EXISTS public.vendors;
+    END IF;
+END $$;
 
 -- Fix timestamp inconsistencies
 ALTER TABLE public.availability_slots

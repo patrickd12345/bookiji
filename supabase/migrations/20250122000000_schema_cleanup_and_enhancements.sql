@@ -34,28 +34,28 @@ CREATE INDEX IF NOT EXISTS idx_credit_transactions_user_id ON credit_transaction
 CREATE INDEX IF NOT EXISTS idx_credit_transactions_booking_id ON credit_transactions(booking_id);
 CREATE INDEX IF NOT EXISTS idx_credit_transactions_created_at ON credit_transactions(created_at);
 
--- 2. Migrate vendors to profiles and drop redundant table
-INSERT INTO profiles (id, email, role, full_name, phone, created_at, updated_at)
-SELECT id, email, 'vendor', full_name, phone, created_at, updated_at
-FROM vendors
-ON CONFLICT (id) DO NOTHING;
+-- 2. Vendor migration skipped - vendors table doesn't exist in this schema
+-- The profiles table is already properly set up
 
-DROP TABLE IF EXISTS vendors;
+-- 3. Enhance calendar integration (conditional - table may not exist)
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'provider_google_calendar') THEN
+        ALTER TABLE provider_google_calendar
+            ADD COLUMN IF NOT EXISTS last_sync_at timestamp with time zone,
+            ADD COLUMN IF NOT EXISTS sync_status text CHECK (sync_status IN ('success', 'failed', 'in_progress')),
+            ADD COLUMN IF NOT EXISTS sync_error text,
+            ADD COLUMN IF NOT EXISTS calendar_ids text[],
+            ADD COLUMN IF NOT EXISTS sync_frequency_minutes integer DEFAULT 5,
+            ADD COLUMN IF NOT EXISTS last_error_at timestamp with time zone,
+            ADD COLUMN IF NOT EXISTS error_count integer DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS sync_enabled boolean DEFAULT true;
 
--- 3. Enhance calendar integration
-ALTER TABLE provider_google_calendar
-    ADD COLUMN IF NOT EXISTS last_sync_at timestamp with time zone,
-    ADD COLUMN IF NOT EXISTS sync_status text CHECK (sync_status IN ('success', 'failed', 'in_progress')),
-    ADD COLUMN IF NOT EXISTS sync_error text,
-    ADD COLUMN IF NOT EXISTS calendar_ids text[],
-    ADD COLUMN IF NOT EXISTS sync_frequency_minutes integer DEFAULT 5,
-    ADD COLUMN IF NOT EXISTS last_error_at timestamp with time zone,
-    ADD COLUMN IF NOT EXISTS error_count integer DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS sync_enabled boolean DEFAULT true;
-
--- Create index for calendar sync monitoring
-CREATE INDEX IF NOT EXISTS idx_provider_google_calendar_sync_status 
-    ON provider_google_calendar(sync_status, last_sync_at);
+        -- Create index for calendar sync monitoring
+        CREATE INDEX IF NOT EXISTS idx_provider_google_calendar_sync_status 
+            ON provider_google_calendar(sync_status, last_sync_at);
+    END IF;
+END $$;
 
 -- 4. Standardize timestamp types
 ALTER TABLE availability_slots

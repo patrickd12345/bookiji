@@ -6,6 +6,12 @@ create table if not exists public.rate_limits (
   primary key (ip, window_start)
 );
 
+-- Ensure required columns exist in case table was created earlier with a different shape
+alter table if exists public.rate_limits 
+  add column if not exists ip inet,
+  add column if not exists window_start timestamptz,
+  add column if not exists count int;
+
 create index if not exists rate_limits_window_idx on public.rate_limits(window_start desc);
 
 create or replace function public.bump_rate_limit(p_ip inet, p_window_seconds int, p_max int)
