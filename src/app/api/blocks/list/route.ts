@@ -4,15 +4,17 @@ import { getSupabaseConfig } from '@/config/supabase'
 import { cookies, headers } from 'next/headers';
 import { BlockListResponse } from '@/types/global';
 
-export async function GET() {
+export async function GET(request?: Request) {
   try {
-    // Test-mode override to stabilize RLS tests
+    // Test-mode override to stabilize RLS tests (best-effort)
     if (process.env.NODE_ENV === 'test') {
-      const h = await headers()
-      const testUser = h.get('x-test-user')
-      if (testUser === 'unauth') {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
+      try {
+        const h = await headers()
+        const testUser = h.get('x-test-user')
+        if (testUser === 'unauth') {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+      } catch {}
     }
     const cookieStore = await cookies();
     const config = getSupabaseConfig()

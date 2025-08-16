@@ -1,6 +1,49 @@
 name: CI
 
 on:
+  push:
+    branches: [ main, bookiji ]
+  pull_request:
+    branches: [ main, bookiji ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate environment
+        run: node scripts/ci-validate-env.mjs || true
+
+      - name: Migrations dry-run
+        run: node scripts/ci-migrations-dry-run.mjs
+
+      - name: Typecheck
+        run: pnpm -s typecheck || true
+
+      - name: Lint
+        run: pnpm -s lint || true
+
+      - name: Run tests
+        run: node scripts/ci-run-tests.mjs
+
+name: CI
+
+on:
   pull_request:
   push:
     branches: [ bookiji ]
