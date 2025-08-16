@@ -1,13 +1,13 @@
+import { NextResponse } from 'next/server'
+
 export async function GET() {
-	const body = JSON.stringify({ ok: true, status: 'healthy' })
-	return new Response(body, {
+	const payload = { status: 'ok', uptime: process.uptime ? process.uptime() : 0, timestamp: Date.now() }
+	const body = JSON.stringify(payload)
+	return new NextResponse(body, {
 		status: 200,
 		headers: {
 			'Content-Type': 'text/plain',
-			'Content-Length': Buffer.byteLength(body).toString(),
-			'Connection': 'close',
-			'Cache-Control': 'no-store',
-			'X-Content-Type-Options': 'nosniff'
+			'Content-Length': Buffer.byteLength(body).toString()
 		}
 	})
 }

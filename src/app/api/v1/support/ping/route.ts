@@ -1,13 +1,12 @@
+import { NextResponse } from 'next/server'
+
 export async function GET() {
 	const body = 'pong'
-	return new Response(body, {
+	return new NextResponse(body, {
 		status: 200,
 		headers: {
 			'Content-Type': 'text/plain',
-			'Content-Length': Buffer.byteLength(body).toString(),
-			'Connection': 'close',
-			'Cache-Control': 'no-store',
-			'X-Content-Type-Options': 'nosniff'
+			'Content-Length': Buffer.byteLength(body).toString()
 		}
 	})
 }
