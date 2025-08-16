@@ -5,7 +5,9 @@ export async function GET() {
 		headers: {
 			'Content-Type': 'text/plain',
 			'Content-Length': Buffer.byteLength(body).toString(),
-			'Connection': 'close'
+			'Connection': 'close',
+			'Cache-Control': 'no-store',
+			'X-Content-Type-Options': 'nosniff'
 		}
 	})
 }

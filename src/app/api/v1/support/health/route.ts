@@ -7,7 +7,9 @@ export async function GET() {
 		headers: {
 			'Content-Type': 'application/json',
 			'Content-Length': length,
-			'Connection': 'close'
+			'Connection': 'close',
+			'Cache-Control': 'no-store',
+			'X-Content-Type-Options': 'nosniff'
 		}
 	})
 }
