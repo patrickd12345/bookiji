@@ -30,7 +30,7 @@ export function limitRequest(request: Request, config: LimiterConfig): NextRespo
       // @ts-ignore RPC types are not generated here
       return (async () => {
         const { data, error } = await s.rpc('bump_rate_limit', { p_ip: ip, p_window_seconds: windowSec, p_max: config.max })
-        if (error) return null
+        if (error) return memoryFallback(request, config)
         if (data === false) {
           const status = (config as any).statusCode ?? 429
           return NextResponse.json({ error: 'Too many requests' }, { status })
@@ -39,6 +39,11 @@ export function limitRequest(request: Request, config: LimiterConfig): NextRespo
       })()
     }
   } catch {}
+  return memoryFallback(request, config)
+}
+
+
+function memoryFallback(request: Request, config: LimiterConfig): NextResponse | null {
   const ip = getClientIp(request)
   const now = Date.now()
   const entry = ipHits.get(ip) || { count: 0, reset: now + config.windowMs }
@@ -55,7 +60,8 @@ export function limitRequest(request: Request, config: LimiterConfig): NextRespo
     if (process.env.NODE_ENV === 'development') {
       console.warn('Rate limited', { ip, count: entry.count, windowMs: config.windowMs })
     }
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    const status = (config as any).statusCode ?? 429
+    return NextResponse.json({ error: 'Too many requests' }, { status })
   }
 
   return null
