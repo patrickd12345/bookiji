@@ -1,13 +1,42 @@
 {
-  "routes": [
-    {
-      "src": "/api/v1/support/(.*)",
-      "dest": "/api/v1/support/$1",
-      "methods": ["GET", "POST", "PATCH"],
-      "headers": {
-        "Access-Control-Allow-Origin": "*",
-        "Cache-Control": "no-store"
+    "version": 2,
+    "builds": [
+      {
+        "src": "next.config.js",
+        "use": "@vercel/next"
       }
+    ],
+    "routes": [
+      {
+        "src": "/api/v1/support/ping",
+        "dest": "/api/v1/support/ping",
+        "methods": ["GET"],
+        "headers": {
+          "Access-Control-Allow-Origin": "*",
+          "Cache-Control": "no-store"
+        }
+      },
+      {
+        "src": "/api/v1/support/health",
+        "dest": "/api/v1/support/health",
+        "methods": ["GET"],
+        "headers": {
+          "Access-Control-Allow-Origin": "*",
+          "Cache-Control": "no-store"
+        }
+      },
+      {
+        "src": "/api/v1/support/health-alt",
+        "dest": "/api/v1/support/health-alt",
+        "methods": ["GET"],
+        "headers": {
+          "Access-Control-Allow-Origin": "*",
+          "Cache-Control": "no-store"
+        }
+      }
+    ],
+    "env": {
+      "NODE_ENV": "production"
     }
-  ]
-}
+  }
+  
