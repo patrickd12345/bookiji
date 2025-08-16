@@ -1,4 +1,5 @@
 name: E2E
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
 on:
   pull_request:
@@ -44,6 +45,12 @@ jobs:
           echo "TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}" >> $GITHUB_ENV
           echo "NEXT_PUBLIC_ADSENSE_APPROVAL_MODE=true" >> $GITHUB_ENV
           echo "ADSENSE_APPROVAL_MODE=true" >> $GITHUB_ENV
+
+      - name: Lint
+        run: pnpm -s lint || true
+
+      - name: Typecheck
+        run: pnpm -s typecheck || true
 
       - name: Run Playwright tests
         run: pnpm dlx playwright test --reporter=html
