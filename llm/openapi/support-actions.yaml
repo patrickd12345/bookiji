@@ -19,6 +19,11 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-dev-agent
+      description: Development header for agent access (value must be 'allow')
     AdminApiKey:
       type: apiKey
       in: header
@@ -494,6 +499,7 @@ paths:
     get:
       summary: Ping
       description: Connectivity test endpoint returning plain text "pong"
+      security: []
       responses:
         '200':
           description: Pong response
@@ -507,6 +513,8 @@ paths:
     get:
       summary: Health (JSON)
       description: Returns a JSON object indicating service health
+      security:
+        - ApiKeyAuth: []
       responses:
         '200':
           description: Health status as JSON
@@ -522,6 +530,17 @@ paths:
               example:
                 ok: true
                 status: healthy
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  error:
+                    type: string
 
   /health-alt:
     get:
