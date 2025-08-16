@@ -107,17 +107,17 @@ curl -s 'http://localhost:3000/api/v1/support/kb/suggestions?status=pending' \
   -H 'x-dev-agent: allow'
 ```
 
-Expected response:
+Expected response (the system guarantees at least one pending suggestion upon resolution; enrichment may run async):
 ```json
 {
   "suggestions": [
     {
       "id": "[UUID]",
       "ticket_id": "[TICKET_ID]",
-      "question": "I need a refund for my booking because the vendor never showed up",
-      "answer": "[Agent response]",
+      "question": "[Derived from subject or transcript]",
+      "answer": "[Fallback or distilled agent answer]",
       "status": "pending",
-      "similarity_to_best": 0.23
+      "similarity_to_best": 0.0
     }
   ]
 }

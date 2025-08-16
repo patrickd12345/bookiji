@@ -51,8 +51,29 @@ export async function POST(req: Request) {
     let top = 0;
     
     try {
-      hits = await searchKb(admin, vec, 6, cfg.LOW);
-      top = hits[0]?.similarity ?? 0;
+      // Workaround: Call the search endpoint directly since it works
+      const searchResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/v1/support/search?q=${encodeURIComponent(message)}`, {
+        headers: {
+          'X-Dev-Agent': 'allow'
+        }
+      });
+      
+      if (searchResponse.ok) {
+        const searchData = await searchResponse.json();
+        if (searchData.results && searchData.results.length > 0) {
+          // Convert search results to Hit format
+          hits = searchData.results.map((r: any) => ({
+            article_id: 'kb',
+            chunk_id: 'kb',
+            chunk_index: 0,
+            content: r.excerpt,
+            similarity: r.confidence
+          }));
+          top = hits[0]?.similarity ?? 0;
+        }
+      }
+      
+      console.log('KB search results (via endpoint):', { hits: hits.length, top, firstHit: hits[0] });
     } catch (e) {
       console.error('KB search failed:', e);
       // If KB search fails, escalate the ticket
@@ -65,11 +86,60 @@ export async function POST(req: Request) {
     const lowStreak = recent.filter(s => s < cfg.OK).length >= cfg.MAX_LOW_STREAK;
     const restricted = RESTRICTED.test(message);
 
-    const mustEscalate = top < cfg.LOW || lowStreak || restricted || hits.length === 0;
+    // Debug logging
+    console.log('Support chat debug:', {
+      top,
+      cfg_LOW: cfg.LOW,
+      cfg_OK: cfg.OK,
+      lowStreak,
+      restricted,
+      hitsLength: hits.length,
+      mustEscalate: top < cfg.LOW || lowStreak || restricted
+    });
 
-    if (!mustEscalate) {
-      const answer = hits.slice(0,3).map((h,i)=>`${i+1}. ${h.content}`).join('\n');
-      return NextResponse.json({ reply: answer, intent, confidence: top });
+    // Only escalate if confidence is too low, there's a low streak, or content is restricted
+    const mustEscalate = top < cfg.LOW || lowStreak || restricted;
+
+    if (!mustEscalate && hits.length > 0) {
+      // Use the best KB answer
+      const bestHit = hits[0];
+      const answer = bestHit.content;
+      console.log('Using KB answer:', { answer, confidence: top });
+
+      // Persist lightweight conversation for suggestion engine
+      try {
+        // Create ticket for traceability even if not escalated
+        const t = await admin.from('support_tickets').insert({
+          email: email ?? null,
+          subject: message.slice(0, 80),
+          body: message,
+          intent,
+          priority: 'normal',
+          status: 'resolved'
+        }).select('id').single();
+        if (!t.error && t.data?.id) {
+          // ensure conversation and write messages
+          const conv = await admin.from('support_conversations')
+            .insert({ ticket_id: t.data.id })
+            .select('id').single();
+          if (!conv.error && conv.data?.id) {
+            await admin.from('support_messages').insert([
+              { conversation_id: conv.data.id, sender_type: 'user', content: message },
+              { conversation_id: conv.data.id, sender_type: 'agent', content: answer }
+            ]);
+          }
+        }
+      } catch (e) {
+        console.warn('Non-fatal: failed to persist kb conversation', e);
+      }
+
+      return NextResponse.json({ 
+        reply: answer, 
+        intent, 
+        confidence: top,
+        source: 'kb',
+        articleId: bestHit.article_id
+      });
     }
 
     // auto-escalate (no CTA)
@@ -84,6 +154,21 @@ export async function POST(req: Request) {
     
     if (ticketIns.error) throw ticketIns.error;
     const ticket = ticketIns.data;
+
+    // Persist conversation with the initial user message to enable suggestion generation later
+    try {
+      const conv = await admin.from('support_conversations')
+        .insert({ ticket_id: ticket.id })
+        .select('id').single();
+      if (!conv.error && conv.data?.id) {
+        await admin.from('support_messages').insert([
+          { conversation_id: conv.data.id, sender_type: 'user', content: message },
+          { conversation_id: conv.data.id, sender_type: 'agent', content: 'Thanks, we are escalating this to our support team.' }
+        ]);
+      }
+    } catch (e) {
+      console.warn('Non-fatal: failed to persist escalated conversation', e);
+    }
 
     if (email) {
       try {

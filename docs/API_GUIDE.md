@@ -61,6 +61,34 @@ Obtain tokens by signing up or authenticating through endpoints in `/api/auth`.
 
 This list covers common routes. Explore the `src/app/api` directory for more examples.
 
+### Support
+
+- `POST /api/support/chat` – End-user chat entrypoint. Returns a KB answer when confidence is high, or escalates and creates a ticket when needed.
+  - Body: `{ "message": string, "email?": string }`
+  - Success (answer): `{ reply, intent, confidence, source: 'kb' }`
+  - Success (escalation): `{ reply, escalated: true, ticketId }`
+
+- `GET /api/v1/support/search?q=...` – Search KB (agent-only)
+  - Auth: requires `support_agent` role. In local/dev you may use header `x-dev-agent: allow`.
+
+- `GET /api/v1/support/digest?window=24h` – Summary counts for support KPIs (agent-only)
+
+- `PATCH /api/v1/support/tickets/[id]` – Update ticket (e.g. `{ status: 'resolved' }`) (agent-only)
+  - On `status: resolved`, the system generates a KB suggestion automatically (with fallbacks), visible under `kb_suggestions`.
+
+- `GET /api/v1/support/tickets/[id]/messages` – List ticket conversation messages (agent-only)
+- `POST /api/v1/support/tickets/[id]/messages` – Add an agent message
+  - Body: `{ text: string, public?: boolean, sendEmail?: boolean }`
+  - Rate limit: 10 messages/minute/agent
+
+- `GET /api/v1/support/kb/suggestions?status=pending|approved|rejected|duplicate` – List suggestions (agent-only)
+- `PATCH /api/v1/support/kb/suggestions/[id]` – Approve, reject, or link a suggestion
+  - Body: `{ action: 'approve' | 'reject' | 'link', articleId?: string }`
+
+Dev helpers (local only):
+- `POST /api/test/support/seed_kb` – Seed KB with a canonical reschedule policy
+- `GET /api/test/support/list_suggestions?ticket=[id]&status=[status]` – Inspect suggestions
+
 ## Rate Limits
 
 API calls are limited to **60 requests per minute per IP**. Exceeding this limit returns `429 Too Many Requests`.

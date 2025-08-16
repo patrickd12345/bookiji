@@ -10,11 +10,30 @@ const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX = 10; // max 10 messages per minute per agent
 
 async function ensureConversationId(admin: any, ticketId: string) {
-  const { data: found } = await admin.from('support_conversations').select('id').eq('id', ticketId).single();
-  if (found?.id) return found.id;
-  const { data, error } = await admin.from('support_conversations').insert({ id: ticketId, origin: 'chat' }).select('id').single();
-  if (error) throw error;
-  return data.id;
+  // Try by ticket_id first
+  const byTicket = await admin
+    .from('support_conversations')
+    .select('id')
+    .eq('ticket_id', ticketId)
+    .maybeSingle();
+  if (byTicket.data?.id) return byTicket.data.id;
+
+  // Fallback: some schemas used conversation id = ticket id
+  const byId = await admin
+    .from('support_conversations')
+    .select('id')
+    .eq('id', ticketId)
+    .maybeSingle();
+  if (byId.data?.id) return byId.data.id;
+
+  // Create using ticket_id
+  const ins = await admin
+    .from('support_conversations')
+    .insert({ ticket_id: ticketId })
+    .select('id')
+    .single();
+  if (ins.error) throw ins.error;
+  return ins.data.id;
 }
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -26,7 +45,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const admin = createClient(url, secretKey, { auth: { persistSession:false } });
 
   const convId = await ensureConversationId(admin, id);
-  const { data, error } = await admin.from('support_messages').select('*').eq('conversation_id', convId).order('created_at', { ascending: true });
+  const { data, error } = await admin.from('support_messages')
+    .select('id, conversation_id, sender_type, content, created_at')
+    .eq('conversation_id', convId)
+    .order('created_at', { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ messages: data ?? [] });
 }
@@ -63,7 +85,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const admin = createClient(url, secretKey, { auth: { persistSession:false } });
 
   const convId = await ensureConversationId(admin, id);
-  await admin.from('support_messages').insert({ conversation_id: convId, role: 'agent', text, intent: null, confidence: null, meta: { public: !!isPublic } });
+  const ins = await admin.from('support_messages').insert({ conversation_id: convId, sender_type: 'agent', content: text });
+  if (ins.error) return NextResponse.json({ error: ins.error.message }, { status: 500 });
 
   if (isPublic && sendEmail) {
     const { data: t } = await admin.from('support_tickets').select('email,subject').eq('id', id).single();

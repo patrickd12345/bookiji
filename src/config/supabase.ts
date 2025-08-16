@@ -5,6 +5,8 @@
  * and supports migration from the old key model to the new one.
  */
 
+import { createClient } from '@supabase/supabase-js';
+
 export interface SupabaseConfig {
   url: string;
   publishableKey: string;
@@ -15,23 +17,24 @@ export interface SupabaseConfig {
  * Get Supabase configuration with backward compatibility
  */
 export function getSupabaseConfig(): SupabaseConfig {
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // For local development, force local database connection
+  if (process.env.NODE_ENV === 'development' && process.env.FORCE_LOCAL_DB === 'true') {
+    return {
+      url: 'http://127.0.0.1:54321',
+      publishableKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
+      secretKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
+    };
+  }
+
+  const url = process.env.SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!url) {
-    throw new Error('Missing Supabase URL environment variable');
+  if (!url || !secretKey || !publishableKey) {
+    throw new Error('Missing Supabase environment variables');
   }
 
-  if (!publishableKey) {
-    throw new Error('Missing Supabase publishable key environment variable');
-  }
-
-  return {
-    url,
-    publishableKey,
-    secretKey
-  };
+  return { url, secretKey, publishableKey };
 }
 
 /**

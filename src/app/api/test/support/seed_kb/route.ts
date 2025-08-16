@@ -36,19 +36,39 @@ export async function POST() {
     console.log('Embedding created with dimension:', vec.length);
   } catch (e) {
     console.error('Embedding failed:', e);
-    vec = new Array(384).fill(0);
+    vec = new Array(768).fill(0);
   }
   
-  // upsert chunk 0 for idempotency
-  const chunkResult = await admin.from('kb_chunks')
-    .upsert({ article_id: art.id, chunk_index: 0, content, embedding: vec }, { onConflict: 'article_id,chunk_index' });
+  // Check if chunk already exists
+  const { data: existingChunk } = await admin
+    .from('kb_chunks')
+    .select('*')
+    .eq('article_id', art.id)
+    .eq('chunk_index', 0)
+    .maybeSingle();
   
-  if (chunkResult.error) {
-    console.error('Chunk insertion failed:', chunkResult.error);
-    return NextResponse.json({ error: chunkResult.error.message }, { status: 500 });
+  if (existingChunk) {
+    // Update existing chunk
+    const chunkResult = await admin.from('kb_chunks')
+      .update({ content, embedding: vec })
+      .eq('id', existingChunk.id);
+    
+    if (chunkResult.error) {
+      console.error('Chunk update failed:', chunkResult.error);
+      return NextResponse.json({ error: chunkResult.error.message }, { status: 500 });
+    }
+  } else {
+    // Insert new chunk
+    const chunkResult = await admin.from('kb_chunks')
+      .insert({ article_id: art.id, chunk_index: 0, content, embedding: vec });
+    
+    if (chunkResult.error) {
+      console.error('Chunk insertion failed:', chunkResult.error);
+      return NextResponse.json({ error: chunkResult.error.message }, { status: 500 });
+    }
   }
   
-  console.log('Chunk created successfully:', chunkResult.data);
+  console.log('Chunk created/updated successfully');
 
   return NextResponse.json({ ok: true });
 }

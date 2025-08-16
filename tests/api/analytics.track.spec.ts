@@ -9,25 +9,39 @@ beforeEach(() => {
 })
 
 const sbMocks = vi.hoisted(() => ({
-  insert: vi.fn(async () => ({ error: null })),
-  upsert: vi.fn(async () => ({ error: null })),
-  rpc: vi.fn(async () => ({ error: null }))
+  insert: vi.fn(async () => ({ data: [{ id: 'test-id' }], error: null })),
+  upsert: vi.fn(async () => ({ data: [{ id: 'test-id' }], error: null })),
+  rpc: vi.fn(async () => ({ data: null, error: null })),
+  select: vi.fn(() => ({
+    eq: vi.fn(() => ({
+      single: async () => ({ data: { completed_bookings: 0, session_duration: 0, help_clicks: 0, signup_abandoned: false, payment_abandoned: false, pricing_page_visits: 0, session_count: 0 }, error: null })
+    }))
+  }))
 }))
 
 // Mock Supabase createClient
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
-    from: (_table: string) => ({
+    from: () => ({
       insert: sbMocks.insert,
       upsert: sbMocks.upsert,
-      select: () => ({
-        eq: () => ({
-          single: async () => ({ data: {}, error: null })
-        })
-      })
+      select: sbMocks.select
     }),
     rpc: sbMocks.rpc
   })
+}))
+
+// Mock the request limiter
+vi.mock('@/middleware/requestLimiter', () => ({
+  limitRequest: vi.fn(async () => null)
+}))
+
+// Mock the supabase config
+vi.mock('@/config/supabase', () => ({
+  getSupabaseConfig: vi.fn(() => ({
+    url: 'https://test.supabase.co',
+    publishableKey: 'test-key'
+  }))
 }))
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
