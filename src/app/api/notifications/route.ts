@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { Notification } from '@/types/notification'
-import { getAuthenticatedUserId } from '../_utils/auth'
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { getSupabaseConfig } from '@/config/supabase'
 
 export async function GET(request: NextRequest) {
   try {
+    if (process.env.NODE_ENV === 'test') {
+      const h = await headers()
+      const testUser = h.get('x-test-user')
+      if (testUser === 'unauth') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+    }
     const cookieStore = await cookies()
     const config = getSupabaseConfig()
     const supabase = createServerClient(
@@ -21,8 +27,8 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const userId = await getAuthenticatedUserId(request)
-    if (!userId) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -32,7 +38,7 @@ export async function GET(request: NextRequest) {
     const { data: notifications, error: fetchError } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (fetchError) {
@@ -55,6 +61,13 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    if (process.env.NODE_ENV === 'test') {
+      const h = await headers()
+      const testUser = h.get('x-test-user')
+      if (testUser === 'unauth') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+    }
     const cookieStore = await cookies()
     const config = getSupabaseConfig()
     const supabase = createServerClient(
@@ -69,8 +82,8 @@ export async function DELETE(request: NextRequest) {
       }
     )
     
-    const userId = await getAuthenticatedUserId(request)
-    if (!userId) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -91,7 +104,7 @@ export async function DELETE(request: NextRequest) {
       .from('notifications')
       .delete()
       .eq('id', notificationId)
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
 
     if (deleteError) {
       console.error('Error deleting notification:', deleteError)

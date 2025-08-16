@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
+import { limitRequest } from '@/middleware/requestLimiter'
 import { ollamaService, BOOKIJI_PROMPTS } from '../../../../lib/ollama'
 
 export async function POST(request: Request) {
   const startTime = Date.now()
   
   try {
+    const limited = limitRequest(request, { windowMs: 10_000, max: 15 })
+    if (limited) return limited
     const { message } = await request.json()
 
     if (!message || typeof message !== 'string') {

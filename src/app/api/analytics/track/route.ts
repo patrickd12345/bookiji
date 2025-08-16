@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { limitRequest } from '@/middleware/requestLimiter'
 import { createClient } from '@supabase/supabase-js'
 import { getSupabaseConfig } from '@/config/supabase'
 
@@ -56,6 +57,8 @@ interface AnalyticsResponse {
 // 📊 Analytics tracking endpoint for post-launch optimization
 export async function POST(request: NextRequest) {
   try {
+    const limited = limitRequest(request, { windowMs: 10_000, max: 30 })
+    if (limited) return limited
     const { event, properties } = await request.json()
     
     if (!event) {
@@ -91,7 +94,9 @@ export async function POST(request: NextRequest) {
       .insert([enhancedEvent as Record<string, unknown>])
 
     if (eventError) {
-      console.error('Failed to store analytics event:', eventError)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to store analytics event:', eventError)
+      }
       return NextResponse.json({ error: 'Failed to store event' }, { status: 500 })
     }
 
@@ -121,7 +126,9 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Analytics tracking error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Analytics tracking error:', error)
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -194,10 +201,14 @@ async function processFunnelEvent(supabase: SupabaseClient, event: string, prope
       })
 
     if (error) {
-      console.error('Failed to process funnel event:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to process funnel event:', error)
+      }
     }
   } catch (error) {
-    console.error('Funnel processing error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Funnel processing error:', error)
+    }
   }
 }
 
@@ -257,7 +268,9 @@ async function updateUserSegmentation(supabase: SupabaseClient, properties: Even
       })
 
   } catch (error) {
-    console.error('User segmentation error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('User segmentation error:', error)
+    }
   }
 }
 
@@ -274,10 +287,14 @@ async function updateGeographicStats(supabase: SupabaseClient, country: string, 
       })
 
     if (error) {
-      console.error('Geographic stats update error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Geographic stats update error:', error)
+      }
     }
   } catch (error) {
-    console.error('Geographic analytics error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Geographic analytics error:', error)
+    }
   }
 }
 
@@ -304,13 +321,17 @@ async function sendRealTimeAlert(event: string, properties: EventProperties): Pr
     // In production, you'd send this to your alert system
     console.log('🚨 Real-time alert:', alertPayload)
   } catch (error) {
-    console.error('Failed to send real-time alert:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to send real-time alert:', error)
+    }
   }
 }
 
 // Analytics data retrieval endpoints
 export async function GET(request: NextRequest): Promise<NextResponse<AnalyticsResponse>> {
   try {
+    const limited = limitRequest(request, { windowMs: 10_000, max: 60 })
+    if (limited) return limited as NextResponse<AnalyticsResponse>
     const supabase = createSupabaseClient()
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
@@ -340,7 +361,9 @@ export async function GET(request: NextRequest): Promise<NextResponse<AnalyticsR
     return NextResponse.json({ success: true, data })
 
   } catch (error) {
-    console.error('Analytics retrieval error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Analytics retrieval error:', error)
+    }
     return NextResponse.json({ 
       success: false, 
       error: 'Failed to retrieve analytics' 
@@ -406,7 +429,9 @@ async function getEventAnalytics(supabase: SupabaseClient) {
     .limit(100)
 
   if (error) {
-    console.error('Failed to fetch event analytics:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to fetch event analytics:', error)
+    }
     return { error: 'Failed to fetch event analytics' }
   }
 

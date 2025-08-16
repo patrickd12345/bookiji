@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { buildCSPHeader } from '@/lib/security/csp'
 
 // In-memory rate limiter storage
 const rateLimitMap = new Map<string, number[]>()
@@ -94,6 +95,9 @@ export function middleware(request: NextRequest) {
   // Apply security headers to all other routes
   const response = NextResponse.next()
   addSecurityHeaders(response)
+  // Add CSP with per-request nonce
+  const nonce = Math.random().toString(36).slice(2)
+  response.headers.set('Content-Security-Policy', buildCSPHeader(nonce))
   return response
 }
 

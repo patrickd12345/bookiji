@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server'
+import { limitRequest } from '@/middleware/requestLimiter'
 import { ollamaService, BOOKIJI_PROMPTS } from '../../../../lib/ollama'
 import { ADSENSE_APPROVAL_MODE } from "@/lib/adsense"
 
 export async function POST(request: Request) {
   try {
+    const limited = limitRequest(request, { windowMs: 10_000, max: 20 })
+    if (limited) return limited
     const { service, location, providerDensity, currentRadius } = await request.json()
     
     if (!service || !location) {

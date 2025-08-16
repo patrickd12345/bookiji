@@ -5,6 +5,12 @@ import { trackPaymentSuccess, trackPaymentFailure, PaymentMetadata } from '@/lib
 import Stripe from 'stripe'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+// Robust base URL for internal server-to-server calls
+const __rawBase = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL || ''
+const __baseUrl = __rawBase
+  ? (__rawBase.startsWith('http') ? __rawBase : `https://${__rawBase}`)
+  : ''
+
 export interface PaymentIntentWithMetadata extends Stripe.PaymentIntent {
   metadata: {
     booking_id?: string;
@@ -40,6 +46,32 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
     private trackPaymentFailure: (data: PaymentMetadata) => void
   ) {}
 
+  private async wasEventProcessed(eventId: string): Promise<boolean> {
+    const { data, error } = await this.supabase
+      .from('processed_webhook_events')
+      .select('event_id')
+      .eq('event_id', eventId)
+      .maybeSingle()
+    if (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Idempotency check failed (non-fatal):', error)
+      }
+      return false
+    }
+    return !!data
+  }
+
+  private async markEventProcessed(eventId: string): Promise<void> {
+    await this.supabase
+      .from('processed_webhook_events')
+      .insert({ event_id: eventId, processed_at: new Date().toISOString() })
+      .then(({ error }) => {
+        if (error && process.env.NODE_ENV === 'development') {
+          console.warn('Failed to mark event processed (non-fatal):', error)
+        }
+      })
+  }
+
   async handle(request: NextRequest): Promise<NextResponse<PaymentsWebhookResponse>> {
     const body = await request.text()
     const signature = request.headers.get('stripe-signature')
@@ -61,9 +93,19 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
-    console.log('🎣 Webhook received:', event.type)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🎣 Webhook received:', event.type)
+    }
 
     try {
+      // Idempotency: avoid reprocessing the same event
+      if (await this.wasEventProcessed(event.id)) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Skipping already-processed event:', event.id)
+        }
+        return NextResponse.json({ received: true })
+      }
+
       switch (event.type) {
         case 'payment_intent.succeeded':
           await this.handlePaymentSucceeded(event.data.object as PaymentIntentWithMetadata)
@@ -75,9 +117,12 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
           await this.handlePaymentCanceled(event.data.object as PaymentIntentWithMetadata)
           break
         default:
-          console.log(`Unhandled event type: ${event.type}`)
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`Unhandled event type: ${event.type}`)
+          }
       }
 
+      await this.markEventProcessed(event.id)
       return NextResponse.json({ received: true })
     } catch (error: unknown) {
       console.error('Webhook handler error:', error)
@@ -93,7 +138,9 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       return
     }
 
-    console.log('✅ Payment succeeded for booking:', bookingId)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ Payment succeeded for booking:', bookingId)
+    }
 
     // Update booking status to confirmed
     const { error } = await this.supabase
@@ -120,21 +167,15 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
 
     // Send notifications
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL 
-        ? `https://${process.env.NEXT_PUBLIC_BASE_URL}` 
-        : process.env.VERCEL_URL 
-          ? `https://${process.env.VERCEL_URL}` 
-          : '';
-
-      if (!baseUrl) {
+      if (!__baseUrl) {
         if (process.env.NODE_ENV === 'development') {
-          console.warn('⚠️ Missing baseUrl for notifications');
+          console.warn('⚠️ Missing base URL for notifications (NEXT_PUBLIC_BASE_URL or VERCEL_URL)')
         }
-        return;
+        return
       }
 
       // Send payment success notification to customer
-      await fetch(`${baseUrl}/api/notifications/send`, {
+      await fetch(`${__baseUrl}/api/notifications/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -144,7 +185,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       })
 
       // Send booking confirmation to customer
-      await fetch(`${baseUrl}/api/notifications/send`, {
+      await fetch(`${__baseUrl}/api/notifications/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -154,7 +195,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       })
 
       // Send provider alert
-      await fetch(`${baseUrl}/api/notifications/send`, {
+      await fetch(`${__baseUrl}/api/notifications/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -163,9 +204,13 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
         })
       })
 
-      console.log('📧 All notifications sent for booking:', bookingId)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📧 All notifications sent for booking:', bookingId)
+      }
     } catch (notificationError) {
-      console.error('Error sending notifications:', notificationError)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error sending notifications:', notificationError)
+      }
     }
   }
 
@@ -177,7 +222,9 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       return
     }
 
-    console.log('❌ Payment failed for booking:', bookingId)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('❌ Payment failed for booking:', bookingId)
+    }
 
     // Update booking status to cancelled
     const { error } = await this.supabase
@@ -210,7 +257,9 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       return
     }
 
-    console.log('🚫 Payment canceled for booking:', bookingId)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🚫 Payment canceled for booking:', bookingId)
+    }
 
     // Update booking status to cancelled
     const { error } = await this.supabase

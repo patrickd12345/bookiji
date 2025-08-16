@@ -134,38 +134,38 @@ describe('Page Components Test Suite', () => {
 
     it('displays main heading', () => {
       render(<HomePageClient initialLocale="en-US" />)
-      expect(screen.getByText('Book Anything,')).toBeInTheDocument()
-      expect(screen.getByText('Anywhere')).toBeInTheDocument()
+      expect(screen.getByText('home.headline')).toBeInTheDocument()
+      expect(screen.getByText('home.tagline')).toBeInTheDocument()
     })
 
     it('displays AI assistant text', () => {
       render(<HomePageClient initialLocale="en-US" />)
-      expect(screen.getByText(/Try our AI booking assistant/)).toBeInTheDocument()
+      expect(screen.getByText('home.feature_grid.chat.desc')).toBeInTheDocument()
     })
 
     it('displays commitment fee information', () => {
       render(<HomePageClient initialLocale="en-US" />)
-      expect(screen.getByText(/Only \$1 commitment fee/)).toBeInTheDocument()
+      expect(screen.getByText('home.commitment_banner')).toBeInTheDocument()
     })
 
     it('has Start Chat button', () => {
       render(<HomePageClient initialLocale="en-US" />)
-      expect(screen.getByText('Start Chat')).toBeInTheDocument()
+      expect(screen.getByText('buttons.start_chat')).toBeInTheDocument()
     })
 
     it('has Search button', () => {
       render(<HomePageClient initialLocale="en-US" />)
-      expect(screen.getByText('Search')).toBeInTheDocument()
+      expect(screen.getByText('buttons.search')).toBeInTheDocument()
     })
 
     it('has Watch Demo button', () => {
       render(<HomePageClient initialLocale="en-US" />)
-      expect(screen.getByText('Watch Demo')).toBeInTheDocument()
+      expect(screen.getByText('buttons.watch_demo')).toBeInTheDocument()
     })
 
     it('has Get Started button', () => {
       render(<HomePageClient initialLocale="en-US" />)
-      expect(screen.getByText('Get Started')).toBeInTheDocument()
+      expect(screen.getByText('cta.get_started')).toBeInTheDocument()
     })
   })
 
@@ -175,7 +175,7 @@ describe('Page Components Test Suite', () => {
       
       // Check for navigation elements - these don't exist in the current HomePageClient
       // The component only has the main content, no navigation menu
-      expect(screen.getByText('Get Started')).toBeInTheDocument()
+      expect(screen.getByText('cta.get_started')).toBeInTheDocument()
     })
   })
 
@@ -185,7 +185,7 @@ describe('Page Components Test Suite', () => {
       
       // Check for footer elements - these don't exist in the current HomePageClient
       // The component only has the main content, no footer
-      expect(screen.getByText('Get Started')).toBeInTheDocument()
+      expect(screen.getByText('cta.get_started')).toBeInTheDocument()
     })
   })
 
@@ -194,13 +194,13 @@ describe('Page Components Test Suite', () => {
       const { rerender } = render(<HomePageClient initialLocale="en-US" />)
       
       // Test that the component renders without errors
-      expect(screen.getByText('Book Anything,')).toBeInTheDocument()
-      expect(screen.getByText('Anywhere')).toBeInTheDocument()
+      expect(screen.getByText('home.headline')).toBeInTheDocument()
+      expect(screen.getByText('home.tagline')).toBeInTheDocument()
       
       // Re-render to test stability
       rerender(<HomePageClient initialLocale="en-US" />)
-      expect(screen.getByText('Book Anything,')).toBeInTheDocument()
-      expect(screen.getByText('Anywhere')).toBeInTheDocument()
+      expect(screen.getByText('home.headline')).toBeInTheDocument()
+      expect(screen.getByText('home.tagline')).toBeInTheDocument()
     })
   })
 
@@ -217,9 +217,9 @@ describe('Page Components Test Suite', () => {
       render(<HomePageClient initialLocale="en-US" />)
       
       // Check that buttons have accessible text
-      expect(screen.getByRole('button', { name: /Start Chat/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /Search/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /Watch Demo/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'buttons.start_chat' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'buttons.search' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'buttons.watch_demo' })).toBeInTheDocument()
     })
   })
 

@@ -28,7 +28,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data: result })
   } catch (err: unknown) {
-    console.error('[analytics/funnel] error', err)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[analytics/funnel] error', err)
+    }
     const msg = err && typeof err === 'object' && 'message' in err ? (err as { message: string }).message : 'Unknown error'
     return NextResponse.json({ ok: false, error: msg }, { status: 500 })
   }

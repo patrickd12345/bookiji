@@ -59,11 +59,10 @@ describe('HomePageClient', () => {
       
       const searchButton = screen.getByText('Search')
       expect(searchButton).toBeInTheDocument()
-      
       fireEvent.click(searchButton)
-      
+
       await waitFor(() => {
-        expect(screen.getByTestId('ai-chat-modal')).toBeInTheDocument()
+        expect(screen.getByText('Start Chat')).toBeInTheDocument()
       })
     })
 
@@ -90,23 +89,22 @@ describe('HomePageClient', () => {
     it('renders main headline correctly', () => {
       render(<HomePageClient initialLocale="en-US" />)
       
-      expect(screen.getByText('Book Anything,')).toBeInTheDocument()
-      expect(screen.getByText('Anywhere')).toBeInTheDocument()
-      expect(screen.getByText(/The universal booking platform powered by AI/)).toBeInTheDocument()
+      expect(screen.getByText('Universal Booking Platform')).toBeInTheDocument()
+      expect(screen.getByText(/Book any service, anywhere, instantly/)).toBeInTheDocument()
     })
 
     it('renders AI assistant description', () => {
       render(<HomePageClient initialLocale="en-US" />)
       
       expect(screen.getAllByText('🤖')).toHaveLength(2) // One in the main component, one in the mock
-      expect(screen.getByText('Try our AI booking assistant')).toBeInTheDocument()
+      expect(screen.getAllByText('Real-Time Booking Chat')).toHaveLength(2) // Multiple elements expected
     })
 
     it('renders commitment fee information', () => {
       render(<HomePageClient initialLocale="en-US" />)
       
       expect(screen.getByText('💡')).toBeInTheDocument()
-      expect(screen.getByText('Only $1 commitment fee • No hidden charges')).toBeInTheDocument()
+      expect(screen.getByText(/Only \$1\.00 commitment fee/)).toBeInTheDocument()
     })
   })
 
@@ -135,7 +133,7 @@ describe('HomePageClient', () => {
       render(<HomePageClient initialLocale="en-US" />)
       
       // Check that the component renders without errors on mobile viewport
-      const container = screen.getByText('Book Anything,')
+      const container = screen.getByText('Universal Booking Platform')
       expect(container).toBeInTheDocument()
     })
   })

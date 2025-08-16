@@ -15,7 +15,9 @@ export async function GET() {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching analytics:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching analytics:', error)
+      }
       return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 })
     }
 
@@ -34,7 +36,9 @@ export async function GET() {
       }
     })
   } catch (error) {
-    console.error('Analytics system error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Analytics system error:', error)
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

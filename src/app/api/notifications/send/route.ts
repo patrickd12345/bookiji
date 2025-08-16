@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { limitRequest } from '@/middleware/requestLimiter'
 import { retryNotification } from '@/lib/services/notificationRetry'
 import { getEmailTemplate } from '@/lib/services/emailTemplates'
 import { getSmsTemplate } from '@/lib/services/smsTemplates'
@@ -19,6 +20,8 @@ export interface NotificationRequest {
 
 export async function POST(request: Request) {
   try {
+    const limited = limitRequest(request, { windowMs: 60_000, max: 20 })
+    if (limited) return limited
     const notification: NotificationRequest = await request.json();
 
     const { type, recipient, template, data } = notification
@@ -61,7 +64,9 @@ export async function POST(request: Request) {
     }
 
     if (result.success) {
-      console.log(`✅ ${type} notification sent to ${recipient}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ ${type} notification sent to ${recipient}`)
+      }
       return NextResponse.json({
         success: true,
         message: `${type} notification sent successfully`
@@ -71,7 +76,9 @@ export async function POST(request: Request) {
     }
 
   } catch (error) {
-    console.error('Notification error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Notification error:', error)
+    }
     return NextResponse.json({ 
       error: error instanceof Error ? error.message : 'Failed to send notification',
       success: false
@@ -104,11 +111,15 @@ async function sendEmail(recipient: string, template: string, data: Record<strin
         providerResponse: String(response.status)
       }
     } else {
-      console.log('📧 [mock] sending email:', { recipient, subject })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📧 [mock] sending email:', { recipient, subject })
+      }
       return { success: true, providerResponse: 'mock' }
     }
   } catch (error) {
-    console.error('Email sending error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Email sending error:', error)
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to send email'
@@ -151,11 +162,15 @@ async function sendSMS(recipient: string, template: string, data: Record<string,
         providerResponse: String(response.status)
       }
     } else {
-      console.log('📱 [mock] sending SMS:', { recipient, message })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📱 [mock] sending SMS:', { recipient, message })
+      }
       return { success: true, providerResponse: 'mock' }
     }
   } catch (error) {
-    console.error('SMS sending error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('SMS sending error:', error)
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to send SMS'
@@ -185,7 +200,9 @@ async function sendPushNotification(recipient: string, template: string, data: R
         })
       })
     } else {
-      console.log('🔔 [mock] sending push notification:', { recipient, pushContent })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔔 [mock] sending push notification:', { recipient, pushContent })
+      }
     }
 
     return {
@@ -194,7 +211,9 @@ async function sendPushNotification(recipient: string, template: string, data: R
       message: 'Push notification sent'
     }
   } catch (error) {
-    console.error('Push notification error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Push notification error:', error)
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to send push notification'

@@ -74,6 +74,64 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/',
 }))
 
+// Mock useI18n hook
+vi.mock('@/lib/i18n/useI18n', () => ({
+  useI18n: () => ({
+    t: (key: string, params?: any) => {
+      const translations: Record<string, string> = {
+        'home.headline': 'Universal Booking Platform',
+        'home.tagline': 'Book any service, anywhere, instantly. One-click booking with AI assistance and $1.00 commitment fee guarantee.',
+        'home.search_placeholder': 'What service do you need?',
+        'home.feature_grid.chat.title': 'Real-Time Booking Chat',
+        'home.commitment_banner': 'Only $1.00 commitment fee • No hidden charges',
+        'home.feature_grid.title': 'Platform Features',
+        'home.feature_grid.chat.desc': 'Try our AI booking assistant',
+        'home.feature_grid.radius.desc': 'AI-powered radius scaling',
+        'home.core.commitment.title': '$1 Commitment Fee',
+        'home.core.commitment.desc': 'Minimal upfront cost',
+        'home.core.assistant.title': 'AI Assistant',
+        'home.core.assistant.desc': 'Smart booking help',
+        'home.core.map.title': 'Map Protection',
+        'home.core.map.desc': 'Location privacy',
+        'home.core.guarantees.title': 'Booking Guarantees',
+        'home.core.guarantees.desc': 'Reliable service',
+        'home.launch_stats.title': 'Global Launch',
+        'home.launch_stats.countries': 'Countries',
+        'home.launch_stats.currencies': 'Currencies',
+        'home.launch_stats.languages': 'Languages',
+        'home.cta.title': 'Ready to Get Started?',
+        'home.cta.subtitle': 'Join the global beta today',
+        'buttons.search': 'Search',
+        'buttons.start_chat': 'Start Chat',
+        'buttons.watch_demo': 'Watch Demo',
+        'buttons.book_appointment': 'Book Appointment',
+        'buttons.offer_services': 'Offer Services',
+        'buttons.start_interactive_tour': 'Start Interactive Tour',
+        'buttons.close': 'Close',
+        'cta.get_started': 'Get Started',
+        'chat.header': 'AI Chat',
+        'demo.platform_title': 'Bookiji Platform Demo',
+        'demo.experience_title': 'Experience the Future of Booking',
+        'demo.experience_body': 'See how our platform makes booking services effortless and secure.',
+        'demo.step1.title': 'Search & Discover',
+        'demo.step1.body': 'Find services in your area with our intelligent search.',
+        'demo.step2.title': 'AI-Powered Matching',
+        'demo.step2.body': 'Our AI helps you find the perfect service provider.',
+        'demo.step3.title': 'Secure Booking',
+        'demo.step3.body': 'Book with confidence using our $1 commitment guarantee.',
+        'demo.step4.title': 'Real-Time Updates',
+        'demo.step4.body': 'Stay informed with live booking status and notifications.',
+        'locale.change_language': 'Change language',
+        'welcome': 'Welcome to Bookiji'
+      }
+      return translations[key] || key
+    },
+    formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
+    setLocale: vi.fn(),
+    locale: 'en-US'
+  })
+}))
+
 // Mock localStorage
 const localStorageMock = {
   getItem: vi.fn(),
