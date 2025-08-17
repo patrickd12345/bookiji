@@ -136,6 +136,7 @@ export default function HomePageClient() {
               <Link
                 href="/get-started"
                 className="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-all duration-200 text-lg"
+                data-testid="book-now-btn"
               >
                 {t('cta.get_started')}
               </Link>

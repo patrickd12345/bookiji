@@ -99,6 +99,7 @@ function PaymentForm({ clientSecret, bookingId }: { clientSecret: string, bookin
         type="submit"
         disabled={!stripe || loading}
         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-shadow"
+        data-testid="pay-commitment-btn"
       >
         {loading ? 'Processing' : 'Pay $1.00 Booking Fee (charged on confirmation)'}
       </button>
@@ -160,7 +161,7 @@ export default function PaymentPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-10">
       <div className="max-w-2xl mx-auto px-4">
         <div className="bg-white rounded-xl shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center" data-testid="pay-heading">
             Complete Your Booking
           </h1>
 

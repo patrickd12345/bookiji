@@ -1,0 +1,82 @@
+name: Deploy to Production
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref (tag/sha/branch) to deploy'
+        required: false
+        default: 'main'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment:
+      name: production
+      url: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Supabase CLI
+        run: npm i -g supabase@latest
+
+      - name: Apply DB migrations (remote)
+        run: |
+          supabase link --project-ref $SUPABASE_PROJECT_REF --password $SUPABASE_DB_PASSWORD
+          supabase db push
+        # NOTE: keep migrations idempotent. If you prefer, gate this behind a manual confirmation step.
+
+      - name: Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Deploy to Production (build on Vercel infra)
+        id: deploy
+        run: |
+          url=$(vercel deploy --prod --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID" --project "$VERCEL_PROJECT_ID" --yes)
+          echo "prod_url=$url" >> $GITHUB_OUTPUT
+          echo "Prod at $url"
+
+      - name: Wait for health
+        run: |
+          npx wait-on -t 600000 ${{ steps.deploy.outputs.prod_url }}/api/health
+          curl -fsSL "${{ steps.deploy.outputs.prod_url }}/api/health"
+
+      - name: Upload Sentry sourcemaps
+        if: env.SENTRY_AUTH_TOKEN != ''
+        run: |
+          npx @sentry/cli sourcemaps inject .next
+          npx @sentry/cli sourcemaps upload --org "$SENTRY_ORG" --project "$SENTRY_PROJECT" .next \
+            --url-prefix "~/_next" --rewrite
+
+      - name: Notify success
+        if: success() && env.ALERT_WEBHOOK_URL != ''
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\":\"✅ Bookiji deployed to production: ${{ steps.deploy.outputs.prod_url }} (ref: ${{
+            github.event.inputs.ref || github.sha }}).\"}" \
+          ${{ secrets.ALERT_WEBHOOK_URL }}

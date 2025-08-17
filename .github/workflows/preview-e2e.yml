@@ -1,0 +1,82 @@
+name: Preview E2E
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  preview-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Deploy Preview (ephemeral)
+        id: deploy
+        run: |
+          url=$(vercel deploy --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID" --project "$VERCEL_PROJECT_ID" --yes)
+          echo "preview_url=$url" >> $GITHUB_OUTPUT
+          echo "Preview at $url"
+
+      - name: Wait for health
+        run: |
+          npx wait-on -t 600000 ${{ steps.deploy.outputs.preview_url }}/api/health
+          curl -fsSL "${{ steps.deploy.outputs.preview_url }}/api/health"
+
+      # OPTIONAL: run remote Supabase migrations in a PR-only "shadow" schema if you have one.
+      # Safe default is to skip remote migrations here and rely on unit tests. Leave this commented unless you've set up a non-prod DB.
+      # - name: Supabase CLI (optional)
+      #   run: npm i -g supabase@latest
+      # - name: Link Supabase (optional)
+      #   run: supabase link --project-ref $SUPABASE_PROJECT_REF --password $SUPABASE_DB_PASSWORD
+      # - name: DB Push (optional)
+      #   run: supabase db push
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+
+      - name: E2E Tests
+        env:
+          BASE_URL: ${{ steps.deploy.outputs.preview_url }}
+          NODE_ENV: test
+        run: npx playwright test --reporter=line
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          if-no-files-found: ignore
+
+      - name: Alert on failure
+        if: failure() && env.ALERT_WEBHOOK_URL != ''
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\":\"❌ Preview E2E failed on PR #${{ github.event.pull_request.number }} (${{
+            github.sha }}).\"}" \
+          ${{ secrets.ALERT_WEBHOOK_URL }}

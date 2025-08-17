@@ -408,7 +408,7 @@ export function FormField({
       return (
         <textarea
           id={fieldId}
-          value={value || ''}
+          value={typeof value === 'string' ? value : ''}
           onChange={handleChange}
           onBlur={onBlur}
           placeholder={placeholder}
@@ -423,7 +423,7 @@ export function FormField({
       <input
         id={fieldId}
         type={type}
-        value={value || ''}
+        value={typeof value === 'string' || typeof value === 'number' ? String(value) : ''}
         onChange={handleChange}
         onBlur={onBlur}
         placeholder={placeholder}

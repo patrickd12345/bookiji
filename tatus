@@ -1,19 +1,10 @@
-[33mcommit bc73f7da69c0bef829560b5253f8e05b9e2e57d9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbookiji[m[33m, [m[1;31morigin/bookiji[m[33m, [m[1;31morigin/HEAD[m[33m)[m
-Author: patrickd12345 <51156466+patrickd12345@users.noreply.github.com>
-Date:   Tue Aug 12 12:53:13 2025 -0400
-
-    Update project status and documentation for beta readiness
-    
-    - Updated the current status to reflect that all systems are operational and ready for beta testing.
-    - Enhanced test coverage to 100% with all tests passing.
-    - Improved AI chat functionality with robust timeout handling and retry logic.
-    - Updated UI components for better user experience and error handling.
-    - Completed the migration to a new Supabase key model with zero downtime.
-    - Revised action items and immediate tasks for the upcoming beta launch.
-
- PROJECT_TRACKING.md         | 115 [32m+++++++++[m[31m---------[m
- README.md                   |  38 [32m+++[m[31m---[m
- REMAINING_TASKS_OVERVIEW.md | 265 [32m++++++++++++++++++++++++++++++++++++++++++[m
- SUPABASE_MIGRATION_GUIDE.md | 277 [32m++++++++++++++++++++++++++[m[31m------------------[m
- TESTING_PHASE_2_TODOS.md    | Bin [31m16784[m -> [32m18254[m bytes
- 5 files changed, 512 insertions(+), 183 deletions(-)
+[33m99aa433[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeat/phone-only-cancel[m[33m, [m[1;31morigin/feat/phone-only-cancel[m[33m)[m feat: implement phone-only cancellation policy and update related messaging across the application; enhance middleware for legacy route redirection
+[33mb369955[m[33m ([m[1;32mbookiji[m[33m)[m refactor: remove initialLocale prop from HomePageClient and update related components; enhance booking fee terminology for clarity and consistency across the application
+[33m2f75567[m feat: enhance Supabase configuration handling and improve database connection testing with CSP awareness
+[33mec45229[m refactor: simplify error handling in various routes by removing unnecessary error variables and improving type definitions
+[33mecc5bb8[m admin console: middleware guard, layout, settings UI/API, migrations, auto RAG detector; check-admin now reads profiles.role
+[33m099ea69[m chore: remove builds configuration and add new routes for digest, tickets, and privacy endpoints in vercel.json
+[33m69d6acf[m chore: update X-Deploy-Touch header values in health, health-alt, and ping routes for deployment tracking
+[33m8fd63cf[m chore: update vercel.json to version 2, add builds configuration, and define new routes for ping, health, and health-alt endpoints
+[33m43e60b0[m fix: add X-Deploy-Touch header to health, health-alt, and ping routes for deployment tracking
+[33ma78082a[m support api: switch to NextResponse and implement ping/health/health-alt per spec (fixed Content-Length, correct Content-Type, uptime+timestamp)

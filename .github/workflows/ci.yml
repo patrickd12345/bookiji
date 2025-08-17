@@ -2,42 +2,38 @@ name: CI
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
 on:
-  push:
-    branches: [ main, bookiji ]
   pull_request:
-    branches: [ main, bookiji ]
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
 
 jobs:
-  build-test:
+  ci:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Validate environment
-        run: node scripts/ci-validate-env.mjs || true
-
-      - name: Migrations dry-run
-        run: node scripts/ci-migrations-dry-run.mjs
+      - name: Install deps
+        run: npm ci
 
       - name: Typecheck
-        run: pnpm -s typecheck || true
+        run: npm run typecheck --if-present
 
       - name: Lint
-        run: pnpm -s lint || true
+        run: npm run lint --if-present
 
-      - name: Run tests
-        run: node scripts/ci-run-tests.mjs
+      - name: Unit tests
+        run: npm run test:ci --if-present
+
+      - name: Build (fail fast)
+        run: npm run build
+
+      # Optional: CodeQL or eslint-security, keep lean by default

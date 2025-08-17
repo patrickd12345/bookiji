@@ -384,6 +384,7 @@ export default function BookingForm({
           type="submit"
           disabled={bookingOperation.loading || !selectedDate || !selectedTime || !customerName || !customerEmail}
           className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          data-testid="continue-btn"
           data-tour="submit-booking"
         >
           {bookingOperation.loading ? (

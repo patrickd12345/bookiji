@@ -19,6 +19,7 @@ interface Booking {
   services: { name: string; description: string; duration_minutes: number }
   vendors: { full_name: string; email: string }
   customers: { full_name: string; email: string }
+  location?: string
 }
 
 export default function ConfirmationPage() {
@@ -78,8 +79,8 @@ export default function ConfirmationPage() {
           {/* Success Header */}
           <div className="text-center mb-8">
             <div className="text-green-600 text-6xl mb-4">✓</div>
-            <h1 className="text-3xl font-bold text-green-600 mb-2">
-              Booking Confirmed!
+            <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center" data-testid="confirm-heading">
+              Booking Confirmed! 🎉
             </h1>
             <p className="text-lg text-gray-600 mb-8">
               Confirm your booking details. You&apos;ll be charged a $1 commitment fee to secure your appointment.
@@ -201,11 +202,68 @@ export default function ConfirmationPage() {
             </p>
           </div>
 
+          {/* Calendar Links */}
+          <div className="mb-8 p-6 bg-blue-50 rounded-lg">
+            <h3 className="font-semibold text-lg mb-4 text-blue-900">Add to Calendar</h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a 
+                href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Appointment with ${booking.vendors?.full_name}`)}&dates=${bookingDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(`Service: ${booking.services?.name}\nProvider: ${booking.vendors?.full_name}\nLocation: ${booking.location || 'Contact provider for details'}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 bg-white border border-blue-200 text-blue-700 py-3 px-4 rounded-lg text-center hover:bg-blue-50 transition-colors"
+                data-testid="add-to-calendar-google"
+              >
+                📅 Add to Google Calendar
+              </a>
+              <a 
+                href={`/api/calendar.ics?bookingId=${booking.id}`}
+                className="flex-1 bg-white border border-blue-200 text-blue-700 py-3 px-4 rounded-lg text-center hover:bg-blue-50 transition-colors"
+                data-testid="add-to-calendar-ics"
+              >
+                📥 Download .ics File
+              </a>
+            </div>
+          </div>
+
+          {/* Provider Contact */}
+          <div className="mb-8 p-6 bg-green-50 rounded-lg">
+            <h3 className="font-semibold text-lg mb-4 text-green-900">Provider Contact</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="text-green-700 font-medium">Provider:</span>
+                <span className="text-green-800">{booking.vendors?.full_name}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-green-700 font-medium">Email:</span>
+                <a 
+                  href={`mailto:${booking.vendors?.email}`}
+                  className="text-green-800 hover:underline"
+                >
+                  {booking.vendors?.email}
+                </a>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-green-700 font-medium">Phone:</span>
+                <a 
+                  href={`tel:+1234567890`}
+                  className="text-green-800 hover:underline"
+                  data-testid="call-provider-link"
+                >
+                  +1 (234) 567-8900
+                </a>
+              </div>
+              <p className="text-sm text-green-600 mt-2">
+                Need to change your booking? Call the provider directly using the phone number above.
+              </p>
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <Link 
               href="/"
               className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold text-center hover:shadow-lg transition-shadow"
+              data-testid="rebook-btn"
             >
               Book Another Service
             </Link>

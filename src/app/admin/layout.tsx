@@ -60,7 +60,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex" data-testid="admin-shell">
       <aside className="w-64 border-r bg-white p-4 space-y-2">
         <div className="text-lg font-semibold mb-2">Admin Console</div>
         <nav className="flex flex-col gap-1">
