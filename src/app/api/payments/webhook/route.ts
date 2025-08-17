@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
           return res
         }
         // process the event directly using the handler's test entrypoint
-        // @ts-expect-error processTestEvent exists on the concrete implementation used here
         if (typeof (handler as any).processTestEvent === 'function') {
           await (handler as any).processTestEvent(payload)
         }

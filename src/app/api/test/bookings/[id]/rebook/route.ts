@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getSupabaseConfig } from '@/config/supabase'
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // Test-only route: allow in preview or when explicitly enabled
   if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV !== 'preview' && process.env.ENABLE_TEST_ROUTES !== 'true') {
     return NextResponse.json({ error: 'Disabled in production' }, { status: 403 })
   }
-  const { id } = params
+  const { id } = await params
   try {
     const { idempotencyKey } = await request.json().catch(() => ({})) as { idempotencyKey?: string }
     const cfg = getSupabaseConfig()

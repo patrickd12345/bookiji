@@ -8,6 +8,7 @@ jobs:
   canaries:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment: production
     env:
       BASE_URL: https://bookiji.com
       ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}

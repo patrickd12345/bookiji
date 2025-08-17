@@ -5,10 +5,10 @@ import { getAuthenticatedUserId } from '@/app/api/_utils/auth'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const { idempotencyKey } = await request.json()
     
     if (!idempotencyKey) {

@@ -8,6 +8,10 @@ declare global {
     }
   }
   var __DEV__: boolean;
+  
+  interface Window {
+    adsbygoogle: any[];
+  }
 }
 
 /// <reference types="vitest" />

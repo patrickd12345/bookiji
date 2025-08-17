@@ -9,7 +9,6 @@ export default function AdBlock() {
 	useEffect(() => {
 		if (!approvalMode) return
 		try {
-			// @ts-expect-error adsbygoogle global provided by AdSense script
 			;(window.adsbygoogle = window.adsbygoogle || []).push({})
 		} catch {}
 	}, [approvalMode])

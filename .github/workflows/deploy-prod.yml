@@ -13,7 +13,6 @@ jobs:
     timeout-minutes: 40
     environment:
       name: production
-      url: ${{ env.NEXT_PUBLIC_BASE_URL }}
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

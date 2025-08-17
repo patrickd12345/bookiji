@@ -6,6 +6,7 @@ on:
 jobs:
   adsense:
     runs-on: ubuntu-latest
+    environment: production
     strategy:
       matrix:
         mode: [on, off]
@@ -45,7 +46,7 @@ jobs:
           BASE_URL: ${{ steps.deploy.outputs.preview_url }}
           NEXT_PUBLIC_ADSENSE_APPROVAL_MODE: ${{ matrix.mode == 'on' && 'true' || 'false' }}
           NEXT_PUBLIC_ADSENSE_CLIENT: ${{ secrets.NEXT_PUBLIC_ADSENSE_CLIENT }}
-          NEXT_PUBLIC_ADSENSE_SLOT: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT }}
+          NEXT_PUBLIC_ADSENSE_SLOT: ${{ secrets.NEXT_PUBLIC_ADSENSE_SLOT }}
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4

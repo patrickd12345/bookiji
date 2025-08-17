@@ -8,6 +8,7 @@ jobs:
   signed-payments:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: production
     env:
       BASE_URL: ${{ github.event.inputs.preview_url || 'https://bookiji.com' }}
       ENABLE_TEST_WEBHOOK_BYPASS: 'false'
