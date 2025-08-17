@@ -38,7 +38,7 @@ export async function POST() {
     }
 
     // Test 4: Test KB search
-    let searchResults: any;
+    let searchResults: unknown;
     try {
       searchResults = await searchKb(admin, embedding, 3, 0.0);
     } catch (e) {
@@ -50,7 +50,7 @@ export async function POST() {
       articles: articles?.length || 0,
       chunks: chunks?.length || 0,
       embedding_dimension: embedding?.length || 0,
-      search_results: searchResults?.length || 0,
+      search_results: Array.isArray(searchResults) ? searchResults.length : 0,
       sample_chunk: chunks?.[0] || null,
       sample_article: articles?.[0] || null
     });

@@ -176,7 +176,7 @@ export default function ProviderMap() {
         if (source && clusterId) {
           source.getClusterExpansionZoom(clusterId, (err, zoom) => {
             if (err) return;
-            const geometry = features[0].geometry as any;
+            const geometry = features[0].geometry as { coordinates?: [number, number] };
             if (geometry.coordinates) {
                           map.easeTo({
               center: geometry.coordinates as [number, number],
@@ -192,7 +192,7 @@ export default function ProviderMap() {
     map.on('click', 'unclustered', (e) => {
       if (e.features && e.features.length > 0) {
         const feature = e.features[0];
-        const geometry = feature.geometry as any;
+        const geometry = feature.geometry as { coordinates?: [number, number] };
         const providerId = feature.properties?.id;
         
         if (geometry.coordinates) {

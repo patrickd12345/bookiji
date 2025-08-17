@@ -47,7 +47,7 @@ export async function addToDeadLetterQueue(
     if (insertError) {
       deadLetterQueue.push({ notification, error, timestamp: Date.now() })
     }
-  } catch (_e) {
+  } catch {
     deadLetterQueue.push({ notification, error, timestamp: Date.now() });
   }
   if (deadLetterQueue.length > DLQ_ALERT_THRESHOLD) {

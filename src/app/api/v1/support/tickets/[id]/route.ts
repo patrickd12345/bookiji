@@ -78,7 +78,7 @@ async function maybeCreateKbSuggestion(
     const [aEmb] = await embed([answer]);
 
     // Nearest match to existing KB to estimate duplication
-    const hits = await searchKb(admin as any, qEmb, 1, 0.0);
+    const hits = await searchKb(admin, qEmb, 1, 0.0);
     const similarity = hits[0]?.similarity ?? 0;
     console.info('kb_suggest: best_sim', similarity);
     
@@ -112,7 +112,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!agent?.roles?.includes('support_agent')) return NextResponse.json({ error:'forbidden' }, { status:403 });
 
   const payload = await req.json();
-  const patch: Record<string, any> = {};
+  const patch: Record<string, string> = {};
   if (payload.status) patch.status = payload.status;
   if (payload.priority) patch.priority = payload.priority;
 
@@ -140,7 +140,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     });
 
     try { 
-      await maybeCreateKbSuggestion(admin as any, id, intentSafe as any); 
+      await maybeCreateKbSuggestion(admin as any, id, intentSafe); 
       console.info('support.kb_suggest.created', { ticket_id: id });
     } catch (e) {
       console.error('Failed to enrich KB suggestion', { ticket_id: id, error: e });
@@ -154,8 +154,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    (data as any).createdSuggestionId = latest.data?.id ?? null;
-    (data as any).createdSuggestionStatus = latest.data?.status ?? null;
+    (data as { createdSuggestionId?: string | null; createdSuggestionStatus?: string | null }).createdSuggestionId = latest.data?.id ?? null;
+    (data as { createdSuggestionId?: string | null; createdSuggestionStatus?: string | null }).createdSuggestionStatus = latest.data?.status ?? null;
 
     // Also create a kb_candidate record for agent approval pipeline
     try {

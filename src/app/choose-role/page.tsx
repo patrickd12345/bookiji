@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export default function ChooseRolePage() {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { user, isAuthenticated } = useAuth()
+  const { isAuthenticated } = useAuth()
   const router = useRouter()
 
   if (!isAuthenticated) {

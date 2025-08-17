@@ -32,7 +32,7 @@ export default function MainNavigation() {
     if (session) {
       try {
         // Try to get profile with roles and beta_status, fallback to basic profile if needed
-        let { data: profile, error } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('role, beta_status')
           .eq('id', session.user.id)
@@ -61,9 +61,9 @@ export default function MainNavigation() {
           if (profile.role) {
             // Single role from profiles table
             rolesArray = [profile.role];
-          } else if ((profile as any).roles) {
+          } else if ((profile as { roles?: string[] }).roles) {
             // Legacy roles array format
-            rolesArray = (profile as any).roles || [];
+            rolesArray = (profile as { roles?: string[] }).roles || [];
           } else {
             // Default to customer if no role specified
             rolesArray = ['customer'];

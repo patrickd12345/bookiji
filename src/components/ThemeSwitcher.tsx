@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function ThemeSwitcher() {
-  const { setTheme, theme, resolvedTheme } = useTheme()
+  const { setTheme, theme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
   const { t } = useI18n()
 

@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from '@/config/supabase';
 import { classifyIntent } from '@/lib/support/intents';
 import { embed } from '@/lib/support/embeddings';
-import { searchKb, type Hit } from '@/lib/support/rag';
+import { type Hit } from '@/lib/support/rag';
 import { sendSupportEmail } from '@/lib/services/notificationQueue';
 
 const cfg = {
@@ -39,12 +39,12 @@ export async function POST(req: Request) {
     const intent = classifyIntent(message);
     const admin = await getAdmin();
     
-    let vec: number[];
+    // Generate embeddings for KB search (fallback to zeros if failed)
+    let embedding: number[] = new Array(768).fill(0);
     try {
-      [vec] = await embed([message]);
+      [embedding] = await embed([message]);
     } catch (e) {
       console.error('Embedding failed:', e);
-      vec = new Array(768).fill(0);
     }
     
     let hits: Hit[] = [];
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
         const searchData = await searchResponse.json();
         if (searchData.results && searchData.results.length > 0) {
           // Convert search results to Hit format
-          hits = searchData.results.map((r: any) => ({
+          hits = searchData.results.map((r: { excerpt: string; confidence: number }) => ({
             article_id: 'kb',
             chunk_id: 'kb',
             chunk_index: 0,
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       top = 0;
     }
 
-    const lastScores = (history as any[]).map(h => h.confidence).filter((x) => typeof x === 'number');
+    const lastScores = (history as Array<{ confidence?: number }>).map(h => h.confidence).filter((x): x is number => typeof x === 'number');
     const recent = [...lastScores.slice(-1), top];
     const lowStreak = recent.filter(s => s < cfg.OK).length >= cfg.MAX_LOW_STREAK;
     const restricted = RESTRICTED.test(message);

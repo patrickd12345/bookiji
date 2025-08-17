@@ -183,7 +183,7 @@ export default function SimpleTestPage() {
 
             {!migrationStatus && !loading && !error && (
               <div className="text-center text-gray-500">
-                Click "Refresh Status" to check your database health
+                Click &quot;Refresh Status&quot; to check your database health
               </div>
             )}
           </CardContent>
@@ -198,7 +198,7 @@ export default function SimpleTestPage() {
             <div>
               <h4 className="font-semibold mb-2">500 Server Errors</h4>
               <p className="text-gray-600 text-sm">
-                If you're seeing 500 errors, it indicates server-side database issues like corrupted tables, 
+                If you&apos;re seeing 500 errors, it indicates server-side database issues like corrupted tables, 
                 broken RLS policies, or missing foreign key constraints. The app will handle these gracefully 
                 and provide fallback functionality.
               </p>

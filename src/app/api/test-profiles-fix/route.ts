@@ -27,7 +27,7 @@ export async function GET() {
 			return NextResponse.json({
 				success: false,
 				error: 'Profiles query failed',
-				code: (profilesError as any).code,
+				code: (profilesError as { code?: string }).code,
 				message: profilesError.message
 			}, { status: 500 })
 		}

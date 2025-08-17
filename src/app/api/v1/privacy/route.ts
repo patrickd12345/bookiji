@@ -22,7 +22,7 @@ export async function GET() {
 		const filePath = path.join(process.cwd(), 'docs', 'PRIVACY_POLICY.md');
 		const markdown = await readFile(filePath, 'utf8');
 		return NextResponse.json({ policy: markdown });
-	} catch (_) {
+	} catch {
 		return NextResponse.json({ policy: FALLBACK_POLICY, source: 'fallback' });
 	}
 }

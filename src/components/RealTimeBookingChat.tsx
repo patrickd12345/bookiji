@@ -47,7 +47,7 @@ export default function RealTimeBookingChat() {
         timestamp: new Date()
       }
     ])
-  }, [])
+  }, [t])
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isTyping) return

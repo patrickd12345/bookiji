@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export type Hit = { article_id: string; chunk_id: string; chunk_index: number; content: string; similarity: number };
 

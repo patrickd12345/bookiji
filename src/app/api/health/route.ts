@@ -8,7 +8,7 @@ export async function GET() {
   let dlqSize = 0
   let dbOk = false
   let rateLimiterBackend: 'supabase' | 'memory' = 'memory'
-  let emailProvider: 'up' | 'down' = process.env.NODE_ENV === 'production'
+  const emailProvider: 'up' | 'down' = process.env.NODE_ENV === 'production'
     ? (process.env.RESEND_API_KEY ? 'up' : 'down')
     : 'up'
 

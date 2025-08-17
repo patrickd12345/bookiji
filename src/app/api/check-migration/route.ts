@@ -1,22 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = createSupabaseServerClient()
     
     console.log('🔍 Checking database migration status...')
     
     // Check if profiles table exists and has beta_status column
-    let columns: any = null
-    let columnsError: any = { message: 'RPC function not available' }
+    let columns: Array<{ column_name: string }> | null = null
+    let columnsError: { message: string } | null = { message: 'RPC function not available' }
     
     try {
       const result = await supabase
         .rpc('get_table_columns', { table_name: 'profiles' })
       columns = result.data
       columnsError = result.error
-    } catch (error) {
+    } catch {
       // RPC function not available, use fallback method
     }
     
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     if (columnsError) {
       // Fallback: try to query the profiles table directly
       try {
-        const { data: testData, error: testError } = await supabase
+        const { error: testError } = await supabase
           .from('profiles')
           .select('id')
           .limit(1)
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
           
           // Try to select beta_status to see if it exists
           try {
-            const { data: betaData, error: betaError } = await supabase
+            const { error: betaError } = await supabase
               .from('profiles')
               .select('beta_status')
               .limit(1)
@@ -53,8 +53,8 @@ export async function GET(request: NextRequest) {
               console.log('✅ beta_status column exists in profiles table')
               hasBetaStatus = true
             }
-          } catch (betaError) {
-            console.log('❌ Exception checking beta_status column:', betaError)
+          } catch (betaCheckError) {
+            console.log('❌ Exception checking beta_status column:', betaCheckError)
           }
         }
       } catch (error) {
@@ -62,14 +62,14 @@ export async function GET(request: NextRequest) {
         profilesTableExists = false
       }
     } else if (columns) {
-      hasBetaStatus = columns.some((col: any) => col.column_name === 'beta_status')
-      console.log(`📊 Profiles table columns: ${columns.map((col: any) => col.column_name).join(', ')}`)
+      hasBetaStatus = columns.some((col) => col.column_name === 'beta_status')
+      console.log(`📊 Profiles table columns: ${columns.map((col) => col.column_name).join(', ')}`)
     }
     
     // Check user_role_summary view
     let userRoleSummaryExists = false
     try {
-      const { data: viewData, error: viewError } = await supabase
+      const { error: viewError } = await supabase
         .from('user_role_summary')
         .select('user_id')
         .limit(1)

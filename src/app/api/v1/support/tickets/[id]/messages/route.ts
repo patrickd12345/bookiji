@@ -9,7 +9,7 @@ const messageRateLimit = new Map<string, { count: number; reset: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX = 10; // max 10 messages per minute per agent
 
-async function ensureConversationId(admin: any, ticketId: string) {
+async function ensureConversationId(admin: SupabaseClient, ticketId: string) {
   // Try by ticket_id first
   const byTicket = await admin
     .from('support_conversations')

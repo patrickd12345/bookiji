@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 // Import the root middleware functions
 import { middleware as rootMiddleware } from '../../middleware'

@@ -20,7 +20,7 @@ export async function POST() {
 
     // Try different client configurations
     let admin;
-    let error: any;
+    let error: unknown;
     
     // Try 1: Default configuration
     try {
@@ -125,7 +125,7 @@ export async function POST() {
     // All methods failed
     return NextResponse.json({ 
       error: 'All client configurations failed', 
-      lastError: error?.message || String(error),
+      lastError: error instanceof Error ? error.message : String(error),
       config: {
         url: config.url,
         hasSecretKey: !!config.secretKey,

@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       const radiusMatch = aiResponse.match(/(\d+(?:\.\d+)?)\s*km/i)
       recommendedRadius = radiusMatch ? parseFloat(radiusMatch[1]) : 5
       explanation = aiResponse
-    } catch (aiError) {
+    } catch {
       // Fallback heuristic if AI is unavailable or fails
       const density = (providerDensity || 'medium').toLowerCase()
       if (density === 'dense') recommendedRadius = 3

@@ -5,7 +5,8 @@
  * and supports migration from the old key model to the new one.
  */
 
-import { createClient } from '@supabase/supabase-js';
+// Import createClient for type reference if needed
+// import { createClient } from '@supabase/supabase-js';
 
 export interface SupabaseConfig {
   url: string;
