@@ -67,10 +67,9 @@ export function PlatformDisclosures() {
             </div>
 
             <div>
-              <h3 className="font-medium">Cancellations</h3>
+              <h3 className="font-medium">Cancellations &amp; Changes</h3>
               <p className="text-sm text-gray-600">
-                The $1 booking fee is charged only when a booking is confirmed and is non‑refundable.
-                Service cancellation policies are set by individual providers.
+                Bookiji does not provide in-app cancellations or rescheduling. To change or cancel, call the other party using the phone number shown on your confirmation. $1 booking fee, charged only when your booking is confirmed. This fee is non-refundable and not applied to the service price.
               </p>
             </div>
 

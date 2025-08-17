@@ -132,6 +132,10 @@ function PaymentForm({
         </div>
       </form>
 
+      <p className="mt-4 text-sm text-gray-500 text-center">
+        Cancellations &amp; Changes: Bookiji does not provide in-app cancellations or rescheduling. To change or cancel, call the other party using the phone number shown on your confirmation.
+      </p>
+
       {/* Security Notice */}
       <div className="mt-4 p-3 bg-gray-50 rounded-lg">
         <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -186,7 +190,7 @@ function DemoPaymentForm(props: StripePaymentProps) {
           <span className="text-lg font-bold text-green-700">$1.00</span>
         </div>
         <p className="text-xs text-green-600 mt-1">
-          This fee guarantees your booking and reduces no-shows
+          $1 booking fee, charged only when your booking is confirmed. This fee is non-refundable and not applied to the service price.
         </p>
       </div>
 
@@ -225,6 +229,10 @@ function DemoPaymentForm(props: StripePaymentProps) {
             {isProcessing ? 'Processing...' : 'Demo Pay $1.00'}
           </button>
         </div>
+
+        <p className="mt-4 text-sm text-gray-500 text-center">
+          Cancellations &amp; Changes: Bookiji does not provide in-app cancellations or rescheduling. To change or cancel, call the other party using the phone number shown on your confirmation.
+        </p>
       </div>
 
       {/* Setup Instructions */}

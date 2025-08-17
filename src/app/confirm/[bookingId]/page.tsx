@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../hooks/useAuth'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import BookingActions from '@/components/booking/BookingActions'
 
 interface Booking {
   id: string
@@ -17,13 +18,15 @@ interface Booking {
   commitment_fee_paid: boolean
   notes?: string
   services: { name: string; description: string; duration_minutes: number }
-  vendors: { full_name: string; email: string }
-  customers: { full_name: string; email: string }
+  vendors: { full_name: string; email: string; phone?: string }
+  customers: { full_name: string; email: string; phone?: string }
 }
 
 export default function ConfirmationPage() {
   const params = useParams<{ bookingId: string }>()
   const bookingId = params?.bookingId ?? ''
+  const searchParams = useSearchParams()
+  const notice = searchParams.get('notice')
   const { user } = useAuth()
   
   const [booking, setBooking] = useState<Booking | null>(null)
@@ -86,6 +89,12 @@ export default function ConfirmationPage() {
             </p>
           </div>
 
+          {notice === 'call-to-change' && (
+            <div className="mb-4 rounded-md border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-800">
+              To change or cancel, call using the phone number on your confirmation. Bookiji doesn’t offer in-app cancellations.
+            </div>
+          )}
+
           {/* Booking Details */}
           <div className="bg-gray-50 rounded-lg p-6 mb-8">
             <h2 className="text-xl font-semibold mb-6">Booking Details</h2>
@@ -104,6 +113,9 @@ export default function ConfirmationPage() {
                   <span className="text-gray-600 block">Provider</span>
                   <span className="font-semibold">{booking.vendors?.full_name}</span>
                   <p className="text-gray-600 text-sm">{booking.vendors?.email}</p>
+                  {booking.vendors?.phone && (
+                    <p className="text-gray-600 text-sm">Phone: {booking.vendors.phone}</p>
+                  )}
                 </div>
 
                 <div>
@@ -158,6 +170,12 @@ export default function ConfirmationPage() {
               </div>
             )}
           </div>
+
+          <BookingActions
+            providerName={booking.vendors?.full_name}
+            providerPhone={booking.vendors?.phone}
+            customerPhone={booking.customers?.phone}
+          />
 
           {/* Next Steps */}
           <div className="bg-blue-50 rounded-lg p-6 mb-8">

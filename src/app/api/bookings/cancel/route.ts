@@ -1,8 +1,14 @@
-import { NextRequest } from 'next/server'
-import { createBookingCancelHandler } from '@/lib/bookingsCancelHandler'
+import { NextRequest, NextResponse } from 'next/server';
 
-const handler = createBookingCancelHandler()
+export async function POST(_req: NextRequest) {
+  console.warn('Deprecated cancel endpoint hit');
+  return NextResponse.json(
+    {
+      error: 'CANCELLATION_DISABLED',
+      message:
+        'In-app cancellation is not available. Call the other party using the phone number on the confirmation.',
+    },
+    { status: 410 }
+  );
+}
 
-export async function POST(request: NextRequest) {
-  return handler.handle(request)
-} 
