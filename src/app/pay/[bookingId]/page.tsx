@@ -104,7 +104,10 @@ function PaymentForm({ clientSecret, bookingId }: { clientSecret: string, bookin
       </button>
 
       <p className="text-sm text-gray-500 text-center">
-        This $1.00 booking fee confirms your reservation and reduces no‑shows. Non‑refundable.
+        $1 booking fee, charged only when your booking is confirmed. This fee is non-refundable and not applied to the service price.
+      </p>
+      <p className="text-sm text-gray-500 text-center mt-2">
+        Cancellations &amp; Changes: Bookiji does not provide in-app cancellations or rescheduling. To change or cancel, call the other party using the phone number shown on your confirmation.
       </p>
     </form>
   )

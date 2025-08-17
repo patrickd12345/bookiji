@@ -51,15 +51,13 @@ export default function TermsPage() {
           <h2 className="text-2xl font-semibold mb-4">4. Booking and Payment Terms</h2>
           <div className="space-y-4">
             <p className="text-gray-700 leading-relaxed">
-              <strong>Booking Fee:</strong> A <strong>$1 booking fee</strong> is charged <strong>only when the booking is confirmed</strong> to reduce no‑shows and secure the slot. This fee is <strong>non‑refundable</strong>.
+              <strong>$1 Booking Fee:</strong> $1 booking fee, charged only when your booking is confirmed. This fee is non-refundable and not applied to the service price.
             </p>
             <p className="text-gray-700 leading-relaxed">
               <strong>Service Payments:</strong> Bookiji does <strong>not</strong> process the final payment for services. We only facilitate a small commitment fee to secure bookings and help prevent no-shows. The remaining payment for services is handled directly between the customer and the service provider, outside of our platform.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              <strong>Cancellation Policy:</strong> Cancellation policies vary by service provider. 
-              Early cancellations typically receive full refunds, while last-minute cancellations may 
-              be subject to provider-specific policies.
+              <strong>Cancellations &amp; Changes:</strong> Bookiji does not provide in-app cancellations or rescheduling. To change or cancel, call the other party using the phone number shown on your confirmation.
             </p>
           </div>
         </section>

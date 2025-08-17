@@ -83,11 +83,9 @@ export default function FAQPage() {
           </div>
 
           <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-xl font-semibold mb-3">What if I need to cancel or reschedule?</h3>
+            <h3 className="text-xl font-semibold mb-3">Cancellations &amp; Changes</h3>
             <p className="text-gray-700 leading-relaxed">
-              You can cancel or reschedule bookings through your account dashboard. Cancellation policies 
-              vary by service provider, but we always aim to be fair to both parties. Early cancellations 
-              typically receive full refunds, while last-minute changes may be subject to provider policies.
+              Bookiji does not provide in-app cancellations or rescheduling. To change or cancel, call the other party using the phone number shown on your confirmation.
             </p>
           </div>
         </div>

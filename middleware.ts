@@ -51,7 +51,7 @@ function getClientIP(request: NextRequest): string {
 }
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const { pathname, search } = request.nextUrl
   // Admin guard for /admin
   if (pathname.startsWith('/admin')) {
     const isAdminHeader = request.headers.get('x-user-role') === 'admin'
@@ -62,6 +62,19 @@ export function middleware(request: NextRequest) {
     }
   }
   
+  // Legacy cancel/reschedule routes redirect
+  if (pathname.startsWith('/cancel/') || pathname.startsWith('/reschedule/')) {
+    const url = request.nextUrl.clone()
+    const m = pathname.match(/\/(cancel|reschedule)\/([^/]+)/)
+    if (m?.[2]) {
+      url.pathname = `/confirm/${m[2]}`
+    } else {
+      url.pathname = `/` // fallback home
+    }
+    url.search = `${search ? `${search}&` : '?'}notice=call-to-change`
+    return NextResponse.redirect(url)
+  }
+
   // Skip rate limiting for health check
   if (pathname === '/api/health') {
     const response = NextResponse.next()
