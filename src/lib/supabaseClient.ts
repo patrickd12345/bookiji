@@ -16,7 +16,7 @@ export function getSupabaseClient(): SupabaseClient {
   } catch (error) {
     console.error('Failed to create Supabase client:', error);
     // Return a dummy client that will fail gracefully
-    return createClient('https://dummy.supabase.co', 'dummy-key');
+    return createClient('https://dummy.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0');
   }
 }
 

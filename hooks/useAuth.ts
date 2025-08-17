@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabaseClient'
+import { getSupabaseConfig } from '@/config/supabase'
 import { ADSENSE_APPROVAL_MODE } from '../src/lib/adsense'
 
 interface UserProfile {
@@ -44,12 +45,24 @@ export function useAuth() {
   // Temporary bypass for AdSense approval
   const isAdSenseApprovalMode = ADSENSE_APPROVAL_MODE
 
-  // Test database connection and table existence
+  // Test database connection and table existence with CSP-safe approach
   const testDatabaseConnection = async () => {
     try {
       if (process.env.NODE_ENV !== 'development') return true;
       
       console.log('Testing database connection...');
+      
+      // Check if we have valid Supabase configuration first
+      try {
+        const config = getSupabaseConfig();
+        if (!config.url || config.url.includes('dummy')) {
+          console.warn('⚠️ Using dummy Supabase configuration - database features disabled');
+          return false;
+        }
+      } catch (configError) {
+        console.warn('⚠️ Supabase configuration invalid:', configError);
+        return false;
+      }
       
       // Test basic connection with error handling for 500 errors
       try {
@@ -61,6 +74,10 @@ export function useAuth() {
         if (testError) {
           if (testError.code === '500' || testError.message.includes('500')) {
             console.error('❌ Server error (500) accessing profiles table');
+            return false;
+          }
+          if (testError.message.includes('CSP') || testError.message.includes('violates')) {
+            console.warn('⚠️ CSP policy blocking database connection - check environment variables');
             return false;
           }
           console.error('Database connection test failed:', testError);
