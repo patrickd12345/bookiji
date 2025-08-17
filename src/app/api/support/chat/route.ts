@@ -186,7 +186,7 @@ export async function POST(req: Request) {
   } catch (e) {
     console.error('Support chat error:', e);
     // Graceful fallback: respond with generic guidance instead of 500
-    const reply = 'Thanks for the message. Please check My Bookings in your dashboard to reschedule or cancel. If this persists, reply with your email and we\'ll create a support ticket for you.';
+    const reply = 'Thanks for the message. To change or cancel a booking, call the provider directly using the phone number on your confirmation. Bookiji doesn\'t offer in-app cancellations. If this persists, reply with your email and we\'ll create a support ticket for you.';
     return NextResponse.json({ reply, escalated: false, intent: 'general', confidence: 0.0 });
   }
 }

@@ -14,7 +14,7 @@ export async function POST() {
     }
   });
 
-  const content = `You can reschedule a booking from your dashboard under "My Bookings" > "Reschedule". Changes allowed up to 24h before start time.`;
+      const content = `Bookiji does not offer in-app cancellations or rescheduling. To change or cancel your appointment, call the service provider directly using the phone number shown on your confirmation. The $1 booking fee is non-refundable once charged upon confirmation.`;
   const { data: existing } = await admin
     .from('kb_articles')
     .select('*')

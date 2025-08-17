@@ -51,7 +51,22 @@ function getClientIP(request: NextRequest): string {
 }
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const { pathname, search } = request.nextUrl
+  
+  // Redirect legacy cancel/reschedule routes
+  if (pathname.startsWith('/cancel/') || pathname.startsWith('/reschedule/')) {
+    const url = request.nextUrl.clone()
+    // Attempt to extract bookingId if present; else send to /bookings with notice
+    const m = pathname.match(/\/(cancel|reschedule)\/([^/]+)/)
+    if (m?.[2]) {
+      url.pathname = `/booking/${m[2]}`
+    } else {
+      url.pathname = `/bookings`
+    }
+    url.search = `${search ? `${search}&` : "?"}notice=call-to-change`
+    return NextResponse.redirect(url)
+  }
+  
   // Admin guard for /admin
   if (pathname.startsWith('/admin')) {
     const isAdminHeader = request.headers.get('x-user-role') === 'admin'

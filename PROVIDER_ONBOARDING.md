@@ -30,7 +30,7 @@ Thank you for joining the world's first universal, AI-powered booking platform. 
    - Your services are now discoverable by Bookiji users
    - Bookings are auto-confirmed and guaranteed
 4. **Manage Bookings**
-   - View, reschedule, or cancel bookings in your dashboard
+   - View bookings and contact customers directly for any changes
    - Communicate with clients as needed (contact info shared only after booking)
 5. **Get Paid**
    - Payments are processed securely and deposited to your account

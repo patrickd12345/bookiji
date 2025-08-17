@@ -41,12 +41,13 @@ export const helpArticles: HelpArticle[] = [
     category: 'Booking',
     tags: ['reschedule','cancel','booking'],
     content: `
-      <p>You can modify or cancel a booking from your dashboard.</p>
+      <p>Bookiji does not offer in-app cancellations or rescheduling. To change or cancel your appointment:</p>
       <ol>
-        <li>Open your upcoming booking.</li>
-        <li>Choose "Reschedule" or "Cancel".</li>
-        <li>Follow the prompts to confirm.</li>
+        <li>Call the service provider directly using the phone number shown on your confirmation.</li>
+        <li>Explain your situation and request the change.</li>
+        <li>The provider will handle the modification according to their policies.</li>
       </ol>
+      <p><strong>Important:</strong> The $1 booking fee is non-refundable once charged upon confirmation. All changes must be arranged directly with the provider by phone.</p>
     `,
     related: ['how-booking-works','refunds-no-shows']
   },
@@ -56,8 +57,9 @@ export const helpArticles: HelpArticle[] = [
     category: 'Payments',
     tags: ['refunds','no-shows'],
     content: `
-      <p>Cancelling within the allowed window triggers an automatic refund of the $1 fee.</p>
+      <p>The $1 booking fee is non-refundable once charged upon confirmation.</p>
       <p>No-shows may forfeit the commitment fee according to provider policy.</p>
+      <p><strong>Note:</strong> All cancellations and changes must be arranged directly with the provider by phone.</p>
     `,
     related: ['the-1-commitment-fee','reschedule-cancel']
   },

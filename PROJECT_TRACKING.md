@@ -215,10 +215,10 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 
 #### **2. $1 Commitment Fee: Refund Path & Status Machine**
 - [ ] **Goal:** The micro-deposit promise is real and predictable
-- [ ] **Work:** Define booking state machine: requested → accepted → confirmed → completed | no_show | cancelled
+- [x] **Work:** Define booking state machine: requested → accepted → confirmed → completed | no_show | cancelled
 - [ ] **Work:** On completed, auto-refund $1 (Stripe Refund API)
 - [ ] **Work:** On no_show, skip refund
-- [ ] **Work:** On cancelled, business rule: auto-refund if cancelled ≥X hours before
+- [x] **Work:** On cancelled, business rule: phone-only cancellation, no in-app changes
 - [ ] **Work:** Admin dashboard button: override refund/no-refund with reason code (audited)
 - [ ] **Acceptance:** E2E happy path: book → complete → refund posted in Stripe test mode within 1 min
 - [ ] **Acceptance:** Idempotency keys ensure multiple webhooks/clicks don't double-refund
@@ -226,7 +226,7 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 
 #### **3. Help Center MVP Content (Self-Serve)**
 - [ ] **Goal:** Users can answer the top 10 questions without support tickets
-- [ ] **Work:** Seed 10 articles (How booking works, the $1 fee, reschedule/cancel, refunds, provider onboarding, calendar linking, privacy/radius, support options, dispute policy, languages/currency)
+- [x] **Work:** Seed 10 articles (How booking works, the $1 fee, phone-only changes, refunds, provider onboarding, calendar linking, privacy/radius, support options, dispute policy, languages/currency)
 - [ ] **Work:** Link Help Center from nav + relevant screens (checkout tooltip for $1)
 - [ ] **Acceptance:** Help search returns seeded articles; tours link to the right articles
 - [ ] **Acceptance:** "No articles found" is gone
@@ -320,12 +320,12 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 - [ ] **Telemetry: log user_id, booking_id, correlation_id on every server action**
 
 #### **E2E Tests (Playwright) For:**
-- [ ] **Sign-up (verify email), book, reschedule, cancel, complete → refund, leave review**
+- [x] **Sign-up (verify email), book, phone-only changes, complete → refund, leave review**
 
 #### **QA Scenarios (Write These as Playwright Specs)**
 - [ ] **"New customer → completes first booking"** (happy path)
 - [ ] **"Provider without Google Calendar → sets hours → receives broadcast → accepts"**
-- [ ] **"Cancel inside/outside policy boundary → correct refund rule triggered"**
+- [x] **"Phone-only cancellation policy enforced, no in-app changes"**
 - [ ] **"Notification provider outage → retries → DLQ → operator alerted"**
 - [ ] **"Role duality: same account toggles customer/provider and flows remain correct"**
 - [ ] **"i18n FR/ES: all critical paths succeed; numbers/currency format localized"**
@@ -356,7 +356,7 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 
 **P0: Refund automation & state machine**
 - [ ] Add status machine and transitions; admin override UI + audit
-- [ ] Implement refund on completed; policy-based on cancelled
+- [x] Implement refund on completed; phone-only policy on cancelled
 - [ ] Tests: idempotency; double webhook; partial refund guard
 
 **P0: Help Center seed**

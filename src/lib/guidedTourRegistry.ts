@@ -200,7 +200,7 @@ registerTour({
     { target: '[data-tour="calendar-view"]', content: 'Your integrated calendar view. See all your appointments and availability in one place.' },
     { target: '[data-tour="availability-slots"]', content: 'Set your available time slots. Green blocks show available times, red shows booked appointments.' },
     { target: '[data-tour="booking-details"]', content: 'Click on any booking to see customer details, service information, and booking status.' },
-    { target: '[data-tour="quick-actions"]', content: 'Use quick actions to confirm, reschedule, or cancel bookings directly from the calendar.' },
+            { target: '[data-tour="quick-actions"]', content: 'Use quick actions to confirm bookings and view contact information for changes.' },
     { target: '[data-tour="sync-status"]', content: 'Monitor your calendar sync status. Ensure your external calendar stays updated.' },
     { target: '[data-tour="block-time"]', content: 'Block off time for personal appointments or breaks that shouldn\'t be bookable.' }
   ]
@@ -217,7 +217,7 @@ registerTour({
     { target: '[data-tour="booking-details"]', content: 'Review your booking details including service, provider, date, time, and location.' },
     { target: '[data-tour="provider-info"]', content: 'Contact information and directions to your service provider.' },
     { target: '[data-tour="reminder-settings"]', content: 'Set up reminders for your appointment. You\'ll receive notifications before your booking.' },
-    { target: '[data-tour="modify-options"]', content: 'Need to change something? You can modify or cancel your booking here.' },
+            { target: '[data-tour="modify-options"]', content: 'Need to change something? Call the provider using the phone number on your confirmation.' },
     { target: '[data-tour="next-steps"]', content: 'What happens next? You\'ll receive confirmation details and can track your booking status.' }
   ]
 }) 

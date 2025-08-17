@@ -7,7 +7,7 @@ import 'shepherd.js/dist/css/shepherd.css';
 
 interface StepOption {
   id?: string;
-  text?: string | HTMLElement | (string | HTMLElement)[];
+  text?: string | HTMLElement;
   title?: string;
   buttons?: { text: string; action: () => void; classes?: string }[];
   classes?: string;
@@ -40,7 +40,7 @@ export function GuidedTourProvider({ children }: { children: ReactNode }) {
     steps.forEach(step => {
       const { helpArticleSlug, ...rest } = step;
       if (helpArticleSlug) {
-        const baseText = Array.isArray(rest.text) ? rest.text.join(' ') : rest.text || '';
+        const baseText = typeof rest.text === 'string' ? rest.text : '';
         const container = document.createElement('span');
         container.textContent = baseText + ' ';
         const button = document.createElement('button');

@@ -39,7 +39,7 @@ async function buildTranscript(admin: ReturnType<typeof createClient>, ticketId:
 }
 
 async function maybeCreateKbSuggestion(
-  admin: ReturnType<typeof createClient>, ticketId: string, intent?: string) {
+  admin: any, ticketId: string, intent?: string) {
   
   // Enable by default in non-production unless explicitly disabled
   const enabled = (process.env.SUPPORT_KB_SUGGEST_ENABLED ?? (process.env.NODE_ENV !== 'production' ? 'true' : 'false')) === 'true';

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, type MouseEvent, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../hooks/useAuth'
+import BookingActions from './booking/BookingActions'
 
 interface BookingStatus {
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no-show'
@@ -116,47 +117,7 @@ export default function ConfirmationStatus({
     }
   }, [bookingId, initialStatus, fetchBookingStatus])
 
-  const handleCancelBooking = async () => {
-    if (!confirm('Are you sure you want to cancel this booking?')) return
 
-    try {
-      setLoading(true)
-      
-      const response = await fetch('/api/bookings/cancel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bookingId,
-                      userId: user?.id, // Get from authenticated user
-          reason: 'Customer requested cancellation'
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        const updatedStatus: BookingStatus = {
-          ...status!,
-          status: 'cancelled',
-          payment_status: data.refund?.success ? 'refunded' : status!.payment_status
-        }
-        setStatus(updatedStatus)
-        onStatusChange?.(updatedStatus)
-        
-        // Show success message
-        alert(data.message + (data.refund?.success ? ' Refund will be processed within 3-5 business days.' : ''))
-      } else {
-        throw new Error(data.error || 'Failed to cancel booking')
-      }
-    } catch (error) {
-      console.error('Error cancelling booking:', error)
-      setError(error instanceof Error ? error.message : 'Failed to cancel booking')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -258,15 +219,6 @@ export default function ConfirmationStatus({
         {showActions && (
           <div className="mt-6 pt-4 border-t">
             <div className="flex gap-3">
-              {canCancel && (
-                <button
-                  onClick={handleCancelBooking}
-                  className="px-4 py-2 border border-red-300 text-red-700 rounded-md hover:bg-red-50 transition-colors"
-                >
-                  Cancel Booking
-                </button>
-              )}
-              
               <button
                 onClick={fetchBookingStatus}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
@@ -276,7 +228,7 @@ export default function ConfirmationStatus({
               
               {status.status === 'confirmed' && (
                 <button
-                  onClick={(evt: MouseEvent<HTMLButtonElement>) => {
+                  onClick={(evt) => {
                     evt.preventDefault();
                     router.push(`/confirm/${bookingId}`);
                   }}
@@ -285,6 +237,15 @@ export default function ConfirmationStatus({
                 </button>
               )}
             </div>
+            
+            {/* Phone-only cancellation notice */}
+            {canCancel && (
+              <BookingActions 
+                providerName="Provider"
+                providerPhone="+1234567890"
+                customerPhone={user?.phone}
+              />
+            )}
           </div>
         )}
       </div>
