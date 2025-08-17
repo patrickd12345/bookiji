@@ -1,0 +1,24 @@
+name: Visual Regression
+on:
+  pull_request:
+    branches: [ main ]
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm dlx playwright install --with-deps
+      - run: pnpm dlx playwright test tests/visual --reporter=line
+        env:
+          BASE_URL: https://bookiji.com
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-diffs
+          path: test-results

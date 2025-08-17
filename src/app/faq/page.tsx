@@ -42,7 +42,7 @@ export default function FAQPage() {
             <p className="text-gray-700 leading-relaxed">
               Bookiji is a universal booking platform that connects customers with service providers 
               across all industries. Whether you need a plumber, personal trainer, tutor, or any other 
-              service, Bookiji makes it easy to find, book, and pay for services with guaranteed availability.
+              service, Bookiji makes it easy to find, book, and pay for services with confirmed availability and a $1 commitment fee.
             </p>
           </div>
 

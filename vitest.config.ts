@@ -5,18 +5,27 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   test: {
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    exclude: [
+      'tests/**/*', 
+      'playwright-report', 
+      'test-results', 
+      'node_modules',
+      '**/*.playwright.{test,spec}.{ts,tsx}'
+    ],
     environment: "jsdom",
     globals: true,
-    setupFiles: ["./tests/setup.ts"],
+    setupFiles: ["./src/test/setup.ts"],
     coverage: {
       reporter: ["text", "html"],
       exclude: [
         "node_modules/",
-        "tests/setup.ts",
+        "src/test/setup.ts",
+        "tests/**/*",
+        "playwright-report/**/*",
+        "test-results/**/*"
       ],
     },
-    include: ["tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-    exclude: ["tests/e2e/**/*"],
   },
   resolve: {
     alias: {

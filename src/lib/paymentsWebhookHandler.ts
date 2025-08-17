@@ -130,6 +130,30 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
     }
   }
 
+  /**
+   * TEST-ONLY helper to process a pre-parsed Stripe-like event JSON without signature verification.
+   * This should only be called from a test-gated route.
+   */
+  public async processTestEvent(event: { id: string; type: string; data: { object: any } }): Promise<void> {
+    // mimic the real switch branches
+    switch (event.type) {
+      case 'payment_intent.succeeded':
+        await this.handlePaymentSucceeded(event.data.object as PaymentIntentWithMetadata)
+        break
+      case 'payment_intent.payment_failed':
+        await this.handlePaymentFailed(event.data.object as PaymentIntentWithMetadata)
+        break
+      case 'payment_intent.canceled':
+        await this.handlePaymentCanceled(event.data.object as PaymentIntentWithMetadata)
+        break
+      default:
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`(test) Unhandled event type: ${event.type}`)
+        }
+    }
+    // do not mark processed in test mode; let tests manage idempotency
+  }
+
   private async handlePaymentSucceeded(paymentIntent: PaymentIntentWithMetadata): Promise<void> {
     const bookingId = paymentIntent.metadata?.booking_id
     

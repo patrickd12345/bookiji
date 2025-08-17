@@ -67,15 +67,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
   
-  // Admin guard for /admin
-  if (pathname.startsWith('/admin')) {
-    const isAdminHeader = request.headers.get('x-user-role') === 'admin'
-    if (!isAdminHeader) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
-    }
-  }
+  // Admin routes are now protected by server-side auth in admin/layout.tsx
+  // No client-side header checks needed
   
   // Skip rate limiting for health check
   if (pathname === '/api/health') {
@@ -118,10 +111,15 @@ export function middleware(request: NextRequest) {
   
   // Apply security headers to all other routes
   const response = NextResponse.next()
+  // Block indexing on non-prod
+  if (process.env.VERCEL_ENV !== 'production') {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow')
+  }
   addSecurityHeaders(response)
   // Add CSP with per-request nonce
   const nonce = Math.random().toString(36).slice(2)
   response.headers.set('Content-Security-Policy', buildCSPHeader(nonce))
+  response.headers.set('x-nonce', nonce)
   return response
 }
 

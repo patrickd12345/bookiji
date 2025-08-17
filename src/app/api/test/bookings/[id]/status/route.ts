@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getSupabaseConfig } from '@/config/supabase'
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' && process.env.ENABLE_TEST_ROUTES !== 'true') {
     return NextResponse.json({ error: 'Disabled in production' }, { status: 403 })
   }
   const { id: bookingId } = await params

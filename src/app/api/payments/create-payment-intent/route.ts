@@ -5,7 +5,9 @@ import { createPaymentsCreateIntentHandler } from '@/lib/paymentsCreateIntentHan
 const handler = createPaymentsCreateIntentHandler()
 
 export async function POST(request: NextRequest) {
-  const limited = await limitRequest(request, { windowMs: 60_000, max: 10 })
+  const max = parseInt(process.env.RATE_LIMIT_PI_MAX || '10', 10)
+  const windowMs = parseInt(process.env.RATE_LIMIT_PI_WINDOW_MS || '60000', 10)
+  const limited = await limitRequest(request, { windowMs, max })
   if (limited) return limited
   return handler.handle(request)
 } 

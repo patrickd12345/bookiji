@@ -3,6 +3,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+concurrency:
+  group: preview-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   preview-e2e:
     runs-on: ubuntu-latest
@@ -18,6 +22,7 @@ jobs:
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
       SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
 
     steps:
       - name: Checkout
@@ -41,6 +46,7 @@ jobs:
           url=$(vercel deploy --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID" --project "$VERCEL_PROJECT_ID" --yes)
           echo "preview_url=$url" >> $GITHUB_OUTPUT
           echo "Preview at $url"
+          echo "NEXT_PUBLIC_BASE_URL=$url" >> $GITHUB_ENV
 
       - name: Wait for health
         run: |
@@ -57,13 +63,22 @@ jobs:
       #   run: supabase db push
 
       - name: Install Playwright
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps | cat
 
       - name: E2E Tests
         env:
           BASE_URL: ${{ steps.deploy.outputs.preview_url }}
           NODE_ENV: test
-        run: npx playwright test --reporter=line
+          RLH_BURST: 14
+          TEST_VENDOR_SLUG: ${{ vars.TEST_VENDOR_SLUG }}
+          TEST_SERVICE_ID: ${{ secrets.TEST_SERVICE_ID }}
+          ENABLE_TEST_WEBHOOK_BYPASS: 'true'
+          TEST_WEBHOOK_KEY: ${{ secrets.TEST_WEBHOOK_KEY }}
+          RATE_LIMIT_PI_MAX: '3'
+          RATE_LIMIT_PI_WINDOW_MS: '2000'
+          CANONICAL_HOST: bookiji.com
+          ENABLE_TEST_ROUTES: 'true'
+        run: npx playwright test tests/rate-limit.spec.ts tests/seo.spec.ts tests/webhook-roundtrip.spec.ts tests/ics.spec.ts tests/seo-canonical.spec.ts tests/rebooking-ui.spec.ts --reporter=line | cat
 
       - name: Upload Playwright report
         if: always()
@@ -77,6 +92,5 @@ jobs:
         if: failure() && env.ALERT_WEBHOOK_URL != ''
         run: |
           curl -X POST -H 'Content-type: application/json' \
-          --data "{\"text\":\"❌ Preview E2E failed on PR #${{ github.event.pull_request.number }} (${{
-            github.sha }}).\"}" \
-          ${{ secrets.ALERT_WEBHOOK_URL }}
+          --data "{\"text\":\"❌ Preview E2E failed on PR #${{ github.event.pull_request.number }} (${{ github.sha }}).\"}" \
+          ${{ env.ALERT_WEBHOOK_URL }}

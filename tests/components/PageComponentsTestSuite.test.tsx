@@ -129,49 +129,49 @@ describe('Page Components Test Suite', () => {
 
   describe('HomePageClient', () => {
     it('renders without crashing', () => {
-      expect(() => render(<HomePageClient initialLocale="en-US" />)).not.toThrow()
+      expect(() => render(<HomePageClient />)).not.toThrow()
     })
 
     it('displays main heading', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       expect(screen.getByText('home.headline')).toBeInTheDocument()
       expect(screen.getByText('home.tagline')).toBeInTheDocument()
     })
 
     it('displays AI assistant text', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       expect(screen.getByText('home.feature_grid.chat.desc')).toBeInTheDocument()
     })
 
     it('displays commitment fee information', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       expect(screen.getByText('home.commitment_banner')).toBeInTheDocument()
     })
 
     it('has Start Chat button', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       expect(screen.getByText('buttons.start_chat')).toBeInTheDocument()
     })
 
     it('has Search button', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       expect(screen.getByText('buttons.search')).toBeInTheDocument()
     })
 
     it('has Watch Demo button', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       expect(screen.getByText('buttons.watch_demo')).toBeInTheDocument()
     })
 
     it('has Get Started button', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       expect(screen.getByText('cta.get_started')).toBeInTheDocument()
     })
   })
 
   describe('Navigation Components', () => {
     it('renders navigation elements', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       // Check for navigation elements - these don't exist in the current HomePageClient
       // The component only has the main content, no navigation menu
@@ -181,7 +181,7 @@ describe('Page Components Test Suite', () => {
 
   describe('Footer Components', () => {
     it('renders footer elements', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       // Check for footer elements - these don't exist in the current HomePageClient
       // The component only has the main content, no footer
@@ -191,14 +191,14 @@ describe('Page Components Test Suite', () => {
 
   describe('Responsive Design', () => {
     it('renders on different screen sizes', () => {
-      const { rerender } = render(<HomePageClient initialLocale="en-US" />)
+      const { rerender } = render(<HomePageClient />)
       
       // Test that the component renders without errors
       expect(screen.getByText('home.headline')).toBeInTheDocument()
       expect(screen.getByText('home.tagline')).toBeInTheDocument()
       
       // Re-render to test stability
-      rerender(<HomePageClient initialLocale="en-US" />)
+      rerender(<HomePageClient />)
       expect(screen.getByText('home.headline')).toBeInTheDocument()
       expect(screen.getByText('home.tagline')).toBeInTheDocument()
     })
@@ -206,7 +206,7 @@ describe('Page Components Test Suite', () => {
 
   describe('Accessibility', () => {
     it('has proper heading structure', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       // Check for main heading
       const mainHeading = screen.getByRole('heading', { level: 1 })
@@ -214,7 +214,7 @@ describe('Page Components Test Suite', () => {
     })
 
     it('has proper button labels', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       // Check that buttons have accessible text
       expect(screen.getByRole('button', { name: 'buttons.start_chat' })).toBeInTheDocument()
@@ -225,9 +225,9 @@ describe('Page Components Test Suite', () => {
 
   describe('Internationalization', () => {
     it('supports different locales', () => {
-      expect(() => render(<HomePageClient initialLocale="en-US" />)).not.toThrow()
-      expect(() => render(<HomePageClient initialLocale="de-DE" />)).not.toThrow()
-      expect(() => render(<HomePageClient initialLocale="fr-FR" />)).not.toThrow()
+      expect(() => render(<HomePageClient />)).not.toThrow()
+      expect(() => render(<HomePageClient />)).not.toThrow()
+      expect(() => render(<HomePageClient />)).not.toThrow()
     })
   })
 }) 

@@ -50,17 +50,23 @@ class DLQMonitor {
 
   private async getCurrentDLQSize(): Promise<number> {
     try {
-      // This should be implemented based on your specific queue system
-      // For example, if using Redis, SQS, or a database table
+      // Get current DLQ size from notification_dlq table
+      const { url, secretKey } = await import('@/config/supabase').then(m => m.getSupabaseConfig())
+      const supabase = (await import('@supabase/supabase-js')).createClient(url, secretKey!, { 
+        auth: { persistSession: false } 
+      })
       
-      // Example for a database-based DLQ:
-      // const { count } = await supabase
-      //   .from('dead_letter_queue')
-      //   .select('*', { count: 'exact', head: true })
-      // return count || 0
+      const { count, error } = await supabase
+        .from('notification_dlq')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Last 24 hours
       
-      // Placeholder implementation
-      return 0
+      if (error) {
+        console.error('Error getting DLQ size from database:', error)
+        return 0
+      }
+      
+      return count || 0
     } catch (error) {
       console.error('Error getting DLQ size:', error)
       return 0

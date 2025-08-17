@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+    "github.vscode-github-actions"
+  ]
+}

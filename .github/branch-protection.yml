@@ -1,0 +1,63 @@
+# Branch Protection Rules for Main
+# This file documents the required checks for main branch protection
+
+## Required Status Checks
+
+### Visual Regression
+- **Workflow**: Visual Regression Tests
+- **Required**: true
+- **Description**: Ensures UI consistency across themes and viewports
+
+### Production Synthetics
+- **Workflow**: Synthetic Monitors (Prod)
+- **Required**: true
+- **Description**: Confirms production health before merge
+
+### k6 Load Testing
+- **Workflow**: Load Testing
+- **Required**: true
+- **Description**: Validates performance under load
+
+### Security Checks
+- **Workflow**: Preview Route Security
+- **Required**: true
+- **Description**: Ensures preview routes have proper noindex headers
+
+## Branch Protection Settings
+
+```yaml
+# In GitHub repository settings:
+branches:
+  - name: main
+    protection:
+      required_status_checks:
+        strict: true
+        contexts:
+          - "Visual Regression Tests"
+          - "Synthetic Monitors (Prod)"
+          - "Load Testing"
+          - "Preview Route Security"
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+      enforce_admins: false
+      allow_force_pushes: false
+      allow_deletions: false
+      block_creations: false
+      required_conversation_resolution: true
+```
+
+## Implementation Notes
+
+1. **Visual Regression**: Must pass on all PRs to catch UI drifts
+2. **Synthetics**: Ensures production health before merge
+3. **Load Testing**: Validates performance budgets
+4. **Security**: Prevents preview routes from being indexed
+
+## Override Process
+
+In emergency situations, repository admins can:
+1. Temporarily disable branch protection
+2. Merge critical fixes
+3. Re-enable protection immediately
+4. Document the override in the PR

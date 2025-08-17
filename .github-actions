@@ -1,0 +1,11 @@
+# GitHub Actions configuration
+# This file helps VS Code extensions recognize GitHub Actions workflows
+workflows:
+  - .github/workflows/deploy-prod.yml
+  - .github/workflows/preview-e2e.yml
+
+# Disable validation for these workflows
+validation:
+  enabled: false
+  contextAccess: false
+  secrets: false

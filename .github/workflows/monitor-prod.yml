@@ -1,0 +1,55 @@
+name: Synthetic Monitors (Prod)
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # every 15 minutes
+  workflow_dispatch: {}
+
+jobs:
+  canaries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BASE_URL: https://bookiji.com
+      ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - name: Run canaries (twice, confirm breach)
+        run: |
+          set -e
+          FAILED=0
+          
+          echo "🔄 Running first canary check..."
+          npx playwright test \
+            tests/health.spec.ts \
+            tests/calendar-links.spec.ts \
+            tests/admin-guard.spec.ts \
+            --reporter=line || FAILED=1
+          
+          if [ "$FAILED" -eq 1 ]; then
+            echo "⚠️  First canary failed, waiting 60s before retry..."
+            sleep 60
+            
+            echo "🔄 Running second canary check..."
+            npx playwright test \
+              tests/health.spec.ts \
+              tests/calendar-links.spec.ts \
+              tests/admin-guard.spec.ts \
+              --reporter=line || FAILED=2
+          fi
+          
+          if [ "$FAILED" -ge 2 ]; then
+            echo "❌ Canary failed twice - this is a real issue"
+            exit 1
+          else
+            echo "✅ Canaries passed or only failed once (transient issue)"
+          fi
+      - name: Alert on failure
+        if: failure() && env.ALERT_WEBHOOK_URL != ''
+        run: |
+          curl -X POST -H 'Content-Type: application/json' \
+            --data "{\"text\":\"❌ Prod canary failed on ${GITHUB_WORKFLOW}. Check Playwright run.\"}" \
+            "$ALERT_WEBHOOK_URL"

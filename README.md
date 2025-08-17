@@ -267,6 +267,35 @@ pnpm dev
 
 **Note:** Test failures are primarily configuration issues, not necessarily functional problems. Core user-facing features are working.
 
+## 🛡️ **QA SAFETY NETS**
+
+### **Visual Regression Testing**
+- **Purpose:** Pixel-perfect UI consistency across changes
+- **Coverage:** Home page and booking confirmation UI
+- **Update Screenshots:** `npx playwright test --update-snapshots`
+- **CI:** Runs on every PR to main branch
+- **Artifacts:** Failed diffs uploaded as GitHub artifacts
+
+### **Production Synthetics**
+- **Purpose:** Real-browser monitoring of critical paths
+- **Coverage:** Health endpoint (200) and home page (<800ms)
+- **Schedule:** Every 5 minutes against production
+- **Failure Handling:** Creates GitHub issues + uploads artifacts
+- **Manual Trigger:** Available via GitHub Actions
+
+### **Load Testing**
+- **Purpose:** Performance validation under load
+- **Coverage:** p95 latency <800ms, failure rate <1%
+- **Schedule:** Nightly at 03:00 UTC
+- **Ramp:** 20→50→0 virtual users over 5 minutes
+- **Manual Trigger:** Available via GitHub Actions
+
+### **Cache Management**
+- **Force Rebuild:** `vercel deploy --prod --force`
+- **Purge CDN:** `vercel cache purge --type=cdn`
+- **Purge Data:** `vercel cache purge --type=data`
+- **Dashboard:** Use "Redeploy (without cache)" option
+
 ---
 
 ## 📚 **DOCUMENTATION**

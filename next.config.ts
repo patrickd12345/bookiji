@@ -1,5 +1,4 @@
 import type { NextConfig } from 'next';
-import { securityHeaders } from './src/middleware/security';
 
 const nextConfig: NextConfig = {
   eslint: {
@@ -11,17 +10,8 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizeCss: true,
   },
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: Object.entries(securityHeaders).map(([key, value]) => ({
-          key,
-          value,
-        })),
-      },
-    ];
-  },
+  // CSP is now handled by middleware.ts with nonce-based approach
+  // Security headers are applied in middleware
 };
 
 export default nextConfig;

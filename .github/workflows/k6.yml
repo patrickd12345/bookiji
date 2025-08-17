@@ -1,0 +1,12 @@
+name: k6 Nightly
+on:
+  schedule: [ { cron: "0 3 * * *" } ] # 03:00 UTC nightly
+  workflow_dispatch:
+jobs:
+  k6:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: grafana/setup-k6-action@v1
+      - run: k6 run load/k6-smoke.js
+        env: { BASE_URL: https://bookiji.com }

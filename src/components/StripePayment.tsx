@@ -186,7 +186,7 @@ function DemoPaymentForm(props: StripePaymentProps) {
           <span className="text-lg font-bold text-green-700">$1.00</span>
         </div>
         <p className="text-xs text-green-600 mt-1">
-          This fee guarantees your booking and reduces no-shows
+          This non-refundable $1 commitment fee secures your booking and reduces no-shows. Changes or cancellations must be arranged directly with the provider by phone.
         </p>
       </div>
 

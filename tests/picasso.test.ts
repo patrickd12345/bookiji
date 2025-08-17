@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs'
 import path from 'path'
+import { test, expect } from '@playwright/test'
 
 async function getAllFiles(dir: string, extRegex = /\.(ts|tsx)$/): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true })
@@ -20,19 +21,17 @@ async function getAllFiles(dir: string, extRegex = /\.(ts|tsx)$/): Promise<strin
 // Sanity check to make sure no deprecated marketplace references sneak in
 // This protects against future "Picasso commits" adding the route back.
 
-describe('codebase sanity – no deprecated marketplace route', () => {
-  it('does not reference "/marketplace" anywhere in src/', async () => {
-    const projectRoot = path.join(__dirname, '..', 'src')
-    const files = await getAllFiles(projectRoot)
-    const offenders: string[] = []
+test('codebase sanity – no deprecated marketplace route', async () => {
+  const projectRoot = path.join(__dirname, '..', 'src')
+  const files = await getAllFiles(projectRoot)
+  const offenders: string[] = []
 
-    for (const file of files) {
-      const text = await fs.readFile(file, 'utf8')
-      if (text.includes('/marketplace')) {
-        offenders.push(path.relative(projectRoot, file))
-      }
+  for (const file of files) {
+    const text = await fs.readFile(file, 'utf8')
+    if (text.includes('/marketplace')) {
+      offenders.push(path.relative(projectRoot, file))
     }
+  }
 
-    expect(offenders).toEqual([])
-  })
+  expect(offenders).toEqual([])
 }) 

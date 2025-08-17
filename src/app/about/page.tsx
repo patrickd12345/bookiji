@@ -13,7 +13,7 @@ export default function AboutPage() {
           <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
           <p className="text-gray-600 leading-relaxed">
             Bookiji is revolutionizing the booking industry by creating a universal platform 
-            where customers can book any service, anywhere, with guaranteed availability and 
+            where customers can book any service, anywhere, with confirmed availability and 
             transparent pricing. Our innovative $1 commitment fee ensures serious bookings 
             while protecting both customers and service providers.
           </p>
@@ -23,7 +23,7 @@ export default function AboutPage() {
           <h2 className="text-2xl font-semibold mb-4">What Makes Us Different</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-xl font-medium mb-2">🔒 Guaranteed Bookings</h3>
+              <h3 className="text-xl font-medium mb-2">🔒 Confirmed Bookings</h3>
               <p className="text-gray-600">
                 Our unique commitment fee system ensures that every booking is serious, 
                 reducing no-shows and protecting service providers&apos; time.
@@ -76,7 +76,7 @@ export default function AboutPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">For Customers</h2>
           <p className="text-gray-600 leading-relaxed">
-            Experience the future of booking with guaranteed availability, transparent 
+            Experience the future of booking with confirmed availability, transparent 
             pricing, and AI-powered recommendations. Our $1 commitment fee is refunded 
             when you complete your booking. The final payment for services is handled 
             directly between you and the service provider.

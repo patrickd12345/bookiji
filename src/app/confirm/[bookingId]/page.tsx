@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useParams } from 'next/navigation'
-import Link from 'next/link'
+import { generateGoogleCalendarLink, generateAppleCalendarLink, generateOutlookCalendarLink, downloadICS } from '@/lib/calendar/icsGenerator'
 
 interface Booking {
   id: string
@@ -31,22 +31,28 @@ export default function ConfirmationPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!bookingId || !user) return;
+    if (!bookingId) return;
     const fetchBooking = async () => {
       try {
-        const response = await fetch(`/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`);
-        const data = await response.json();
-        if (data.success) {
-          setBooking(data.booking);
+        // Prefer direct GET by id to avoid auth dependency in confirmation view
+        const response = await fetch(`/api/bookings/${bookingId}`)
+        if (response.ok) {
+          const result = await response.json()
+          setBooking(result)
+        } else if (user) {
+          // Fallback for legacy path
+          const fallback = await fetch(`/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`)
+          const data = await fallback.json()
+          if (data.success && data.booking) setBooking(data.booking)
         }
       } catch (error) {
-        console.error('Error fetching booking:', error);
+        console.error('Error fetching booking:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    fetchBooking();
-  }, [bookingId, user]);
+    }
+    fetchBooking()
+  }, [bookingId, user])
 
   if (!bookingId) {
     return <div className="p-8 text-red-600">Invalid booking id</div>
@@ -71,6 +77,34 @@ export default function ConfirmationPage() {
   const isConfirmed = booking.status === 'confirmed' && booking.commitment_fee_paid
   const bookingDate = new Date(booking.slot_start)
   const endDate = new Date(booking.slot_end)
+
+  const addToCalendar = (type: 'google' | 'apple' | 'ics' | 'outlook') => {
+    if (!booking) return
+    
+    const event = {
+      summary: `Appointment with ${booking.vendors?.full_name}`,
+      description: `Service: ${booking.services?.name}\nProvider: ${booking.vendors?.full_name}\nLocation: ${booking.location || 'Contact provider for details'}`,
+      location: booking.location || 'Contact provider for details',
+      startTime: bookingDate,
+      endTime: endDate,
+      organizer: { name: booking.vendors?.full_name || 'Provider' }
+    }
+    
+    switch (type) {
+      case 'google':
+        window.open(generateGoogleCalendarLink(event), '_blank')
+        break
+      case 'apple':
+        window.open(generateAppleCalendarLink(event), '_blank')
+        break
+      case 'ics':
+        downloadICS(event, `appointment-${booking.id}.ics`)
+        break
+      case 'outlook':
+        window.open(generateOutlookCalendarLink(event), '_blank')
+        break
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-10">
@@ -206,22 +240,34 @@ export default function ConfirmationPage() {
           <div className="mb-8 p-6 bg-blue-50 rounded-lg">
             <h3 className="font-semibold text-lg mb-4 text-blue-900">Add to Calendar</h3>
             <div className="flex flex-col sm:flex-row gap-3">
-              <a 
-                href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Appointment with ${booking.vendors?.full_name}`)}&dates=${bookingDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(`Service: ${booking.services?.name}\nProvider: ${booking.vendors?.full_name}\nLocation: ${booking.location || 'Contact provider for details'}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button 
+                onClick={() => addToCalendar('google')}
                 className="flex-1 bg-white border border-blue-200 text-blue-700 py-3 px-4 rounded-lg text-center hover:bg-blue-50 transition-colors"
-                data-testid="add-to-calendar-google"
+                data-testid="ics-google"
               >
                 📅 Add to Google Calendar
-              </a>
-              <a 
-                href={`/api/calendar.ics?bookingId=${booking.id}`}
+              </button>
+              <button 
+                onClick={() => addToCalendar('apple')}
+                className="flex-1 bg-white border border-blue-200 text-blue-700 py-3 px-4 rounded-lg text-center hover:bg-blue-50 transition-colors"
+                data-testid="ics-apple"
+              >
+                🍎 Add to Apple Calendar
+              </button>
+              <button 
+                onClick={() => addToCalendar('ics')}
+                className="flex-1 bg-white border border-blue-200 text-blue-700 py-3 px-4 rounded-lg text-center hover:bg-blue-50 transition-colors"
+                data-testid="ics-outlook"
+              >
+                🪟 Add to Outlook
+              </button>
+              <button 
+                onClick={() => addToCalendar('ics')}
                 className="flex-1 bg-white border border-blue-200 text-blue-700 py-3 px-4 rounded-lg text-center hover:bg-blue-50 transition-colors"
                 data-testid="add-to-calendar-ics"
               >
                 📥 Download .ics File
-              </a>
+              </button>
             </div>
           </div>
 
@@ -260,13 +306,27 @@ export default function ConfirmationPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
-            <Link 
-              href="/"
+            <button
+              onClick={async () => {
+                try {
+                  const rebookPath = (process.env.NODE_ENV !== 'production' ? `/api/test/bookings/${bookingId}/rebook` : `/api/bookings/${bookingId}/rebook`)
+                  const res = await fetch(rebookPath, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idempotencyKey: `rebook-${Date.now()}` }) })
+                  if (res.ok) {
+                    const json = await res.json().catch(() => ({}) as Record<string, unknown>)
+                    if (json?.booking_id) {
+                      window.location.href = `/confirm/${json.booking_id}`
+                    } else {
+                      const toast = document.querySelector('[data-testid="rebook-toast"]') as HTMLElement | null
+                      if (toast) toast.hidden = false
+                    }
+                  }
+                } catch {}
+              }}
               className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold text-center hover:shadow-lg transition-shadow"
-              data-testid="rebook-btn"
+              data-testid="btn-rebook"
             >
-              Book Another Service
-            </Link>
+              Rebook
+            </button>
             <button 
               onClick={() => window.print()}
               className="flex-1 border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
@@ -274,6 +334,9 @@ export default function ConfirmationPage() {
               Print Confirmation
             </button>
           </div>
+
+          {/* Rebook toast/signals */}
+          <div role="status" aria-live="polite" data-testid="rebook-toast" hidden />
 
           {/* Booking Reference */}
           <div className="mt-8 pt-6 border-t text-center">

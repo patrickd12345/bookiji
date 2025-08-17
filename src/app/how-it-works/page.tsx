@@ -37,7 +37,7 @@ export default function HowItWorksPage() {
             <h3 className="text-xl font-semibold mb-3">📅 Choose & Book</h3>
             <p className="text-gray-600">
               Browse available time slots, read reviews, and select the perfect provider. 
-              Our system shows real-time availability for guaranteed bookings.
+              Our system shows real-time availability for confirmed bookings with a $1 commitment fee.
             </p>
           </div>
 
@@ -69,7 +69,7 @@ export default function HowItWorksPage() {
       <section className="mb-16 bg-gray-50 p-8 rounded-lg">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-4 text-green-600">For Service Providers</h2>
-          <p className="text-lg text-gray-600">Start earning with guaranteed bookings</p>
+          <p className="text-lg text-gray-600">Start earning with confirmed bookings</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -126,7 +126,7 @@ export default function HowItWorksPage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="text-4xl mb-4">🔒</div>
-            <h3 className="text-xl font-semibold mb-3">Guaranteed Bookings</h3>
+            <h3 className="text-xl font-semibold mb-3">Confirmed Bookings</h3>
             <p className="text-gray-600">
               Our $1 commitment fee system ensures every booking is serious, protecting 
               both customers and providers from no-shows and cancellations.

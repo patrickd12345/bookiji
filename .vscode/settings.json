@@ -20,5 +20,34 @@
   },
   "css.customData": [".vscode/css-data.json"],
   "github-actions.workflows.validateContextAccess": false,
-  "github-actions.workflows.validate": false
+  "github-actions.workflows.validate": false,
+  "github-actions.workflows.validateOnSave": false,
+  "github-actions.workflows.validateOnType": false,
+  "github-actions.workflows.validateOnOpen": false,
+  "github-actions.workflows.validateOnChange": false,
+  "github-actions.workflows.validateOnFocus": false,
+  "github-actions.workflows.validateOnHover": false,
+  "github-actions.workflows.validateOnCompletion": false,
+  "github-actions.workflows.validateOnDiagnostics": false,
+  "github-actions.workflows.validateOnProblems": false,
+  "yaml.validate": false,
+  "yaml.schemas": {},
+  "yaml.customTags": [],
+  "yaml.format.enable": false,
+  "yaml.hover": false,
+  "yaml.completion": false,
+  "yaml.documentSymbols": false,
+  "yaml.folding": false,
+  "yaml.selectionRanges": false,
+  "yaml.diagnostics.enable": false,
+  "files.associations": {
+    "*.yml": "yaml",
+    ".github/workflows/*.yml": "github-actions"
+  },
+  "github-actions.workflows.associations": [
+    ".github/workflows/*.yml"
+  ],
+  "github-actions.workflows.ignore": [
+    ".github/workflows/*.yml"
+  ]
 } 

@@ -248,6 +248,37 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
 
                 {faqLoading && <p className="text-gray-500 mb-4">Searching…</p>}
 
+                {/* Quick KB Answers */}
+                <div className="grid md:grid-cols-2 gap-6 mb-8">
+                  <div className="bg-blue-50 p-6 rounded-lg">
+                    <h3 className="text-lg font-semibold text-blue-900 mb-3">💳 How does the $1 commitment fee work?</h3>
+                    <p className="text-blue-800 text-sm">
+                      The $1 commitment fee is a non-refundable charge that secures your booking slot. This fee goes to Bookiji and helps reduce no-shows by ensuring serious bookings. The full service payment is handled separately with your provider.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-green-50 p-6 rounded-lg">
+                    <h3 className="text-lg font-semibold text-green-900 mb-3">🔄 Can I change or cancel my booking?</h3>
+                    <p className="text-green-800 text-sm">
+                      Changes and cancellations must be arranged directly with your service provider by phone. The $1 commitment fee is non-refundable, but your provider may offer flexibility for rescheduling.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-purple-50 p-6 rounded-lg">
+                    <h3 className="text-lg font-semibold text-purple-900 mb-3">📱 How do I contact my provider?</h3>
+                    <p className="text-purple-800 text-sm">
+                      After booking confirmation, you'll receive your provider's contact information including phone number and email. Use these details to coordinate directly with your provider.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-orange-50 p-6 rounded-lg">
+                                         <h3 className="text-lg font-semibold text-orange-900 mb-3">🎯 What if my provider doesn&apos;t show up?</h3>
+                     <p className="text-orange-800 text-sm">
+                       If your provider no-shows, contact Bookiji support immediately. We&apos;ll investigate and may refund your $1 commitment fee. Your provider will also face consequences for reliability.
+                     </p>
+                  </div>
+                </div>
+
                 {faqResults.length > 0 && (
                   <div className="space-y-4 mb-8">
                     {faqResults.map((item) => (

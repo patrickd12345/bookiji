@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 
 import Link from 'next/link'
+import AdBlock from '@/components/AdBlock'
 
 // Wrapper component to handle browser extension attributes without breaking functionality
 function HydrationSafeButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
@@ -107,6 +108,11 @@ export default function HomePageClient() {
                   {t('buttons.search')}
                 </HydrationSafeButton>
               </div>
+            </div>
+
+            {/* AdSense block (approval mode only) */}
+            <div className="mb-6 flex justify-center">
+              <AdBlock />
             </div>
 
             {/* AI Chat Section */}

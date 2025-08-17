@@ -1,73 +1,53 @@
-'use client'
+import { redirect } from 'next/navigation'
+import { createClient } from '@supabase/supabase-js'
+import { getSupabaseConfig } from '@/config/supabase'
+import { cookies } from 'next/headers'
 
-import { useEffect, useState, useCallback } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import Link from 'next/link'
-import { LayoutDashboard, LifeBuoy, Database, Settings } from 'lucide-react'
-import { ADSENSE_APPROVAL_MODE } from '@/lib/adsense'
-
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
-  const pathname = usePathname()
-
-  const checkAuthentication = useCallback(async () => {
-    try {
-      const response = await fetch('/api/auth/check-admin', { method: 'GET', credentials: 'include' })
-      if (!response.ok) throw new Error('Admin check failed')
-      const { isAdmin } = await response.json()
-      if (!isAdmin) {
-        router.push('/')
-        return
-      }
-      setIsAuthenticated(true)
-    } catch {
-      router.push('/')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [router])
-
-  useEffect(() => { checkAuthentication() }, [checkAuthentication])
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-        <span className="ml-3 text-gray-600">Verifying admin access</span>
-      </div>
-    )
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { url, secretKey } = getSupabaseConfig()
+  const cookieStore = cookies()
+  
+  // Create server-side Supabase client
+  const supabase = createClient(url, secretKey!, { 
+    auth: { persistSession: false },
+    global: { headers: { Cookie: cookieStore.toString() } }
+  })
+  
+  // Get user from auth context
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  
+  if (authError || !user) {
+    redirect('/login')
   }
-
-  if (!isAuthenticated && !ADSENSE_APPROVAL_MODE) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-          <p className="text-sm text-gray-500">You don&apos;t have permission to access this area.</p>
-        </div>
-      </div>
-    )
+  
+  // Check user role from profiles table
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
+  
+  if (profileError || !profile || profile.role !== 'admin') {
+    redirect('/')
   }
-
-  type IconType = React.ComponentType<{ size?: number; className?: string }>
-  const NavLink = ({ href, icon: Icon, label }: { href: string; icon: IconType; label: string }) => (
-    <Link href={href} className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 ${pathname?.startsWith(href) ? 'bg-gray-100 font-medium' : ''}`}>
-      <Icon size={18} />
-      <span>{label}</span>
-    </Link>
-  )
-
+  
   return (
     <div className="min-h-screen bg-gray-50 flex" data-testid="admin-shell">
       <aside className="w-64 border-r bg-white p-4 space-y-2">
         <div className="text-lg font-semibold mb-2">Admin Console</div>
         <nav className="flex flex-col gap-1">
-          <NavLink href="/admin/dashboard" icon={LayoutDashboard} label="Dashboard" />
-          <NavLink href="/admin/support-tickets" icon={LifeBuoy} label="Support Tickets" />
-          <NavLink href="/admin/rag" icon={Database} label="RAG Knowledge Base" />
-          <NavLink href="/admin/parameters" icon={Settings} label="Admin Parameters" />
+          <a href="/admin/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
+            <span>Dashboard</span>
+          </a>
+          <a href="/admin/support" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
+            <span>Support Tickets</span>
+          </a>
+          <a href="/admin/faq" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
+            <span>FAQ Management</span>
+          </a>
+          <a href="/admin/parameters" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
+            <span>Admin Parameters</span>
+          </a>
         </nav>
       </aside>
       <main className="flex-1 p-6">{children}</main>

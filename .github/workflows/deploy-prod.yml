@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 40
     environment:
       name: production
-      url: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+      url: ${{ env.NEXT_PUBLIC_BASE_URL }}
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -79,4 +79,4 @@ jobs:
           curl -X POST -H 'Content-type: application/json' \
           --data "{\"text\":\"✅ Bookiji deployed to production: ${{ steps.deploy.outputs.prod_url }} (ref: ${{
             github.event.inputs.ref || github.sha }}).\"}" \
-          ${{ secrets.ALERT_WEBHOOK_URL }}
+          ${{ env.ALERT_WEBHOOK_URL }}

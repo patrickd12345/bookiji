@@ -1,0 +1,57 @@
+name: AdSense Gating & CSP
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}
+jobs:
+  adsense:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mode: [on, off]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install deps
+        run: npm ci
+      - name: Vercel CLI
+        run: npm i -g vercel@latest
+      - name: Deploy Preview (ephemeral)
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          url=$(vercel deploy --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID" --project "$VERCEL_PROJECT_ID" --yes)
+          echo "preview_url=$url" >> $GITHUB_OUTPUT
+          echo "Preview at $url"
+      - name: Wait for health
+        run: |
+          npx wait-on -t 600000 ${{ steps.deploy.outputs.preview_url }}/api/health
+          curl -fsSL "${{ steps.deploy.outputs.preview_url }}/api/health"
+      - name: Install Playwright
+        run: npx playwright install --with-deps | cat
+      - name: Run AdSense probes (remote)
+        run: |
+          if [ "${{ matrix.mode }}" = "on" ]; then
+            npx playwright test -c playwright.remote.config.mjs tests/adsense-on.spec.ts --reporter=line | cat
+          else
+            npx playwright test -c playwright.remote.config.mjs tests/adsense-off.spec.ts --reporter=line | cat
+          fi
+        env:
+          BASE_URL: ${{ steps.deploy.outputs.preview_url }}
+          NEXT_PUBLIC_ADSENSE_APPROVAL_MODE: ${{ matrix.mode == 'on' && 'true' || 'false' }}
+          NEXT_PUBLIC_ADSENSE_CLIENT: ${{ secrets.NEXT_PUBLIC_ADSENSE_CLIENT }}
+          NEXT_PUBLIC_ADSENSE_SLOT: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT }}
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: adsense-playwright-report-${{ matrix.mode }}
+          path: playwright-report
+          if-no-files-found: ignore
+
+

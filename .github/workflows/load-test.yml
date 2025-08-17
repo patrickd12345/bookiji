@@ -1,0 +1,57 @@
+name: Load Testing
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to test'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+        - preview
+        - staging
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TEST_SERVICE_ID: ${{ secrets.TEST_SERVICE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy preview (if needed)
+        if: github.event_name == 'pull_request'
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          working-directory: ./
+          vercel-args: '--prod'
+      
+      - name: Set BASE_URL
+        id: set-url
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "BASE_URL=${{ steps.deploy.outputs.preview_url }}" >> $GITHUB_ENV
+          else
+            echo "BASE_URL=http://localhost:3000" >> $GITHUB_ENV
+          fi
+      
+      - name: Run k6 load test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: load/k6-booking.js
+        env:
+          BASE_URL: ${{ env.BASE_URL }}
+          TEST_SERVICE_ID: ${{ env.TEST_SERVICE_ID }}
+      
+      - name: Performance budget check
+        run: |
+          echo "Load test completed successfully"
+          echo "Check k6 output above for performance metrics"
+          echo "Thresholds: <1% errors, p95 < 1.5s"

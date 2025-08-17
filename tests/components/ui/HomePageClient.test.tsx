@@ -42,7 +42,7 @@ describe('HomePageClient', () => {
 
   describe('Button Interactions', () => {
     it('opens AI chat when Start Chat button is clicked', async () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       const startChatButton = screen.getByText('Start Chat')
       expect(startChatButton).toBeInTheDocument()
@@ -55,7 +55,7 @@ describe('HomePageClient', () => {
     })
 
     it('opens AI chat when Search button is clicked', async () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       const searchButton = screen.getByText('Search')
       expect(searchButton).toBeInTheDocument()
@@ -67,7 +67,7 @@ describe('HomePageClient', () => {
     })
 
     it('has clickable Search button', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       const searchButton = screen.getByText('Search')
       expect(searchButton).toBeInTheDocument()
       fireEvent.click(searchButton)
@@ -77,7 +77,7 @@ describe('HomePageClient', () => {
 
   describe('Navigation Links', () => {
     it('renders Get Started link', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       const getStartedLink = screen.getByText('Get Started')
       expect(getStartedLink).toBeInTheDocument()
@@ -87,21 +87,21 @@ describe('HomePageClient', () => {
 
   describe('Content Rendering', () => {
     it('renders main headline correctly', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       expect(screen.getByText('Universal Booking Platform')).toBeInTheDocument()
       expect(screen.getByText(/Book any service, anywhere, instantly/)).toBeInTheDocument()
     })
 
     it('renders AI assistant description', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       expect(screen.getAllByText('🤖')).toHaveLength(2) // One in the main component, one in the mock
       expect(screen.getAllByText('Real-Time Booking Chat')).toHaveLength(2) // Multiple elements expected
     })
 
     it('renders commitment fee information', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       expect(screen.getByText('💡')).toBeInTheDocument()
       expect(screen.getByText(/Only \$1\.00 commitment fee/)).toBeInTheDocument()
@@ -110,7 +110,7 @@ describe('HomePageClient', () => {
 
   describe('Accessibility', () => {
     it('has proper button accessibility attributes', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       const startChatButton = screen.getByText('Start Chat')
       const searchButton = screen.getByText('Search')
@@ -121,7 +121,7 @@ describe('HomePageClient', () => {
     })
 
     it('has proper link accessibility attributes', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       const getStartedLink = screen.getByText('Get Started')
       expect(getStartedLink.closest('a')).toHaveAttribute('href')
@@ -130,7 +130,7 @@ describe('HomePageClient', () => {
 
   describe('Responsive Design', () => {
     it('renders mobile-friendly layout', () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       // Check that the component renders without errors on mobile viewport
       const container = screen.getByText('Universal Booking Platform')
@@ -140,7 +140,7 @@ describe('HomePageClient', () => {
 
   describe('State Management', () => {
     it('manages AI chat modal state correctly', async () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       // Check that the Start Chat button exists and is clickable
       const startChatButton = screen.getByText('Start Chat')
@@ -154,7 +154,7 @@ describe('HomePageClient', () => {
     })
 
     it('manages guided tour modal state correctly', async () => {
-      render(<HomePageClient initialLocale="en-US" />)
+      render(<HomePageClient />)
       
       // Initially modal should be closed
       expect(screen.queryByText('Guided Tour')).not.toBeInTheDocument()
