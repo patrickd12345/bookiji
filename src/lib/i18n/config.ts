@@ -184,6 +184,18 @@ export const COUNTRIES: Record<string, CountryInfo> = {
   PH: { code: 'PH', name: 'Philippines', currency: 'php', continent: 'Asia', timezone: 'Asia/Manila', emergingMarket: true },
   MY: { code: 'MY', name: 'Malaysia', currency: 'myr', continent: 'Asia', timezone: 'Asia/Kuala_Lumpur', emergingMarket: true },
   
+  // Eastern Europe
+  RU: { code: 'RU', name: 'Russia', currency: 'usd', continent: 'Europe', timezone: 'Europe/Moscow', emergingMarket: true },
+  UA: { code: 'UA', name: 'Ukraine', currency: 'usd', continent: 'Europe', timezone: 'Europe/Kiev', emergingMarket: true },
+  
+  // Additional European Countries
+  FI: { code: 'FI', name: 'Finland', currency: 'eur', continent: 'Europe', timezone: 'Europe/Helsinki', emergingMarket: false },
+  CZ: { code: 'CZ', name: 'Czech Republic', currency: 'eur', continent: 'Europe', timezone: 'Europe/Prague', emergingMarket: false },
+  HU: { code: 'HU', name: 'Hungary', currency: 'eur', continent: 'Europe', timezone: 'Europe/Budapest', emergingMarket: false },
+  
+  // Middle East & North Africa
+  SA: { code: 'SA', name: 'Saudi Arabia', currency: 'usd', continent: 'Asia', timezone: 'Asia/Riyadh', emergingMarket: true },
+  
   // Middle East & Africa
   IL: { code: 'IL', name: 'Israel', currency: 'ils', continent: 'Asia', timezone: 'Asia/Jerusalem', emergingMarket: false },
   NG: { code: 'NG', name: 'Nigeria', currency: 'ngn', continent: 'Africa', timezone: 'Africa/Lagos', emergingMarket: true },
@@ -219,6 +231,22 @@ export const SUPPORTED_LOCALES: Record<string, SupportedLocale> = {
   'hi-IN': { code: 'hi-IN', name: 'हिन्दी (भारत)', currency: 'inr', country: 'IN', rtl: false, dateFormat: 'dd/MM/yyyy', timeFormat: '12h' },
   'th-TH': { code: 'th-TH', name: 'ไทย (ประเทศไทย)', currency: 'thb', country: 'TH', rtl: false, dateFormat: 'dd/MM/yyyy', timeFormat: '24h' },
   'vi-VN': { code: 'vi-VN', name: 'Tiếng Việt (Việt Nam)', currency: 'vnd', country: 'VN', rtl: false, dateFormat: 'dd/MM/yyyy', timeFormat: '24h' },
+  'ru-RU': { code: 'ru-RU', name: 'Русский (Россия)', currency: 'usd', country: 'RU', rtl: false, dateFormat: 'dd.MM.yyyy', timeFormat: '24h' },
+  'uk-UA': { code: 'uk-UA', name: 'Українська (Україна)', currency: 'usd', country: 'UA', rtl: false, dateFormat: 'dd.MM.yyyy', timeFormat: '24h' },
+  
+  'ar-SA': { code: 'ar-SA', name: 'العربية (السعودية)', currency: 'usd', country: 'SA', rtl: true, dateFormat: 'dd/MM/yyyy', timeFormat: '12h' },
+  'nl-NL': { code: 'nl-NL', name: 'Nederlands (Nederland)', currency: 'eur', country: 'NL', rtl: false, dateFormat: 'dd-MM-yyyy', timeFormat: '24h' },
+  'sv-SE': { code: 'sv-SE', name: 'Svenska (Sverige)', currency: 'sek', country: 'SE', rtl: false, dateFormat: 'yyyy-MM-dd', timeFormat: '24h' },
+  'da-DK': { code: 'da-DK', name: 'Dansk (Danmark)', currency: 'dkk', country: 'DK', rtl: false, dateFormat: 'dd-MM-yyyy', timeFormat: '24h' },
+  'no-NO': { code: 'no-NO', name: 'Norsk (Norge)', currency: 'nok', country: 'NO', rtl: false, dateFormat: 'dd.MM.yyyy', timeFormat: '24h' },
+  'fi-FI': { code: 'fi-FI', name: 'Suomi (Suomi)', currency: 'eur', country: 'FI', rtl: false, dateFormat: 'dd.MM.yyyy', timeFormat: '24h' },
+  'pl-PL': { code: 'pl-PL', name: 'Polski (Polska)', currency: 'pln', country: 'PL', rtl: false, dateFormat: 'dd.MM.yyyy', timeFormat: '24h' },
+  'tr-TR': { code: 'tr-TR', name: 'Türkçe (Türkiye)', currency: 'try', country: 'TR', rtl: false, dateFormat: 'dd.MM.yyyy', timeFormat: '24h' },
+  'id-ID': { code: 'id-ID', name: 'Bahasa Indonesia (Indonesia)', currency: 'idr', country: 'ID', rtl: false, dateFormat: 'dd/MM/yyyy', timeFormat: '24h' },
+  'ms-MY': { code: 'ms-MY', name: 'Bahasa Melayu (Malaysia)', currency: 'myr', country: 'MY', rtl: false, dateFormat: 'dd/MM/yyyy', timeFormat: '24h' },
+  'en-IN': { code: 'en-IN', name: 'English (India)', currency: 'inr', country: 'IN', rtl: false, dateFormat: 'dd/MM/yyyy', timeFormat: '12h' },
+  'cs-CZ': { code: 'cs-CZ', name: 'Čeština (Česká republika)', currency: 'eur', country: 'CZ', rtl: false, dateFormat: 'dd.MM.yyyy', timeFormat: '24h' },
+  'hu-HU': { code: 'hu-HU', name: 'Magyar (Magyarország)', currency: 'eur', country: 'HU', rtl: false, dateFormat: 'yyyy.MM.dd', timeFormat: '24h' },
 }
 
 // 🚀 DEFAULT CONFIGURATION

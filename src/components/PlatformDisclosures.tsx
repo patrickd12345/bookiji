@@ -69,7 +69,7 @@ export function PlatformDisclosures() {
             <div>
               <h3 className="font-medium">Cancellations</h3>
               <p className="text-sm text-gray-600">
-                Commitment fees are non-refundable as they confirm booking intention.
+                The $1 booking fee is charged only when a booking is confirmed and is non‑refundable.
                 Service cancellation policies are set by individual providers.
               </p>
             </div>

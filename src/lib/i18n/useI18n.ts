@@ -20,6 +20,21 @@ import enCA from '../../locales/en-CA.json'
 import enGB from '../../locales/en-GB.json'
 import enAU from '../../locales/en-AU.json'
 import deCH from '../../locales/de-CH.json'
+import ruRU from '../../locales/ru-RU.json'
+import ukUA from '../../locales/uk-UA.json'
+import arSA from '../../locales/ar-SA.json'
+import nlNL from '../../locales/nl-NL.json'
+import svSE from '../../locales/sv-SE.json'
+import daDK from '../../locales/da-DK.json'
+import noNO from '../../locales/no-NO.json'
+import fiFI from '../../locales/fi-FI.json'
+import plPL from '../../locales/pl-PL.json'
+import trTR from '../../locales/tr-TR.json'
+import idID from '../../locales/id-ID.json'
+import msMY from '../../locales/ms-MY.json'
+import enIN from '../../locales/en-IN.json'
+import csCZ from '../../locales/cs-CZ.json'
+import huHU from '../../locales/hu-HU.json'
 import { 
   SUPPORTED_LOCALES, 
   DEFAULT_LOCALE, 
@@ -53,7 +68,22 @@ const STATIC_TRANSLATIONS: Record<string, Record<string, string>> = {
   'en-CA': enCA,
   'en-GB': enGB,
   'en-AU': enAU,
-  'de-CH': deCH
+  'de-CH': deCH,
+  'ru-RU': ruRU,
+  'uk-UA': ukUA,
+  'ar-SA': arSA,
+  'nl-NL': nlNL,
+  'sv-SE': svSE,
+  'da-DK': daDK,
+  'no-NO': noNO,
+  'fi-FI': fiFI,
+  'pl-PL': plPL,
+  'tr-TR': trTR,
+  'id-ID': idID,
+  'ms-MY': msMY,
+  'en-IN': enIN,
+  'cs-CZ': csCZ,
+  'hu-HU': huHU
 }
 
 // 🔄 LOCALE PERSISTENCE

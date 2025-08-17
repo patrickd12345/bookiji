@@ -51,9 +51,7 @@ export default function TermsPage() {
           <h2 className="text-2xl font-semibold mb-4">4. Booking and Payment Terms</h2>
           <div className="space-y-4">
             <p className="text-gray-700 leading-relaxed">
-              <strong>Commitment Fee:</strong> A $1 commitment fee is charged for each booking to ensure 
-              serious bookings and reduce no-shows. This fee is fully refunded upon completion of the 
-              service appointment.
+              <strong>Booking Fee:</strong> A <strong>$1 booking fee</strong> is charged <strong>only when the booking is confirmed</strong> to reduce no‑shows and secure the slot. This fee is <strong>non‑refundable</strong>.
             </p>
             <p className="text-gray-700 leading-relaxed">
               <strong>Service Payments:</strong> Bookiji does <strong>not</strong> process the final payment for services. We only facilitate a small commitment fee to secure bookings and help prevent no-shows. The remaining payment for services is handled directly between the customer and the service provider, outside of our platform.

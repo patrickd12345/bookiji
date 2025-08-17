@@ -9,7 +9,7 @@ export interface ValidationRule {
   minLength?: number
   maxLength?: number
   pattern?: RegExp
-  custom?: (value: any) => string | null
+  custom?: (value: unknown) => string | null
   email?: boolean
   phone?: boolean
   url?: boolean
@@ -31,7 +31,7 @@ export interface ValidationResult {
 }
 
 export interface FieldValidation {
-  value: any
+  value: unknown
   rules: ValidationRule
   touched: boolean
   errors: string[]
@@ -43,91 +43,91 @@ export interface FormValidation {
 
 // Built-in validation rules
 export const validationRules = {
-  required: (value: any): string | null => {
+  required: (value: unknown): string | null => {
     if (value === null || value === undefined || value === '') {
       return 'This field is required'
     }
     return null
   },
 
-  minLength: (value: any, min: number): string | null => {
+  minLength: (value: unknown, min: number): string | null => {
     if (value && value.length < min) {
       return `Must be at least ${min} characters`
     }
     return null
   },
 
-  maxLength: (value: any, max: number): string | null => {
+  maxLength: (value: unknown, max: number): string | null => {
     if (value && value.length > max) {
       return `Must be no more than ${max} characters`
     }
     return null
   },
 
-  pattern: (value: any, pattern: RegExp): string | null => {
+  pattern: (value: unknown, pattern: RegExp): string | null => {
     if (value && !pattern.test(value)) {
       return 'Invalid format'
     }
     return null
   },
 
-  email: (value: any): string | null => {
+  email: (value: unknown): string | null => {
     if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
       return 'Invalid email address'
     }
     return null
   },
 
-  phone: (value: any): string | null => {
+  phone: (value: unknown): string | null => {
     if (value && !/^[\+]?[1-9][\d]{0,15}$/.test(value.replace(/[\s\-\(\)]/g, ''))) {
       return 'Invalid phone number'
     }
     return null
   },
 
-  url: (value: any): string | null => {
+  url: (value: unknown): string | null => {
     if (value && !/^https?:\/\/.+/.test(value)) {
       return 'Invalid URL'
     }
     return null
   },
 
-  numeric: (value: any): string | null => {
+  numeric: (value: unknown): string | null => {
     if (value && isNaN(Number(value))) {
       return 'Must be a number'
     }
     return null
   },
 
-  positive: (value: any): string | null => {
+  positive: (value: unknown): string | null => {
     if (value && Number(value) <= 0) {
       return 'Must be a positive number'
     }
     return null
   },
 
-  futureDate: (value: any): string | null => {
+  futureDate: (value: unknown): string | null => {
     if (value && new Date(value) <= new Date()) {
       return 'Must be a future date'
     }
     return null
   },
 
-  pastDate: (value: any): string | null => {
+  pastDate: (value: unknown): string | null => {
     if (value && new Date(value) >= new Date()) {
       return 'Must be a past date'
     }
     return null
   },
 
-  minValue: (value: any, min: number): string | null => {
+  minValue: (value: unknown, min: number): string | null => {
     if (value && Number(value) < min) {
       return `Must be at least ${min}`
     }
     return null
   },
 
-  maxValue: (value: any, max: number): string | null => {
+  maxValue: (value: unknown, max: number): string | null => {
     if (value && Number(value) > max) {
       return `Must be no more than ${max}`
     }
@@ -136,7 +136,7 @@ export const validationRules = {
 }
 
 // Validate a single field
-export function validateField(value: any, rules: ValidationRule): string[] {
+export function validateField(value: unknown, rules: ValidationRule): string[] {
   const errors: string[] = []
 
   // Required validation
@@ -228,7 +228,7 @@ export function validateField(value: any, rules: ValidationRule): string[] {
 }
 
 // Hook for form validation
-export function useFormValidation<T extends Record<string, any>>(
+export function useFormValidation<T extends Record<string, unknown>>(
   initialValues: T,
   validationSchema: Record<keyof T, ValidationRule>,
   options?: {
@@ -263,7 +263,7 @@ export function useFormValidation<T extends Record<string, any>>(
   }, [validationSchema])
 
   // Validate a single field
-  const validateFieldLocal = useCallback((field: keyof T, value: any): string[] => {
+  const validateFieldLocal = useCallback((field: keyof T, value: unknown): string[] => {
     const fieldErrors = validateField(value, validationSchema[field])
     setErrors(prev => ({
       ...prev,
@@ -298,7 +298,7 @@ export function useFormValidation<T extends Record<string, any>>(
   }, [values, validationSchema])
 
   // Set field value
-  const setFieldValue = useCallback((field: keyof T, value: any) => {
+  const setFieldValue = useCallback((field: keyof T, value: unknown) => {
     setValues(prev => ({ ...prev, [field]: value }))
     
     if (validateOnChange) {
@@ -362,8 +362,8 @@ export function useFormValidation<T extends Record<string, any>>(
 interface FormFieldProps {
   name: string
   label: string
-  value: any
-  onChangeAction: (value: any) => void
+  value: unknown
+  onChangeAction: (value: unknown) => void
   onBlur?: () => void
   errors?: string[]
   touched?: boolean

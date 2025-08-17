@@ -47,12 +47,9 @@ export default function FAQPage() {
           </div>
 
           <div className="bg-gray-50 p-6 rounded-lg">
-            <h3 className="text-xl font-semibold mb-3">How does the $1 commitment fee work?</h3>
+            <h3 className="text-xl font-semibold mb-3">How does the $1 booking fee work?</h3>
             <p className="text-gray-700 leading-relaxed">
-              When you book a service, we charge a $1 commitment fee to ensure serious bookings and 
-              reduce no-shows. This fee is fully refunded when you complete your booking appointment. 
-              The final payment for the actual service is handled directly between you and the service provider, 
-              outside of our platform.
+              A <strong>$1 booking fee</strong> is charged <strong>only when your booking is confirmed</strong>. This small fee helps reduce no‑shows and confirms your reservation. The fee is <strong>not refundable</strong>. The final payment for the actual service is handled directly between you and the service provider, outside of our platform.
             </p>
           </div>
 

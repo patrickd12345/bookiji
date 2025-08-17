@@ -9,13 +9,13 @@ interface StepOption {
   id?: string;
   text?: string | HTMLElement | (string | HTMLElement)[];
   title?: string;
-  buttons?: any[];
+  buttons?: { text: string; action: () => void; classes?: string }[];
   classes?: string;
   highlightClass?: string;
   scrollTo?: boolean;
   modalOverlayOpeningPadding?: number;
   modalOverlayOpeningRadius?: number;
-  popperOptions?: any;
+  popperOptions?: Record<string, unknown>;
   helpArticleSlug?: string;
 }
 
@@ -51,7 +51,7 @@ export function GuidedTourProvider({ children }: { children: ReactNode }) {
         container.appendChild(button);
         rest.text = container;
       }
-      tour.addStep(rest as any);
+      tour.addStep(rest);
     });
 
     const markComplete = () => {

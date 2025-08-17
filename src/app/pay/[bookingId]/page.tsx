@@ -100,11 +100,11 @@ function PaymentForm({ clientSecret, bookingId }: { clientSecret: string, bookin
         disabled={!stripe || loading}
         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-shadow"
       >
-        {loading ? 'Processing' : 'Pay $1.00 Commitment Fee'}
+        {loading ? 'Processing' : 'Pay $1.00 Booking Fee (charged on confirmation)'}
       </button>
 
       <p className="text-sm text-gray-500 text-center">
-        This $1.00 commitment fee ensures serious bookings and reduces no-shows.
+        This $1.00 booking fee confirms your reservation and reduces no‑shows. Non‑refundable.
       </p>
     </form>
   )

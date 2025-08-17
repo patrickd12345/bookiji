@@ -320,7 +320,7 @@ export default function UserDashboard() {
               ].map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id)}
                   className={cn(
                     'py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2',
                     activeTab === tab.id

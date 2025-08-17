@@ -40,9 +40,8 @@ export async function POST(req: Request) {
     const admin = await getAdmin();
     
     // Generate embeddings for KB search (fallback to zeros if failed)
-    let embedding: number[] = new Array(768).fill(0);
     try {
-      [embedding] = await embed([message]);
+      await embed([message]);
     } catch (e) {
       console.error('Embedding failed:', e);
     }

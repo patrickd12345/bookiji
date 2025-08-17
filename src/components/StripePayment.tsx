@@ -68,8 +68,8 @@ function PaymentForm({
           <span className="text-white text-sm">💳</span>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-900">Booking Commitment Fee</h3>
-          <p className="text-sm text-gray-500">Secure payment to guarantee your booking</p>
+          <h3 className="font-semibold text-gray-900">$1 Booking Fee</h3>
+          <p className="text-sm text-gray-500">Charged only once your booking is confirmed</p>
         </div>
       </div>
 
@@ -87,11 +87,11 @@ function PaymentForm({
       {/* Payment Amount */}
       <div className="mb-6 p-4 bg-green-50 rounded-xl">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-green-800">Commitment Fee</span>
+          <span className="text-sm font-medium text-green-800">Booking Fee</span>
           <span className="text-lg font-bold text-green-700">$1.00</span>
         </div>
         <p className="text-xs text-green-600 mt-1">
-          This fee guarantees your booking and reduces no-shows
+          This fee confirms your reservation and reduces no-shows. Non‑refundable.
         </p>
       </div>
 
@@ -127,7 +127,7 @@ function PaymentForm({
             disabled={!stripe || isProcessing}
             className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isProcessing ? 'Processing...' : 'Pay $1.00'}
+            {isProcessing ? 'Processing...' : 'Pay $1.00 (on confirmation)'}
           </button>
         </div>
       </form>

@@ -24,5 +24,5 @@ export default function HomePage() {
   }
 
   // In development or AdSense approval mode, show the real landing page
-  return <HomePageClient initialLocale="en-US" />
+  return <HomePageClient />
 } 

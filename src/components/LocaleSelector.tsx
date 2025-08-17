@@ -29,7 +29,8 @@ export default function LocaleSelector({
       CH: '🇨🇭', SE: '🇸🇪', NO: '🇳🇴', DK: '🇩🇰', PL: '🇵🇱', TR: '🇹🇷',
       JP: '🇯🇵', KR: '🇰🇷', CN: '🇨🇳', HK: '🇭🇰', SG: '🇸🇬', AU: '🇦🇺',
       NZ: '🇳🇿', IN: '🇮🇳', ID: '🇮🇩', TH: '🇹🇭', VN: '🇻🇳', PH: '🇵🇭',
-      MY: '🇲🇾', IL: '🇮🇱', ZA: '🇿🇦', NG: '🇳🇬', BR: '🇧🇷', AR: '🇦🇷'
+      MY: '🇲🇾', IL: '🇮🇱', ZA: '🇿🇦', NG: '🇳🇬', BR: '🇧🇷', AR: '🇦🇷',
+      RU: '🇷🇺', UA: '🇺🇦', SA: '🇸🇦', FI: '🇫🇮', CZ: '🇨🇿', HU: '🇭🇺'
     }
     return flagMap[countryCode] || '🌍'
   }

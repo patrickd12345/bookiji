@@ -263,16 +263,16 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                   {type === 'customer' ? (
                     <>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
-                        <h3 className="font-semibold text-gray-900 mb-2">What is the $1 commitment fee?</h3>
-                        <p className="text-gray-600">The $1 commitment fee guarantees your booking slot and prevents no-shows. It’s fully refundable if the provider cancels or doesn’t show up.</p>
+                        <h3 className="font-semibold text-gray-900 mb-2">What is the $1 booking fee?</h3>
+                        <p className="text-gray-600">The $1 booking fee confirms your reservation and prevents no‑shows. It is <strong>charged only when your booking is confirmed</strong> and is <strong>non‑refundable</strong>.</p>
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">How do I pay for the actual service?</h3>
-                        <p className="text-gray-600">You pay the service fee directly to the provider after your appointment is completed. Bookiji only processes the $1 commitment fee to secure your booking.</p>
+                        <p className="text-gray-600">You pay the service price directly to the provider after your appointment is completed. Bookiji only processes the <strong>$1 booking fee</strong> to confirm your reservation.</p>
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">What if I need to cancel my booking?</h3>
-                        <p className="text-gray-600">You can cancel free of charge up to 2 hours before your appointment. Late cancellations forfeit the commitment fee to compensate the provider.</p>
+                        <p className="text-gray-600">You can cancel at any time via your dashboard. The <strong>$1 booking fee is non‑refundable</strong> and remains the same regardless of cancellation timing.</p>
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">How does the AI booking assistant work?</h3>

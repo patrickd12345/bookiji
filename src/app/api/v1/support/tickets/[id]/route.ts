@@ -140,7 +140,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     });
 
     try { 
-      await maybeCreateKbSuggestion(admin as any, id, intentSafe); 
+      await maybeCreateKbSuggestion(admin, id, intentSafe); 
       console.info('support.kb_suggest.created', { ticket_id: id });
     } catch (e) {
       console.error('Failed to enrich KB suggestion', { ticket_id: id, error: e });
