@@ -50,10 +50,12 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'pnpm dev',
+    command: process.env.PW_SERVER_CMD || 'pnpm dev',
     url: 'http://localhost:3000',
+    timeout: 120_000,
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 });
 
