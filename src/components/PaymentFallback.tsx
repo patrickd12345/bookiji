@@ -49,17 +49,17 @@ export function PaymentFallback({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-10" role="main">
       <div className="max-w-2xl mx-auto px-4">
         <div className="bg-white rounded-xl shadow-lg p-8 text-center">
           <div className="mb-6">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4" role="img" aria-label="Warning icon">
               <AlertTriangle className="w-8 h-8 text-orange-600" aria-hidden="true" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2" id="payment-error-heading">
               {t('payment.fallback.title', 'Payment Temporarily Unavailable')}
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-6" aria-describedby="payment-error-heading">
               {error || t('payment.fallback.message', 
                 'We\'re experiencing technical difficulties with our payment system. Your booking is safe.'
               )}

@@ -3,10 +3,16 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useParams, useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { PaymentFallback } from '@/components/PaymentFallback'
 import { useRequestState } from '@/hooks/useRequestState'
+
+// Dynamic import for PaymentFallback to reduce initial bundle size
+const PaymentFallback = dynamic(() => import('@/components/PaymentFallback').then(mod => ({ default: mod.PaymentFallback })), {
+  ssr: false,
+  loading: () => <div className="min-h-screen flex items-center justify-center">Loading...</div>
+})
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 

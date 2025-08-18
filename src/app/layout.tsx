@@ -8,6 +8,7 @@ import AdSenseScript from '@/components/AdSenseScript'
 import Consent from '@/components/Consent'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { OfflineStatusProvider } from '@/components/providers/OfflineStatusProvider'
+import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: 'Bookiji — Universal Booking Platform',
@@ -31,6 +32,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Consent Mode v2 default (EEA-friendly); precedes AdSense */}
         <Consent />
         <AdSenseScript />
+        <Script id="preload-routes" strategy="afterInteractive">
+          {`
+            if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+              requestIdleCallback(() => {
+                const routes = ['/pay', '/login', '/register', '/book'];
+                routes.forEach(route => {
+                  const link = document.createElement('link');
+                  link.rel = 'prefetch';
+                  link.href = route;
+                  document.head.appendChild(link);
+                });
+              });
+            }
+          `}
+        </Script>
       </head>
       <body className="min-h-screen bg-background text-foreground">
         <ThemeProvider>

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Moon, Sun, Palette } from "lucide-react"
+import { useTheme } from "next-themes"
 import { useI18n } from "@/lib/i18n/useI18n"
 import { useThemeWithTimeout } from "@/hooks/useThemeWithTimeout"
 import { ThemeToast } from "@/components/ThemeToast"
@@ -27,9 +28,9 @@ export function ThemeSwitcher() {
 
   if (!mounted) {
     return (
-      <Button variant="outline" size="icon" disabled aria-label={t('theme.loading')} title={t('theme.loading')}>
+      <Button variant="outline" size="icon" disabled aria-label="Theme selector loading">
         <Palette className="h-[1.2rem] w-[1.2rem]" />
-        <span className="sr-only">{t('theme.loading')}</span>
+        <span className="sr-only">Loading theme selector</span>
       </Button>
     )
   }
@@ -38,7 +39,8 @@ export function ThemeSwitcher() {
   const isColorful = theme ? colorfulThemes.has(theme) : false
 
   return (
-    <DropdownMenu>
+    <>
+      <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon" aria-label={t('theme.change')} title={t('theme.change')}>
           {isColorful ? (
@@ -94,7 +96,9 @@ export function ThemeSwitcher() {
           🌙 {t('theme.midnight')}
         </DropdownMenuItem>
       </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenu>
+      <ThemeToast show={showTimeoutToast} onDismiss={dismissToast} />
+    </>
   )
 }
 

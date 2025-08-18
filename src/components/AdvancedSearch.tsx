@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { Search, RefreshCw, AlertCircle } from 'lucide-react'
+import { useAsyncState } from '@/hooks/useAsyncState'
 
 interface SearchFilters {
   query: string
@@ -41,7 +43,7 @@ interface Provider {
 }
 
 interface AdvancedSearchProps {
-  onResults?: (results: { providers: Provider[], total: number }) => void
+  onResults?: (results: { providers: Provider[], total: number, searchQuery: string, location: string, latitude?: number, longitude?: number, serviceCategory: string, radius: number }) => void
   defaultLocation?: string
 }
 
@@ -65,19 +67,8 @@ export default function AdvancedSearch({
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
 
-  const searchRequest = useRequestState({
-    onSuccess: (data: unknown) => {
-      const result = data as { success: boolean; providers: Provider[]; total: number }
-      if (result.success && result.providers) {
-        onResults?.({
-          providers: result.providers,
-          total: result.total || 0
-        })
-      }
-    },
-    onError: (error) => {
-      console.error('Search failed:', error)
-    }
+  const searchRequest = useAsyncState<{ success: boolean; providers: Provider[]; total: number }>({
+    autoReset: false
   })
 
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -117,12 +108,28 @@ export default function AdvancedSearch({
       return response.json()
     }
 
-    await searchRequest.execute(
-      searchFn,
-      `/api/search/providers`,
-      'GET'
-    )
-  }, [filters, onResults, searchRequest])
+    const result = await searchRequest.execute(searchFn, {
+      onSuccess: (data) => {
+        if (data.success && data.providers) {
+          onResults?.({
+            providers: data.providers,
+            total: data.total || 0,
+            searchQuery: filters.query,
+            location: filters.location,
+            latitude: filters.latitude,
+            longitude: filters.longitude,
+            serviceCategory: filters.service_category,
+            radius: filters.radius
+          })
+        }
+      },
+      onError: (error: string) => {
+        console.error('Search failed:', error)
+      }
+    })
+
+    return result
+  }, [filters, searchRequest, onResults])
 
   useEffect(() => {
     // Check geolocation permission
@@ -337,16 +344,17 @@ export default function AdvancedSearch({
             </button>
             
             {searchRequest.error && (
-              <div className="flex items-center gap-1 text-sm text-red-600" role="alert">
+              <div className="flex items-center gap-1 text-sm text-red-600" role="alert" aria-live="assertive">
                 <AlertCircle className="h-3 w-3" aria-hidden="true" />
-                <span>Search failed.</span>
+                <span>Search failed. Please try again.</span>
                 <button
                   onClick={() => {
-                    searchRequest.retry()
+                    searchRequest.reset()
                     performSearch()
                   }}
-                  className="text-blue-600 hover:text-blue-800 underline ml-1"
+                  className="text-blue-600 hover:text-blue-800 underline ml-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded"
                   data-testid="search-retry-btn"
+                  aria-label="Retry search request"
                 >
                   Retry
                 </button>
