@@ -30,25 +30,26 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch configuration using the helper function
-    const { data: configData, error: configError } = await supabase
+    const { data: configResponse, error: configError } = await supabase
       .rpc('get_shout_out_config')
       .single()
 
     if (configError) {
       console.error('Error fetching shout-out config:', configError)
-      // Return default config if none exists
-      const defaultConfig: ShoutOutConfig = {
-        enabled: true,
-        default_radius_km: 10,
-        expiry_minutes: 30,
-        max_radius_km: 100,
-        min_radius_km: 1
-      }
-      
       return NextResponse.json({
-        success: true,
-        config: defaultConfig
+        success: false,
+        error: 'Failed to fetch configuration'
+      }, {
+        status: 500
       })
+    }
+
+    const configData = configResponse as {
+      enabled: boolean
+      default_radius_km: number
+      expiry_minutes: number
+      max_radius_km: number
+      min_radius_km: number
     }
 
     const shoutOutConfig: ShoutOutConfig = {

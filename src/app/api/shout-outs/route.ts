@@ -83,93 +83,108 @@ export async function POST(request: NextRequest) {
     }
 
     // Get system configuration for expiry time
-    const { data: configData } = await supabase
+    const { data: configResponse, error: configError } = await supabase
       .rpc('get_shout_out_config')
       .single()
-    
-    const expiryMinutes = configData?.expiry_minutes || 30
-    const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1000).toISOString()
 
-    // Create shout-out
-    const { data: shoutOut, error: shoutOutError } = await supabase
-      .from('shout_outs')
-      .insert([{
-        user_id: user.id,
-        service_type,
-        description,
-        location: `POINT(${longitude} ${latitude})`,
-        radius_km,
-        expires_at: expiresAt,
-        status: 'active'
-      }])
-      .select()
-      .single()
+    if (configError) {
+      console.error('Error fetching shout-out config:', configError)
+      // Use default values if config fetch fails
+      const expiryMinutes = 30
+      const defaultRadiusKm = 10
+      const maxRadiusKm = 100
+      const minRadiusKm = 1
+    } else {
+      const configData = configResponse as {
+        expiry_minutes: number
+        default_radius_km: number
+        max_radius_km: number
+        min_radius_km: number
+      }
+      const expiryMinutes = configData?.expiry_minutes || 30
+      const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1000).toISOString()
 
-    if (shoutOutError) {
-      console.error('Error creating shout-out:', shoutOutError)
-      return NextResponse.json(
-        { error: 'Failed to create shout-out' },
-        { status: 500 }
-      )
-    }
+      // Create shout-out
+      const { data: shoutOut, error: shoutOutError } = await supabase
+        .from('shout_outs')
+        .insert([{
+          user_id: user.id,
+          service_type,
+          description,
+          location: `POINT(${longitude} ${latitude})`,
+          radius_km,
+          expires_at: expiresAt,
+          status: 'active'
+        }])
+        .select()
+        .single()
 
-    // Find eligible vendors within radius
-    const { data: eligibleVendors, error: vendorsError } = await supabase
-      .rpc('find_eligible_vendors', {
-        p_service_type: service_type,
-        p_location: `POINT(${longitude} ${latitude})`,
-        p_radius_km: radius_km
-      })
-
-    if (vendorsError) {
-      console.error('Error finding eligible vendors:', vendorsError)
-      // Continue without vendor notifications
-    }
-
-    // Create recipient records and notifications for eligible vendors
-    if (eligibleVendors && eligibleVendors.length > 0) {
-      const vendorIds = eligibleVendors.map((vendor: { vendor_id: string }) => vendor.vendor_id)
-      
-      const recipients = eligibleVendors.map((vendor: { vendor_id: string }) => ({
-        shout_out_id: shoutOut.id,
-        vendor_id: vendor.vendor_id,
-        response_status: 'pending'
-      }))
-
-      const { error: recipientsError } = await supabase
-        .from('shout_out_recipients')
-        .insert(recipients)
-
-      if (recipientsError) {
-        console.error('Error creating recipient records:', recipientsError)
-        // Continue without recipient records
+      if (shoutOutError) {
+        console.error('Error creating shout-out:', shoutOutError)
+        return NextResponse.json(
+          { error: 'Failed to create shout-out' },
+          { status: 500 }
+        )
       }
 
-      // Record metrics for shout-out creation
-      await supabase.rpc('record_shout_out_metric', {
-        p_shout_out_id: shoutOut.id,
-        p_vendor_id: null,
-        p_event: 'created',
-        p_metadata: { eligible_vendor_count: vendorIds.length }
-      })
+      // Find eligible vendors within radius
+      const { data: eligibleVendors, error: vendorsError } = await supabase
+        .rpc('find_eligible_vendors', {
+          p_service_type: service_type,
+          p_location: `POINT(${longitude} ${latitude})`,
+          p_radius_km: radius_km
+        })
 
-      // Create vendor notifications
-      const { error: notificationError } = await supabase.rpc('create_vendor_notifications', {
-        p_shout_out_id: shoutOut.id,
-        p_vendor_ids: vendorIds
-      })
-
-      if (notificationError) {
-        console.error('Error creating vendor notifications:', notificationError)
-        // Continue without notifications
+      if (vendorsError) {
+        console.error('Error finding eligible vendors:', vendorsError)
+        // Continue without vendor notifications
       }
-    }
 
-    return NextResponse.json({
-      success: true,
-      shout_out: shoutOut,
-      eligible_vendors_count: eligibleVendors?.length || 0
-    })
+      // Create recipient records and notifications for eligible vendors
+      if (eligibleVendors && eligibleVendors.length > 0) {
+        const vendorIds = eligibleVendors.map((vendor: { vendor_id: string }) => vendor.vendor_id)
+        
+        const recipients = eligibleVendors.map((vendor: { vendor_id: string }) => ({
+          shout_out_id: shoutOut.id,
+          vendor_id: vendor.vendor_id,
+          response_status: 'pending'
+        }))
+
+        const { error: recipientsError } = await supabase
+          .from('shout_out_recipients')
+          .insert(recipients)
+
+        if (recipientsError) {
+          console.error('Error creating recipient records:', recipientsError)
+          // Continue without recipient records
+        }
+
+        // Record metrics for shout-out creation
+        await supabase.rpc('record_shout_out_metric', {
+          p_shout_out_id: shoutOut.id,
+          p_vendor_id: null,
+          p_event: 'created',
+          p_metadata: { eligible_vendor_count: vendorIds.length }
+        })
+
+        // Create vendor notifications
+        const { error: notificationError } = await supabase.rpc('create_vendor_notifications', {
+          p_shout_out_id: shoutOut.id,
+          p_vendor_ids: vendorIds
+        })
+
+        if (notificationError) {
+          console.error('Error creating vendor notifications:', notificationError)
+          // Continue without notifications
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        shout_out: shoutOut,
+        eligible_vendors_count: eligibleVendors?.length || 0
+      })
+    }
 
   } catch (error) {
     console.error('Error in shout-out creation:', error)
