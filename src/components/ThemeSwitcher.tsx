@@ -16,11 +16,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
+import { useState } from "react"
 
 export function ThemeSwitcher() {
   const { setTheme, theme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
   const { t } = useI18n()
+  const [showTimeoutToast, setShowTimeoutToast] = useState(false)
+  const dismissToast = () => setShowTimeoutToast(false)
 
   React.useEffect(() => {
     setMounted(true)

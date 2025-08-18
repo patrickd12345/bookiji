@@ -157,7 +157,7 @@ test.describe('Shout-Out Flow', () => {
     // Mock geolocation
     await page.evaluate(() => {
       const mockGeolocation = {
-        getCurrentPosition: (success: Function) => {
+        getCurrentPosition: (success: (position: { coords: { latitude: number; longitude: number } }) => void) => {
           success({
             coords: {
               latitude: 40.7128,
