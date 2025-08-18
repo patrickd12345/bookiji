@@ -1,5 +1,55 @@
 # 📍 Bookiji Unified Feature Roadmap
 
+## ✅ Status vs. Recommendations (Market Analysis Alignment)
+
+### Positioning & Offering
+- **DONE**: Universal booking narrative sharpened; last-minute/instant rebooking implemented; $1 commitment fee clarified in copy and tests.
+- **IN FLIGHT**: Support/Triage flow + RAG candidate tagging (admin UX + thresholds).
+- **TO DO (Decision)**: Pick 2–3 hero categories for launch SEO + supply focus (e.g., mobile beauty, handyman, music tutors).
+
+### Pricing & Fees
+- **DONE**: $1 customer fee model (charged on confirmed booking).
+- **TO DO (Decision)**: Vendor fee lane. Recommend 5–8% intro with founder deals; A/B later toward 10–12% if retention holds. Align TOS, receipts, emails.
+
+### Trust, Policy, & Ops
+- **DONE**: Copy reflects no in-app cancellation (exchange phone numbers; settle directly).
+- **TO DO (Spec)**: SLA/etiquette micro-policy: response window, no-show etiquette, refund edge cases.
+
+### Growth Loops (SEO/Content)
+- **DONE**: Tech hygiene—weekly sitemap/robots/ads.txt audit; JSON-LD vendor schema.
+- **IN FLIGHT**: “Quality Bar” + CI keeps SEO/a11y/perf visible.
+- **TO DO (Build)**:
+  - City+service landing generator (e.g., `/montreal/handyman`, `/brossard/makeup-artist`) with unique blurbs.
+  - Lightweight reviews/testimonials module (seed with provider quotes possible).
+  - Provider minisites (claimable profile with CTA) to create backlink flywheel.
+
+### Product & A11y/Perf
+- **DONE**: Dialog focus-trap + axe WCAG AA; perf smoke with trace; coverage; weekly digest; badges.
+- **IN FLIGHT**: Admin console for ticket approval/“RAG candidate” detection (UI & thresholds).
+- **TO DO (Nice win)**: One-click provider onboarding flow (email → claim → publish). ICS links shipping.
+
+### Data & Insights
+- **DONE**: CI summaries for a11y/perf/coverage; warning burn-down; auto-fix pack (Prettier, ESLint --fix, codemods).
+- **TO DO (Metrics)**: Minimal KPI pipeline: supply added, first bookings, conversion to confirmed, rebooking rate, time-to-first-response.
+
+### 2-Week Sprint (Concrete)
+- **Go-to-Market Focus**:
+  - Lock hero categories (2–3) + pilot city (Greater Montreal/Brossard).
+  - Generate SEO landers (service × city), add to sitemap.
+- **Supply Onboarding**:
+  - Ship provider signup/claim flow (public profile + availability block; manual OK to start).
+  - Draft outreach pack (DM/email template + one-pager); recruit 20–30 providers.
+- **Admin/RAG Console v1**:
+  - Ticket list with: “Mark as KB/RAG,” frequency flag, solved flag, threshold setting.
+  - Nightly job: export flagged tickets to KB index.
+- **Fees & Policy**:
+  - Decide vendor fee (start 5–8%), update TOS/receipts, and add fee disclosure in vendor onboarding.
+
+### Risks to Watch (Pragmatic)
+- Too broad at launch → thin SEO, slow supply density. Mitigation: hero-category focus.
+- Policy gaps → review disputes. Mitigation: concise SLA/no-show rules in confirmation emails.
+- Provider friction → minimize claim/publish steps; help providers look good fast.
+
 ## 🚀 **Phase 0 — Launch Blockers (Pre-Go-Live / Day-0 Essentials)**
 
 **Focus:** Trust, reliability, and clarity at launch. These are non-negotiable before public beta.
@@ -158,5 +208,5 @@
 
 ---
 
-**Last Updated:** January 16, 2025  
+**Last Updated:** January 17, 2025  
 **Status:** 🚀 **ROADMAP READY - PHASE 0 IMPLEMENTATION IN PROGRESS**
