@@ -1,0 +1,131 @@
+name: Performance Smoke Tests
+on:
+  pull_request:
+    branches: [ "main", "develop" ]
+  workflow_dispatch: {}
+
+jobs:
+  performance-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15  # Should complete well under 90 seconds
+    environment: preview
+    permissions:
+      contents: read
+      actions: read
+    concurrency:
+      group: perf-smoke-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        id: cache-playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        if: steps.cache-playwright.outputs.cache-hit != 'true'
+        run: pnpm dlx playwright install --with-deps
+
+      - name: Prepare environment
+        run: |
+          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+          echo "SUPABASE_SECRET_KEY=${{ secrets.SUPABASE_SECRET_KEY }}" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_ADSENSE_APPROVAL_MODE=true" >> $GITHUB_ENV
+          echo "ADSENSE_APPROVAL_MODE=true" >> $GITHUB_ENV
+
+      - name: Run performance smoke tests
+        run: |
+          echo "🚀 Starting performance smoke tests..."
+          start_time=$(date +%s)
+          
+          # Run only performance tests
+          pnpm dlx @playwright/test test tests/performance/ --reporter=html --timeout=90000
+          
+          end_time=$(date +%s)
+          duration=$((end_time - start_time))
+          
+          echo "⏱️ Performance tests completed in ${duration} seconds"
+          
+          # Fail if tests took longer than 90 seconds
+          if [ $duration -gt 90 ]; then
+            echo "❌ Performance tests exceeded 90-second limit"
+            exit 1
+          fi
+
+      - name: Collect performance artifacts
+        if: always()
+        run: |
+          mkdir -p performance-artifacts
+          
+          # Collect performance traces
+          find . -type f -path "**/test-results/performance-traces/*.zip" -exec cp {} performance-artifacts/ \; || true
+          
+          # Collect any performance-related screenshots
+          find . -type f -path "**/test-results/**/screenshots/*.png" -exec cp {} performance-artifacts/ \; || true
+          
+          # Collect test results
+          find . -type f -path "**/test-results/**/*.json" -exec cp {} performance-artifacts/ \; || true
+
+      - name: Upload performance artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-smoke-${{ github.run_number }}
+          path: performance-artifacts
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report-${{ github.run_number }}
+          path: playwright-report
+          retention-days: 7
+
+      - name: Performance summary
+        if: always()
+        run: |
+          echo "📊 PERFORMANCE SMOKE TEST SUMMARY"
+          echo "=================================="
+          
+          if [ -d "performance-artifacts" ]; then
+            trace_count=$(find performance-artifacts -name "*.zip" | wc -l)
+            screenshot_count=$(find performance-artifacts -name "*.png" | wc -l)
+            echo "Traces collected: ${trace_count}"
+            echo "Screenshots collected: ${screenshot_count}"
+          else
+            echo "No performance artifacts found"
+          fi
+          
+          if [ -d "playwright-report" ]; then
+            echo "Playwright report generated"
+          else
+            echo "No Playwright report found"
+          fi
+          
+          echo ""
+          echo "🔍 Check artifacts for detailed performance analysis"
+          echo "📈 Performance traces can be opened with: npx playwright show-trace <trace-file>"

@@ -1,0 +1,176 @@
+name: Accessibility Audit
+on:
+  pull_request:
+    branches: [ "main", "develop" ]
+  workflow_dispatch: {}
+
+jobs:
+  a11y-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: preview
+    permissions:
+      contents: read
+      actions: read
+    concurrency:
+      group: a11y-audit-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        id: cache-playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        if: steps.cache-playwright.outputs.cache-hit != 'true'
+        run: pnpm dlx playwright install --with-deps
+
+      - name: Prepare environment
+        run: |
+          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+          echo "SUPABASE_SECRET_KEY=${{ secrets.SUPABASE_SECRET_KEY }}" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_ADSENSE_APPROVAL_MODE=true" >> $GITHUB_ENV
+          echo "ADSENSE_APPROVAL_MODE=true" >> $GITHUB_ENV
+
+      - name: Run accessibility tests
+        run: |
+          echo "♿ Starting accessibility audit..."
+          
+          # Run only a11y tests
+          pnpm dlx @playwright/test test tests/a11y/ --reporter=html
+
+      - name: Collect a11y artifacts
+        if: always()
+        run: |
+          mkdir -p a11y-artifacts
+          
+          # Collect a11y JSON and HTML reports
+          find . -type f -path "**/test-results/a11y-artifacts/*.json" -exec cp {} a11y-artifacts/ \; || true
+          find . -type f -path "**/test-results/a11y-artifacts/*.html" -exec cp {} a11y-artifacts/ \; || true
+          
+          # Collect legacy axe attachments
+          find . -type f -path "**/test-results/**/attachments/axe-*.json" -exec cp {} a11y-artifacts/ \; || true
+          find . -type f -path "**/playwright-report/**/attachments/axe-*.json" -exec cp {} a11y-artifacts/ \; || true
+          
+          # Collect screenshots for failed tests
+          find . -type f -path "**/test-results/**/screenshots/*.png" -exec cp {} a11y-artifacts/ \; || true
+
+      - name: Upload a11y artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-audit-${{ github.run_number }}
+          path: a11y-artifacts
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-report-${{ github.run_number }}
+          path: playwright-report
+          retention-days: 7
+
+      - name: Generate a11y summary
+        if: always()
+        run: |
+          echo "♿ ACCESSIBILITY AUDIT SUMMARY"
+          echo "=============================="
+          
+          if [ -d "a11y-artifacts" ]; then
+            json_count=$(find a11y-artifacts -name "*.json" | wc -l)
+            html_count=$(find a11y-artifacts -name "*.html" | wc -l)
+            screenshot_count=$(find a11y-artifacts -name "*.png" | wc -l)
+            
+            echo "JSON reports: ${json_count}"
+            echo "HTML reports: ${html_count}"
+            echo "Screenshots: ${screenshot_count}"
+            
+            # Analyze violations if JSON reports exist
+            if [ $json_count -gt 0 ]; then
+              echo ""
+              echo "🔍 Analyzing violations..."
+              
+              # Count total violations across all reports
+              total_violations=0
+              critical_violations=0
+              serious_violations=0
+              moderate_violations=0
+              minor_violations=0
+              
+              for json_file in a11y-artifacts/*.json; do
+                if [ -f "$json_file" ]; then
+                  violations=$(jq '.violations | length' "$json_file" 2>/dev/null || echo "0")
+                  total_violations=$((total_violations + violations))
+                  
+                  # Count by impact level
+                  critical=$(jq '.violations[] | select(.impact == "critical") | .nodes | length' "$json_file" 2>/dev/null | awk '{sum+=$1} END {print sum+0}')
+                  serious=$(jq '.violations[] | select(.impact == "serious") | .nodes | length' "$json_file" 2>/dev/null | awk '{sum+=$1} END {print sum+0}')
+                  moderate=$(jq '.violations[] | select(.impact == "moderate") | .nodes | length' "$json_file" 2>/dev/null | awk '{sum+=$1} END {print sum+0}')
+                  minor=$(jq '.violations[] | select(.impact == "minor") | .nodes | length' "$json_file" 2>/dev/null | awk '{sum+=$1} END {print sum+0}')
+                  
+                  critical_violations=$((critical_violations + critical))
+                  serious_violations=$((serious_violations + serious))
+                  moderate_violations=$((moderate_violations + moderate))
+                  minor_violations=$((minor_violations + minor))
+                fi
+              done
+              
+              echo "Total violations: ${total_violations}"
+              echo "Critical: ${critical_violations} | Serious: ${serious_violations} | Moderate: ${moderate_violations} | Minor: ${minor_violations}"
+              
+              # Provide recommendations
+              if [ $critical_violations -gt 0 ]; then
+                echo "🚨 CRITICAL: Fix critical violations immediately"
+              fi
+              
+              if [ $serious_violations -gt 0 ]; then
+                echo "⚠️ SERIOUS: Address serious violations this sprint"
+              fi
+              
+              if [ $moderate_violations -gt 10 ]; then
+                echo "🔧 MODERATE: Consider batch fixes for moderate violations"
+              fi
+              
+              if [ $total_violations -eq 0 ]; then
+                echo "🎉 EXCELLENT: No accessibility violations found!"
+              fi
+            fi
+          else
+            echo "No a11y artifacts found"
+          fi
+          
+          if [ -d "playwright-report" ]; then
+            echo "Playwright report generated"
+          else
+            echo "No Playwright report found"
+          fi
+          
+          echo ""
+          echo "📋 Check HTML reports for detailed violation information"
+          echo "🔍 JSON reports contain machine-readable violation data"
+          echo "📸 Screenshots show the state when violations occurred"

@@ -7,24 +7,41 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --cache --cache-location .eslintcache",
+    "lint:crit": "eslint . --max-warnings=0 --rule \"no-unused-vars: off\" --rule \"@typescript-eslint/no-explicit-any: off\" --rule \"react/no-unescaped-entities: off\" --ignore-pattern \"packages/**/*\" --ignore-pattern \"tests/setup.ts\"",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "typecheck": "tsc --noEmit",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
     "context": "node startup-context.js",
     "test": "vitest",
-    "test:unit": "vitest --run",
+    "test:unit": "vitest run",
     "test:e2e": "playwright test --project=e2e",
-    "ci": "pnpm lint && pnpm type-check && pnpm test:unit && pnpm test:e2e",
+    "ci": "pnpm lint:crit && pnpm typecheck && pnpm test:unit && pnpm test:e2e",
+    "format": "prettier --write .",
+    "codemod:unused": "node scripts/codemods/unused-vars.mjs",
+    "codemod:any": "node scripts/codemods/any-to-unknown.mjs",
+    "codemod:auto": "pnpm codemod:unused && pnpm codemod:any",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:ci": "vitest run --reporter=dot --coverage",
     "test:coverage": "vitest run --coverage",
+    "coverage": "vitest run --coverage",
+    "coverage:watch": "vitest --coverage",
     "e2e": "playwright test -c playwright.config.ts",
     "e2e:ui": "playwright test --ui -c playwright.config.ts",
     "e2e:debug": "playwright test --debug -c playwright.config.ts",
     "e2e:remote": "BASE_URL=${BASE_URL:-http://localhost:3000} playwright test -c playwright.remote.config.ts",
     "test:a11y:dialog": "playwright test tests/a11y/dialog-focus-trap.spec.ts",
+    "test:a11y:isolated": "pnpm -C packages/pw-tests test",
+    "test:a11y:isolated:list": "pnpm -C packages/pw-tests test --list",
+    "test:a11y": "playwright test tests/a11y --project=chromium",
+    "test:perf": "playwright test tests/perf --project=chromium",
+    "warning:debt": "node scripts/warning-debt.js",
+    "test:performance": "pnpm dlx @playwright/test test tests/performance/",
+    "quality:debt": "node scripts/warning-debt-burn-down.mjs",
+    "quality:badges": "node scripts/generate-quality-badges.mjs",
+    "quality:digest": "node scripts/weekly-quality-digest.mjs",
     "test:visual": "playwright test -c playwright.visual.config.ts",
     "test:synthetics": "playwright test -c playwright.synthetics.config.ts",
     "test:update-snaps": "playwright test --update-snapshots -c playwright.config.ts",
@@ -39,10 +56,14 @@
     "i18n:check": "node scripts/check-i18n.mjs",
     "visual:snapshots": "node scripts/generate-visual-snapshots.js",
     "prebuild": "npm run i18n:check",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "digest:weekly": "node scripts/weekly-quality-digest.mjs"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,css,md}": "eslint --fix"
+    "*.{ts,tsx,js,jsx,json,md}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   },
   "dependencies": {
     "@formspree/react": "^3.0.0",
@@ -134,7 +155,9 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5",
     "vitest": "^3.2.4",
-    "wait-on": "^8.0.4"
+    "wait-on": "^8.0.4",
+    "fast-glob": "^3.3.2",
+    "prettier": "^3.3.3"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.1.10",

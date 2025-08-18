@@ -1,17 +1,16 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './tests',
-  testMatch: ['**/e2e/**/*.spec.ts', '**/a11y/**/*.spec.ts'],
+  testDir: './tests/a11y',
+  testMatch: ['**/*.spec.ts'],
   retries: 1,
-  fullyParallel: true,
+  fullyParallel: false,
+  workers: 1,
+  
   expect: {
     timeout: 10_000,
-    toHaveScreenshot: {
-      threshold: 0.01,
-      maxDiffPixels: 100,
-    },
   },
+  
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     viewport: { width: 1280, height: 800 },
@@ -28,10 +27,6 @@ export default defineConfig({
     },
   ],
 
-  // Make sure no Vitest setup is auto-imported here
-  globalSetup: undefined,
-  globalTeardown: undefined,
-
   webServer: {
     command: process.env.PW_SERVER_CMD || 'pnpm dev',
     url: 'http://localhost:3000',
@@ -40,9 +35,4 @@ export default defineConfig({
     stdout: 'pipe',
     stderr: 'pipe',
   },
-
-  // Explicitly exclude any setup files
-  testIgnore: ['**/setup.ts', '**/setup.js', '**/_helpers/**', '**/*.helper.*', '**/*.fixture.*'],
 });
-
- 

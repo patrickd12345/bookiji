@@ -1,0 +1,14 @@
+{
+  "name": "pw-tests",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.54.2",
+    "@axe-core/playwright": "^4.9.1",
+    "typescript": "^5.4.0"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:a11y": "playwright test tests/a11y"
+  }
+}

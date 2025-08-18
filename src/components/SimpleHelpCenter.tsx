@@ -267,7 +267,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                   <div className="bg-purple-50 p-6 rounded-lg">
                     <h3 className="text-lg font-semibold text-purple-900 mb-3">📱 How do I contact my provider?</h3>
                     <p className="text-purple-800 text-sm">
-                      After booking confirmation, you'll receive your provider's contact information including phone number and email. Use these details to coordinate directly with your provider.
+                      After booking confirmation, you&apos;ll receive your provider&apos;s contact information including phone number and email. Use these details to coordinate directly with your provider.
                     </p>
                   </div>
                   

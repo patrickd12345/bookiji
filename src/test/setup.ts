@@ -1,5 +1,4 @@
-﻿import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+﻿import { vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 
 // Set up environment variables for integration tests
@@ -77,7 +76,7 @@ vi.mock('next/navigation', () => ({
 // Mock useI18n hook
 vi.mock('@/lib/i18n/useI18n', () => ({
   useI18n: () => ({
-    t: (key: string, params?: any) => {
+    t: (key: string, params?: Record<string, unknown>) => {
       const translations: Record<string, string> = {
         'home.headline': 'Universal Booking Platform',
         'home.tagline': 'Book any service, anywhere, instantly. One-click booking with AI assistance and $1.00 commitment fee guarantee.',

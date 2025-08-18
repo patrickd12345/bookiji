@@ -18,7 +18,7 @@
         "name": "next"
       }
     ],
-    "types": ["vitest/globals", "jest", "node", "react", "react-dom", "nodemailer"],
+    "types": ["jest", "node", "react", "react-dom", "nodemailer"],
     "paths": {
       "@/*": ["./src/*"]
     },

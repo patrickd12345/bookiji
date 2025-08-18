@@ -2,6 +2,26 @@
 
 **Status:** 🎉 **DEVELOPMENT COMPLETED - READY FOR PRODUCTION** | **All Systems Operational** | **Domain:** [bookiji.com](https://bookiji.com)
 
+## Quality Bar
+<!-- Quality Bar -->
+[![Tests + Coverage](https://img.shields.io/github/actions/workflow/status/patri/bookijibck/e2e.yml?branch=main&label=Tests%20%2B%20Coverage)](https://github.com/patri/bookijibck/actions/workflows/e2e.yml)
+[![Accessibility](https://img.shields.io/github/actions/workflow/status/patri/bookijibck/e2e.yml?branch=main&label=A11y)](https://github.com/patri/bookijibck/actions/workflows/e2e.yml)
+[![Performance Smoke](https://img.shields.io/github/actions/workflow/status/patri/bookijibck/e2e.yml?branch=main&label=Perf%20Smoke)](https://github.com/patri/bookijibck/actions/workflows/e2e.yml)
+[![Content Audit](https://img.shields.io/github/actions/workflow/status/patri/bookijibck/weekly-content-audit.yml?branch=main&label=Content%20Audit)](https://github.com/patri/bookijibck/actions/workflows/weekly-content-audit.yml)
+[![Weekly Digest](https://img.shields.io/github/actions/workflow/status/patri/bookijibck/weekly-quality-digest.yml?branch=main&label=Weekly%20Digest)](https://github.com/patri/bookijibck/actions/workflows/weekly-quality-digest.yml)
+
+### What the badges mean
+- **Tests + Coverage**: Unit/integration tests pass; coverage % is shown in the CI run summary.
+- **Accessibility (A11y)**: Playwright + axe-core checks enforce WCAG AA for dialogs and key flows.
+- **Performance Smoke**: Short trace-based run to catch perf regressions early.
+- **Content Audit**: Weekly checks for `sitemap.xml`, `robots.txt`, and `ads.txt` to keep SEO healthy.
+- **Weekly Digest**: Monday summary of a11y, performance, and warning debt (optional Slack ping).
+
+[![Weekly Content Audit](https://img.shields.io/github/actions/workflow/status/patri/bookijibck/weekly-content-audit.yml?branch=main&label=Content%20Audit)](https://github.com/patri/bookijibck/actions/workflows/weekly-content-audit.yml)
+[![A11y Dialog Tests](https://img.shields.io/github/actions/workflow/status/patri/bookijibck/e2e.yml?branch=main&label=A11y%20Tests)](https://github.com/patri/bookijibck/actions/workflows/e2e.yml)
+[![Weekly Quality Digest](https://img.shields.io/github/actions/workflow/status/patri/bookijibck/weekly-quality-digest.yml?branch=main&label=Weekly%20Digest)](https://github.com/patri/bookijibck/actions/workflows/weekly-quality-digest.yml)
+[![Unit Tests + Coverage](https://img.shields.io/github/actions/workflow/status/patri/bookijibck/e2e.yml?branch=main&label=Tests%20%2B%20Coverage)](https://github.com/patri/bookijibck/actions/workflows/e2e.yml)
+
 ### Feature Status
 - Guided tours: customer booking, vendor onboarding, dashboard, and settings tours **live**
 - Map v1: **live**
@@ -307,7 +327,7 @@ pnpm dev
 
 ---
 
-## 📚 **DOCUMENTATION**
+## 📈 **DOCUMENTATION**
 
 - [**API Guide**](./docs/API_GUIDE.md) - Complete API reference
 - [**Features Overview**](./docs/FEATURES_OVERVIEW.md) - Detailed feature list

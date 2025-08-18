@@ -69,7 +69,7 @@ jobs:
       - name: Forbid Vitest in E2E
         run: |
           # forbid vitest imports outside unit test dirs
-          if rg -n "from 'vitest'|require\\('vitest'\\)" -- tests src | rg -v "src/.*/(__tests__|\\.test|\\.spec)\\."; then
+          if rg -n "from 'vitest'|require\('vitest'\)" -- tests src | rg -v "src/.*/(__tests__|\.test|\.spec)\."; then
             echo "❌ Found forbidden 'vitest' import outside unit tests."
             exit 1;
           fi
@@ -78,31 +78,96 @@ jobs:
       - name: Forbid Playwright in Non-Test Files
         run: |
           # forbid @playwright/test imports outside test dirs
-          if rg -n "from '@playwright/test'|require\\(['\"]@playwright/test['\"]\\)" --glob '!tests/**' . ; then
+          if rg -n "from '@playwright/test'|require\(['\"]@playwright/test['\"]\)" --glob '!tests/**' . ; then
             echo "❌ Found forbidden '@playwright/test' import outside tests/";
             exit 1;
           fi
           echo "✅ No forbidden Playwright imports found"
 
+      - name: Analyze warning debt
+        run: |
+          echo "🔍 Running warning debt analysis..."
+          node scripts/warning-debt-burn-down.mjs || echo "Warning debt analysis completed with issues"
+
+      - name: Run unit tests with coverage
+        run: pnpm coverage
+
+      - name: Summarize coverage
+        if: always()
+        run: |
+          npx istanbul-reports text-summary < coverage/lcov.info > coverage/summary.txt || true
+          echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage/summary.txt ]; then
+            cat coverage/summary.txt >> $GITHUB_STEP_SUMMARY
+          else
+            echo "(coverage summary not available)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ github.run_number }}
+          path: coverage
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload to Codecov (optional)
+        if: always() && env.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+
       - name: Run Playwright tests
         run: pnpm dlx @playwright/test test --reporter=html
 
-      - name: Collect axe JSON
+      - name: Run a11y & e2e tests
+        run: pnpm exec playwright test --project=chromium
+
+      - name: Upload a11y artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-reports
+          path: playwright-report/**/*.html
+
+      - name: Run perf smoke
+        run: pnpm exec playwright test tests/perf/smoke.spec.ts --project=chromium
+
+      - name: Collect a11y artifacts
         if: always() && (github.ref == 'refs/heads/main' || failure())
         run: |
-          mkdir -p axe-artifacts
-          # Collect attachments wherever Playwright stored them
-          find . -type f -path "**/test-results/**/attachments/axe-*.json" -exec cp {} axe-artifacts/ \; || true
-          find . -type f -path "**/playwright-report/**/attachments/axe-*.json" -exec cp {} axe-artifacts/ \; || true
+          mkdir -p a11y-artifacts
+          mkdir -p performance-traces
+          
+          # Collect a11y JSON and HTML reports
+          find . -type f -path "**/test-results/a11y-artifacts/*.json" -exec cp {} a11y-artifacts/ \; || true
+          find . -type f -path "**/test-results/a11y-artifacts/*.html" -exec cp {} a11y-artifacts/ \; || true
+          
+          # Collect performance traces
+          find . -type f -path "**/test-results/performance-traces/*.zip" -exec cp {} performance-traces/ \; || true
+          
+          # Collect legacy axe attachments
+          find . -type f -path "**/test-results/**/attachments/axe-*.json" -exec cp {} a11y-artifacts/ \; || true
+          find . -type f -path "**/playwright-report/**/attachments/axe-*.json" -exec cp {} a11y-artifacts/ \; || true
 
-      - name: Upload axe artifacts
+      - name: Upload a11y artifacts
         if: always() && (github.ref == 'refs/heads/main' || failure())
         uses: actions/upload-artifact@v4
         with:
-          name: axe-json-${{ github.run_number }}
-          path: axe-artifacts
+          name: a11y-artifacts-${{ github.run_number }}
+          path: a11y-artifacts
           if-no-files-found: ignore
-          retention-days: 3
+          retention-days: 7
+
+      - name: Upload performance traces
+        if: always() && (github.ref == 'refs/heads/main' || failure())
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-traces-${{ github.run_number }}
+          path: performance-traces
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload Playwright report
         if: always()

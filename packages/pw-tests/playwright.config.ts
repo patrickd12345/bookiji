@@ -1,17 +1,21 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Guard against NODE_OPTIONS preloads that could cause conflicts
+if (process.env.NODE_OPTIONS?.includes('ts-node') || process.env.NODE_OPTIONS?.includes('tsconfig-paths')) {
+  throw new Error('NODE_OPTIONS preloads are not allowed for Playwright.');
+}
+
 export default defineConfig({
   testDir: './tests',
-  testMatch: ['**/e2e/**/*.spec.ts', '**/a11y/**/*.spec.ts'],
+  testMatch: ['**/*.spec.ts'],
   retries: 1,
-  fullyParallel: true,
+  fullyParallel: false,
+  workers: 1,
+  
   expect: {
     timeout: 10_000,
-    toHaveScreenshot: {
-      threshold: 0.01,
-      maxDiffPixels: 100,
-    },
   },
+  
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     viewport: { width: 1280, height: 800 },
@@ -22,27 +26,18 @@ export default defineConfig({
   },
 
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+    { 
+      name: 'chromium', 
+      use: { ...devices['Desktop Chrome'] } 
     },
   ],
 
-  // Make sure no Vitest setup is auto-imported here
-  globalSetup: undefined,
-  globalTeardown: undefined,
-
   webServer: {
-    command: process.env.PW_SERVER_CMD || 'pnpm dev',
+    command: process.env.PW_SERVER_CMD || 'cd ../.. && pnpm dev',
     url: 'http://localhost:3000',
     timeout: 120_000,
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',
     stderr: 'pipe',
   },
-
-  // Explicitly exclude any setup files
-  testIgnore: ['**/setup.ts', '**/setup.js', '**/_helpers/**', '**/*.helper.*', '**/*.fixture.*'],
 });
-
- 

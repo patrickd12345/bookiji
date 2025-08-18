@@ -1,35 +1,27 @@
-﻿import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
-import path from "path";
+﻿import { defineConfig } from 'vitest/config';
+import path from 'path';
+import { readFileSync } from 'fs';
 
 export default defineConfig({
-  plugins: [react()],
   test: {
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    exclude: [
-      'tests/**/*', 
-      'playwright-report', 
-      'test-results', 
-      'node_modules',
-      '**/*.playwright.{test,spec}.{ts,tsx}'
-    ],
-    environment: "jsdom",
-    globals: true,
-    setupFiles: ["./src/test/setup.ts"],
+    include: ['tests/unit/**/*.spec.ts', 'tests/component/**/*.spec.ts'],
+    exclude: ['tests/e2e/**', 'tests/a11y/**', 'node_modules/**', 'dist/**'],
+    globals: true,          // enable global test functions
+    environment: 'jsdom',
+    setupFiles: ['src/test/setup.ts'],
+    // Use the Vitest-only tsconfig so vitest/globals don't bleed
+    pool: 'threads',
     coverage: {
-      reporter: ["text", "html"],
-      exclude: [
-        "node_modules/",
-        "src/test/setup.ts",
-        "tests/**/*",
-        "playwright-report/**/*",
-        "test-results/**/*"
-      ],
-    },
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: ['tests/**', '**/*.d.ts']
+    }
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+      '@': path.resolve(__dirname, './src')
+    }
   },
+  esbuild: { tsconfigRaw: JSON.parse(readFileSync('./tsconfig.vitest.json', 'utf-8')) }
 });

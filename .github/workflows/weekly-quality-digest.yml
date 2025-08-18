@@ -1,0 +1,105 @@
+name: weekly-quality-digest
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"   # Mondays 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        id: cache-playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        if: steps.cache-playwright.outputs.cache-hit != 'true'
+        run: pnpm dlx playwright install --with-deps
+
+      - name: Run warning debt analysis
+        run: pnpm warning:debt > warning-debt.txt
+
+      - name: Run a11y tests (axe snapshots)
+        run: pnpm test:a11y || true   # don’t fail digest, just collect results
+
+      - name: Run perf smoke test
+        run: pnpm test:perf || true
+
+      - name: Collect a11y and performance artifacts
+        if: always()
+        run: |
+          mkdir -p a11y-artifacts
+          mkdir -p performance-traces
+          # a11y reports (json/html from test-results and playwright-report)
+          find . -type f -path "**/test-results/a11y-artifacts/*" -exec cp {} a11y-artifacts/ \; || true
+          find . -type f -path "**/playwright-report/**/*" -name "*.html" -exec cp {} a11y-artifacts/ \; || true
+          # performance traces (zip)
+          find . -type f -path "**/test-results/performance-traces/*.zip" -exec cp {} performance-traces/ \; || true
+
+      - name: Collect digest summary
+        run: |
+          echo "# Weekly Quality Digest" >> $GITHUB_STEP_SUMMARY
+          echo "## Accessibility" >> $GITHUB_STEP_SUMMARY
+          echo "- Reports saved under **a11y-artifacts** artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "## Performance" >> $GITHUB_STEP_SUMMARY
+          echo "- Perf traces saved under **performance-traces** artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "## Warning Debt" >> $GITHUB_STEP_SUMMARY
+          cat warning-debt.txt >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload a11y artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-artifacts
+          path: a11y-artifacts
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload performance traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-traces
+          path: performance-traces
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload warning debt snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: warning-debt
+          path: warning-debt.txt
+
+      - name: Post to Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": "*Weekly Quality Digest* for ${{ github.repository }} on run #${{ github.run_number }}\n• Accessibility: see 'a11y-artifacts' artifact\n• Performance: see 'performance-traces' artifact\n• Warning Debt: see 'warning-debt' artifact"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
