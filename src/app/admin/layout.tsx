@@ -37,16 +37,29 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="text-lg font-semibold mb-2">Admin Console</div>
         <nav className="flex flex-col gap-1">
           <a href="/admin/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
-            <span>Dashboard</span>
+            <span>📊 Dashboard</span>
           </a>
+          <a href="/admin/bookings" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
+            <span>📅 Bookings</span>
+          </a>
+          <a href="/admin/vendors" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
+            <span>🏪 Vendors</span>
+          </a>
+          <a href="/admin/activity" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
+            <span>🔍 Activity Log</span>
+          </a>
+          <a href="/admin/system" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
+            <span>⚙️ System</span>
+          </a>
+          <div className="border-t border-gray-200 my-2"></div>
           <a href="/admin/support" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
-            <span>Support Tickets</span>
+            <span>🎫 Support Tickets</span>
           </a>
           <a href="/admin/faq" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
-            <span>FAQ Management</span>
+            <span>❓ FAQ Management</span>
           </a>
           <a href="/admin/parameters" className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100">
-            <span>Admin Parameters</span>
+            <span>🔧 Parameters</span>
           </a>
         </nav>
       </aside>
