@@ -1,0 +1,47 @@
+{
+  "timestamp": "2025-08-18T20:35:29.636Z",
+  "accessibility": {
+    "score": 0,
+    "details": {
+      "error": "spawnSync C:\\WINDOWS\\system32\\cmd.exe ETIMEDOUT",
+      "status": "Test Failure"
+    }
+  },
+  "performance": {
+    "score": 0,
+    "details": {
+      "error": "spawnSync C:\\WINDOWS\\system32\\cmd.exe ETIMEDOUT",
+      "status": "Test Failure"
+    }
+  },
+  "codeQuality": {
+    "score": 10,
+    "details": {
+      "lintErrors": 1,
+      "lintWarnings": 197,
+      "typeErrors": 71,
+      "status": "Needs Cleanup"
+    }
+  },
+  "stability": {
+    "score": 100,
+    "details": {
+      "testsRun": 1,
+      "testsPassed": 1,
+      "testsFailed": 0,
+      "passRate": 100,
+      "status": "Rock Solid"
+    }
+  },
+  "overall": {
+    "score": 12,
+    "grade": "⭐ Poor",
+    "trend": "📉 Declining",
+    "breakdown": {
+      "accessibility": 0,
+      "performance": 0,
+      "codeQuality": 2,
+      "stability": 10
+    }
+  }
+}

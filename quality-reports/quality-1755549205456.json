@@ -1,0 +1,50 @@
+{
+  "timestamp": "2025-08-18T20:31:31.801Z",
+  "accessibility": {
+    "score": 0,
+    "details": {
+      "error": "Command failed: cd packages/pw-tests && npx playwright test tests/a11y --timeout=30000 --max-failures=3 2>&1",
+      "status": "Test Failure"
+    }
+  },
+  "performance": {
+    "score": 100,
+    "details": {
+      "avgTBT": 0,
+      "avgFCP": 0,
+      "avgCLS": 0,
+      "pages": [],
+      "status": "Excellent"
+    }
+  },
+  "codeQuality": {
+    "score": 10,
+    "details": {
+      "lintErrors": 1,
+      "lintWarnings": 197,
+      "typeErrors": 71,
+      "status": "Needs Cleanup"
+    }
+  },
+  "stability": {
+    "score": 100,
+    "details": {
+      "testsRun": 1,
+      "testsPassed": 1,
+      "testsFailed": 0,
+      "passRate": 100,
+      "status": "Rock Solid"
+    }
+  },
+  "overall": {
+    "score": 47,
+    "grade": "⭐ Poor",
+    "trend": "📈 Improving",
+    "breakdown": {
+      "accessibility": 0,
+      "performance": 35,
+      "codeQuality": 2,
+      "stability": 10
+    }
+  }
+}
