@@ -15,7 +15,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm dlx playwright install --with-deps
       - name: Run canaries
-        run: pnpm dlx playwright test tests/synthetics --reporter=line
+        run: pnpm dlx playwright test -c playwright.synthetics.config.ts --reporter=line
         env:
           BASE_URL: https://bookiji.com
       - if: failure()

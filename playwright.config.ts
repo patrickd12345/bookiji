@@ -1,47 +1,54 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './tests',
-  testMatch: /.*\.(spec|test)\.(js|ts|mjs)/,
-  timeout: 30_000,
-  expect: { 
+  // Root is just a convenience, projects override below.
+  testDir: 'tests',
+  retries: 1,
+  fullyParallel: true,
+  expect: {
     timeout: 10_000,
     toHaveScreenshot: {
       threshold: 0.01,
       maxDiffPixels: 100,
     },
   },
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     viewport: { width: 1280, height: 800 },
     ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
+    video: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
+
   projects: [
     {
-      name: 'chromium',
-      use: { 
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1280, height: 800 },
-        deviceScaleFactor: 1,
-      },
+      name: 'e2e',
+      testDir: 'tests/e2e',
+      testMatch: /.*\.(spec|test)\.(ts|tsx)$/,
+      testIgnore: ['**/_helpers/**', '**/*.helper.*', '**/*.fixture.*'],
+      use: { ...devices['Desktop Chrome'] },
+      workers: 1, // lift to default after a couple of green runs
     },
     {
-      name: 'chromium-dark',
-      use: { 
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1280, height: 800 },
-        deviceScaleFactor: 1,
-        colorScheme: 'dark',
-      },
+      name: 'visual',
+      testDir: 'tests/visual',
+      testMatch: /.*\.(spec|test)\.(ts|tsx)$/,
+      testIgnore: ['**/_helpers/**', '**/*.helper.*', '**/*.fixture.*'],
+      use: { ...devices['Desktop Chrome'], colorScheme: 'light' },
+    },
+    {
+      name: 'synthetics',
+      testDir: 'tests/synthetics',
+      testMatch: /.*\.(spec|test)\.(ts|tsx)$/,
+      testIgnore: ['**/_helpers/**', '**/*.helper.*', '**/*.fixture.*'],
+      // Keep these single-threaded to reduce flake.
+      workers: 1,
+      retries: 0,
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
+
   webServer: {
     command: 'pnpm dev',
     url: 'http://localhost:3000',

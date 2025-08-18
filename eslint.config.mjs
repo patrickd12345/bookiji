@@ -39,6 +39,46 @@ const eslintConfig = [
       "@next/next/no-html-link-for-pages": "off",
     },
   },
+  // Unit tests can use vitest
+  {
+    files: ['src/**/__tests__/**/*.{ts,tsx}', 'src/**/*.spec.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
+    rules: {}
+  },
+  // Everywhere else: ban vitest
+  {
+    files: ['tests/**/*.{ts,tsx}', 'src/**/*.{ts,tsx}'],
+    ignores: ['src/**/__tests__/**/*.{ts,tsx}', 'src/**/*.spec.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', { paths: ['vitest'] }]
+    }
+  },
+  // Allow vitest in test files
+  {
+    files: ['**/__tests__/**/*.{ts,tsx}', '**/*.spec.{ts,tsx}', '**/*.test.{ts,tsx}', '**/test/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': 'off'
+    }
+  },
+  // Tests can use @playwright/test
+  {
+    files: ['tests/**/*.{ts,tsx}'],
+    rules: {}
+  },
+  // Playwright config files can use @playwright/test
+  {
+    files: ['playwright*.config.ts'],
+    rules: {
+      'no-restricted-imports': 'off'
+    }
+  },
+  // Everywhere else: ban @playwright/test
+  {
+    files: ['**/*.{ts,tsx}'],
+    ignores: ['tests/**/*.{ts,tsx}', 'playwright*.config.ts'],
+    rules: {
+      'no-restricted-imports': ['error', { paths: ['@playwright/test'] }]
+    }
+  }
 ];
 
 export default eslintConfig;

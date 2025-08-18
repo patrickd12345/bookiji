@@ -1,0 +1,28 @@
+# Global owners
+* @patri
+
+# API routes
+/src/app/api/** @patri
+
+# Database and migrations
+/supabase/** @patri
+
+# GitHub Actions
+/.github/workflows/** @patri
+
+# Core components and hooks
+/src/components/** @patri
+/src/hooks/** @patri
+/src/lib/** @patri
+
+# Tests
+/tests/** @patri
+/src/lib/__tests__/** @patri
+
+# Configuration
+/src/config/** @patri
+/src/types/** @patri
+
+# Documentation
+/docs/** @patri
+*.md @patri

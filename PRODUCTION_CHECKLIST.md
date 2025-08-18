@@ -18,6 +18,12 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 NEXT_PUBLIC_BASE_URL=https://yourdomain.com
 NODE_ENV=production
 
+# AdSense
+NEXT_PUBLIC_ADSENSE_APPROVAL_MODE=false
+NEXT_PUBLIC_ADSENSE_GLOBAL_OFF=false
+NEXT_PUBLIC_ADSENSE_CLIENT=ca-pub-xxxxxxxxxxxxxxxx
+NEXT_PUBLIC_ADSENSE_SLOT=1234567890
+
 # Monitoring & Observability
 SENTRY_DSN=https://...
 ALERT_WEBHOOK_URL=https://hooks.slack.com/... # or Discord webhook

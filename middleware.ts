@@ -120,6 +120,16 @@ export function middleware(request: NextRequest) {
   const nonce = Math.random().toString(36).slice(2)
   response.headers.set('Content-Security-Policy', buildCSPHeader(nonce))
   response.headers.set('x-nonce', nonce)
+  // Preview-only CSP report-only headers to catch regressions
+  if (process.env.VERCEL_ENV === 'preview') {
+    response.headers.set('Content-Security-Policy-Report-Only', buildCSPHeader(nonce) + '; report-to default')
+    const reportTo = {
+      group: 'default',
+      max_age: 10800,
+      endpoints: [{ url: process.env.CSP_REPORT_ENDPOINT || 'https://httpbin.org/post' }],
+    }
+    response.headers.set('Report-To', JSON.stringify(reportTo))
+  }
   return response
 }
 

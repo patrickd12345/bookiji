@@ -272,9 +272,10 @@ pnpm dev
 ### **Visual Regression Testing**
 - **Purpose:** Pixel-perfect UI consistency across changes
 - **Coverage:** Home page and booking confirmation UI
-- **Update Screenshots:** `npx playwright test --update-snapshots`
+- **Update Screenshots:** `pnpm test:visual --update-snapshots`
 - **CI:** Runs on every PR to main branch
 - **Artifacts:** Failed diffs uploaded as GitHub artifacts
+- **Config:** Uses `playwright.visual.config.ts` for isolation
 
 ### **Production Synthetics**
 - **Purpose:** Real-browser monitoring of critical paths
@@ -282,6 +283,7 @@ pnpm dev
 - **Schedule:** Every 5 minutes against production
 - **Failure Handling:** Creates GitHub issues + uploads artifacts
 - **Manual Trigger:** Available via GitHub Actions
+- **Config:** Uses `playwright.synthetics.config.ts` for isolation
 
 ### **Load Testing**
 - **Purpose:** Performance validation under load
@@ -295,6 +297,13 @@ pnpm dev
 - **Purge CDN:** `vercel cache purge --type=cdn`
 - **Purge Data:** `vercel cache purge --type=data`
 - **Dashboard:** Use "Redeploy (without cache)" option
+
+### **Test Execution**
+- **Unit Tests:** `pnpm test:unit` (Vitest)
+- **E2E Tests:** `pnpm test:e2e` (Playwright main config)
+- **Visual Tests:** `pnpm test:visual` (Playwright visual config)
+- **Synthetics:** `pnpm test:synthetics` (Playwright synthetics config)
+- **All Tests:** `pnpm ci` (lint + type-check + unit + e2e)
 
 ---
 

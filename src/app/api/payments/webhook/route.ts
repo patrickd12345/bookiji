@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'node:crypto'
+import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
 import { createPaymentsWebhookHandler } from '@/lib/paymentsWebhookHandler'
 
 const handler = createPaymentsWebhookHandler()
@@ -59,6 +60,8 @@ export async function POST(request: NextRequest) {
       }
     }
   }
+  // Idempotency early-return via persisted store after signature verification happens in handler.
+  // We cannot check before verifying signature because we must not trust unauthenticated bodies.
   const res = await handler.handle(request)
   res.headers.set('X-Request-ID', requestId)
   return res

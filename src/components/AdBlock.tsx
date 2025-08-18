@@ -1,5 +1,6 @@
 'use client'
 import { useEffect } from 'react'
+import { ADSENSE_GLOBAL_OFF } from '@/lib/adsense'
 
 export default function AdBlock() {
 	const approvalMode = process.env.NEXT_PUBLIC_ADSENSE_APPROVAL_MODE === 'true'
@@ -7,7 +8,7 @@ export default function AdBlock() {
 	const slot = process.env.NEXT_PUBLIC_ADSENSE_SLOT
 
 	useEffect(() => {
-		if (!approvalMode) return
+		if (!approvalMode || ADSENSE_GLOBAL_OFF) return
 		try {
 			;(window.adsbygoogle = window.adsbygoogle || []).push({})
 		} catch {}
@@ -15,14 +16,24 @@ export default function AdBlock() {
 
 	if (!approvalMode || !client || !slot) return null
 
+	if (ADSENSE_GLOBAL_OFF) {
+		return (
+			<div
+				style={{ display: 'block', minHeight: 280, width: '100%' }}
+				data-testid="ads-placeholder"
+			/>
+		)
+	}
+
 	return (
 		<ins
 			className="adsbygoogle"
-			style={{ display: 'block', minHeight: 90 }}
+			style={{ display: 'block', minHeight: 280, width: '100%' }}
 			data-ad-client={client}
 			data-ad-slot={slot}
 			data-ad-format="auto"
 			data-full-width-responsive="true"
+			data-testid="ads-slot"
 		/>
 	)
 }

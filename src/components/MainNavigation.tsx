@@ -97,7 +97,7 @@ export default function MainNavigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center" aria-current={pathname === '/' ? 'page' : undefined}>
               <span className="text-xl font-bold text-primary">Bookiji</span>
             </Link>
           </div>
@@ -114,6 +114,7 @@ export default function MainNavigation() {
                           ? 'bg-primary/10 text-primary'
                           : 'text-foreground hover:bg-muted'
                       }`}
+                      aria-current={pathname === '/customer/dashboard' ? 'page' : undefined}
                     >
                       {t('nav.dashboard')}
                     </Link>
@@ -126,6 +127,7 @@ export default function MainNavigation() {
                             ? 'bg-primary/10 text-primary'
                             : 'text-foreground hover:bg-muted'
                         }`}
+                        aria-current={pathname.startsWith('/vendor') ? 'page' : undefined}
                       >
                         {t('nav.vendor_portal')}
                       </Link>
@@ -159,6 +161,7 @@ export default function MainNavigation() {
                           ? 'bg-primary/10 text-primary'
                           : 'text-foreground hover:bg-muted'
                       }`}
+                      aria-current={pathname.startsWith('/help') ? 'page' : undefined}
                     >
                       Help
                     </Link>
@@ -170,6 +173,7 @@ export default function MainNavigation() {
                           ? 'bg-primary/10 text-primary'
                           : 'text-foreground hover:bg-muted'
                       }`}
+                      aria-current={pathname.startsWith('/settings') ? 'page' : undefined}
                     >
                       {t('nav.settings')} {isBetaUser && <span className="ml-1">⚡</span>}
                     </Link>

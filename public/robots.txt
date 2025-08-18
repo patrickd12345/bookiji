@@ -1,7 +1,31 @@
+# Bookiji Robots.txt
+# Optimized for search engines and ad crawlers
+
 User-agent: *
 Allow: /
 
-Sitemap: https://bookiji.com/sitemap.xml 
-
+# Google AdSense crawler optimization
 User-agent: Mediapartners-Google
-Allow: / 
+Disallow:
+
+# Block admin and preview routes
+User-agent: *
+Disallow: /admin/
+Disallow: /preview/
+Disallow: /staging/
+Disallow: /dev/
+Disallow: /api/preview/
+
+# Allow important business pages
+Allow: /vendor/
+Allow: /book/
+Allow: /about/
+Allow: /terms/
+Allow: /privacy/
+Allow: /help/
+
+# Sitemap
+Sitemap: https://bookiji.com/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1 

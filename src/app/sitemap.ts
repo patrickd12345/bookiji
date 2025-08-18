@@ -4,7 +4,11 @@ import { getSupabaseConfig } from '@/config/supabase'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const raw = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL || 'https://bookiji.com'
-  const baseUrl = raw.startsWith('http') ? raw : `https://${raw}`
+  let baseUrl = raw.startsWith('http') ? raw : `https://${raw}`
+  // Avoid vercel.app canonicals: if the resolved base is a vercel preview, force apex domain
+  if (baseUrl.includes('vercel.app')) {
+    baseUrl = 'https://bookiji.com'
+  }
   const now = new Date()
   
   // Static routes
@@ -93,7 +97,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           priority: 0.5,
         }))
         
-        return [...staticRoutes, ...vendorRoutes, ...serviceRoutes]
+        const routes = [...staticRoutes, ...vendorRoutes, ...serviceRoutes]
+        // Send cache header via route config (Next metadata route supports headers via Response override only in route handlers).
+        return routes
       }
       
       return [...staticRoutes, ...vendorRoutes]

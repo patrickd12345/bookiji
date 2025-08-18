@@ -14,7 +14,7 @@ jobs:
         with: { node-version: 20 }
       - run: pnpm install --frozen-lockfile
       - run: pnpm dlx playwright install --with-deps
-      - run: pnpm dlx playwright test tests/visual --reporter=line
+      - run: pnpm dlx playwright test -c playwright.visual.config.ts --reporter=line
         env:
           BASE_URL: https://bookiji.com
       - if: failure()

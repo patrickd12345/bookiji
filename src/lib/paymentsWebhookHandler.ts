@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'node:crypto'
 import { getStripeOrThrow } from '@/lib/stripe'
 import { supabase } from '@/lib/supabaseClient'
 import { trackPaymentSuccess, trackPaymentFailure, PaymentMetadata } from '@/lib/analytics'
@@ -48,7 +49,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
 
   private async wasEventProcessed(eventId: string): Promise<boolean> {
     const { data, error } = await this.supabase
-      .from('processed_webhook_events')
+      .from('payments_processed_events')
       .select('event_id')
       .eq('event_id', eventId)
       .maybeSingle()
@@ -63,7 +64,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
 
   private async markEventProcessed(eventId: string): Promise<void> {
     await this.supabase
-      .from('processed_webhook_events')
+      .from('payments_processed_events')
       .insert({ event_id: eventId, processed_at: new Date().toISOString() })
       .then(({ error }) => {
         if (error && process.env.NODE_ENV === 'development') {
@@ -73,6 +74,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
   }
 
   async handle(request: NextRequest): Promise<NextResponse<PaymentsWebhookResponse>> {
+    const reqId = request.headers.get('x-request-id') || randomUUID()
     const body = await request.text()
     const signature = request.headers.get('stripe-signature')
 
@@ -93,9 +95,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🎣 Webhook received:', event.type)
-    }
+    console.log('🎣 Webhook received', { type: event.type, id: event.id, req: reqId })
 
     try {
       // Idempotency: avoid reprocessing the same event
@@ -117,15 +117,13 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
           await this.handlePaymentCanceled(event.data.object as PaymentIntentWithMetadata)
           break
         default:
-          if (process.env.NODE_ENV === 'development') {
-            console.log(`Unhandled event type: ${event.type}`)
-          }
+          console.log('Ignoring unhandled Stripe event', { type: event.type, id: event.id, req: reqId })
       }
 
       await this.markEventProcessed(event.id)
       return NextResponse.json({ received: true })
     } catch (error: unknown) {
-      console.error('Webhook handler error:', error)
+      console.error('Webhook handler error:', { error: error instanceof Error ? error.message : String(error), req: reqId })
       return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
     }
   }
@@ -158,7 +156,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
     const bookingId = paymentIntent.metadata?.booking_id
     
     if (!bookingId) {
-      console.error('No booking ID in payment intent metadata')
+      console.warn('Missing booking_id metadata for succeeded intent', { id: paymentIntent.id, req: randomUUID() })
       return
     }
 
@@ -242,7 +240,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
     const bookingId = paymentIntent.metadata?.booking_id
     
     if (!bookingId) {
-      console.error('No booking ID in payment intent metadata')
+      console.warn('Missing booking_id metadata for failed intent', { id: paymentIntent.id })
       return
     }
 
@@ -277,7 +275,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
     const bookingId = paymentIntent.metadata?.booking_id
     
     if (!bookingId) {
-      console.error('No booking ID in payment intent metadata')
+      console.warn('Missing booking_id metadata for canceled intent', { id: paymentIntent.id })
       return
     }
 

@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: preview
+    permissions:
+      contents: read
+      actions: read
     env:
       TEST_SERVICE_ID: ${{ secrets.TEST_SERVICE_ID }}
     steps:

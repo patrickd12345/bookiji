@@ -63,7 +63,26 @@ jobs:
       - name: Wait for health
         run: |
           npx wait-on -t 600000 ${{ steps.deploy.outputs.prod_url }}/api/health
-          curl -fsSL "${{ steps.deploy.outputs.prod_url }}/api/health"
+          curl -fsS --retry 3 --max-time 10 "${{ steps.deploy.outputs.prod_url }}/api/health"
+
+      - name: Prod hygiene (headers + no data-adtest in rendered HTML)
+        run: |
+          set -euo pipefail
+          URL="${{ steps.deploy.outputs.prod_url }}"
+          HTML="$(mktemp)"
+          # Header assertions
+          curl -fsSI --retry 3 --retry-all-errors --connect-timeout 5 --max-time 10 "$URL/" \
+            | rg -qi '^strict-transport-security: ' || { echo "::error ::Missing HSTS"; exit 1; }
+          curl -fsSI "$URL/" | rg -qi '^x-robots-tag:' && { echo "::error ::X-Robots-Tag should be absent in prod"; exit 1; }
+          curl -fsSI "$URL/ads.txt" \
+            | rg -qi '^cache-control: .*max-age=86400' || { echo "::error ::ads.txt missing 1d cache"; exit 1; }
+          # HTML snapshot and adtest grep
+          curl -fsS --retry 3 --retry-all-errors --connect-timeout 5 --max-time 10 --compressed -H 'Accept-Encoding: gzip' "$URL/" -o "$HTML"
+          if rg -n "data-adtest" "$HTML"; then
+            echo "::group::HTML snapshot"; sed -n '1,200p' "$HTML"; echo "::endgroup::"
+            echo "::error ::Found data-adtest in prod HTML"; exit 1
+          fi
+          echo "OK: headers sane and no data-adtest in prod HTML"
 
       - name: Upload Sentry sourcemaps
         if: env.SENTRY_AUTH_TOKEN != ''
