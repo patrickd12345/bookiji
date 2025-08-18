@@ -24,10 +24,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="color-scheme" content="light dark" />
       </head>
       <body className="min-h-screen bg-background text-foreground">
+        <a href="#main" className="skip-link">Skip to main</a>
         <ThemeProvider>
           <GuidedTourProvider>
             <MainNavigation />
-            <main>{children}</main>
+            <main id="main" tabIndex={-1}>{children}</main>
           </GuidedTourProvider>
         </ThemeProvider>
       </body>

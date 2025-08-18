@@ -55,6 +55,22 @@ jobs:
       - name: Run Playwright tests
         run: pnpm dlx @playwright/test test --reporter=html
 
+      - name: Collect axe JSON
+        if: always()
+        run: |
+          mkdir -p axe-artifacts
+          find . -type f -path "**/test-results/**/attachments/axe-*.json" -exec cp {} axe-artifacts/ \; || true
+          find . -type f -path "**/playwright-report/**/attachments/axe-*.json" -exec cp {} axe-artifacts/ \; || true
+
+      - name: Upload axe artifacts
+        if: always() && (github.ref == 'refs/heads/main' || failure())
+        uses: actions/upload-artifact@v4
+        with:
+          name: axe-json-${{ github.run_number }}
+          path: axe-artifacts
+          if-no-files-found: ignore
+          retention-days: ${{ github.ref == 'refs/heads/main' && 7 || 3 }}
+
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4

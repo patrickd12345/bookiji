@@ -27,7 +27,8 @@
     "ai:test": "node scripts/ai-test-loop.mjs",
     "maintenance:calendar": "node scripts/setup-maintenance-calendar.mjs",
     "i18n:check": "node scripts/check-i18n.mjs",
-    "prebuild": "npm run i18n:check"
+    "prebuild": "npm run i18n:check",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@formspree/react": "^3.0.0",
@@ -85,6 +86,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.9.0",
     "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.54.2",
     "@testing-library/jest-dom": "^6.6.3",
@@ -104,7 +106,9 @@
     "autoprefixer": "^10.4.15",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
+    "husky": "^9.0.0",
     "jsdom": "^26.1.0",
+    "lint-staged": "^15.0.0",
     "msw": "^2.3.0",
     "openai": "^4.34.0",
     "postcss": "^8.4.31",
@@ -117,5 +121,8 @@
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.1.10",
     "lightningcss-linux-x64-gnu": "^1.29.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,css,md}": "eslint --fix"
   }
 }
