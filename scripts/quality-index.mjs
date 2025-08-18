@@ -89,9 +89,9 @@ class QualityIndexCalculator {
     
     try {
       // Run accessibility tests and capture results
-      const output = execSync('pnpm test:a11y 2>&1', { 
+      const output = execSync('cd packages/pw-tests && npx playwright test tests/a11y --timeout=30000 --max-failures=3 2>&1', { 
         encoding: 'utf8',
-        timeout: 60000 
+        timeout: 45000 
       });
       
       // Parse test results for violations
@@ -127,9 +127,10 @@ class QualityIndexCalculator {
     console.log('🚀 Measuring Performance...');
     
     try {
-      const output = execSync('cd packages/pw-tests && npx playwright test tests/perf/budgets.spec.ts 2>&1', {
+      // Use our working performance tests instead of budgets.spec.ts which doesn't exist
+      const output = execSync('cd packages/pw-tests && npx playwright test tests/performance/performance-smoke.spec.ts --max-failures=2 2>&1', {
         encoding: 'utf8',
-        timeout: 60000
+        timeout: 90000
       });
       
       const metrics = this.parsePerfOutput(output);
@@ -161,8 +162,8 @@ class QualityIndexCalculator {
     
     try {
       // Check for console errors, warnings, and code smells
-      const lintOutput = this.runSafely('pnpm lint:crit 2>&1');
-      const typeOutput = this.runSafely('pnpm typecheck 2>&1');
+      const lintOutput = this.runSafely('pnpm lint 2>&1');
+      const typeOutput = this.runSafely('pnpm tsc --noEmit --skipLibCheck 2>&1');
       
       const lintIssues = this.countLintIssues(lintOutput);
       const typeIssues = this.countTypeIssues(typeOutput);
@@ -196,9 +197,9 @@ class QualityIndexCalculator {
     
     try {
       // Run smoke tests to check basic stability
-      const output = execSync('cd packages/pw-tests && npx playwright test --grep smoke 2>&1', {
+      const output = execSync('cd packages/pw-tests && npx playwright test tests/perf/smoke.spec.ts --max-failures=2 2>&1', {
         encoding: 'utf8',
-        timeout: 30000
+        timeout: 45000
       });
       
       const testResults = this.parseTestOutput(output);

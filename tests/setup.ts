@@ -1,5 +1,5 @@
 ﻿import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+// Vitest import removed for Jest compatibility
 import { cleanup } from '@testing-library/react'
 
 // Set up environment variables for integration tests

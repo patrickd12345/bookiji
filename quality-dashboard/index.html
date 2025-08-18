@@ -13,7 +13,7 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
         .score-card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 2rem; }
         .big-score { text-align: center; padding: 3rem; }
-        .score-number { font-size: 4rem; font-weight: bold; margin: 0; color: #f59e0b; }
+        .score-number { font-size: 4rem; font-weight: bold; margin: 0; color: #ef4444; }
         .score-grade { font-size: 1.5rem; margin: 0.5rem 0; }
         .score-trend { font-size: 1.2rem; opacity: 0.8; }
         .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
@@ -38,9 +38,9 @@
     <div class="container">
         <div class="score-card">
             <div class="big-score">
-                <div class="score-number">77</div>
-                <div class="score-grade">⭐⭐⭐ Good</div>
-                <div class="score-trend">📈 Improving</div>
+                <div class="score-number">12</div>
+                <div class="score-grade">⭐ Poor</div>
+                <div class="score-trend">📉 Declining</div>
             </div>
         </div>
         
@@ -48,28 +48,28 @@
             <div class="metric-card">
                 <div class="metric-header">
                     <div class="metric-title">♿ Accessibility (40%)</div>
-                    <div class="metric-score" style="color: #10b981">100</div>
+                    <div class="metric-score" style="color: #ef4444">0</div>
                 </div>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: 100%; background: #10b981"></div>
+                    <div class="progress-fill" style="width: 0%; background: #ef4444"></div>
                 </div>
                 <div class="metric-details">
-                    Status: WCAG 2.1 AA Compliant<br>
-                    Violations: 0 (0 critical)
+                    Status: Test Failure<br>
+                    Test results pending
                 </div>
             </div>
             
             <div class="metric-card">
                 <div class="metric-header">
                     <div class="metric-title">🚀 Performance (35%)</div>
-                    <div class="metric-score" style="color: #10b981">100</div>
+                    <div class="metric-score" style="color: #ef4444">0</div>
                 </div>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: 100%; background: #10b981"></div>
+                    <div class="progress-fill" style="width: 0%; background: #ef4444"></div>
                 </div>
                 <div class="metric-details">
-                    Status: Excellent<br>
-                    Avg FCP: 0ms • TBT: 0ms • CLS: 0
+                    Status: Test Failure<br>
+                    Test results pending
                 </div>
             </div>
             
@@ -83,21 +83,21 @@
                 </div>
                 <div class="metric-details">
                     Status: Needs Cleanup<br>
-                    Lint: 0 errors, 66 warnings • Types: 8 errors
+                    Lint: 1 errors, 197 warnings • Types: 71 errors
                 </div>
             </div>
             
             <div class="metric-card">
                 <div class="metric-header">
                     <div class="metric-title">🛡️ Stability (10%)</div>
-                    <div class="metric-score" style="color: #ef4444">0</div>
+                    <div class="metric-score" style="color: #10b981">100</div>
                 </div>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: 0%; background: #ef4444"></div>
+                    <div class="progress-fill" style="width: 100%; background: #10b981"></div>
                 </div>
                 <div class="metric-details">
-                    Status: Critical Failure<br>
-                    Test results pending
+                    Status: Rock Solid<br>
+                    Tests: 1/1 passed (100%)
                 </div>
             </div>
         </div>
@@ -111,7 +111,7 @@
         </div>
         
         <div class="timestamp">
-            Last updated: 2025-08-18, 2:34:06 p.m.
+            Last updated: 2025-08-18, 4:35:29 p.m.
         </div>
     </div>
 </body>

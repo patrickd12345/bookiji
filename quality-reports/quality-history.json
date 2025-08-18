@@ -93,5 +93,193 @@
         "stability": 0
       }
     }
+  },
+  {
+    "timestamp": "2025-08-18T19:22:09.394Z",
+    "accessibility": {
+      "score": 0,
+      "details": {
+        "error": "Command failed: pnpm test:a11y 2>&1",
+        "status": "Test Failure"
+      }
+    },
+    "performance": {
+      "score": 100,
+      "details": {
+        "avgTBT": 0,
+        "avgFCP": 0,
+        "avgCLS": 0,
+        "pages": [],
+        "status": "Excellent"
+      }
+    },
+    "codeQuality": {
+      "score": 10,
+      "details": {
+        "lintErrors": 4,
+        "lintWarnings": 68,
+        "typeErrors": 29,
+        "status": "Needs Cleanup"
+      }
+    },
+    "stability": {
+      "score": 0,
+      "details": {
+        "error": "Command failed: cd packages/pw-tests && npx playwright test --grep smoke 2>&1",
+        "status": "Critical Failure"
+      }
+    },
+    "overall": {
+      "score": 37,
+      "grade": "⭐ Poor",
+      "trend": "📉 Declining",
+      "breakdown": {
+        "accessibility": 0,
+        "performance": 35,
+        "codeQuality": 2,
+        "stability": 0
+      }
+    }
+  },
+  {
+    "timestamp": "2025-08-18T20:24:45.075Z",
+    "accessibility": {
+      "score": 0,
+      "details": {
+        "error": "spawnSync C:\\WINDOWS\\system32\\cmd.exe ETIMEDOUT",
+        "status": "Test Failure"
+      }
+    },
+    "performance": {
+      "score": 0,
+      "details": {
+        "error": "spawnSync C:\\WINDOWS\\system32\\cmd.exe ETIMEDOUT",
+        "status": "Test Failure"
+      }
+    },
+    "codeQuality": {
+      "score": 10,
+      "details": {
+        "lintErrors": 1,
+        "lintWarnings": 56,
+        "typeErrors": 71,
+        "status": "Needs Cleanup"
+      }
+    },
+    "stability": {
+      "score": 0,
+      "details": {
+        "error": "spawnSync C:\\WINDOWS\\system32\\cmd.exe ETIMEDOUT",
+        "status": "Critical Failure"
+      }
+    },
+    "overall": {
+      "score": 2,
+      "grade": "⭐ Poor",
+      "trend": "📉 Declining",
+      "breakdown": {
+        "accessibility": 0,
+        "performance": 0,
+        "codeQuality": 2,
+        "stability": 0
+      }
+    }
+  },
+  {
+    "timestamp": "2025-08-18T20:31:31.801Z",
+    "accessibility": {
+      "score": 0,
+      "details": {
+        "error": "Command failed: cd packages/pw-tests && npx playwright test tests/a11y --timeout=30000 --max-failures=3 2>&1",
+        "status": "Test Failure"
+      }
+    },
+    "performance": {
+      "score": 100,
+      "details": {
+        "avgTBT": 0,
+        "avgFCP": 0,
+        "avgCLS": 0,
+        "pages": [],
+        "status": "Excellent"
+      }
+    },
+    "codeQuality": {
+      "score": 10,
+      "details": {
+        "lintErrors": 1,
+        "lintWarnings": 197,
+        "typeErrors": 71,
+        "status": "Needs Cleanup"
+      }
+    },
+    "stability": {
+      "score": 100,
+      "details": {
+        "testsRun": 1,
+        "testsPassed": 1,
+        "testsFailed": 0,
+        "passRate": 100,
+        "status": "Rock Solid"
+      }
+    },
+    "overall": {
+      "score": 47,
+      "grade": "⭐ Poor",
+      "trend": "📈 Improving",
+      "breakdown": {
+        "accessibility": 0,
+        "performance": 35,
+        "codeQuality": 2,
+        "stability": 10
+      }
+    }
+  },
+  {
+    "timestamp": "2025-08-18T20:35:29.636Z",
+    "accessibility": {
+      "score": 0,
+      "details": {
+        "error": "spawnSync C:\\WINDOWS\\system32\\cmd.exe ETIMEDOUT",
+        "status": "Test Failure"
+      }
+    },
+    "performance": {
+      "score": 0,
+      "details": {
+        "error": "spawnSync C:\\WINDOWS\\system32\\cmd.exe ETIMEDOUT",
+        "status": "Test Failure"
+      }
+    },
+    "codeQuality": {
+      "score": 10,
+      "details": {
+        "lintErrors": 1,
+        "lintWarnings": 197,
+        "typeErrors": 71,
+        "status": "Needs Cleanup"
+      }
+    },
+    "stability": {
+      "score": 100,
+      "details": {
+        "testsRun": 1,
+        "testsPassed": 1,
+        "testsFailed": 0,
+        "passRate": 100,
+        "status": "Rock Solid"
+      }
+    },
+    "overall": {
+      "score": 12,
+      "grade": "⭐ Poor",
+      "trend": "📉 Declining",
+      "breakdown": {
+        "accessibility": 0,
+        "performance": 0,
+        "codeQuality": 2,
+        "stability": 10
+      }
+    }
   }
 ]

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, fireEvent, waitFor } from '@testing-library/react';
+// Removed unused testing imports
 
 // Mock the useAuth hook
 vi.mock('@/hooks/useAuth', () => ({
@@ -24,7 +24,7 @@ global.fetch = vi.fn(() =>
     ok: true,
     json: () => Promise.resolve({ success: true })
   })
-) as any;
+) as unknown;
 
 describe('role flow', () => {
   it.skip('allows users to select roles and continue', async () => {
