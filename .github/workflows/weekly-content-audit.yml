@@ -1,0 +1,47 @@
+name: weekly-content-audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * 1"   # Mondays 09:00 UTC (05:00 in America/Toronto during EDT)
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      # Set in: Repo Settings → Variables → PUBLIC_BASE_URL (e.g., https://bookiji.com)
+      BASE: ${{ vars.PUBLIC_BASE_URL }}
+    steps:
+      - name: Check configuration
+        run: |
+          if [ -z "$BASE" ]; then
+            echo "::error ::Set repository variable PUBLIC_BASE_URL (e.g., https://bookiji.com)"; exit 1;
+          fi
+          echo "Auditing $BASE"
+
+      - name: sitemap.xml
+        run: |
+          set -euo pipefail
+          curl -fsS -D /tmp/h1 -o /tmp/sitemap.xml "$BASE/sitemap.xml"
+          grep -Eiq '^Content-Type: (application|text)/xml' /tmp/h1
+          grep -Eq '<(urlset|sitemapindex)\b' /tmp/sitemap.xml
+          echo "✅ sitemap.xml ok"
+
+      - name: robots.txt
+        run: |
+          set -euo pipefail
+          curl -fsS -D /tmp/h2 -o /tmp/robots.txt "$BASE/robots.txt"
+          test -s /tmp/robots.txt
+          grep -iq '^User-agent:' /tmp/robots.txt
+          grep -Eiq '^Content-Type: text/plain' /tmp/h2 || true  # some CDNs omit it
+          echo "✅ robots.txt ok"
+
+      - name: ads.txt
+        run: |
+          set -euo pipefail
+          curl -fsS -D /tmp/h3 -o /tmp/ads.txt "$BASE/ads.txt"
+          test -s /tmp/ads.txt
+          # At least one "seller-domain, publisher-id, RELATIONSHIP"
+          grep -Eq '^[^,#/ ]+,[^,#/ ]+,(DIRECT|RESELLER)' /tmp/ads.txt
+          grep -Eiq '^Content-Type: text/plain' /tmp/h3 || true
+          echo "✅ ads.txt ok"

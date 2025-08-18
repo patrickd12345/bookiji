@@ -24,6 +24,7 @@
     "e2e:ui": "playwright test --ui -c playwright.config.ts",
     "e2e:debug": "playwright test --debug -c playwright.config.ts",
     "e2e:remote": "BASE_URL=${BASE_URL:-http://localhost:3000} playwright test -c playwright.remote.config.ts",
+    "test:a11y:dialog": "playwright test tests/a11y/dialog-focus-trap.spec.ts",
     "test:visual": "playwright test -c playwright.visual.config.ts",
     "test:synthetics": "playwright test -c playwright.synthetics.config.ts",
     "test:update-snaps": "playwright test --update-snapshots -c playwright.config.ts",

@@ -384,6 +384,27 @@ printenv | grep -E 'NEXT_PUBLIC_|STRIPE|DATABASE_URL'  # missing env?
 
 **Future enhancement:** Add weekly job that curls `sitemap.xml`, `robots.txt`, and `ads.txt` to catch SEO header drift.
 
+### **Dialog Focus-Trap Testing**
+```bash
+# Test any dialog with environment variables
+DIALOG_TEST_PATH=/demo \
+DIALOG_OPEN_SELECTOR='[data-testid="open-dialog"]' \
+DIALOG_SELECTOR='[role="dialog"]' \
+pnpm test:a11y:dialog
+
+# Or use the convenience script
+pnpm test:a11y:dialog
+```
+
+### **Content Audit Tools**
+```bash
+# Local audit (requires bash)
+chmod +x scripts/audit-urls.sh
+scripts/audit-urls.sh https://bookiji.com
+
+# Weekly automated audit runs every Monday at 09:00 UTC
+# Set PUBLIC_BASE_URL in repo variables
+
 ---
 
 **🚀 Enjoy the green lights!**
