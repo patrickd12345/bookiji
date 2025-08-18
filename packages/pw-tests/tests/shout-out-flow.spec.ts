@@ -205,7 +205,8 @@ test.describe('Shout-Out Flow', () => {
     // Mock an expired shout-out
     await page.evaluate(() => {
       // Mock the offers API to return expired shout-out
-      window.fetch = async (url: string) => {
+      window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = typeof input === 'string' ? input : input.toString()
         if (url.includes('/api/shout-outs/') && url.includes('/offers')) {
           return new Response(JSON.stringify({
             success: true,
@@ -236,7 +237,8 @@ test.describe('Shout-Out Flow', () => {
     
     // Mock offers response
     await page.evaluate(() => {
-      window.fetch = async (url: string) => {
+      window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = typeof input === 'string' ? input : input.toString()
         if (url.includes('/api/shout-outs/') && url.includes('/offers')) {
           return new Response(JSON.stringify({
             success: true,
@@ -288,8 +290,9 @@ test.describe('Shout-Out Flow', () => {
     
     // Mock successful offer acceptance
     await page.evaluate(() => {
-      window.fetch = async (url: string, options?: any) => {
-        if (options?.method === 'POST' && url.includes('/accept')) {
+      window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = typeof input === 'string' ? input : input.toString()
+        if (init?.method === 'POST' && url.includes('/accept')) {
           return new Response(JSON.stringify({
             success: true,
             booking_id: 'booking-123',
@@ -364,7 +367,7 @@ test.describe('Shout-Out Flow', () => {
     
     // Mock shout-out requests
     await page.evaluate(() => {
-      window.fetch = async (url: string) => {
+      window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
         if (url.includes('/api/vendors/shout-outs')) {
           return new Response(JSON.stringify({
             success: true,
