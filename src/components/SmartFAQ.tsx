@@ -73,10 +73,15 @@ const SmartFAQ: React.FC = () => {
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1"
         />
+        <label htmlFor="category-select" className="sr-only">
+          Select FAQ category
+        </label>
         <select
+          id="category-select"
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
           className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+          aria-label="Select FAQ category"
         >
           <option value="">All Categories</option>
           {categories.map((cat) => (

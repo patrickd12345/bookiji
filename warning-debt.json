@@ -1,0 +1,13 @@
+{
+  "timestamp": "2025-08-18T17:50:46.100Z",
+  "typescript": {
+    "errors": 2,
+    "warnings": 0
+  },
+  "eslint": {
+    "errors": 1,
+    "warnings": 191
+  },
+  "totalWarnings": 191,
+  "totalErrors": 3
+}

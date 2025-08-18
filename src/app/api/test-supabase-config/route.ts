@@ -7,7 +7,7 @@ export async function GET() {
     console.log('🔧 Testing Supabase Configuration...')
     
     const config = getSupabaseConfig()
-    const supabase = createClient(config.url, config.publishableKey)
+    const supabase = createClient(config.url, config.publishableKey || config.anonKey)
     
     console.log('1️⃣ Supabase configuration:')
     console.log(`   URL: ${config.url ? '✅ Set' : '❌ Missing'}`)

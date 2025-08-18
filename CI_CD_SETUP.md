@@ -40,6 +40,10 @@ This setup provides enterprise-grade CI/CD with GitHub Actions, Vercel, Supabase
 ### App
 - `NEXT_PUBLIC_BASE_URL` - Production domain (e.g., https://bookiji.com)
 
+### **QA Pipeline** 🆕
+- `SLACK_WEBHOOK` - Slack webhook URL for quality notifications
+- `QA_EMAIL_RECIPIENTS` - Comma-separated email addresses for quality reports
+
 ## 🏗️ Branch Strategy
 
 ```
@@ -76,7 +80,14 @@ feature/* → preview deployments
 - **Timeout:** 40 minutes
 - **Purpose:** Validate changes work in real environment
 
-### 3. Production Deploy (`.github/workflows/deploy-prod.yml`)
+### 3. **QA Pipeline** (`.github/workflows/qa-pipeline.yml`) 🆕
+- **Triggers:** Every PR, push to main/develop, daily schedule, manual
+- **Runs:** Site crawling → Test generation → Test execution → Quality reporting
+- **Timeout:** 60 minutes
+- **Purpose:** Automated quality assurance with accessibility validation
+- **Quality Gates:** 80% overall, 70% coverage, 90% accessibility
+
+### 4. Production Deploy (`.github/workflows/deploy-prod.yml`)
 - **Triggers:** Manual (workflow_dispatch)
 - **Runs:** DB migrations → Deploy → Health check → Sentry sourcemaps
 - **Timeout:** 40 minutes
@@ -93,6 +104,13 @@ feature/* → preview deployments
 - Real browser testing
 - Against actual preview deployments
 - Critical user journeys
+
+### **QA Pipeline Tests** 🆕
+- **Automated Discovery**: Crawls site to find user journeys and interactive elements
+- **Test Generation**: Creates comprehensive Playwright tests from discovered elements
+- **Accessibility Validation**: WCAG compliance checking at every step
+- **Quality Metrics**: Overall score, coverage, and accessibility scoring
+- **Critical Path Identification**: 🚨 marks high-priority user flows
 
 ### Smoke Tests
 - Basic functionality verification
@@ -147,16 +165,58 @@ npx playwright test
 npx playwright show-report
 ```
 
+## 🚀 **QA Pipeline Operations** 🆕
+
+### **Pipeline Commands**
+```bash
+# Run complete QA pipeline
+pnpm qa:pipeline
+
+# Individual phases
+pnpm qa:crawl      # Site discovery
+pnpm qa:generate   # Test generation
+pnpm qa:test       # Test execution
+pnpm qa:report     # Generate reports
+pnpm qa:help       # Show all options
+```
+
+### **Environment Configuration**
+```bash
+# Local development
+BASE_URL=http://localhost:3000 pnpm qa:pipeline
+
+# Staging environment
+BASE_URL=https://staging.bookiji.com pnpm qa:pipeline
+
+# Production testing
+BASE_URL=https://bookiji.com pnpm qa:pipeline
+```
+
+### **Quality Gates**
+- **Overall Score**: ≥ 80% (blocks deployment)
+- **Test Coverage**: ≥ 70% (blocks deployment)
+- **Accessibility**: ≥ 90% (blocks deployment)
+
+### **Pipeline Outputs**
+- **`crawl-output.json`** - Discovered user journeys
+- **`tests/generated.spec.ts`** - Auto-generated tests
+- **`qa-pipeline-report.json`** - Quality metrics
+- **`qa-pipeline-report.html`** - Visual dashboard
+
+---
+
 ## 🚨 Monitoring & Alerts
 
 ### Success Notifications
 - ✅ Production deployments
 - ✅ Preview deployments
+- ✅ **QA Pipeline completions** 🆕
 
 ### Failure Alerts
 - ❌ CI failures
 - ❌ Preview E2E failures
 - ❌ Production deployment failures
+- ❌ **QA Pipeline quality gate failures** 🆕
 
 ## 🔒 Security Features
 
@@ -173,6 +233,9 @@ npx playwright show-report
 - Build success/failure rates
 - Deployment frequency
 - Mean time to recovery
+- **QA Pipeline quality metrics** 🆕
+- **Accessibility compliance scores** 🆕
+- **User journey coverage reports** 🆕
 
 ## 🚀 Getting Started
 
@@ -190,6 +253,7 @@ npx playwright show-report
 2. **Build timeout:** Check for infinite loops or heavy operations
 3. **E2E failures:** Verify preview deployment health
 4. **Migration errors:** Ensure migrations are idempotent
+5. **QA Pipeline failures:** Check quality thresholds and accessibility violations 🆕
 
 ### Debug Commands
 
@@ -205,6 +269,12 @@ pnpm e2e
 
 # Verify health endpoint
 curl http://localhost:3000/api/health
+
+# QA Pipeline debugging
+pnpm qa:help                    # Show all options
+pnpm qa:crawl                   # Test crawling only
+pnpm qa:report                  # Generate quality report
+cat qa-pipeline-report.json     # Check quality metrics
 ```
 
 ## 📈 Next Steps

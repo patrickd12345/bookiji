@@ -9,8 +9,8 @@ export default defineConfig({
   testDir: './tests',
   testMatch: ['**/*.spec.ts'],
   retries: 1,
-  fullyParallel: false,
-  workers: 1,
+  fullyParallel: true,
+  workers: 3,
   
   expect: {
     timeout: 10_000,
@@ -23,6 +23,10 @@ export default defineConfig({
     trace: 'on-first-retry',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    extraHTTPHeaders: {
+      'Authorization': `Bearer ${process.env.CUSTOMER_JWT ?? ''}`,
+      'Content-Type': 'application/json',
+    },
   },
 
   projects: [
@@ -36,7 +40,7 @@ export default defineConfig({
     command: process.env.PW_SERVER_CMD || 'cd ../.. && pnpm dev',
     url: 'http://localhost:3000',
     timeout: 120_000,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     stdout: 'pipe',
     stderr: 'pipe',
   },

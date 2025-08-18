@@ -33,6 +33,8 @@ export default function CompliancePage() {
                   .replace(/❌ (.*$)/gim, '<li class="ml-4 text-red-600">❌ $1</li>')
                   .replace(/\n\n/g, '</p><p>')
                   .replace(/^(.+)$/gm, '<p>$1</p>')
+                  // Wrap consecutive list items in ul tags
+                  .replace(/(<li[^>]*>.*?<\/li>)(\s*<li[^>]*>.*?<\/li>)*/g, '<ul class="list-disc pl-6 my-4">$&</ul>')
               }}
             />
           </div>

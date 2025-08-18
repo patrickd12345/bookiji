@@ -51,7 +51,11 @@ module.exports = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			}
+  			},
+        /* Semantic a11y aliases - use these instead of raw green-600/gray-400 */
+        brandGreen: 'hsl(170 85% 25%)',
+        textMuted: 'hsl(220 15% 35%)',
+        brandOrange: 'hsl(25 90% 30%)',
       },
       borderRadius: {
   			lg: 'var(--radius)',

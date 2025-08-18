@@ -303,7 +303,7 @@ export default function HomePageClient() {
                   suppressHydrationWarning
                 >
                   <span>{t('buttons.book_appointment')}</span>
-                  <span className="text-sm text-gray-200">(Customer)</span>
+                  <span className="text-sm text-primary-foreground">(Customer)</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -315,7 +315,7 @@ export default function HomePageClient() {
                   suppressHydrationWarning
                 >
                   <span>{t('buttons.offer_services')}</span>
-                  <span className="text-sm text-gray-500">(Provider)</span>
+                  <span className="text-sm text-muted-foreground">(Provider)</span>
                 </Button>
               </>
             ) : (
@@ -325,7 +325,7 @@ export default function HomePageClient() {
                   <Link href="/customer/dashboard">
                     <Button className="h-10 px-8 text-lg flex flex-col items-start gap-1" suppressHydrationWarning>
                       <span>{t('buttons.book_appointment')}</span>
-                      <span className="text-xs text-gray-500">(Customer)</span>
+                      <span className="text-xs text-muted-foreground">(Customer)</span>
                     </Button>
                   </Link>
                 )}
@@ -333,7 +333,7 @@ export default function HomePageClient() {
                   <Link href="/vendor/dashboard">
                     <Button variant="outline" className="h-10 px-8 text-lg flex flex-col items-start gap-1" suppressHydrationWarning>
                       <span>{t('buttons.offer_services')}</span>
-                      <span className="text-xs text-gray-500">(Provider)</span>
+                      <span className="text-xs text-muted-foreground">(Provider)</span>
                     </Button>
                   </Link>
                 )}

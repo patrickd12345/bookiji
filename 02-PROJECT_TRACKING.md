@@ -88,6 +88,12 @@
 - [ ] **CSP headers, secure cookies, API rate limits**
 - [ ] **Daily DB backup job** + restore drill
 
+### 🧱 **Code Modularity & Reusability Audit**
+- [ ] **Scan codebase for reusable components** (UI, utilities, business logic)
+- [ ] **Modularize external-ready modules** (auth flows, map abstractions, AI chat, booking engine)
+- [ ] **Create extraction plan** for future projects (component library, shared utilities, APIs)
+- [ ] **Document reusable patterns** and architectural decisions for knowledge transfer
+
 ---
 
 ## ⏳ **Phase 1 — Launch Polish (Weeks 1–2 Post-Beta)**

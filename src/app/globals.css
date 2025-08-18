@@ -16,6 +16,48 @@
   z-index: 1;
 }
 
+/* High contrast accessibility overrides */
+.text-green-600 {
+  color: hsl(142 76% 36%) !important; /* Darker green for better contrast */
+}
+
+.text-green-500 {
+  color: hsl(142 76% 36%) !important; /* Darker green for better contrast */
+}
+
+.bg-green-600 {
+  background-color: hsl(142 76% 36%) !important; /* Darker green for better contrast */
+}
+
+.text-gray-400 {
+  color: hsl(220 15% 35%) !important; /* Use our muted-foreground for better contrast */
+}
+
+.text-gray-500 {
+  color: hsl(220 15% 35%) !important; /* Use our muted-foreground for better contrast */
+}
+
+.text-orange-600 {
+  color: hsl(38 92% 50%) !important; /* Darker orange for better contrast */
+}
+
+.text-blue-600 {
+  color: hsl(221 83% 53%) !important; /* Darker blue for better contrast */
+}
+
+/* Background color overrides for better contrast */
+.bg-green-50 {
+  background-color: hsl(142 76% 95%) !important; /* Lighter background for better contrast */
+}
+
+.bg-blue-50 {
+  background-color: hsl(221 83% 95%) !important; /* Lighter background for better contrast */
+}
+
+.bg-orange-50 {
+  background-color: hsl(38 92% 95%) !important; /* Lighter background for better contrast */
+}
+
 .leaflet-control-container {
   z-index: 1000;
 }
@@ -95,7 +137,7 @@
     --secondary: 320 50% 90%;
     --secondary-foreground: 315 15% 25%;
     --muted: 320 50% 90%;
-    --muted-foreground: 315 15% 45%;
+    --muted-foreground: 315 25% 35%;
     --accent: 300 60% 85%;
     --accent-foreground: 315 15% 25%;
     --destructive: 0 75% 70%;
@@ -284,12 +326,12 @@
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 90%;
-    --secondary-foreground: 220 9% 30%;
+    --secondary-foreground: 220 15% 25%;
 
     --muted: 220 16% 93%;
-    --muted-foreground: 220 5% 46%;
+    --muted-foreground: 220 15% 35%;
 
-    --accent: 170 66% 44%; /* Teal accent */
+    --accent: 170 85% 25%; /* Even darker teal for 4.5:1 contrast */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -298,6 +340,14 @@
     --border: 220 14% 90%;
     --input: 220 14% 90%;
     --ring: 226 71% 55%;
+
+    /* High contrast colors for accessibility */
+    --success: 142 76% 36%; /* Darker green for better contrast */
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%; /* Darker orange for better contrast */
+    --warning-foreground: 0 0% 100%;
+    --info: 221 83% 53%; /* Darker blue for better contrast */
+    --info-foreground: 0 0% 100%;
 
     --chart-1: 226 71% 55%;
     --chart-2: 254 92% 62%;

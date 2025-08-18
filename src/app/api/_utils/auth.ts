@@ -1,6 +1,14 @@
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { getSupabaseConfig } from '@/config/supabase'
+import type { NextRequest } from 'next/server'
+
+export function getBearer(req: NextRequest): string | null {
+  const raw = req.headers.get('authorization') ?? req.headers.get('Authorization');
+  if (!raw) return null;
+  const m = /^Bearer\s+(.+)$/i.exec(raw);
+  return m ? m[1] : null;
+}
 
 /**
  * Returns the authenticated user's id using either the Supabase session cookie
@@ -11,9 +19,16 @@ export async function getAuthenticatedUserId(request: Request): Promise<string |
   
   const config = getSupabaseConfig()
   
+  // Guard against undefined config values
+  const key = config.publishableKey || config.anonKey
+  if (!config.url || !key) {
+    console.error('Missing Supabase configuration')
+    return null
+  }
+  
   const supabase = createServerClient(
     config.url,
-    config.publishableKey,
+    key,
     {
       cookies: {
         get(name: string) {

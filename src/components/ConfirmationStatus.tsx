@@ -241,9 +241,14 @@ export default function ConfirmationStatus({
             {/* Phone-only cancellation notice */}
             {canCancel && (
               <BookingActions 
-                providerName="Provider"
-                providerPhone="+1234567890"
-                customerPhone={user?.phone}
+                booking={{
+                  id: bookingId,
+                  status: status.status,
+                  vendorPhone: "+1234567890",
+                  vendor_id: "placeholder",
+                  service_id: "placeholder",
+                  customer_id: "placeholder"
+                }}
               />
             )}
           </div>

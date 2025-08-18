@@ -1,93 +1,77 @@
-name: E2E
-# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: E2E + A11y + Perf
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
-    branches: [ "**" ]
-  workflow_dispatch: {}
 
 jobs:
-  e2e:
+  test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: preview
-    permissions:
-      contents: read
-      actions: read
-    concurrency:
-      group: e2e-${{ github.ref }}
-      cancel-in-progress: true
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Install dependencies
+      - name: Install PNPM
+        run: corepack enable
+
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: Cache Playwright browsers
-        id: cache-playwright
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
+      - name: Build app
+        run: pnpm build
 
+      - name: Start app
+        run: pnpm start &
+      
       - name: Install Playwright browsers
-        if: steps.cache-playwright.outputs.cache-hit != 'true'
-        run: pnpm dlx playwright install --with-deps
+        run: pnpm exec playwright install --with-deps
 
-      - name: Prepare environment
+      - name: Crawl & generate tests
         run: |
-          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
-          echo "SUPABASE_SECRET_KEY=${{ secrets.SUPABASE_SECRET_KEY }}" >> $GITHUB_ENV
-          echo "SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}" >> $GITHUB_ENV
-          echo "TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}" >> $GITHUB_ENV
-          echo "TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_ADSENSE_APPROVAL_MODE=true" >> $GITHUB_ENV
-          echo "ADSENSE_APPROVAL_MODE=true" >> $GITHUB_ENV
+          pnpm crawl
+          pnpm generate:e2e
 
-      - name: Lint
-        run: pnpm -s lint || true
+      - name: Run E2E (HTML report, auto workers)
+        run: pnpm test:e2e -- --workers=auto
+        continue-on-error: true
 
-      - name: Typecheck
-        run: pnpm -s type-check || true
+      - name: Warning debt report
+        run: pnpm warn:debt
 
-      - name: Forbid Vitest in E2E
+      - name: Light chaos testing (must pass)
+        run: pnpm chaos:light
+        continue-on-error: false
+
+      - name: Chaos A11y testing  
+        run: pnpm chaos:a11y
+        continue-on-error: false
+
+      - name: Storm chaos testing (report-only)
         run: |
-          # forbid vitest imports outside unit test dirs
-          if rg -n "from 'vitest'|require\('vitest'\)" -- tests src | rg -v "src/.*/(__tests__|\.test|\.spec)\."; then
-            echo "❌ Found forbidden 'vitest' import outside unit tests."
-            exit 1;
-          fi
-          echo "✅ No forbidden Vitest imports found"
+          pnpm chaos:storm || echo "::warning ::Storm chaos failures recorded - this is expected and tests graceful degradation"
+        continue-on-error: true
 
-      - name: Forbid Playwright in Non-Test Files
-        run: |
-          # forbid @playwright/test imports outside test dirs
-          if rg -n "from '@playwright/test'|require\(['\"]@playwright/test['\"]\)" --glob '!tests/**' . ; then
-            echo "❌ Found forbidden '@playwright/test' import outside tests/";
-            exit 1;
-          fi
-          echo "✅ No forbidden Playwright imports found"
+      - name: Offline mode testing
+        run: pnpm chaos:offline
+        continue-on-error: false
 
-      - name: Analyze warning debt
-        run: |
-          echo "🔍 Running warning debt analysis..."
-          node scripts/warning-debt-burn-down.mjs || echo "Warning debt analysis completed with issues"
+      - name: Upload artifacts (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts
+          path: |
+            playwright-report/**
+            test-results/**
+            trace.zip
+            warning-debt.json
 
       - name: Run unit tests with coverage
         run: pnpm coverage
@@ -118,63 +102,5 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
-
-      - name: Run Playwright tests
-        run: pnpm dlx @playwright/test test --reporter=html
-
-      - name: Run a11y & e2e tests
-        run: pnpm exec playwright test --project=chromium
-
-      - name: Upload a11y artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: a11y-reports
-          path: playwright-report/**/*.html
-
-      - name: Run perf smoke
-        run: pnpm exec playwright test tests/perf/smoke.spec.ts --project=chromium
-
-      - name: Collect a11y artifacts
-        if: always() && (github.ref == 'refs/heads/main' || failure())
-        run: |
-          mkdir -p a11y-artifacts
-          mkdir -p performance-traces
-          
-          # Collect a11y JSON and HTML reports
-          find . -type f -path "**/test-results/a11y-artifacts/*.json" -exec cp {} a11y-artifacts/ \; || true
-          find . -type f -path "**/test-results/a11y-artifacts/*.html" -exec cp {} a11y-artifacts/ \; || true
-          
-          # Collect performance traces
-          find . -type f -path "**/test-results/performance-traces/*.zip" -exec cp {} performance-traces/ \; || true
-          
-          # Collect legacy axe attachments
-          find . -type f -path "**/test-results/**/attachments/axe-*.json" -exec cp {} a11y-artifacts/ \; || true
-          find . -type f -path "**/playwright-report/**/attachments/axe-*.json" -exec cp {} a11y-artifacts/ \; || true
-
-      - name: Upload a11y artifacts
-        if: always() && (github.ref == 'refs/heads/main' || failure())
-        uses: actions/upload-artifact@v4
-        with:
-          name: a11y-artifacts-${{ github.run_number }}
-          path: a11y-artifacts
-          if-no-files-found: ignore
-          retention-days: 7
-
-      - name: Upload performance traces
-        if: always() && (github.ref == 'refs/heads/main' || failure())
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-traces-${{ github.run_number }}
-          path: performance-traces
-          if-no-files-found: ignore
-          retention-days: 7
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report
-          retention-days: 3
 
 

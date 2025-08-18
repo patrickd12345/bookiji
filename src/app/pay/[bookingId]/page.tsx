@@ -5,6 +5,8 @@ import { useAuth } from '../../../../hooks/useAuth'
 import { useParams, useSearchParams } from 'next/navigation'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { PaymentFallback } from '@/components/PaymentFallback'
+import { useRequestState } from '@/hooks/useRequestState'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -119,41 +121,88 @@ export default function PaymentPage() {
   const { user } = useAuth()
   
   const [booking, setBooking] = useState<Booking | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [showFallback, setShowFallback] = useState(false)
+  
+  const bookingRequest = useRequestState<Booking>({
+    onSuccess: (data) => setBooking(data as Booking),
+    onError: (error) => {
+      console.error('Error fetching booking:', error)
+      setPaymentError(error.message)
+      setShowFallback(true)
+    }
+  })
 
   useEffect(() => {
     if (!user || !bookingId) return;
+    
     const fetchBooking = async () => {
-      try {
-        const response = await fetch(`/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`);
-        const data = await response.json();
-        setBooking(data.booking);
-      } catch (error) {
-        console.error('Error fetching booking:', error);
-      } finally {
-        setLoading(false);
+      const response = await fetch(`/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch booking details')
       }
+      const data = await response.json();
+      if (!data.booking) {
+        throw new Error('Booking not found')
+      }
+      return data.booking;
     };
-    fetchBooking();
-  }, [bookingId, user]);
+    
+    bookingRequest.execute(
+      fetchBooking, 
+      `/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`,
+      'GET'
+    );
+  }, [bookingId, user, bookingRequest]);
 
   if (!bookingId) {
-    return <div className="p-8 text-red-600">Invalid booking id</div>
+    return (
+      <PaymentFallback 
+        bookingId={bookingId || 'unknown'} 
+        error="Invalid booking ID"
+      />
+    )
   }
 
-  if (loading) {
+  if (bookingRequest.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading payment details</div>
+        <div className="text-lg" aria-live="polite">Loading payment details...</div>
       </div>
     )
   }
 
-  if (!booking || !clientSecret) {
+  if (showFallback || bookingRequest.error || !booking || !clientSecret) {
+    const handleRetry = async () => {
+      setShowFallback(false)
+      setPaymentError(null)
+      if (!user || !bookingId) return;
+      
+      const fetchBooking = async () => {
+        const response = await fetch(`/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch booking details')
+        }
+        const data = await response.json();
+        if (!data.booking) {
+          throw new Error('Booking not found')
+        }
+        return data.booking;
+      };
+      
+      await bookingRequest.execute(
+        fetchBooking, 
+        `/api/bookings/user?userId=${user.id}&bookingId=${bookingId}`,
+        'GET'
+      );
+    }
+
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg text-red-600">Booking or payment details not found</div>
-      </div>
+      <PaymentFallback 
+        bookingId={bookingId} 
+        error={paymentError || bookingRequest.error || 'Booking or payment details not found'}
+        onRetry={handleRetry}
+      />
     )
   }
 

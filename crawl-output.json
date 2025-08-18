@@ -1,0 +1,904 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "timestamp": "2025-08-18T18:03:25.448Z",
+  "journeys": [
+    [
+      {
+        "type": "visit",
+        "url": "http://localhost:3000",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/#main",
+        "selector": "a[href=\"#main\"]",
+        "text": "Skip to main",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/",
+        "selector": "a[href=\"/\"]",
+        "text": "Bookiji",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/get-started",
+        "selector": "a[href=\"/get-started\"]",
+        "text": "Start Booking",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help",
+        "selector": "a[href=\"/help\"]",
+        "text": "Help",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/login",
+        "selector": "a[href=\"/login\"]",
+        "text": "Log In",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/get-started",
+        "selector": "a[href=\"/get-started\"]",
+        "text": "Get Started",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Book an Appointment(Customer)\")",
+        "text": "Book an Appointment(Customer)",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Offer Your Services(Provider)\")",
+        "text": "Offer Your Services(Provider)",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Loading theme\")",
+        "text": "Loading theme",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Search\")",
+        "text": "Search",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Start Chat\")",
+        "text": "Start Chat",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Watch Demo\")",
+        "text": "Watch Demo",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"See it in ACTION!\")",
+        "text": "See it in ACTION!",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"🎤\")",
+        "text": "🎤",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"📷\")",
+        "text": "📷",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Send\")",
+        "text": "Send",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Book a haircut for today\")",
+        "text": "Book a haircut for today",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"I need a massage tomorrow\")",
+        "text": "I need a massage tomorrow",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Book a cleaning service\")",
+        "text": "Book a cleaning service",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"What services are available?\")",
+        "text": "What services are available?",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Refresh Radius Analysis\")",
+        "text": "Refresh Radius Analysis",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Show More Details\")",
+        "text": "Show More Details",
+        "depth": 0
+      }
+    ],
+    [
+      {
+        "type": "visit",
+        "url": "http://localhost:3000/#main",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/#main",
+        "selector": "a[href=\"#main\"]",
+        "text": "Skip to main",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/",
+        "selector": "a[href=\"/\"]",
+        "text": "Bookiji",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/get-started",
+        "selector": "a[href=\"/get-started\"]",
+        "text": "Start Booking",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help",
+        "selector": "a[href=\"/help\"]",
+        "text": "Help",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/login",
+        "selector": "a[href=\"/login\"]",
+        "text": "Log In",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/get-started",
+        "selector": "a[href=\"/get-started\"]",
+        "text": "Get Started",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Book an Appointment(Customer)\")",
+        "text": "Book an Appointment(Customer)",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Offer Your Services(Provider)\")",
+        "text": "Offer Your Services(Provider)",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Loading theme\")",
+        "text": "Loading theme",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Search\")",
+        "text": "Search",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Start Chat\")",
+        "text": "Start Chat",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Watch Demo\")",
+        "text": "Watch Demo",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"See it in ACTION!\")",
+        "text": "See it in ACTION!",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"🎤\")",
+        "text": "🎤",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"📷\")",
+        "text": "📷",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Send\")",
+        "text": "Send",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Book a haircut for today\")",
+        "text": "Book a haircut for today",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"I need a massage tomorrow\")",
+        "text": "I need a massage tomorrow",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Book a cleaning service\")",
+        "text": "Book a cleaning service",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"What services are available?\")",
+        "text": "What services are available?",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Refresh Radius Analysis\")",
+        "text": "Refresh Radius Analysis",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Show More Details\")",
+        "text": "Show More Details",
+        "depth": 1
+      }
+    ],
+    [
+      {
+        "type": "visit",
+        "url": "http://localhost:3000/",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/#main",
+        "selector": "a[href=\"#main\"]",
+        "text": "Skip to main",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/",
+        "selector": "a[href=\"/\"]",
+        "text": "Bookiji",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/get-started",
+        "selector": "a[href=\"/get-started\"]",
+        "text": "Start Booking",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help",
+        "selector": "a[href=\"/help\"]",
+        "text": "Help",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/login",
+        "selector": "a[href=\"/login\"]",
+        "text": "Log In",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/get-started",
+        "selector": "a[href=\"/get-started\"]",
+        "text": "Get Started",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Book an Appointment(Customer)\")",
+        "text": "Book an Appointment(Customer)",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Offer Your Services(Provider)\")",
+        "text": "Offer Your Services(Provider)",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Loading theme\")",
+        "text": "Loading theme",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Search\")",
+        "text": "Search",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Start Chat\")",
+        "text": "Start Chat",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Watch Demo\")",
+        "text": "Watch Demo",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"See it in ACTION!\")",
+        "text": "See it in ACTION!",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"🎤\")",
+        "text": "🎤",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"📷\")",
+        "text": "📷",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Send\")",
+        "text": "Send",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Book a haircut for today\")",
+        "text": "Book a haircut for today",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"I need a massage tomorrow\")",
+        "text": "I need a massage tomorrow",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Book a cleaning service\")",
+        "text": "Book a cleaning service",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"What services are available?\")",
+        "text": "What services are available?",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Refresh Radius Analysis\")",
+        "text": "Refresh Radius Analysis",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Show More Details\")",
+        "text": "Show More Details",
+        "depth": 2
+      },
+      {
+        "type": "visit",
+        "url": "http://localhost:3000/get-started",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/#main",
+        "selector": "a[href=\"#main\"]",
+        "text": "Skip to main",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/",
+        "selector": "a[href=\"/\"]",
+        "text": "Bookiji",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/get-started",
+        "selector": "a[href=\"/get-started\"]",
+        "text": "Start Booking",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help",
+        "selector": "a[href=\"/help\"]",
+        "text": "Help",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/login",
+        "selector": "a[href=\"/login\"]",
+        "text": "Log In",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Book an Appointment(Customer)\")",
+        "text": "Book an Appointment(Customer)",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Offer Your Services(Provider)\")",
+        "text": "Offer Your Services(Provider)",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Loading theme\")",
+        "text": "Loading theme",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Create Account\")",
+        "text": "Create Account",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Sign in\")",
+        "text": "Sign in",
+        "depth": 2
+      },
+      {
+        "type": "form",
+        "selector": "form",
+        "data": {
+          "email": "test@example.com",
+          "password": "Password123!",
+          "confirmPassword": "Password123!"
+        },
+        "depth": 2
+      },
+      {
+        "type": "visit",
+        "url": "http://localhost:3000/help",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/#main",
+        "selector": "a[href=\"#main\"]",
+        "text": "Skip to main",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/",
+        "selector": "a[href=\"/\"]",
+        "text": "Bookiji",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/get-started",
+        "selector": "a[href=\"/get-started\"]",
+        "text": "Start Booking",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help",
+        "selector": "a[href=\"/help\"]",
+        "text": "Help",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/login",
+        "selector": "a[href=\"/login\"]",
+        "text": "Log In",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help/how-booking-works",
+        "selector": "a[href=\"/help/how-booking-works\"]",
+        "text": "How Booking Works\n      Step-by-step booking guide\n      \n        Search for a provider and choose a service.\n        Select an available…",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help/the-1-commitment-fee",
+        "selector": "a[href=\"/help/the-1-commitment-fee\"]",
+        "text": "The $1 Commitment Fee\n      We place a $1 charge on your card to verify booking intent. The amount is refunded automatically after the appoin…",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help/reschedule-cancel",
+        "selector": "a[href=\"/help/reschedule-cancel\"]",
+        "text": "Reschedule & Cancel\n      Bookiji does not offer in-app cancellations or rescheduling. To change or cancel your appointment:\n      \n       …",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help/refunds-no-shows",
+        "selector": "a[href=\"/help/refunds-no-shows\"]",
+        "text": "Refunds & No-Shows\n      The $1 booking fee is non-refundable once charged upon confirmation.\n      No-shows may forfeit the commitment fe…",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help/provider-onboarding",
+        "selector": "a[href=\"/help/provider-onboarding\"]",
+        "text": "Provider Onboarding\n      \n        Create a vendor account.\n        Verify your email and complete your profile.\n        Link your calendar…",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help/calendar-linking",
+        "selector": "a[href=\"/help/calendar-linking\"]",
+        "text": "Calendar Linking\n      Connect your Google Calendar to keep bookings in sync.\n      \n        Go to Settings > Calendar.\n        Click…",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help/privacy-radius",
+        "selector": "a[href=\"/help/privacy-radius\"]",
+        "text": "Privacy & Radius\n      We show only an approximate location until a booking is confirmed. Radius settings let providers control how far …",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help/support-options",
+        "selector": "a[href=\"/help/support-options\"]",
+        "text": "Support Options\n      Need help? Visit the help center, start a chat, or email support@bookiji.com.\n    …",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help/dispute-policy",
+        "selector": "a[href=\"/help/dispute-policy\"]",
+        "text": "Dispute Policy\n      If something goes wrong, contact support within 7 days. We'll investigate and mediate between parties.\n    …",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help/languages-currency",
+        "selector": "a[href=\"/help/languages-currency\"]",
+        "text": "Languages & Currency\n      Bookiji supports multiple languages and currencies. Change your preferences in Settings to localize your experien…",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Book an Appointment(Customer)\")",
+        "text": "Book an Appointment(Customer)",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Offer Your Services(Provider)\")",
+        "text": "Offer Your Services(Provider)",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Loading theme\")",
+        "text": "Loading theme",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"All\")",
+        "text": "All",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Booking\")",
+        "text": "Booking",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Payments\")",
+        "text": "Payments",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Providers\")",
+        "text": "Providers",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Privacy\")",
+        "text": "Privacy",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Support\")",
+        "text": "Support",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Platform\")",
+        "text": "Platform",
+        "depth": 2
+      },
+      {
+        "type": "visit",
+        "url": "http://localhost:3000/login",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/#main",
+        "selector": "a[href=\"#main\"]",
+        "text": "Skip to main",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/",
+        "selector": "a[href=\"/\"]",
+        "text": "Bookiji",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/get-started",
+        "selector": "a[href=\"/get-started\"]",
+        "text": "Start Booking",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help",
+        "selector": "a[href=\"/help\"]",
+        "text": "Help",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/login",
+        "selector": "a[href=\"/login\"]",
+        "text": "Log In",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/register",
+        "selector": "a[href=\"/register\"]",
+        "text": "create a new account",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/forgot-password",
+        "selector": "a[href=\"/forgot-password\"]",
+        "text": "Forgot your password?",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Book an Appointment(Customer)\")",
+        "text": "Book an Appointment(Customer)",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Offer Your Services(Provider)\")",
+        "text": "Offer Your Services(Provider)",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Loading theme\")",
+        "text": "Loading theme",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Sign in\")",
+        "text": "Sign in",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Google\")",
+        "text": "Google",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"GitHub\")",
+        "text": "GitHub",
+        "depth": 2
+      },
+      {
+        "type": "form",
+        "selector": "form",
+        "data": {
+          "email": "test@example.com",
+          "password": "Password123!"
+        },
+        "depth": 2
+      }
+    ],
+    [
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Sign in\")",
+        "text": "Sign in",
+        "depth": 2
+      },
+      {
+        "type": "form",
+        "selector": "form",
+        "data": {
+          "email": "test@example.com",
+          "password": "Password123!",
+          "confirmPassword": "Password123!"
+        },
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "selector": "button:has-text(\"Sign in\")",
+        "text": "Sign in",
+        "depth": 2
+      },
+      {
+        "type": "form",
+        "selector": "form",
+        "data": {
+          "email": "test@example.com",
+          "password": "Password123!"
+        },
+        "depth": 2
+      }
+    ],
+    [
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help",
+        "selector": "a[href=\"/help\"]",
+        "text": "Help",
+        "depth": 0
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help",
+        "selector": "a[href=\"/help\"]",
+        "text": "Help",
+        "depth": 1
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help",
+        "selector": "a[href=\"/help\"]",
+        "text": "Help",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help",
+        "selector": "a[href=\"/help\"]",
+        "text": "Help",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help",
+        "selector": "a[href=\"/help\"]",
+        "text": "Help",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help/support-options",
+        "selector": "a[href=\"/help/support-options\"]",
+        "text": "Support Options\n      Need help? Visit the help center, start a chat, or email support@bookiji.com.\n    …",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help/dispute-policy",
+        "selector": "a[href=\"/help/dispute-policy\"]",
+        "text": "Dispute Policy\n      If something goes wrong, contact support within 7 days. We'll investigate and mediate between parties.\n    …",
+        "depth": 2
+      },
+      {
+        "type": "click",
+        "url": "http://localhost:3000/help",
+        "selector": "a[href=\"/help\"]",
+        "text": "Help",
+        "depth": 2
+      }
+    ],
+    [
+      {
+        "type": "form",
+        "selector": "form",
+        "data": {
+          "email": "test@example.com",
+          "password": "Password123!",
+          "confirmPassword": "Password123!"
+        },
+        "depth": 2
+      },
+      {
+        "type": "form",
+        "selector": "form",
+        "data": {
+          "email": "test@example.com",
+          "password": "Password123!"
+        },
+        "depth": 2
+      }
+    ]
+  ],
+  "totalSteps": 136,
+  "totalJourneys": 6
+}

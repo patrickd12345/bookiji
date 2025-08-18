@@ -43,6 +43,7 @@
   "cta.open_vendor_dashboard": "Open Vendor Dashboard",
   "cta.get_started": "Get Started",
   "theme.change": "Change theme",
+  "theme.loading": "Loading theme",
   "locale.change_language": "Change language",
   "home.search_placeholder": "What service do you need?",
   "home.commitment_banner": "Only {{fee}} commitment fee • No hidden charges",

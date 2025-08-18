@@ -1,39 +1,58 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { getSupabaseConfig } from '@/config/supabase';
+import type { Database } from '@/types/supabase';
 
-// Create a function to get the Supabase client
-// This prevents the config from being evaluated at module load time
-export function getSupabaseClient(): SupabaseClient {
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const pubKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!url) throw new Error('❌ Missing NEXT_PUBLIC_SUPABASE_URL in env');
+
+let client: SupabaseClient<Database>;
+
+function makeClient(key: string) {
+  return createClient<Database>(url, key, {
+    auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true },
+    realtime: { params: { eventsPerSecond: 2 } },
+  });
+}
+
+// --- bootstrap: prefer publishable, fallback to anon ---
+if (pubKey) {
+  console.info('✅ Initializing with publishable key');
+  client = makeClient(pubKey);
+} else if (anonKey) {
+  console.info('✅ Initializing with anon key (no publishable key found)');
+  client = makeClient(anonKey);
+} else {
+  throw new Error('❌ Missing both publishable and anon keys in env');
+}
+
+// --- probe auth to auto-switch if publishable isn’t ready ---
+async function probeAndFix() {
   try {
-    const config = getSupabaseConfig();
-    return createClient(config.url, config.publishableKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-      }
-    });
-  } catch (error) {
-    console.error('Failed to create Supabase client:', error);
-    // Return a dummy client that will fail gracefully
-    return createClient('https://dummy.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0');
+    await client.auth.getSession();
+    console.info('✅ Auth probe successful with current key');
+  } catch {
+    console.warn('⚠️ Publishable key not accepted for auth — switching to anon');
+    if (anonKey) {
+      client = makeClient(anonKey);
+      console.info('✅ Switched to anon key');
+    } else {
+      throw new Error('❌ No anon key available to fallback');
+    }
   }
 }
 
-// Export a default client instance (for backward compatibility)
-// This will be created when first accessed
-let _supabase: SupabaseClient | null = null;
+// Run probe once on load
+probeAndFix();
 
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(target, prop) {
-    if (!_supabase) {
-      _supabase = getSupabaseClient();
-    }
-    return _supabase![prop as keyof SupabaseClient];
-  }
-});
+export function getSupabaseClient() {
+  return client;
+}
 
-// Export function to create new client instances (for server-side use)
-export const createSupabaseClient = (): SupabaseClient => {
-  return getSupabaseClient();
-}; 
+// Backward compatibility exports
+export const supabase = client;
+
+export function createSupabaseClient() {
+  return client;
+} 

@@ -1,0 +1,46 @@
+{
+  "timestamp": "2025-08-18T18:33:00.380Z",
+  "accessibility": {
+    "score": 100,
+    "details": {
+      "totalViolations": 0,
+      "criticalViolations": 0,
+      "pages": [],
+      "status": "WCAG 2.1 AA Compliant"
+    }
+  },
+  "performance": {
+    "score": 0,
+    "details": {
+      "error": "Command failed: pnpm test:perf 2>&1",
+      "status": "Test Failure"
+    }
+  },
+  "codeQuality": {
+    "score": 10,
+    "details": {
+      "lintErrors": 0,
+      "lintWarnings": 66,
+      "typeErrors": 8,
+      "status": "Needs Cleanup"
+    }
+  },
+  "stability": {
+    "score": 0,
+    "details": {
+      "error": "Command failed: pnpm test:smoke 2>&1",
+      "status": "Critical Failure"
+    }
+  },
+  "overall": {
+    "score": 42,
+    "grade": "⭐ Poor",
+    "trend": "📊 Baseline",
+    "breakdown": {
+      "accessibility": 40,
+      "performance": 0,
+      "codeQuality": 2,
+      "stability": 0
+    }
+  }
+}

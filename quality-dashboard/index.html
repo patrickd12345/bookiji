@@ -1,0 +1,118 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookiji Quality Index Dashboard</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; background: #f8fafc; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; text-align: center; }
+        .header h1 { margin: 0; font-size: 2.5rem; }
+        .subtitle { opacity: 0.9; margin-top: 0.5rem; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .score-card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .big-score { text-align: center; padding: 3rem; }
+        .score-number { font-size: 4rem; font-weight: bold; margin: 0; color: #f59e0b; }
+        .score-grade { font-size: 1.5rem; margin: 0.5rem 0; }
+        .score-trend { font-size: 1.2rem; opacity: 0.8; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+        .metric-card { background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .metric-header { display: flex; justify-content: between; align-items: center; margin-bottom: 1rem; }
+        .metric-title { font-weight: 600; font-size: 1.1rem; }
+        .metric-score { font-size: 2rem; font-weight: bold; }
+        .metric-details { font-size: 0.9rem; color: #6b7280; line-height: 1.5; }
+        .progress-bar { background: #e5e7eb; border-radius: 4px; height: 8px; margin: 1rem 0; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+        .timestamp { text-align: center; color: #6b7280; margin-top: 2rem; }
+        .legend { background: #f3f4f6; padding: 1rem; border-radius: 8px; margin-top: 2rem; }
+        .legend h3 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Bookiji Quality Index</h1>
+        <div class="subtitle">Continuous quality monitoring • Accessibility + Performance + Code Quality + Stability</div>
+    </div>
+    
+    <div class="container">
+        <div class="score-card">
+            <div class="big-score">
+                <div class="score-number">77</div>
+                <div class="score-grade">⭐⭐⭐ Good</div>
+                <div class="score-trend">📈 Improving</div>
+            </div>
+        </div>
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">♿ Accessibility (40%)</div>
+                    <div class="metric-score" style="color: #10b981">100</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%; background: #10b981"></div>
+                </div>
+                <div class="metric-details">
+                    Status: WCAG 2.1 AA Compliant<br>
+                    Violations: 0 (0 critical)
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">🚀 Performance (35%)</div>
+                    <div class="metric-score" style="color: #10b981">100</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%; background: #10b981"></div>
+                </div>
+                <div class="metric-details">
+                    Status: Excellent<br>
+                    Avg FCP: 0ms • TBT: 0ms • CLS: 0
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">🔧 Code Quality (15%)</div>
+                    <div class="metric-score" style="color: #ef4444">10</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 10%; background: #ef4444"></div>
+                </div>
+                <div class="metric-details">
+                    Status: Needs Cleanup<br>
+                    Lint: 0 errors, 66 warnings • Types: 8 errors
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">🛡️ Stability (10%)</div>
+                    <div class="metric-score" style="color: #ef4444">0</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%; background: #ef4444"></div>
+                </div>
+                <div class="metric-details">
+                    Status: Critical Failure<br>
+                    Test results pending
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <h3>Scoring Formula</h3>
+            <p><strong>Accessibility (40%)</strong>: WCAG 2.1 AA compliance, zero critical violations</p>
+            <p><strong>Performance (35%)</strong>: Core Web Vitals (TBT < 300ms, FCP < 2200ms, CLS < 0.1)</p>
+            <p><strong>Code Quality (15%)</strong>: Lint errors, TypeScript issues, console warnings</p>
+            <p><strong>Stability (10%)</strong>: Test pass rate, error boundaries, graceful degradation</p>
+        </div>
+        
+        <div class="timestamp">
+            Last updated: 2025-08-18, 2:34:06 p.m.
+        </div>
+    </div>
+</body>
+</html>

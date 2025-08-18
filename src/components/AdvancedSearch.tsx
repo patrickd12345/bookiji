@@ -61,10 +61,24 @@ export default function AdvancedSearch({
     sort_by: 'rating'
   })
 
-  const [loading, setLoading] = useState(false)
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+
+  const searchRequest = useRequestState({
+    onSuccess: (data: unknown) => {
+      const result = data as { success: boolean; providers: Provider[]; total: number }
+      if (result.success && result.providers) {
+        onResults?.({
+          providers: result.providers,
+          total: result.total || 0
+        })
+      }
+    },
+    onError: (error) => {
+      console.error('Search failed:', error)
+    }
+  })
 
   const searchInputRef = useRef<HTMLInputElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
@@ -84,8 +98,7 @@ export default function AdvancedSearch({
   const performSearch = useCallback(async () => {
     if (!filters.query && !filters.location) return
 
-    setLoading(true)
-    try {
+    const searchFn = async () => {
       const queryParams = new URLSearchParams()
       
       Object.entries(filters).forEach(([key, value]) => {
@@ -94,21 +107,22 @@ export default function AdvancedSearch({
         }
       })
 
-      const response = await fetch(`/api/search/providers?${queryParams}`)
-      const data = await response.json()
-
-      if (data.success && data.providers) {
-        onResults?.({
-          providers: data.providers as Provider[],
-          total: data.total || 0
-        })
+      const url = `/api/search/providers?${queryParams}`
+      const response = await fetch(url)
+      
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.status} ${response.statusText}`)
       }
-    } catch (error) {
-      console.error('Search failed:', error)
-    } finally {
-      setLoading(false)
+      
+      return response.json()
     }
-  }, [filters, onResults])
+
+    await searchRequest.execute(
+      searchFn,
+      `/api/search/providers`,
+      'GET'
+    )
+  }, [filters, onResults, searchRequest])
 
   useEffect(() => {
     // Check geolocation permission
@@ -302,13 +316,43 @@ export default function AdvancedSearch({
           </div>
 
           {/* Search Button */}
-          <button
-            onClick={performSearch}
-            disabled={loading}
-            className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-          >
-            {loading ? 'Searching...' : 'Search'}
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={performSearch}
+              disabled={searchRequest.loading}
+              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold flex items-center gap-2"
+              data-testid="search-providers-btn"
+            >
+              {searchRequest.loading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4" aria-hidden="true" />
+                  Search
+                </>
+              )}
+            </button>
+            
+            {searchRequest.error && (
+              <div className="flex items-center gap-1 text-sm text-red-600" role="alert">
+                <AlertCircle className="h-3 w-3" aria-hidden="true" />
+                <span>Search failed.</span>
+                <button
+                  onClick={() => {
+                    searchRequest.retry()
+                    performSearch()
+                  }}
+                  className="text-blue-600 hover:text-blue-800 underline ml-1"
+                  data-testid="search-retry-btn"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Filters Toggle */}

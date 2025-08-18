@@ -56,6 +56,14 @@ interface UIState {
   // Appointments
   currentAppointment: Appointment | null;
   setCurrentAppointment: (appointment: Appointment | null) => void;
+
+  // Offline/Connectivity
+  isOffline: boolean;
+  showOfflineBanner: boolean;
+  lastFailedRequest: { url: string; method: string; retryFn: () => Promise<unknown> } | null;
+  setIsOffline: (offline: boolean) => void;
+  setShowOfflineBanner: (show: boolean) => void;
+  setLastFailedRequest: (request: { url: string; method: string; retryFn: () => Promise<unknown> } | null) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -107,5 +115,13 @@ export const useUIStore = create<UIState>((set) => ({
 
   // Appointments
   currentAppointment: null,
-  setCurrentAppointment: (appointment) => set({ currentAppointment: appointment })
+  setCurrentAppointment: (appointment) => set({ currentAppointment: appointment }),
+
+  // Offline/Connectivity
+  isOffline: false,
+  showOfflineBanner: false,
+  lastFailedRequest: null,
+  setIsOffline: (offline) => set({ isOffline: offline }),
+  setShowOfflineBanner: (show) => set({ showOfflineBanner: show }),
+  setLastFailedRequest: (request) => set({ lastFailedRequest: request })
 })); 

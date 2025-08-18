@@ -1,0 +1,140 @@
+/* =========================
+   A11Y THEME HARDENING SHEET
+   =========================
+   Goals:
+   1) Force safe contrast for common Tailwind offenders.
+   2) Provide CSS variables for semantic colors (light/dark).
+   3) Improve focus visibility + reading comfort.
+   4) Be minimally invasive: only override where necessary.
+*/
+
+/* ---------- Semantic tokens (light) ---------- */
+:root {
+  /* Text on light bg */
+  --a11y-fg-muted: hsl(220 15% 35%);   /* replaces gray-400-ish */
+  --a11y-fg-green: hsl(170 85% 25%);   /* ≥4.5:1 on white */
+  --a11y-fg-orange: hsl(25 90% 30%);   /* ≥4.5:1 on white */
+  --a11y-link: hsl(220 90% 35%);
+  --a11y-link-hover: hsl(220 95% 30%);
+
+  /* Surfaces */
+  --a11y-surface: #ffffff;
+  --a11y-surface-muted: hsl(220 20% 97%);
+
+  /* Interactive */
+  --a11y-btn-bg: hsl(170 85% 25%);     /* used instead of bg-green-600 */
+  --a11y-btn-fg: #ffffff;
+
+  /* Focus ring */
+  --a11y-focus: hsl(220 95% 40%);
+}
+
+/* ---------- Semantic tokens (dark) ---------- */
+.dark {
+  --a11y-fg-muted: hsl(220 10% 75%);   /* lighter on dark bg, still ≥4.5:1 */
+  --a11y-fg-green: hsl(170 70% 65%);   /* green on dark bg with contrast */
+  --a11y-fg-orange: hsl(25 85% 70%);
+  --a11y-link: hsl(210 100% 75%);
+  --a11y-link-hover: hsl(210 100% 82%);
+
+  --a11y-surface: hsl(220 14% 14%);
+  --a11y-surface-muted: hsl(220 14% 18%);
+
+  --a11y-btn-bg: hsl(170 75% 40%);
+  --a11y-btn-fg: #0b1010;
+}
+
+/* ---------- Global readability tweaks ---------- */
+html {
+  /* Slightly larger default improves readability without breaking layouts */
+  font-size: 100%;
+  background: var(--a11y-surface);
+}
+
+a {
+  color: var(--a11y-link);
+  text-decoration-thickness: .08em;
+  text-underline-offset: .15em;
+}
+a:hover {
+  color: var(--a11y-link-hover);
+}
+
+/* Prefer visible focus rings over outline-none */
+:where(button, [role="button"], a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--a11y-focus);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+/* Respect reduced motion (modals, menus, accordions, etc.) */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- High-contrast overrides for known offenders ----------
+   Use !important sparingly; here it's intentional to beat Tailwind utilities.
+*/
+
+/* Text utilities */
+.text-gray-400,
+.text-slate-400,
+.text-zinc-400 {
+  color: var(--a11y-fg-muted) !important;
+}
+
+.text-green-600 {
+  color: var(--a11y-fg-green) !important;
+}
+
+.text-orange-600 {
+  color: var(--a11y-fg-orange) !important;
+}
+
+/* Background utilities (buttons, badges, CTAs) */
+.bg-green-600 {
+  background-color: var(--a11y-btn-bg) !important;
+  color: var(--a11y-btn-fg) !important;
+}
+
+/* If you have "subtle" gray backgrounds with low contrast text */
+.bg-gray-50, .bg-slate-50, .bg-zinc-50 {
+  background-color: var(--a11y-surface-muted) !important;
+}
+
+/* Buttons with icon-only content must remain nameable */
+button[aria-label], [role="button"][aria-label] {
+  /* nothing to change; this selector is a reminder to keep aria-labels */
+}
+
+/* ---------- Lists/Markdown sanity (helps screen readers) ---------- */
+ul:not([role]) > li { list-style: disc; }
+ol:not([role]) > li { list-style: decimal; }
+li > ul, li > ol { margin-left: 1.25rem; }
+
+/* ---------- Form affordances ---------- */
+label[for], [aria-label], [aria-labelledby] {
+  /* presence of these attributes is what matters; styling optional */
+}
+
+select, input, textarea {
+  min-height: 2.25rem;
+}
+
+/* ---------- Dialog baseline (so tests + users win) ---------- */
+[role="dialog"], dialog {
+  /* Ensure dialog text meets contrast and surfaces pop */
+  color: var(--a11y-fg-muted);
+  background: var(--a11y-surface);
+}
+
+[role="dialog"] [aria-label="Close"],
+[role="dialog"] button[aria-label="Close"] {
+  /* if using icon-only close */
+  outline-offset: 2px;
+}

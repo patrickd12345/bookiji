@@ -12,30 +12,24 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 Form submitted, email:', email);
     setError(null);
     setIsLoading(true);
 
     try {
+      console.log('📧 Calling Supabase resetPasswordForEmail...');
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset`,
+        redirectTo: `${window.location.origin}/update-password`,
       });
+
+      console.log('📧 Supabase response:', { error });
 
       if (error) throw error;
 
-      const token = 'reset-token';
-      await fetch('/api/notifications/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'email',
-          recipient: email,
-          template: 'password_reset',
-          data: { name: email, token }
-        })
-      }).catch(() => {});
-
+      console.log('✅ Password reset email sent successfully!');
       setSuccess(true);
     } catch (error: unknown) {
+      console.error('❌ Error in password reset:', error);
       if (error instanceof Error) {
         setError(error.message || 'Failed to send reset password email');
       } else {
@@ -71,7 +65,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8" suppressHydrationWarning>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
           Reset your password
@@ -82,14 +76,14 @@ export default function ForgotPasswordPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10" suppressHydrationWarning>
           {error && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
               {error}
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit} suppressHydrationWarning>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address

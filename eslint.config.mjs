@@ -66,7 +66,7 @@ const eslintConfig = [
   },
   // Playwright config files can use @playwright/test
   {
-    files: ['playwright*.config.ts'],
+    files: ['playwright*.config.ts', 'packages/pw-tests/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': 'off'
     }
@@ -74,7 +74,7 @@ const eslintConfig = [
   // Everywhere else: ban @playwright/test
   {
     files: ['**/*.{ts,tsx}'],
-    ignores: ['tests/**/*.{ts,tsx}', 'playwright*.config.ts'],
+    ignores: ['tests/**/*.{ts,tsx}', 'playwright*.config.ts', 'packages/pw-tests/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': ['error', { paths: ['@playwright/test'] }]
     }

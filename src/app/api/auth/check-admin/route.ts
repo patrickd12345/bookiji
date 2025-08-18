@@ -5,7 +5,7 @@ import { getSupabaseConfig } from '@/config/supabase'
 export async function GET(request: NextRequest) {
   try {
     const config = getSupabaseConfig()
-    const supabase = createClient(config.url, config.publishableKey)
+    const supabase = createClient(config.url, config.publishableKey || config.anonKey)
 
     // Try cookie-based auth first
     const cookieStore = await request.cookies

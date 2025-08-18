@@ -7,16 +7,17 @@ export async function GET() {
 		console.log('🧪 Testing profiles table access after fix...')
 
 		const config = getSupabaseConfig()
-		if (!config.url || !config.publishableKey) {
+		const key = config.publishableKey || config.anonKey
+		if (!config.url || !key) {
 			return NextResponse.json({
 				success: false,
 				error: 'Missing Supabase configuration',
 				urlSet: !!config.url,
-				keySet: !!config.publishableKey
+				keySet: !!key
 			}, { status: 500 })
 		}
 
-		const supabase = createClient(config.url, config.publishableKey)
+		const supabase = createClient(config.url, key)
 
 		const { data: profilesData, error: profilesError } = await supabase
 			.from('profiles')

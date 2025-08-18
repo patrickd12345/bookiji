@@ -16,7 +16,23 @@
     "context": "node startup-context.js",
     "test": "vitest",
     "test:unit": "vitest run",
-    "test:e2e": "playwright test --project=e2e",
+    "test:e2e": "playwright test tests --reporter=html",
+    "crawl": "node scripts/crawl-site.mjs",
+    "generate:e2e": "node scripts/generate-tests.mjs",
+    "qa:pipeline": "node scripts/qa-pipeline.mjs run",
+    "qa:crawl": "node scripts/qa-pipeline.mjs crawl",
+    "qa:generate": "node scripts/qa-pipeline.mjs generate",
+    "qa:test": "node scripts/qa-pipeline.mjs test",
+    "qa:report": "node scripts/qa-pipeline.mjs report",
+    "qa:help": "node scripts/qa-pipeline.mjs help",
+    "test:pw": "cd packages/pw-tests && playwright test --reporter=list",
+    "test:a11y": "playwright test tests/a11y --project=chromium",
+    "test:a11y-dialog": "cd packages/pw-tests && playwright test tests/a11y --grep '@a11y-dialog' --reporter=list",
+    "test:perf": "playwright test tests/perf --project=chromium",
+    "test:smoke": "cd packages/pw-tests && playwright test tests --grep '@smoke' --reporter=list",
+    "perf:lhci": "lhci autorun --config=lighthouserc.json || true",
+    "quality:index": "node scripts/quality-index.mjs",
+    "quality:dashboard": "node scripts/quality-index.mjs && echo 'Dashboard: ./quality-dashboard/index.html'",
     "ci": "pnpm lint:crit && pnpm typecheck && pnpm test:unit && pnpm test:e2e",
     "format": "prettier --write .",
     "codemod:unused": "node scripts/codemods/unused-vars.mjs",
@@ -35,9 +51,15 @@
     "test:a11y:dialog": "playwright test tests/a11y/dialog-focus-trap.spec.ts",
     "test:a11y:isolated": "pnpm -C packages/pw-tests test",
     "test:a11y:isolated:list": "pnpm -C packages/pw-tests test --list",
-    "test:a11y": "playwright test tests/a11y --project=chromium",
-    "test:perf": "playwright test tests/perf --project=chromium",
-    "warning:debt": "node scripts/warning-debt.js",
+    "warning:debt": "node scripts/warn-debt.cjs",
+    "check:a11y-buttons": "node scripts/check-icon-buttons.mjs",
+    "chaos:light": "cross-env CHAOS_ENABLED=true CHAOS_LATENCY_MS=150 CHAOS_FAILURE_RATE=0.05 CHAOS_TIMEOUT_RATE=0.02 CHAOS_SUPABASE_FAIL_RATE=0.10 playwright test tests/chaos",
+    "chaos:storm": "cross-env CHAOS_ENABLED=true CHAOS_LATENCY_MS=400 CHAOS_FAILURE_RATE=0.15 CHAOS_TIMEOUT_RATE=0.08 CHAOS_SUPABASE_FAIL_RATE=0.30 CHAOS_AI_FAIL_RATE=0.25 playwright test tests/chaos",
+    "chaos:offline": "playwright test tests/chaos/offline.spec.ts",
+    "chaos:a11y": "cross-env CHAOS_ENABLED=true CHAOS_LATENCY_MS=200 CHAOS_FAILURE_RATE=0.10 playwright test tests/chaos/a11y-chaos.spec.ts",
+    "chaos:contracts": "cross-env CHAOS_ENABLED=true CHAOS_LATENCY_MS=300 CHAOS_FAILURE_RATE=0.20 CHAOS_TIMEOUT_RATE=0.10 CHAOS_SUPABASE_FAIL_RATE=0.25 playwright test tests/chaos/ux-contracts.spec.ts",
+    "chaos:taxonomy": "node scripts/chaos-taxonomy.mjs playwright-report",
+    "chaos:full": "pnpm chaos:light && pnpm chaos:contracts && pnpm chaos:taxonomy",
     "test:performance": "pnpm dlx @playwright/test test tests/performance/",
     "quality:debt": "node scripts/warning-debt-burn-down.mjs",
     "quality:badges": "node scripts/generate-quality-badges.mjs",
@@ -56,14 +78,21 @@
     "i18n:check": "node scripts/check-i18n.mjs",
     "visual:snapshots": "node scripts/generate-visual-snapshots.js",
     "prebuild": "npm run i18n:check",
-    "prepare": "husky install",
-    "digest:weekly": "node scripts/weekly-quality-digest.mjs"
+    "digest:weekly": "node scripts/weekly-quality-digest.mjs",
+    "prepare": "husky"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,md}": [
-      "prettier --write",
-      "eslint --fix"
-    ]
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix --cache --cache-location node_modules/.cache/eslint",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ],
+    "*.{css,scss}": [
+      "prettier --write"
+    ],
+    "*": "prettier --write --ignore-unknown"
   },
   "dependencies": {
     "@formspree/react": "^3.0.0",
@@ -86,6 +115,7 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "2.50.2",
     "@types/google.maps": "^3.58.1",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/leaflet": "^1.9.19",
     "@types/recharts": "^2.0.1",
     "class-variance-authority": "^0.7.1",
@@ -95,6 +125,7 @@
     "dotenv": "^17.2.1",
     "framer-motion": "^11.0.8",
     "googleapis": "^150.0.1",
+    "jsonwebtoken": "^9.0.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.358.0",
     "mapbox-gl": "^3.6.0",
@@ -123,6 +154,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
     "@eslint/eslintrc": "^3",
+    "@lhci/cli": "^0.15.1",
     "@playwright/test": "1.54.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.3.1",
@@ -142,12 +174,14 @@
     "autoprefixer": "^10.4.15",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
+    "fast-glob": "^3.3.2",
     "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "lint-staged": "^16.1.5",
     "msw": "^2.3.0",
     "openai": "^4.34.0",
     "postcss": "^8.4.31",
+    "prettier": "^3.3.3",
     "schema-dts": "^1.1.5",
     "supabase": "^2.34.3",
     "supertest": "^6.3.3",
@@ -155,9 +189,7 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5",
     "vitest": "^3.2.4",
-    "wait-on": "^8.0.4",
-    "fast-glob": "^3.3.2",
-    "prettier": "^3.3.3"
+    "wait-on": "^8.0.4"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.1.10",

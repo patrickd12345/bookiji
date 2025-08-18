@@ -41,14 +41,33 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, children, ...props }, ref) => {
+    // 🛡️ A11y Guardian: Warn about icon buttons without accessible names
+    if (size === "icon" && process.env.NODE_ENV !== "production") {
+      const hasAriaLabel = props["aria-label"] || props["aria-labelledby"]
+      const hasVisibleText = children && typeof children === "string" && children.trim()
+      const hasSrOnlyText = React.isValidElement(children) && 
+        (children.props?.className?.includes('sr-only') || 
+         children.props?.className?.includes('screen-reader-only'))
+      
+      if (!hasAriaLabel && !hasVisibleText && !hasSrOnlyText) {
+        console.warn(
+          '🔍 A11y Warning: Icon button detected without accessible name.\n' +
+          'Add aria-label="..." or <span className="sr-only">...</span> for screen readers.\n' +
+          'Component:', { size, variant, className }
+        )
+      }
+    }
+    
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         {...props}
-      />
+      >
+        {children}
+      </Comp>
     )
   }
 )

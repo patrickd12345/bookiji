@@ -1,0 +1,61 @@
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "pnpm dev",
+      "url": [
+        "http://localhost:3000/",
+        "http://localhost:3000/about", 
+        "http://localhost:3000/faq",
+        "http://localhost:3000/login",
+        "http://localhost:3000/register"
+      ],
+      "numberOfRuns": 1,
+      "settings": {
+        "preset": "desktop",
+        "formFactor": "desktop",
+        "throttlingMethod": "simulate",
+        "screenEmulation": {
+          "mobile": false,
+          "width": 1350,
+          "height": 940,
+          "deviceScaleFactor": 1,
+          "disabled": false
+        },
+        "emulatedUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": ["warn", {"minScore": 0.9}],
+        "categories:accessibility": ["error", {"minScore": 0.95}],
+        "categories:best-practices": ["warn", {"minScore": 0.9}],
+        "categories:seo": ["warn", {"minScore": 0.9}],
+        "server-response-time": ["error", {"maxNumericValue": 600}],
+        "largest-contentful-paint": ["error", {"maxNumericValue": 2500}],
+        "cumulative-layout-shift": ["error", {"maxNumericValue": 0.1}],
+        "total-blocking-time": ["error", {"maxNumericValue": 300}],
+        "first-contentful-paint": ["warn", {"maxNumericValue": 1800}],
+        "interactive": ["warn", {"maxNumericValue": 3500}],
+        "speed-index": ["warn", {"maxNumericValue": 3000}],
+        "unused-javascript": ["warn", {"maxNumericValue": 40}],
+        "render-blocking-resources": ["warn", {"maxNumericValue": 500}],
+        "uses-responsive-images": "error",
+        "uses-optimized-images": "warn",
+        "modern-image-formats": "warn",
+        "uses-text-compression": "error",
+        "uses-rel-preconnect": "warn"
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "./lhci-report"
+    },
+    "server": {
+      "port": 9001,
+      "storage": {
+        "storageMethod": "filesystem",
+        "storagePath": "./lhci-data"
+      }
+    }
+  }
+}

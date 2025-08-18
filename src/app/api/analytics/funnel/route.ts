@@ -5,7 +5,7 @@ import { getSupabaseConfig } from '@/config/supabase'
 export async function GET(request: NextRequest) {
   try {
     const config = getSupabaseConfig()
-    const supabase = createClient(config.url, config.publishableKey)
+    const supabase = createClient(config.url, config.publishableKey || config.anonKey)
 
     const { searchParams } = new URL(request.url)
     const funnel = searchParams.get('funnel') || 'booking'

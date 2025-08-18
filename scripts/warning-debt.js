@@ -20,3 +20,4 @@ try {
   console.error('Failed to run warning debt analysis:', e.message);
   process.exit(1);
 }
+

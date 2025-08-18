@@ -5,7 +5,7 @@ import { getSupabaseConfig } from '@/config/supabase'
 export async function GET() {
   try {
     const config = getSupabaseConfig()
-    const supabase = createClient(config.url, config.publishableKey)
+    const supabase = createClient(config.url, config.publishableKey || config.anonKey)
     
     // Get system metrics
     const { data: metrics, error } = await supabase

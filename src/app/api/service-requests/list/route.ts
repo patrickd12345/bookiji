@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     }
 
     const config = getSupabaseConfig()
-    const supabase = createClient(config.url, config.publishableKey)
+    const supabase = createClient(config.url, config.publishableKey || config.anonKey)
 
     const { data, error } = await supabase
       .from('service_requests')

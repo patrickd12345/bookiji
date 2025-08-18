@@ -25,6 +25,7 @@
     }],
     "no-restricted-imports": "off",
     "@typescript-eslint/ban-ts-comment": "warn",
-    "@typescript-eslint/no-require-imports": "warn"
+    "@typescript-eslint/no-require-imports": "warn",
+    "./scripts/eslint-button-accessibility": "error"
   }
 }

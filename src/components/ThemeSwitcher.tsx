@@ -2,8 +2,9 @@
 
 import * as React from "react"
 import { Moon, Sun, Palette } from "lucide-react"
-import { useTheme } from "next-themes"
 import { useI18n } from "@/lib/i18n/useI18n"
+import { useThemeWithTimeout } from "@/hooks/useThemeWithTimeout"
+import { ThemeToast } from "@/components/ThemeToast"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -26,8 +27,9 @@ export function ThemeSwitcher() {
 
   if (!mounted) {
     return (
-      <Button variant="outline" size="icon" disabled>
+      <Button variant="outline" size="icon" disabled aria-label={t('theme.loading')} title={t('theme.loading')}>
         <Palette className="h-[1.2rem] w-[1.2rem]" />
+        <span className="sr-only">{t('theme.loading')}</span>
       </Button>
     )
   }

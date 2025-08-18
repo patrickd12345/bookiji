@@ -3,12 +3,25 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "@playwright/test": "^1.54.2",
     "@axe-core/playwright": "^4.9.1",
     "typescript": "^5.4.0"
   },
   "scripts": {
     "test": "playwright test",
-    "test:a11y": "playwright test tests/a11y"
+    "test:all": "playwright test",
+    "test:reschedule": "playwright test tests/reschedule-comprehensive.spec.ts",
+    "test:race": "playwright test tests/reschedule-race.spec.ts",
+    "test:happy": "playwright test tests/happy-path.spec.ts",
+    "test:overlap": "playwright test tests/overlap-conflict.spec.ts",
+    "test:countdown": "playwright test tests/countdown-ux.spec.ts",
+    "test:a11y": "playwright test tests/a11y --grep '@a11y(?!-dialog)'",
+    "test:a11y-dialog": "playwright test tests/a11y --grep '@a11y-dialog'",
+    "test:a11y-all": "playwright test tests/a11y",
+    "test:perf": "playwright test tests/perf --grep '@perf'",
+    "test:smoke": "playwright test tests --grep '@smoke'",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "setup": "bash simple-test-setup.sh",
+    "setup:env": "bash setup-test-env.sh"
   }
 }

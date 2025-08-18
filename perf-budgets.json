@@ -1,0 +1,36 @@
+{
+  "description": "Performance budgets for Bookiji platform",
+  "routes": [
+    { "path": "/", "name": "Homepage", "priority": "critical" },
+    { "path": "/about", "name": "About", "priority": "high" },
+    { "path": "/faq", "name": "FAQ", "priority": "high" },
+    { "path": "/login", "name": "Login", "priority": "critical" },
+    { "path": "/register", "name": "Register", "priority": "critical" }
+  ],
+  "budgets": {
+    "critical": {
+      "TBT": 250,
+      "LCP": 2000,
+      "CLS": 0.05,
+      "FCP": 1500
+    },
+    "high": {
+      "TBT": 300,
+      "LCP": 2500,
+      "CLS": 0.1,
+      "FCP": 1800
+    },
+    "medium": {
+      "TBT": 400,
+      "LCP": 3000,
+      "CLS": 0.15,
+      "FCP": 2000
+    }
+  },
+  "context": {
+    "device": "Desktop Chrome simulation",
+    "network": "3G Fast simulation",
+    "cpu": "4x slowdown",
+    "notes": "Budgets based on Core Web Vitals 'Good' thresholds with safety margins"
+  }
+}

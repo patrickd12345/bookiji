@@ -1,0 +1,15 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Quality gate before code leaves your machine
+echo "🔍 Running pre-push quality checks..."
+
+# Type checking
+echo "📘 TypeScript type checking..."
+pnpm typecheck
+
+# Linting (full project)
+echo "🔧 ESLint check..."
+pnpm lint:crit
+
+echo "✅ All checks passed! Pushing code..."

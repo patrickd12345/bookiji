@@ -282,7 +282,7 @@ export function useAuth() {
     let fallback: ReturnType<typeof setTimeout> | null = null
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
+    supabase.auth.getSession().then(({ data: { session }, error: sessionError }: { data: { session: Session | null }, error: any }) => {
       if (sessionError) {
         console.error('Error getting initial session:', sessionError)
       }

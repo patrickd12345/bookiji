@@ -9,7 +9,7 @@ export async function DELETE(request: NextRequest) {
     const config = getSupabaseConfig()
     const supabase = createServerClient(
       config.url,
-      config.publishableKey,
+      config.publishableKey || config.anonKey,
       {
         cookies: {
           get(name) {

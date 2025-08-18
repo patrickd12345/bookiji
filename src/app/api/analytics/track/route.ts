@@ -9,7 +9,7 @@ type SupabaseClient = ReturnType<typeof createClient>
 function createSupabaseClient(): SupabaseClient {
   const config = getSupabaseConfig()
   
-  return createClient(config.url, config.publishableKey, {
+  return createClient(config.url, config.publishableKey || config.anonKey, {
     auth: {
       autoRefreshToken: true,
       persistSession: true,

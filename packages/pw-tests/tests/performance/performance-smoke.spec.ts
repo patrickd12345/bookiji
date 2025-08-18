@@ -131,12 +131,17 @@ const checkPerformanceThresholds = (metrics: any, pageName: string) => {
 // Test each critical page for performance
 for (const pageInfo of CRITICAL_PAGES) {
   test(`performance: ${pageInfo.name} meets performance thresholds`, async ({ page }) => {
-    // Enable tracing for detailed performance analysis
-    await page.context().tracing.start({ 
-      screenshots: true, 
-      snapshots: true,
-      sources: true 
-    });
+    // Enable tracing for detailed performance analysis (only if not already started)
+    try {
+      await page.context().tracing.start({ 
+        screenshots: true, 
+        snapshots: true,
+        sources: true 
+      });
+    } catch (e) {
+      // Tracing might already be started, continue
+      console.log('Tracing already active, continuing...');
+    }
     
     const startTime = Date.now();
     
@@ -174,10 +179,15 @@ for (const pageInfo of CRITICAL_PAGES) {
       expect(elapsed, `Performance test took ${elapsed}ms, should complete within 90s`).toBeLessThan(90000);
       
     } finally {
-      // Stop tracing and save trace file
-      await page.context().tracing.stop({
-        path: `test-results/performance-traces/${pageInfo.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.zip`
-      });
+      // Stop tracing and save trace file (only if tracing was started)
+      try {
+        await page.context().tracing.stop({
+          path: `test-results/performance-traces/${pageInfo.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.zip`
+        });
+      } catch (e) {
+        // Tracing might not be active, continue
+        console.log('Tracing not active, skipping stop...');
+      }
     }
   });
 }

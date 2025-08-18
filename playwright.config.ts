@@ -2,8 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: ['**/e2e/**/*.spec.ts', '**/a11y/**/*.spec.ts'],
-  retries: 1,
+  testMatch: ['**/e2e/**/*.spec.ts', '**/a11y/**/*.spec.ts', '**/chaos/**/*.spec.ts', '**/generated.spec.ts'],
+  retries: process.env.CI ? 2 : 0,
   fullyParallel: true,
   expect: {
     timeout: 10_000,
@@ -16,9 +16,10 @@ export default defineConfig({
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     viewport: { width: 1280, height: 800 },
     ignoreHTTPSErrors: true,
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    headless: !process.env.HEADED,
   },
 
   projects: [
@@ -33,8 +34,8 @@ export default defineConfig({
   globalTeardown: undefined,
 
   webServer: {
-    command: process.env.PW_SERVER_CMD || 'pnpm dev',
-    url: 'http://localhost:3000',
+    command: process.env.PW_WEB_CMD || 'pnpm start',
+    url: process.env.BASE_URL || 'http://localhost:3000',
     timeout: 120_000,
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',

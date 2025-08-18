@@ -1,0 +1,206 @@
+name: Bookiji QA Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to test'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - local
+        - staging
+        - production
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  qa-pipeline:
+    name: QA Pipeline
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        environment: [staging, production]
+        exclude:
+          - environment: production
+            if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Setup Playwright
+        run: pnpm exec playwright install --with-deps chromium
+        
+      - name: Start application
+        run: |
+          if [ "${{ matrix.environment }}" = "local" ]; then
+            echo "Starting local application..."
+            pnpm dev &
+            sleep 30
+          fi
+        env:
+          BASE_URL: ${{ matrix.environment == 'staging' && 'https://staging.bookiji.com' || matrix.environment == 'production' && 'https://bookiji.com' || 'http://localhost:3000' }}
+          
+      - name: Run QA Pipeline
+        run: |
+          export BASE_URL=${{ matrix.environment == 'staging' && 'https://staging.bookiji.com' || matrix.environment == 'production' && 'https://bookiji.com' || 'http://localhost:3000' }}
+          export MAX_DEPTH=2
+          export SLACK_WEBHOOK=${{ secrets.SLACK_WEBHOOK }}
+          export EMAIL_RECIPIENTS=${{ secrets.QA_EMAIL_RECIPIENTS }}
+          
+          pnpm qa:pipeline
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qa-test-results-${{ matrix.environment }}
+          path: |
+            test-results/
+            qa-pipeline-report.*
+            crawl-output.json
+            
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.environment }}
+          path: playwright-report/
+          
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let report = 'QA Pipeline completed';
+            
+            try {
+              if (fs.existsSync('qa-pipeline-report.json')) {
+                const data = JSON.parse(fs.readFileSync('qa-pipeline-report.json', 'utf8'));
+                report = `## 🚀 QA Pipeline Results for ${{ matrix.environment }}
+                
+                **Status:** ${data.status.toUpperCase()}
+                **Overall Score:** ${data.qualityMetrics.overallScore}%
+                **Test Coverage:** ${data.qualityMetrics.testCoverage}%
+                **Accessibility:** ${data.qualityMetrics.accessibilityScore}%
+                
+                **Journeys Discovered:** ${data.crawlResults.totalJourneys}
+                **Tests Executed:** ${data.testExecution.total || 'N/A'}
+                
+                [View Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+                `;
+              }
+            } catch (error) {
+              report = 'QA Pipeline completed but report generation failed';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+            
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: qa-pipeline
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download QA results
+        uses: actions/download-artifact@v4
+        with:
+          name: qa-test-results-staging
+          
+      - name: Check quality thresholds
+        run: |
+          if [ -f "qa-pipeline-report.json" ]; then
+            echo "Checking quality thresholds..."
+            node -e "
+              const report = JSON.parse(require('fs').readFileSync('qa-pipeline-report.json', 'utf8'));
+              const metrics = report.qualityMetrics;
+              
+              console.log('Quality Metrics:');
+              console.log('- Overall Score:', metrics.overallScore + '%');
+              console.log('- Test Coverage:', metrics.testCoverage + '%');
+              console.log('- Accessibility:', metrics.accessibilityScore + '%');
+              
+              // Quality gates
+              const failures = [];
+              if (metrics.overallScore < 80) failures.push('Overall score below 80%');
+              if (metrics.testCoverage < 70) failures.push('Test coverage below 70%');
+              if (metrics.accessibilityScore < 90) failures.push('Accessibility score below 90%');
+              
+              if (failures.length > 0) {
+                console.error('Quality gates failed:');
+                failures.forEach(f => console.error('- ' + f));
+                process.exit(1);
+              }
+              
+              console.log('✅ All quality gates passed!');
+            "
+          else
+            echo "QA report not found, quality gate failed"
+            exit 1
+          fi
+          
+  notify-team:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    needs: [qa-pipeline, quality-gate]
+    if: always()
+    
+    steps:
+      - name: Download QA results
+        uses: actions/download-artifact@v4
+        with:
+          name: qa-test-results-staging
+          
+      - name: Send Slack notification
+        if: always()
+        run: |
+          if [ -f "qa-pipeline-report.json" ]; then
+            echo "Preparing Slack notification..."
+            # In production, you'd use a proper Slack integration
+            echo "Slack notification would be sent here"
+          fi
+          
+      - name: Send email notification
+        if: always()
+        run: |
+          if [ -f "qa-pipeline-report.json" ]; then
+            echo "Preparing email notification..."
+            # In production, you'd use a proper email service
+            echo "Email notification would be sent here"
+          fi
