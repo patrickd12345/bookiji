@@ -1,0 +1,151 @@
+name: 🛡️ Migration Drift Detection
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Check daily for drift (in case manual DB changes happen)
+    - cron: '0 8 * * *'
+
+jobs:
+  migration-drift-check:
+    name: 🔍 Check Migration Sync Status
+    runs-on: ubuntu-latest
+    
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: 📦 Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: 🔗 Link Supabase Project
+        run: |
+          echo "Linking to project lzgynywojluwdccqkeop..."
+          supabase link --project-ref lzgynywojluwdccqkeop
+
+      - name: 📊 Check Migration Status
+        id: migration_check
+        run: |
+          echo "🔍 Checking migration sync status..."
+          
+          # Get migration list and check for sync issues
+          MIGRATION_OUTPUT=$(supabase migration list 2>&1)
+          echo "$MIGRATION_OUTPUT"
+          
+          # Count local vs remote mismatches
+          SYNC_ISSUES=$(echo "$MIGRATION_OUTPUT" | grep -E "^\s+[0-9]+.*\|\s*\|" | wc -l || echo "0")
+          TOTAL_MIGRATIONS=$(echo "$MIGRATION_OUTPUT" | grep -E "^\s+[0-9]+.*\|.*\|" | wc -l || echo "0")
+          
+          echo "sync_issues=$SYNC_ISSUES" >> $GITHUB_OUTPUT
+          echo "total_migrations=$TOTAL_MIGRATIONS" >> $GITHUB_OUTPUT
+          
+          if [ "$SYNC_ISSUES" -gt 0 ]; then
+            echo "❌ DRIFT DETECTED: $SYNC_ISSUES migrations out of sync!"
+            echo "status=drift" >> $GITHUB_OUTPUT
+            echo "message=drift-detected" >> $GITHUB_OUTPUT
+            echo "color=red" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "✅ All migrations synchronized ($TOTAL_MIGRATIONS total)"
+            echo "status=synced" >> $GITHUB_OUTPUT  
+            echo "message=all-synced" >> $GITHUB_OUTPUT
+            echo "color=brightgreen" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🚫 Check for Malformed Migration Files
+        run: |
+          echo "🔍 Checking for malformed migration filenames..."
+          
+          MALFORMED_FILES=""
+          for file in supabase/migrations/*.sql; do
+            filename=$(basename "$file")
+            
+            # Skip the _hold directory and proper timestamp format
+            if [[ "$filename" == "_hold" ]] || [[ "$filename" =~ ^[0-9]{14}_.+\.sql$ ]] || [[ "$filename" =~ ^[0-9]{3}_.+\.sql$ ]]; then
+              continue
+            fi
+            
+            echo "❌ MALFORMED: $filename"
+            MALFORMED_FILES="$MALFORMED_FILES $filename"
+          done
+          
+          if [ -n "$MALFORMED_FILES" ]; then
+            echo "💥 Found malformed migration files: $MALFORMED_FILES"
+            echo "👉 Use: supabase migration new <description>"
+            exit 1
+          fi
+          
+          echo "✅ All migration filenames properly formatted"
+
+      - name: 📈 Generate Migration Badge
+        if: always()
+        run: |
+          mkdir -p .github/badges
+          
+          if [ "${{ steps.migration_check.outputs.status }}" = "synced" ]; then
+            BADGE_MESSAGE="${{ steps.migration_check.outputs.total_migrations }} synced"
+            BADGE_COLOR="brightgreen"
+          else
+            BADGE_MESSAGE="drift detected"
+            BADGE_COLOR="red"
+          fi
+          
+          cat <<EOF > .github/badges/migrations.json
+          {
+            "schemaVersion": 1,
+            "label": "migrations",
+            "message": "$BADGE_MESSAGE",
+            "color": "$BADGE_COLOR"
+          }
+          EOF
+          
+          echo "🏷️ Generated badge: $BADGE_MESSAGE ($BADGE_COLOR)"
+
+      - name: 📤 Upload Badge Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-badge
+          path: .github/badges/migrations.json
+
+      - name: 💾 Commit Badge to Repository
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config --global user.name "migration-bot"
+          git config --global user.email "ci@bookiji.com"
+          git add .github/badges/migrations.json
+          git commit -m "🏷️ Update migration badge [skip ci]" || echo "📝 No badge changes to commit"
+          git push
+
+      - name: 📋 Generate Migration Report
+        if: failure()
+        run: |
+          echo "## 🚨 Migration Drift Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: ❌ DRIFT DETECTED" >> $GITHUB_STEP_SUMMARY
+          echo "**Sync Issues**: ${{ steps.migration_check.outputs.sync_issues }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Migrations**: ${{ steps.migration_check.outputs.total_migrations }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔧 How to Fix:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Run \`supabase migration list\` locally" >> $GITHUB_STEP_SUMMARY
+          echo "2. Apply missing migrations: \`supabase db push\`" >> $GITHUB_STEP_SUMMARY
+          echo "3. Repair tracking if needed: \`supabase migration repair\`" >> $GITHUB_STEP_SUMMARY
+          echo "4. Verify: \`supabase migration list\` should show all synced" >> $GITHUB_STEP_SUMMARY
