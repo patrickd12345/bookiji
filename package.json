@@ -23,6 +23,7 @@
     "e2e": "playwright test -c playwright.config.ts",
     "e2e:ui": "playwright test --ui -c playwright.config.ts",
     "e2e:debug": "playwright test --debug -c playwright.config.ts",
+    "e2e:remote": "BASE_URL=${BASE_URL:-http://localhost:3000} playwright test -c playwright.remote.config.ts",
     "test:visual": "playwright test -c playwright.visual.config.ts",
     "test:synthetics": "playwright test -c playwright.synthetics.config.ts",
     "test:update-snaps": "playwright test --update-snapshots -c playwright.config.ts",
@@ -36,7 +37,8 @@
     "maintenance:calendar": "node scripts/setup-maintenance-calendar.mjs",
     "i18n:check": "node scripts/check-i18n.mjs",
     "visual:snapshots": "node scripts/generate-visual-snapshots.js",
-    "prebuild": "npm run i18n:check"
+    "prebuild": "npm run i18n:check",
+    "prepare": "husky install"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,css,md}": "eslint --fix"

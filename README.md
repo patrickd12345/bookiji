@@ -322,5 +322,70 @@ pnpm dev
 **Test Status:** 81.3% passing (26/32 tests)  
 **Documentation Status:** ✅ Current (Verified against actual codebase)
 
-#   T e s t   c o m m i t  
+---
+
+## 🛠️ **OPS CARD - DEVELOPMENT RELIABILITY**
+
+### **Registry Hygiene (.npmrc in repo root)**
+```bash
+registry=https://registry.npmjs.org/
+# carve-out for scoped pkgs if you ever point @* to a private registry
+@axe-core:registry=https://registry.npmjs.org/
+```
+
+**If a proxy ever meddles again:** `pnpm add … --registry=https://registry.npmjs.org/` is your force option.
+
+### **Husky Reliability (all OSes)**
+- Keep `"prepare": "husky install"` in package.json
+- Ensure `.husky/*` files are executable: `git update-index --chmod=+x .husky/*`
+- No custom `core.hooksPath` in git config: `git config --global --get core.hooksPath` should be empty
+
+### **Playwright Server Strategy (choose one per run)**
+
+**Remote runs:** Remove webServer; use BASE_URL (Vercel preview) and `playwright.remote.config.ts`
+
+**Local runs:** Keep webServer with:
+```typescript
+webServer: {
+  command: process.env.PW_SERVER_CMD || 'pnpm dev',
+  url: 'http://localhost:3000',
+  timeout: 120_000,
+  reuseExistingServer: !process.env.CI,
+  stdout: 'pipe',
+  stderr: 'pipe',
+}
+```
+
+**Optional PW_SERVER_CMD override:** `pnpm build && pnpm start` for prod-like testing
+
+### **Quick Sanity Checks**
+
+**Local Development:**
+```bash
+pnpm lint && pnpm type-check
+pnpm test         # unit tests
+BASE_URL=http://localhost:3000 pnpm e2e
+```
+
+**If "exited early" ever returns:**
+```bash
+pnpm next dev            # see real boot error
+netstat -an | findstr :3000  # port already in use? (Windows)
+lsof -i :3000            # port already in use? (macOS/Linux)
+printenv | grep -E 'NEXT_PUBLIC_|STRIPE|DATABASE_URL'  # missing env?
+```
+
+### **What's Locked In (Nice!)**
+- ✅ **Modern Husky + lint-staged** (no deprecated popup)
+- ✅ **Skip link + focusable `<main id="main" tabindex="-1">`** with reduced-motion styles
+- ✅ **Theme-aware axe scans** with attachments; axe JSON uploads (on failure or on main)
+- ✅ **A11y asserts** (h1 invariant, landmarks, skip-link focus, calendar link noopener)
+- ✅ **Hardened Playwright config** (retries, trace/video/screenshots) and stable webServer
+
+**Future enhancement:** Add weekly job that curls `sitemap.xml`, `robots.txt`, and `ads.txt` to catch SEO header drift.
+
+---
+
+**🚀 Enjoy the green lights!**
+ 
  
