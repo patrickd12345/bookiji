@@ -20,7 +20,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   return NextResponse.json(data);
 }
 
-async function buildTranscript(admin: ReturnType<typeof createClient>, ticketId: string) {
+async function buildTranscript(admin: any, ticketId: string) {
   const { data: conv } = await admin
     .from('support_conversations')
     .select('id')
@@ -32,14 +32,14 @@ async function buildTranscript(admin: ReturnType<typeof createClient>, ticketId:
     .select('sender_type,content')
     .eq('conversation_id', conv.id)
     .order('created_at', { ascending: true });
-  return (msgs ?? []).map(m => ({ 
+  return (msgs ?? []).map((m: any) => ({ 
     role: (m.sender_type === 'user' ? 'user' : 'agent') as 'user' | 'agent' | 'assistant',
     text: String(m.content || '')
   }));
 }
 
 async function maybeCreateKbSuggestion(
-  admin: ReturnType<typeof createClient>, ticketId: string, intent?: string) {
+  admin: any, ticketId: string, intent?: string) {
   
   // Enable by default in non-production unless explicitly disabled
   const enabled = (process.env.SUPPORT_KB_SUGGEST_ENABLED ?? (process.env.NODE_ENV !== 'production' ? 'true' : 'false')) === 'true';

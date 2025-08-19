@@ -51,7 +51,7 @@ export function GuidedTourProvider({ children }: { children: ReactNode }) {
         container.appendChild(button);
         rest.text = container;
       }
-      tour.addStep(rest);
+      tour.addStep(rest as any);
     });
 
     const markComplete = () => {

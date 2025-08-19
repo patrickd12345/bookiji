@@ -32,6 +32,8 @@ export default function AuthEntry({ mode = "signup" }: { mode?: "signup" | "logi
           },
         });
         if (error) throw error;
+        
+        // Redirect immediately - useAuthReady will handle session readiness
         router.push("/choose-role");
       } else {
         const { error } = await supabase.auth.signInWithPassword({

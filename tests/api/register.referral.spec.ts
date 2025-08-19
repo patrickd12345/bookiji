@@ -10,7 +10,17 @@ vi.mock('@/lib/supabaseClient', () => ({
         data: { user: { id: 'new-user', email: 'new@example.com' } },
         error: null
       }))
-    }
+    },
+    from: vi.fn(() => ({
+      upsert: vi.fn(() => ({
+        select: vi.fn(() => ({
+          single: vi.fn(async () => ({
+            data: { id: 'new-user', email: 'new@example.com', role: 'customer' },
+            error: null
+          }))
+        }))
+      }))
+    }))
   }
 }))
 

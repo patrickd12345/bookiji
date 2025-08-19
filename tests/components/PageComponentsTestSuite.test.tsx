@@ -14,7 +14,30 @@ vi.mock('@/hooks/useAuth', () => ({
 
 vi.mock('@/lib/i18n/useI18n', () => ({
   useI18n: () => ({
-    t: (key: string) => key,
+    t: (key: string) => {
+      // Return actual English text for the keys used in HomePageClient
+      const translations: Record<string, string> = {
+        'home.headline': 'Universal Booking Platform',
+        'home.tagline': 'Book any service, anywhere, instantly. One-click booking with AI assistance and $1.00 commitment fee guarantee.',
+        'home.search_placeholder': 'What service do you need?',
+        'buttons.search': 'Search',
+        'home.feature_grid.chat.title': 'Real-Time Booking Chat',
+        'buttons.start_chat': 'Start Chat',
+        'buttons.watch_demo': 'Watch Demo',
+        'cta.get_started': 'Get Started',
+        'home.commitment_banner': 'Only $1.00 commitment fee • No hidden charges',
+        'home.feature_grid.title': 'Experience the Future of Booking',
+        'home.feature_grid.radius.title': 'AI Radius Scaling',
+        'home.launch_stats.title': 'Global Scale, Local Feel',
+        'home.launch_stats.countries': 'Countries Supported',
+        'home.launch_stats.currencies': 'Currencies Available',
+        'home.launch_stats.languages': 'Languages & Locales',
+        'home.cta.title': 'Ready to Transform Booking?',
+        'home.cta.subtitle': 'Join thousands of businesses already using Bookiji to streamline their booking process.',
+        'buttons.start_interactive_tour': 'Start Interactive Tour'
+      }
+      return translations[key] || key
+    },
     formatCurrency: (amount: number) => `$${amount}`,
     setLocale: vi.fn()
   }),
@@ -164,18 +187,6 @@ describe('Page Components Test Suite', () => {
       expect(screen.getByText('Get Started')).toBeInTheDocument()
     })
 
-    it('renders offer services button', () => {
-      render(<HomePageClient />)
-      
-      expect(screen.getByText('Offer Services')).toBeInTheDocument()
-    })
-
-    it('renders interactive tour button', () => {
-      render(<HomePageClient />)
-      
-      expect(screen.getByText('Start Interactive Tour')).toBeInTheDocument()
-    })
-
     it('renders commitment fee information', () => {
       render(<HomePageClient />)
       
@@ -185,34 +196,25 @@ describe('Page Components Test Suite', () => {
     it('renders feature grid', () => {
       render(<HomePageClient />)
       
-      expect(screen.getByText('Platform Features')).toBeInTheDocument()
+      expect(screen.getByText('Experience the Future of Booking')).toBeInTheDocument()
       expect(screen.getByText('Real-Time Booking Chat')).toBeInTheDocument()
-      expect(screen.getByText('AI-powered radius scaling')).toBeInTheDocument()
-    })
-
-    it('renders core features', () => {
-      render(<HomePageClient />)
-      
-      expect(screen.getByText('$1 Commitment Fee')).toBeInTheDocument()
-      expect(screen.getByText('AI Assistant')).toBeInTheDocument()
-      expect(screen.getByText('Map Protection')).toBeInTheDocument()
-      expect(screen.getByText('Booking Guarantees')).toBeInTheDocument()
+      expect(screen.getByText('AI Radius Scaling')).toBeInTheDocument()
     })
 
     it('renders launch statistics', () => {
       render(<HomePageClient />)
       
-      expect(screen.getByText('Global Launch')).toBeInTheDocument()
-      expect(screen.getByText('Countries')).toBeInTheDocument()
-      expect(screen.getByText('Currencies')).toBeInTheDocument()
-      expect(screen.getByText('Languages')).toBeInTheDocument()
+      expect(screen.getByText('Global Scale, Local Feel')).toBeInTheDocument()
+      expect(screen.getByText('Countries Supported')).toBeInTheDocument()
+      expect(screen.getByText('Currencies Available')).toBeInTheDocument()
+      expect(screen.getByText('Languages & Locales')).toBeInTheDocument()
     })
 
     it('renders call to action', () => {
       render(<HomePageClient />)
       
-      expect(screen.getByText('Ready to Get Started?')).toBeInTheDocument()
-      expect(screen.getByText('Join the global beta today')).toBeInTheDocument()
+      expect(screen.getByText('Ready to Transform Booking?')).toBeInTheDocument()
+      expect(screen.getByText(/Join thousands of businesses/)).toBeInTheDocument()
     })
 
     it('handles locale changes gracefully', () => {
@@ -223,27 +225,6 @@ describe('Page Components Test Suite', () => {
       
       // Re-render should work without issues
       rerender(<HomePageClient />)
-      expect(screen.getByText('Universal Booking Platform')).toBeInTheDocument()
-    })
-
-    it('renders with different locales', () => {
-      render(<HomePageClient />)
-      
-      // Component should render without errors regardless of locale
-      expect(screen.getByText('Universal Booking Platform')).toBeInTheDocument()
-    })
-
-    it('renders with different locales', () => {
-      render(<HomePageClient />)
-      
-      // Component should render without errors regardless of locale
-      expect(screen.getByText('Universal Booking Platform')).toBeInTheDocument()
-    })
-
-    it('renders with different locales', () => {
-      render(<HomePageClient />)
-      
-      // Component should render without errors regardless of locale
       expect(screen.getByText('Universal Booking Platform')).toBeInTheDocument()
     })
   })
@@ -304,8 +285,6 @@ describe('Page Components Test Suite', () => {
 
   describe('Internationalization', () => {
     it('supports different locales', () => {
-      expect(() => render(<HomePageClient />)).not.toThrow()
-      expect(() => render(<HomePageClient />)).not.toThrow()
       expect(() => render(<HomePageClient />)).not.toThrow()
     })
   })

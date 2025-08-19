@@ -176,3 +176,36 @@ export async function installChaos(page: Page, cfg: ChaosConfig): Promise<void> 
     await route.continue();
   });
 }
+
+export async function throttle(page: Page, kbps = 100) {
+  await page.context().route("**/*", route => {
+    const delay = Math.max(0, (route.request().postData()?.length ?? 0) / (kbps * 128)) // rough calculation
+    setTimeout(() => route.continue(), delay * 1000)
+  })
+}
+
+export async function sometimesFail(page: Page, pct = 0.15) {
+  await page.route("**/api/**", async route => {
+    if (Math.random() < pct) {
+      return route.fulfill({ status: 503, body: "flaky" })
+    }
+    return route.continue()
+  })
+}
+
+export async function simulateSlowNetwork(page: Page, latency = 1000) {
+  await page.context().route("**/*", route => {
+    setTimeout(() => route.continue(), latency)
+  })
+}
+
+export async function simulateIntermittentFailures(page: Page, failureRate = 0.2) {
+  let requestCount = 0
+  await page.context().route("**/api/**", async route => {
+    requestCount++
+    if (requestCount % Math.floor(1 / failureRate) === 0) {
+      return route.fulfill({ status: 500, body: "intermittent failure" })
+    }
+    return route.continue()
+  })
+}

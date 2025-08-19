@@ -312,11 +312,11 @@ export default function UserDashboard() {
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8 px-6">
               {[
-                { id: 'overview', label: 'Overview', icon: '📊' },
-                { id: 'bookings', label: 'Bookings', icon: '📅' },
-                { id: 'credits', label: 'Credits', icon: '💰' },
-                { id: 'favorites', label: 'Favorites', icon: '❤️' },
-                { id: 'profile', label: 'Profile', icon: '👤' }
+                { id: 'overview' as const, label: 'Overview', icon: '📊' },
+                { id: 'bookings' as const, label: 'Bookings', icon: '📅' },
+                { id: 'credits' as const, label: 'Credits', icon: '💰' },
+                { id: 'favorites' as const, label: 'Favorites', icon: '❤️' },
+                { id: 'profile' as const, label: 'Profile', icon: '👤' }
               ].map((tab) => (
                 <button
                   key={tab.id}

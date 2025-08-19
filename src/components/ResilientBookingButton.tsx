@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
-import { useOptimisticAction, useDebouncedClick } from '@/hooks';
+import { useOptimisticActionWithTelemetry, useDebouncedClickWithTelemetry } from '@/hooks';
 import { Calendar, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface BookingData {
@@ -12,8 +12,13 @@ interface BookingData {
   time: string;
 }
 
+interface BookingResult {
+  success: boolean;
+  bookingId?: string;
+}
+
 interface ResilientBookingButtonProps {
-  onBook: (data: BookingData) => Promise<{ success: boolean; bookingId?: string }>;
+  onBook: (data: BookingData) => Promise<BookingResult>;
   serviceId: string;
   date: string;
   time: string;
@@ -23,8 +28,8 @@ export function ResilientBookingButton({ onBook, serviceId, date, time }: Resili
   const [isOptimistic, setIsOptimistic] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
 
-  // 1. OPTIMISTIC UI + GRACEFUL ROLLBACK
-  const { execute, isLoading, error } = useOptimisticAction({
+  // 1. OPTIMISTIC UI + GRACEFUL ROLLBACK with TELEMETRY
+  const { execute, isLoading, error } = useOptimisticActionWithTelemetry({
     action: async () => {
       const result = await onBook({ serviceId, date, time });
       if (!result.success) {
@@ -32,24 +37,28 @@ export function ResilientBookingButton({ onBook, serviceId, date, time }: Resili
       }
       return result;
     },
-    onSuccess: (result) => {
+    onSuccess: (result: BookingResult) => {
       setBookingId(result.bookingId || null);
       setIsOptimistic(false);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       // Graceful rollback - reset optimistic state
       setIsOptimistic(false);
       setBookingId(null);
       console.error('Booking failed, rolling back:', error);
-    }
+    },
+    component: 'ResilientBookingButton' // Required for telemetry
   });
 
-  // 2. DEBOUNCED CLICK (prevents double-click chaos)
-  const debouncedBook = useDebouncedClick(async () => {
+  // 2. DEBOUNCED CLICK (prevents double-click chaos) with TELEMETRY
+  const debouncedBook = useDebouncedClickWithTelemetry(async () => {
     setIsOptimistic(true);
     setBookingId(null);
     await execute();
-  }, { delay: 300 });
+  }, { 
+    delay: 300,
+    component: 'ResilientBookingButton' // Required for telemetry
+  });
 
   // 3. LOADING SKELETONS (instead of dead space)
   if (isLoading || isOptimistic) {
@@ -75,7 +84,7 @@ export function ResilientBookingButton({ onBook, serviceId, date, time }: Resili
           <span className="text-sm">Booking failed</span>
         </div>
         <div className="flex gap-2">
-          <Button onClick={debouncedBook} variant="outline" size="sm">
+          <Button onClick={() => debouncedBook()} variant="outline" size="sm">
             Try Again
           </Button>
           <Button onClick={() => window.location.reload()} variant="ghost" size="sm">
@@ -103,7 +112,7 @@ export function ResilientBookingButton({ onBook, serviceId, date, time }: Resili
 
   // Default state
   return (
-    <Button onClick={debouncedBook} className="w-full">
+    <Button onClick={() => debouncedBook()} className="w-full">
       <Calendar className="h-4 w-4 mr-2" />
       Book Now
     </Button>

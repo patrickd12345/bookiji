@@ -326,29 +326,27 @@ export default function HomePageClient() {
             ) : !isAuthenticated ? (
               // Not logged in - show onboarding CTAs
               <>
-                <Button
-                  className="h-14 px-10 text-xl flex flex-col items-start gap-1 rounded-lg shadow-lg"
-                  onClick={() => {
-                    window.location.href = '/register?redirect=/customer/dashboard';
-                  }}
-                  aria-label="Book an appointment as a customer"
-                  suppressHydrationWarning
-                >
-                  <span>{t('buttons.book_appointment')}</span>
-                  <span className="text-sm text-gray-200">(Customer)</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-14 px-10 text-xl flex flex-col items-start gap-1 rounded-lg shadow-lg"
-                  onClick={() => {
-                    window.location.href = '/register?redirect=/vendor/dashboard';
-                  }}
-                  aria-label="Offer your services as a provider"
-                  suppressHydrationWarning
-                >
-                  <span>{t('buttons.offer_services')}</span>
-                  <span className="text-sm text-gray-500">(Provider)</span>
-                </Button>
+                <Link href="/get-started">
+                  <Button
+                    className="h-14 px-10 text-xl flex flex-col items-start gap-1 rounded-lg shadow-lg"
+                    aria-label="Book an appointment as a customer"
+                    suppressHydrationWarning
+                  >
+                    <span>{t('buttons.book_appointment')}</span>
+                    <span className="text-sm text-gray-200">(Customer)</span>
+                  </Button>
+                </Link>
+                <Link href="/get-started">
+                  <Button
+                    variant="outline"
+                    className="h-14 px-10 text-xl flex flex-col items-start gap-1 rounded-lg shadow-lg"
+                    aria-label="Offer your services as a provider"
+                    suppressHydrationWarning
+                  >
+                    <span>{t('buttons.offer_services')}</span>
+                    <span className="text-sm text-gray-500">(Provider)</span>
+                  </Button>
+                </Link>
               </>
             ) : (
               // Logged in - show dashboard CTAs based on capabilities
@@ -371,17 +369,16 @@ export default function HomePageClient() {
                 )}
                 {/* Fallback CTAs if user lacks capabilities */}
                 {!canBookServices && !canOfferServices && (
-                  <Button
-                    className="h-10 px-8 text-lg flex flex-col items-start gap-1"
-                    onClick={() => {
-                      window.location.href = '/register?redirect=/customer/dashboard';
-                    }}
-                    aria-label="Book an appointment as a customer"
-                    suppressHydrationWarning
-                  >
-                    <span>{t('buttons.book_appointment')}</span>
-                    <span className="text-xs text-gray-500">(Customer)</span>
-                  </Button>
+                  <Link href="/get-started">
+                    <Button
+                      className="h-10 px-8 text-lg flex flex-col items-start gap-1"
+                      aria-label="Book an appointment as a customer"
+                      suppressHydrationWarning
+                    >
+                      <span>{t('buttons.book_appointment')}</span>
+                      <span className="text-xs text-gray-500">(Customer)</span>
+                    </Button>
+                  </Link>
                 )}
               </>
             )}

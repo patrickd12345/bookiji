@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton, CardSkeleton, GridSkeleton } from '@/components/ui/LoadingSkeleton'
-import { useOptimisticAction } from '@/hooks/useOptimisticAction'
-import { useDebouncedClick } from '@/hooks/useDebouncedClick'
+import { useOptimisticActionWithTelemetry } from '@/hooks/useOptimisticActionWithTelemetry'
+import { useDebouncedClickWithTelemetry } from '@/hooks/useDebouncedClickWithTelemetry'
 import { useResilientQuery } from '@/hooks/useResilientQuery'
 import { useErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { CheckCircle, XCircle, AlertTriangle, Loader2, RefreshCw } from 'lucide-react'
@@ -52,8 +52,8 @@ export function ResilientVendorInbox({
     cacheTime: 60000   // 1 minute
   })
 
-  // 2. OPTIMISTIC ACCEPT ACTION
-  const { execute: executeAccept, status: acceptStatus } = useOptimisticAction({
+  // 2. OPTIMISTIC ACCEPT ACTION with TELEMETRY
+  const { execute: executeAccept, status: acceptStatus } = useOptimisticActionWithTelemetry({
     action: async (requestId: string) => {
       const response = await fetch('/api/vendor/requests/accept', {
         method: 'POST',
@@ -101,11 +101,12 @@ export function ResilientVendorInbox({
       ))
       
       handleError(error)
-    }
+    },
+    component: 'ResilientVendorInbox' // Required for telemetry
   })
 
-  // 3. OPTIMISTIC DECLINE ACTION
-  const { execute: executeDecline, status: declineStatus } = useOptimisticAction({
+  // 3. OPTIMISTIC DECLINE ACTION with TELEMETRY
+  const { execute: executeDecline, status: declineStatus } = useOptimisticActionWithTelemetry({
     action: async (requestId: string) => {
       const response = await fetch('/api/vendor/requests/decline', {
         method: 'POST',
@@ -153,22 +154,25 @@ export function ResilientVendorInbox({
       ))
       
       handleError(error)
-    }
+    },
+    component: 'ResilientVendorInbox' // Required for telemetry
   })
 
-  // 4. DEBOUNCED CLICKS (prevents duplicate actions)
-  const debouncedAccept = useDebouncedClick(executeAccept, {
+  // 4. DEBOUNCED CLICKS (prevents duplicate actions) with TELEMETRY
+  const debouncedAccept = useDebouncedClickWithTelemetry(executeAccept, {
     delay: 300,
     onDuplicate: () => {
       console.log('Accept already in progress, ignoring duplicate click')
-    }
+    },
+    component: 'ResilientVendorInbox' // Required for telemetry
   })
 
-  const debouncedDecline = useDebouncedClick(executeDecline, {
+  const debouncedDecline = useDebouncedClickWithTelemetry(executeDecline, {
     delay: 300,
     onDuplicate: () => {
       console.log('Decline already in progress, ignoring duplicate click')
-    }
+    },
+    component: 'ResilientVendorInbox' // Required for telemetry
   })
 
   // 5. UPDATE REQUESTS WHEN DATA CHANGES

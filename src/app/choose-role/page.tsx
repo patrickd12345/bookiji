@@ -1,38 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '../../../hooks/useAuth'
+import { useAuthReady } from '@/hooks/useAuthReady'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import Loading from './loading'
 
 export default function ChooseRolePage() {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { isAuthenticated } = useAuth()
+  const { ready, session } = useAuthReady()
   const router = useRouter()
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Authentication Required</CardTitle>
-            <CardDescription>
-              Please log in to choose your role
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={() => router.push('/login')}
-              className="w-full"
-            >
-              Go to Login
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
+  useEffect(() => {
+    if (!ready) return
+    if (!session) {
+      router.replace('/login?next=/choose-role')
+    }
+  }, [ready, session, router])
+
+  if (!ready) return <Loading />
+
+  if (!session) {
+    return <Loading />
   }
 
   const handleRoleToggle = (role: string) => {

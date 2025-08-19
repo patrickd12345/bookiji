@@ -3,6 +3,7 @@ import './globals.css'
 import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider'
 import MainNavigation from '@/components/MainNavigation'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export const metadata: Metadata = {
   title: 'Bookiji — Universal Booking Platform',
@@ -25,12 +26,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-background text-foreground">
         <a href="#main" className="skip-link">Skip to main</a>
-        <ThemeProvider>
-          <GuidedTourProvider>
-            <MainNavigation />
-            <main id="main" tabIndex={-1}>{children}</main>
-          </GuidedTourProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <GuidedTourProvider>
+              <MainNavigation />
+              <main id="main" tabIndex={-1}>{children}</main>
+            </GuidedTourProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )

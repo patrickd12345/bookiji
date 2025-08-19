@@ -67,6 +67,19 @@ export function buildVendorJsonLd(vendor: VendorData): WithContext<ProfessionalS
       },
     }),
     ...(vendor.priceRange && { priceRange: vendor.priceRange }),
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      itemListElement: vendor.services.map((service) => ({
+        '@type': 'Offer',
+        '@id': `#service-${service.id}`,
+        itemOffered: {
+          '@type': 'Service',
+          name: service.name,
+          ...(service.description && { description: service.description }),
+          ...(service.price_cents && { price: service.price_cents / 100 }),
+        },
+      })),
+    },
     makesOffer: vendor.services.map((service) => ({
       '@type': 'Offer',
       '@id': `#service-${service.id}`,

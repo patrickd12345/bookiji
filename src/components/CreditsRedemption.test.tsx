@@ -1,0 +1,112 @@
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import CreditsRedemption from './CreditsRedemption';
+
+// Mock fetch
+global.fetch = jest.fn();
+
+const mockUserCredits = {
+  id: '1',
+  email: 'test@example.com',
+  credits_balance: 50.00,
+  total_credits_earned: 100.00,
+  total_credits_spent: 50.00,
+  current_tier: 'Gold',
+  tier_level: 2,
+  bonus_multiplier: 1.5,
+  discount_percentage: 10,
+  benefits: { priority_support: true },
+  total_referrals: 5,
+  completed_referrals: 3,
+};
+
+const defaultProps = {
+  userId: '1',
+  totalCost: 100.00,
+  onCreditsApplied: jest.fn(),
+  className: '',
+};
+
+describe('CreditsRedemption', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (fetch as jest.Mock).mockResolvedValue({
+      json: () => Promise.resolve({ success: true, data: mockUserCredits }),
+    });
+  });
+
+  it('renders loading state initially', () => {
+    render(<CreditsRedemption {...defaultProps} />);
+    expect(screen.getByText('Apply Credits')).toBeInTheDocument();
+  });
+
+  it('displays user credits and tier information', async () => {
+    render(<CreditsRedemption {...defaultProps} />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('💎 Apply Credits')).toBeInTheDocument();
+      expect(screen.getByText('Gold')).toBeInTheDocument();
+      expect(screen.getByText('$50.00')).toBeInTheDocument();
+    });
+  });
+
+  it('allows user to input redemption amount', async () => {
+    render(<CreditsRedemption {...defaultProps} />);
+    
+    await waitFor(() => {
+      const input = screen.getByLabelText('Amount to Apply');
+      fireEvent.change(input, { target: { value: '25.00' } });
+      expect(input).toHaveValue(25);
+    });
+  });
+
+  it('applies max redemption when max button is clicked', async () => {
+    render(<CreditsRedemption {...defaultProps} />);
+    
+    await waitFor(() => {
+      const maxButton = screen.getByText('Max');
+      fireEvent.click(maxButton);
+      
+      // Max redemption should be 25% of total cost (25.00) or available balance (50.00), whichever is lower
+      const input = screen.getByLabelText('Amount to Apply');
+      expect(input).toHaveValue(25);
+    });
+  });
+
+  it('shows cost breakdown when amount is entered', async () => {
+    render(<CreditsRedemption {...defaultProps} />);
+    
+    await waitFor(() => {
+      const input = screen.getByLabelText('Amount to Apply');
+      fireEvent.change(input, { target: { value: '20.00' } });
+      
+      expect(screen.getByText('Original Cost:')).toBeInTheDocument();
+      expect(screen.getByText('Credits Applied:')).toBeInTheDocument();
+      expect(screen.getByText('Final Cost:')).toBeInTheDocument();
+    });
+  });
+
+  it('calls onCreditsApplied when credits are successfully applied', async () => {
+    (fetch as jest.Mock)
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ success: true, data: mockUserCredits }),
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ success: true, data: mockUserCredits }),
+      });
+
+    render(<CreditsRedemption {...defaultProps} />);
+    
+    await waitFor(() => {
+      const input = screen.getByLabelText('Amount to Apply');
+      fireEvent.change(input, { target: { value: '20.00' } });
+      
+      const applyButton = screen.getByText(/Apply \$20.00 Credits/);
+      fireEvent.click(applyButton);
+    });
+
+    await waitFor(() => {
+      expect(defaultProps.onCreditsApplied).toHaveBeenCalledWith(20, 82);
+    });
+  });
+});
+

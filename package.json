@@ -26,7 +26,7 @@
     "db:stop": "supabase stop",
     "ai:test": "node scripts/ai-test-loop.mjs",
     "maintenance:calendar": "node scripts/setup-maintenance-calendar.mjs",
-    "i18n:check": "node scripts/check-i18n.mjs",
+    "i18n:check": "node scripts/i18n-check.js",
     "prebuild": "npm run i18n:check",
     "prepare": "husky install"
   },
@@ -101,6 +101,7 @@
     "@types/react-dom": "^19.1.6",
     "@types/react-map-gl": "^6.1.7",
     "@types/supertest": "^6.0.3",
+    "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.6.0",
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.15",

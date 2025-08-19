@@ -3,8 +3,8 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton, ButtonSkeleton } from '@/components/ui/LoadingSkeleton'
-import { useOptimisticAction } from '@/hooks/useOptimisticAction'
-import { useDebouncedClick } from '@/hooks/useDebouncedClick'
+import { useOptimisticActionWithTelemetry } from '@/hooks/useOptimisticActionWithTelemetry'
+import { useDebouncedClickWithTelemetry } from '@/hooks/useDebouncedClickWithTelemetry'
 import { useResilientQuery } from '@/hooks/useResilientQuery'
 import { Calendar, Clock, CheckCircle, AlertCircle, Loader2, RotateCcw } from 'lucide-react'
 
@@ -36,8 +36,8 @@ export function ResilientRescheduleButton({
   const [rescheduleId, setRescheduleId] = useState<string | null>(null)
   const [oldSlot, setOldSlot] = useState<{ start: string; end: string } | null>(null)
 
-  // 1. OPTIMISTIC RESCHEDULE ACTION
-  const { execute: executeReschedule, status, error, rollback } = useOptimisticAction({
+  // 1. OPTIMISTIC RESCHEDULE ACTION with TELEMETRY
+  const { execute: executeReschedule, status, error, rollback } = useOptimisticActionWithTelemetry({
     action: async () => {
       // Simulate reschedule processing
       const response = await fetch('/api/bookings/reschedule', {
@@ -76,15 +76,17 @@ export function ResilientRescheduleButton({
       setRescheduleId(null)
       setOldSlot(null)
       onRollback()
-    }
+    },
+    component: 'ResilientRescheduleButton' // Required for telemetry
   })
 
-  // 2. DEBOUNCED CLICK (prevents duplicate reschedules)
-  const debouncedReschedule = useDebouncedClick(() => executeReschedule(), {
+  // 2. DEBOUNCED CLICK (prevents duplicate reschedules) with TELEMETRY
+  const debouncedReschedule = useDebouncedClickWithTelemetry(() => executeReschedule(), {
     delay: 300,
     onDuplicate: () => {
       console.log('Reschedule already in progress, ignoring duplicate click')
-    }
+    },
+    component: 'ResilientRescheduleButton' // Required for telemetry
   })
 
   // 3. RESILIENT QUERY for reschedule confirmation
@@ -149,7 +151,7 @@ export function ResilientRescheduleButton({
     return (
       <div className="space-y-3">
         <Button 
-          onClick={debouncedReschedule}
+          onClick={() => debouncedReschedule()}
           variant="destructive"
           className="w-full"
         >
@@ -162,15 +164,15 @@ export function ResilientRescheduleButton({
         </div>
         
         <div className="flex gap-2">
-                      <Button 
-              onClick={() => rollback()}
-              variant="outline"
-              size="sm"
-              className="flex-1"
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Restore Original
-            </Button>
+          <Button 
+            onClick={() => rollback()}
+            variant="outline"
+            size="sm"
+            className="flex-1"
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Restore Original
+          </Button>
           
           <Button 
             onClick={() => setRescheduleStatus('idle')}
@@ -188,7 +190,7 @@ export function ResilientRescheduleButton({
   // 7. DEFAULT STATE - Reschedule button
   return (
     <Button
-      onClick={debouncedReschedule}
+      onClick={() => debouncedReschedule()}
       disabled={disabled || status === 'loading'}
       className={`w-full ${className}`}
       size="lg"

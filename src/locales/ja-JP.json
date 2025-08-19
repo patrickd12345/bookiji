@@ -92,5 +92,13 @@
   "density.dense": "dense",
   "density.medium": "medium",
   "density.sparse": "sparse",
-  "cta.explore_features": "Explore Bookiji features"
+  "cta.explore_features": "Explore Bookiji features",
+  "buttons.search": "Search",
+  "buttons.start_chat": "Start Chat",
+  "buttons.watch_demo": "Watch Demo",
+  "buttons.book_appointment": "Book an Appointment",
+  "buttons.offer_services": "Offer Your Services",
+  "buttons.start_interactive_tour": "Start Interactive Tour",
+  "buttons.close": "Close",
+  "buttons.try_again": "Try again"
 }

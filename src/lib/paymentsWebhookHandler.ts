@@ -76,6 +76,49 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
     const body = await request.text()
     const signature = request.headers.get('stripe-signature')
 
+    // Test bypass logic for unsigned webhook events
+    if (process.env.ENABLE_TEST_WEBHOOK_BYPASS === 'true') {
+      const testKey = request.headers.get('x-test-webhook-key')
+      if (testKey === process.env.TEST_WEBHOOK_KEY) {
+        try {
+          const event = JSON.parse(body) as any
+          
+          // Check for duplicate events
+          if (await this.wasEventProcessed(event.id)) {
+            return NextResponse.json({ received: true, duplicate: true })
+          }
+
+          // Handle test events
+          switch (event.type) {
+            case 'payment_intent.succeeded':
+              if (event.data?.object?.metadata?.booking_id) {
+                await this.handlePaymentSucceeded(event.data.object as PaymentIntentWithMetadata)
+              }
+              break
+            case 'payment_intent.payment_failed':
+              if (event.data?.object?.metadata?.booking_id) {
+                await this.handlePaymentFailed(event.data.object as PaymentIntentWithMetadata)
+              }
+              break
+            case 'payment_intent.canceled':
+              if (event.data?.object?.metadata?.booking_id) {
+                await this.handlePaymentCanceled(event.data.object as PaymentIntentWithMetadata)
+              }
+              break
+            default:
+              // Unhandled event types are ignored in test mode
+              break
+          }
+
+          await this.markEventProcessed(event.id)
+          return NextResponse.json({ received: true })
+        } catch (error) {
+          console.error('Test webhook handler error:', error)
+          return NextResponse.json({ error: 'Test webhook handler failed' }, { status: 500 })
+        }
+      }
+    }
+
     if (!signature) {
       return NextResponse.json({ error: 'No signature' }, { status: 400 })
     }

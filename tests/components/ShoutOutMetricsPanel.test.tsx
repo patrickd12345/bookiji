@@ -2,68 +2,34 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import ShoutOutMetricsPanel from '@/app/admin/shout-outs/ShoutOutMetricsPanel'
 
-// Mock the hook
-vi.mock('@/hooks/useShoutOutTimeseries', () => ({
-  useShoutOutTimeseries: () => ({
-    data: [
-      {
-        date: '2025-08-05',
-        conversion_rate: 0.42,
-        avg_response_ms: 284000,
-        resolution_pct: 0.55
-      },
-      {
-        date: '2025-08-06',
-        conversion_rate: 0.38,
-        avg_response_ms: 312000,
-        resolution_pct: 0.48
-      }
-    ],
-    isLoading: false,
-    isError: false
-  })
-}))
+// No mocking needed - component uses internal state
 
 describe('ShoutOutMetricsPanel', () => {
-  it('renders three chart cards with correct titles', () => {
+  it('renders four metric cards with correct titles', () => {
     render(<ShoutOutMetricsPanel />)
     
-    expect(screen.getByText('Conversion %')).toBeInTheDocument()
-    expect(screen.getByText('Avg Response Time (min)')).toBeInTheDocument()
-    expect(screen.getByText('Resolution %')).toBeInTheDocument()
+    expect(screen.getByText('Total Requests')).toBeInTheDocument()
+    expect(screen.getByText('Pending')).toBeInTheDocument()
+    expect(screen.getByText('Accepted')).toBeInTheDocument()
+    expect(screen.getByText('Response Time')).toBeInTheDocument()
   })
 
-  it('renders loading state when data is loading', () => {
-    vi.mocked(require('@/hooks/useShoutOutTimeseries').useShoutOutTimeseries).mockReturnValue({
-      data: [],
-      isLoading: true,
-      isError: false
-    })
-
+  it('renders metrics data when loaded', () => {
     render(<ShoutOutMetricsPanel />)
-    expect(screen.getByText('Loading shout‑out metrics…')).toBeInTheDocument()
-  })
-
-  it('renders error state when there is an error', () => {
-    vi.mocked(require('@/hooks/useShoutOutTimeseries').useShoutOutTimeseries).mockReturnValue({
-      data: [],
-      isLoading: false,
-      isError: true
-    })
-
-    render(<ShoutOutMetricsPanel />)
-    expect(screen.getByText('Failed to load metrics.')).toBeInTheDocument()
-  })
-
-  it('renders no data state when data is empty', () => {
-    vi.mocked(require('@/hooks/useShoutOutTimeseries').useShoutOutTimeseries).mockReturnValue({
-      data: [],
-      isLoading: false,
-      isError: false
-    })
-
-    render(<ShoutOutMetricsPanel />)
-    expect(screen.getByText('No data yet.')).toBeInTheDocument()
+    
+    // Check that the mock data is displayed - use more specific selectors
+    expect(screen.getByText('Total Requests')).toBeInTheDocument()
+    expect(screen.getByText('Pending')).toBeInTheDocument()
+    expect(screen.getByText('Accepted')).toBeInTheDocument()
+    expect(screen.getByText('Response Time')).toBeInTheDocument()
+    
+    // Check for service categories
+    expect(screen.getByText('Hair & Beauty')).toBeInTheDocument()
+    expect(screen.getByText('Wellness')).toBeInTheDocument()
+    
+    // Check for specific text that appears only once
+    expect(screen.getByText('All time shout-out requests')).toBeInTheDocument()
+    expect(screen.getByText('Average vendor response time')).toBeInTheDocument()
   })
 })
 

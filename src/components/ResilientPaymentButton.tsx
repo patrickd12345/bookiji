@@ -3,8 +3,8 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingSkeleton, ButtonSkeleton } from '@/components/ui/LoadingSkeleton'
-import { useOptimisticAction } from '@/hooks/useOptimisticAction'
-import { useDebouncedClick } from '@/hooks/useDebouncedClick'
+import { useOptimisticActionWithTelemetry } from '@/hooks/useOptimisticActionWithTelemetry'
+import { useDebouncedClickWithTelemetry } from '@/hooks/useDebouncedClickWithTelemetry'
 import { useResilientQuery } from '@/hooks/useResilientQuery'
 import { CheckCircle, CreditCard, AlertCircle, Loader2 } from 'lucide-react'
 
@@ -32,8 +32,8 @@ export function ResilientPaymentButton({
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle')
   const [paymentId, setPaymentId] = useState<string | null>(null)
 
-  // 1. OPTIMISTIC PAYMENT ACTION
-  const { execute: executePayment, status, error, rollback } = useOptimisticAction({
+  // 1. OPTIMISTIC PAYMENT ACTION with TELEMETRY
+  const { execute: executePayment, status, error, rollback } = useOptimisticActionWithTelemetry({
     action: async (details: PaymentDetails) => {
       // Simulate payment processing
       const response = await fetch('/api/payments/process', {
@@ -65,15 +65,17 @@ export function ResilientPaymentButton({
     onRollback: (details: PaymentDetails) => {
       setPaymentStatus('idle')
       setPaymentId(null)
-    }
+    },
+    component: 'ResilientPaymentButton' // Required for telemetry
   })
 
-  // 2. DEBOUNCED CLICK (prevents double-payments)
-  const debouncedPayment = useDebouncedClick(() => executePayment(paymentDetails), {
+  // 2. DEBOUNCED CLICK (prevents double-payments) with TELEMETRY
+  const debouncedPayment = useDebouncedClickWithTelemetry(() => executePayment(paymentDetails), {
     delay: 500,
     onDuplicate: () => {
       console.log('Payment already in progress, ignoring duplicate click')
-    }
+    },
+    component: 'ResilientPaymentButton' // Required for telemetry
   })
 
   // 3. RESILIENT QUERY for payment status confirmation
@@ -134,7 +136,7 @@ export function ResilientPaymentButton({
     return (
       <div className="space-y-3">
         <Button 
-          onClick={debouncedPayment}
+          onClick={() => debouncedPayment()}
           variant="destructive"
           className="w-full"
         >
@@ -161,7 +163,7 @@ export function ResilientPaymentButton({
   // 7. DEFAULT STATE - Payment button
   return (
     <Button
-      onClick={debouncedPayment}
+      onClick={() => debouncedPayment()}
       disabled={disabled || status === 'loading'}
       className={`w-full ${className}`}
       size="lg"
