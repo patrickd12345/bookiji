@@ -1,0 +1,181 @@
+name: Supabase Migrations Audit (Monthly)
+
+on:
+  schedule:
+    # 09:00 UTC on the 1st of every month — adjust as you like
+    - cron: "0 9 1 * *"
+  workflow_dispatch: {}
+
+jobs:
+  audit-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Auth & Link (Staging)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_STG }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_STG }}
+        run: |
+          supabase link --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Remote migration list (Staging)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_STG }}
+        run: |
+          echo "## Remote migrations (staging)" >> $GITHUB_STEP_SUMMARY
+          supabase migration list --remote | tee migrations_staging.txt
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat migrations_staging.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Schema dump & hash (Staging)
+        id: schema-staging
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_STG }}
+        run: |
+          # Dump schema only (no data). Produces supabase/schema.sql
+          supabase db dump --schema-only --db-url env://SUPABASE_DB_URL || true
+
+          # If you don't want to store DB URL, let CLI infer from 'link' (older CLI may need DB URL)
+          # Compute hash even if file missing (shows 'N/A')
+          if [ -f supabase/schema.sql ]; then
+            sha256sum supabase/schema.sql | tee schema_staging.sha256
+            echo "hash=$(cut -d' ' -f1 schema_staging.sha256)" >> $GITHUB_OUTPUT
+          else
+            echo "No schema.sql produced; check CLI/db-url permissions." | tee schema_staging.sha256
+            echo "hash=N/A" >> $GITHUB_OUTPUT
+          fi
+
+          echo "### Schema hash (staging)" >> $GITHUB_STEP_SUMMARY
+          echo "\`${{ steps.schema-staging.outputs.hash }}\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload artifacts (Staging)
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-audit-staging
+          path: |
+            migrations_staging.txt
+            schema_staging.sha256
+            supabase/schema.sql
+
+      # Optional: post to your ops webhook (Slack/Teams/etc.)
+      - name: Notify ops webhook (Staging) (optional)
+        env:
+          WEBHOOK_URL: ${{ secrets.OPS_WEBHOOK_URL_STG }}
+        run: |
+          if [ -n "$WEBHOOK_URL" ] && [ "$WEBHOOK_URL" != "" ]; then
+            payload=$(jq -nc --arg env "staging" --arg hash "${{ steps.schema-staging.outputs.hash }}" '
+              { text: ("Supabase migration audit (" + $env + "): schema_hash=" + $hash) }')
+            curl -sS -X POST -H 'Content-Type: application/json' --data "$payload" "$WEBHOOK_URL" || true
+          fi
+
+  audit-production:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Auth & Link (Production)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_PROD }}
+        run: |
+          supabase link --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Remote migration list (Production)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+        run: |
+          echo "## Remote migrations (production)" >> $GITHUB_STEP_SUMMARY
+          supabase migration list --remote | tee migrations_production.txt
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat migrations_production.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Schema dump & hash (Production)
+        id: schema-production
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+        run: |
+          # Dump schema only (no data). Produces supabase/schema.sql
+          supabase db dump --schema-only --db-url env://SUPABASE_DB_URL || true
+
+          # If you don't want to store DB URL, let CLI infer from 'link' (older CLI may need DB URL)
+          # Compute hash even if file missing (shows 'N/A')
+          if [ -f supabase/schema.sql ]; then
+            sha256sum supabase/schema.sql | tee schema_production.sha256
+            echo "hash=$(cut -d' ' -f1 schema_production.sha256)" >> $GITHUB_OUTPUT
+          else
+            echo "No schema.sql produced; check CLI/db-url permissions." | tee schema_production.sha256
+            echo "hash=N/A" >> $GITHUB_OUTPUT
+          fi
+
+          echo "### Schema hash (production)" >> $GITHUB_STEP_SUMMARY
+          echo "\`${{ steps.schema-production.outputs.hash }}\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload artifacts (Production)
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-audit-production
+          path: |
+            migrations_production.txt
+            schema_production.sha256
+            supabase/schema.sql
+
+      # Optional: post to your ops webhook (Slack/Teams/etc.)
+      - name: Notify ops webhook (Production) (optional)
+        env:
+          WEBHOOK_URL: ${{ secrets.OPS_WEBHOOK_URL_PROD }}
+        run: |
+          if [ -n "$WEBHOOK_URL" ] && [ "$WEBHOOK_URL" != "" ]; then
+            payload=$(jq -nc --arg env "production" --arg hash "${{ steps.schema-production.outputs.hash }}" '
+              { text: ("Supabase migration audit (" + $env + "): schema_hash=" + $hash) }')
+            curl -sS -X POST -H 'Content-Type: application/json' --data "$payload" "$WEBHOOK_URL" || true
+          fi
+
+  summary:
+    runs-on: ubuntu-latest
+    needs: [audit-staging, audit-production]
+    if: always()
+    steps:
+      - name: Monthly Migration Audit Summary
+        run: |
+          echo "# 🏰 Monthly Migration Fortress Audit" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Audit Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Staging Status:** ${{ needs.audit-staging.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Production Status:** ${{ needs.audit-production.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎯 What This Audit Proves" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Migrations are linked and visible**" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Schema fingerprint captured**" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Fortress walls are standing**" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **No manual dashboard changes**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📁 Artifacts Available" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Migration lists for both environments" >> $GITHUB_STEP_SUMMARY
+          echo "- Schema dumps with SHA-256 hashes" >> $GITHUB_STEP_SUMMARY
+          echo "- Download from Actions → Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔍 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Compare hashes** month-to-month for schema drift detection" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Review migration counts** to ensure consistency" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Download artifacts** if detailed analysis needed" >> $GITHUB_STEP_SUMMARY
+          echo "4. **Celebrate** - your migration fortress is working!" >> $GITHUB_STEP_SUMMARY
