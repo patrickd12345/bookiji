@@ -52,10 +52,17 @@ function getClientIP(request: NextRequest): string {
 
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
-  // Admin guard for /admin
-  if (pathname.startsWith('/admin')) {
-    const isAdminHeader = request.headers.get('x-user-role') === 'admin'
-    if (!isAdminHeader) {
+  // Admin guard for /admin and /api/admin/*
+  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
+    const hasSession = request.cookies.has('sb-access-token') || request.cookies.has('supabase-auth-token')
+    
+    if (!hasSession) {
+      if (pathname.startsWith('/api/')) {
+        return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { 'content-type': 'application/json' }
+        })
+      }
       const url = request.nextUrl.clone()
       url.pathname = '/'
       return NextResponse.redirect(url)

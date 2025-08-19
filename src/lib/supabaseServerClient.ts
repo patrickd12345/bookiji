@@ -42,3 +42,22 @@ export const getSupabaseKey = (isServer: boolean = false, requireSecret: boolean
   
   return config.publishableKey;
 };
+
+/**
+ * Get Supabase server client that authenticates as the current user
+ * This is used for operations that need user context (like requireAdmin)
+ */
+export const getSupabaseServerClient = () => {
+  const config = getSupabaseConfig();
+  
+  if (!config.publishableKey) {
+    throw new Error('Missing Supabase publishable key environment variable');
+  }
+
+  return createClient(config.url, config.publishableKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+};
