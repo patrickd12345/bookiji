@@ -128,6 +128,12 @@ export default function HomePageClient() {
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground rounded-full text-sm">
                 <span>💡</span>
                 <span>{t('home.commitment_banner', { fee: formatCurrency(1) })}</span>
+                <span 
+                  className="text-accent-foreground/80 cursor-help text-base ml-1" 
+                  title="This small fee guarantees your booking slot and helps reduce no-shows. It's separate from the service price and is refunded if the provider doesn't show up."
+                >
+                  ℹ️
+                </span>
               </div>
             </div>
 
@@ -135,6 +141,7 @@ export default function HomePageClient() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center" data-tour="get-started-btn">
               <Link
                 href="/get-started"
+                data-testid="book-now-btn"
                 className="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-all duration-200 text-lg"
               >
                 {t('cta.get_started')}
@@ -214,7 +221,15 @@ export default function HomePageClient() {
               <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">💸</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">{t('home.core.commitment.title', { fee: formatCurrency(1) })}</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground flex items-center justify-center gap-2">
+                {t('home.core.commitment.title', { fee: formatCurrency(1) })}
+                <span 
+                  className="text-primary/80 cursor-help text-lg" 
+                  title="Our $1 commitment fee ensures serious bookings and eliminates no-shows. It's a small investment that guarantees your appointment slot."
+                >
+                  ℹ️
+                </span>
+              </h3>
               <p className="text-muted-foreground">{t('home.core.commitment.desc')}</p>
             </div>
             
@@ -222,7 +237,15 @@ export default function HomePageClient() {
               <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🤖</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">{t('home.core.assistant.title')}</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground flex items-center justify-center gap-2">
+                {t('home.core.assistant.title')}
+                <span 
+                  className="text-secondary/80 cursor-help text-lg" 
+                  title="Our AI understands natural language and handles complex booking requirements. Just chat naturally to find and book services."
+                >
+                  ℹ️
+                </span>
+              </h3>
               <p className="text-muted-foreground">{t('home.core.assistant.desc')}</p>
             </div>
             
@@ -230,7 +253,15 @@ export default function HomePageClient() {
               <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🗺️</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">{t('home.core.map.title')}</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground flex items-center justify-center gap-2">
+                {t('home.core.map.title')}
+                <span 
+                  className="text-accent/80 cursor-help text-lg" 
+                  title="We protect provider privacy by showing availability zones instead of exact locations. Smart radius scaling finds nearby services while maintaining privacy."
+                >
+                  ℹ️
+                </span>
+              </h3>
               <p className="text-muted-foreground">{t('home.core.map.desc')}</p>
             </div>
             
@@ -238,7 +269,15 @@ export default function HomePageClient() {
               <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🛡️</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">{t('home.core.guarantees.title')}</h3>
+              <h3 className="text-xl font-semibold mb-2 text-foreground flex items-center justify-center gap-2">
+                {t('home.core.guarantees.title')}
+                <span 
+                  className="text-secondary/80 cursor-help text-lg" 
+                  title="Self-enforcing contracts with automatic dispute resolution. Your $1 commitment fee is protected and refunded if providers don't show up."
+                >
+                  ℹ️
+                </span>
+              </h3>
               <p className="text-muted-foreground">{t('home.core.guarantees.desc')}</p>
             </div>
           </div>

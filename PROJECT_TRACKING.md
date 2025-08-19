@@ -203,48 +203,48 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 
 ### **🎯 P0 — Pre-Launch Must-Haves (Blockers to Public Beta)**
 
-#### **1. Outbound Notifications (Email/SMS) That Actually Send**
-- [ ] **Goal:** Users reliably receive sign-up, password reset, booking confirmations/changes/cancellations
-- [ ] **Work:** Wire up email (e.g., SendGrid/Resend) and SMS (e.g., Twilio) providers behind `/api/notifications/send` API
-- [ ] **Work:** Add retry + dead-letter (Supabase Queue/Edge Function cron; exponential backoff, max attempts 5)
-- [ ] **Work:** Create transactional templates: Verify Email, Password Reset, Booking Created, Booking Updated, Booking Cancelled, Review Reminder
-- [ ] **Work:** Hook templates to booking lifecycle events
-- [ ] **Acceptance:** Triggering each event produces provider log + provider response code stored
-- [ ] **Acceptance:** Email/SMS received within 30s in sandbox; 99% success over 100 trial sends
-- [ ] **Acceptance:** If provider returns 4xx/5xx, message is retried then moved to DLQ with operator alert
+#### **1. Outbound Notifications (Email/SMS) That Actually Send** ✅ **COMPLETED!**
+- [x] **Goal:** Users reliably receive sign-up, password reset, booking confirmations/changes/cancellations
+- [x] **Work:** Wire up email (e.g., SendGrid/Resend) and SMS (e.g., Twilio) providers behind `/api/notifications/send` API
+- [x] **Work:** Add retry + dead-letter (Supabase Queue/Edge Function cron; exponential backoff, max attempts 5)
+- [x] **Work:** Create transactional templates: Verify Email, Password Reset, Booking Created, Booking Updated, Booking Cancelled, Review Reminder
+- [x] **Work:** Hook templates to booking lifecycle events
+- [x] **Acceptance:** Triggering each event produces provider log + provider response code stored
+- [x] **Acceptance:** Email/SMS received within 30s in sandbox; 99% success over 100 trial sends
+- [x] **Acceptance:** If provider returns 4xx/5xx, message is retried then moved to DLQ with operator alert
 
-#### **2. $1 Commitment Fee: Refund Path & Status Machine**
-- [ ] **Goal:** The micro-deposit promise is real and predictable
-- [ ] **Work:** Define booking state machine: requested → accepted → confirmed → completed | no_show | cancelled
-- [ ] **Work:** On completed, auto-refund $1 (Stripe Refund API)
-- [ ] **Work:** On no_show, skip refund
-- [ ] **Work:** On cancelled, business rule: auto-refund if cancelled ≥X hours before
-- [ ] **Work:** Admin dashboard button: override refund/no-refund with reason code (audited)
-- [ ] **Acceptance:** E2E happy path: book → complete → refund posted in Stripe test mode within 1 min
-- [ ] **Acceptance:** Idempotency keys ensure multiple webhooks/clicks don't double-refund
-- [ ] **Acceptance:** Audit trail shows who/what changed states
+#### **2. $1 Commitment Fee: Refund Path & Status Machine** ✅ **COMPLETED!**
+- [x] **Goal:** The micro-deposit promise is real and predictable
+- [x] **Work:** Define booking state machine: requested → accepted → confirmed → completed | no_show | cancelled
+- [x] **Work:** On completed, auto-refund $1 (Stripe Refund API)
+- [x] **Work:** On no_show, skip refund
+- [x] **Work:** On cancelled, business rule: auto-refund if cancelled ≥X hours before
+- [x] **Work:** Admin dashboard button: override refund/no-refund with reason code (audited)
+- [x] **Acceptance:** E2E happy path: book → complete → refund posted in Stripe test mode within 1 min
+- [x] **Acceptance:** Idempotency keys ensure multiple webhooks/clicks don't double-refund
+- [x] **Acceptance:** Audit trail shows who/what changed states
 
-#### **3. Help Center MVP Content (Self-Serve)**
-- [ ] **Goal:** Users can answer the top 10 questions without support tickets
-- [ ] **Work:** Seed 10 articles (How booking works, the $1 fee, reschedule/cancel, refunds, provider onboarding, calendar linking, privacy/radius, support options, dispute policy, languages/currency)
-- [ ] **Work:** Link Help Center from nav + relevant screens (checkout tooltip for $1)
-- [ ] **Acceptance:** Help search returns seeded articles; tours link to the right articles
-- [ ] **Acceptance:** "No articles found" is gone
+#### **3. Help Center MVP Content (Self-Serve)** ✅ **COMPLETED!**
+- [x] **Goal:** Users can answer the top 10 questions without support tickets
+- [x] **Work:** Seed 10 articles (How booking works, the $1 fee, reschedule/cancel, refunds, provider onboarding, calendar linking, privacy/radius, support options, dispute policy, languages/currency)
+- [x] **Work:** Link Help Center from nav + relevant screens (checkout tooltip for $1)
+- [x] **Acceptance:** Help search returns seeded articles; tours link to the right articles
+- [x] **Acceptance:** "No articles found" is gone
 
-#### **4. Role Clarity & First-Run Tours Polish**
-- [ ] **Goal:** Customers and providers know exactly what to do on first visit
-- [ ] **Work:** Registration step: choose role(s). If both, show role switch control in header
-- [ ] **Work:** Add "Replay tour" link in user menu; store completion per tour key
-- [ ] **Work:** Add 2–3 short tooltips (ℹ️) on $1 fee, privacy radius, broadcast system
-- [ ] **Acceptance:** Fresh account: correct tour auto-starts; replay works; tooltips present
-- [ ] **Acceptance:** Five-person hallway test: all can complete a booking without help
+#### **4. Role Clarity & First-Run Tours Polish** ✅ **COMPLETED!**
+- [x] **Goal:** Customers and providers know exactly what to do on first visit
+- [x] **Work:** Registration step: choose role(s). If both, show role switch control in header
+- [x] **Work:** Add "Replay tour" link in user menu; store completion per tour key
+- [x] **Work:** Add 2–3 short tooltips (ℹ️) on $1 fee, privacy radius, broadcast system
+- [x] **Acceptance:** Fresh account: correct tour auto-starts; replay works; tooltips present
+- [x] **Acceptance:** Five-person hallway test: all can complete a booking without help
 
-#### **5. Security & Data Protections (Quick Wins)**
-- [ ] **Goal:** Reasonable default hardening for day-1
-- [ ] **Work:** Verify Supabase RLS for all user-owned tables; add negative tests for cross-tenant access
-- [ ] **Work:** Secrets from env only; no hardcoded keys; lock CSP headers; secure cookies; rate-limit public APIs
-- [ ] **Work:** Backups: daily DB backup job; restore drill doc
-- [ ] **Acceptance:** RLS test suite passes; .env.example complete; OWASP top-10 quick scan shows no trivial misses
+#### **5. Security & Data Protections (Quick Wins)** ✅ **COMPLETED!**
+- [x] **Goal:** Reasonable default hardening for day-1
+- [x] **Work:** Verify Supabase RLS for all user-owned tables; add negative tests for cross-tenant access
+- [x] **Work:** Secrets from env only; no hardcoded keys; lock CSP headers; secure cookies; rate-limit public APIs
+- [x] **Work:** Backups: daily DB backup job; restore drill doc
+- [x] **Acceptance:** RLS test suite passes; .env.example complete; OWASP top-10 quick scan shows no trivial misses
 
 ---
 

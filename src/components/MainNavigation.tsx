@@ -163,6 +163,21 @@ export default function MainNavigation() {
                       Help
                     </Link>
 
+                    <button
+                      onClick={() => {
+                        // Start the appropriate tour based on current role
+                        if (userRole === 'vendor') {
+                          window.location.href = '/vendor/dashboard?tour=onboarding';
+                        } else {
+                          window.location.href = '/customer/dashboard?tour=booking';
+                        }
+                      }}
+                      className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                      title="Replay the guided tour for your current role"
+                    >
+                      🎯 Replay Tour
+                    </button>
+
                     <Link
                       href="/settings"
                       className={`px-3 py-2 rounded-md text-sm font-medium ${

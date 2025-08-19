@@ -12,6 +12,7 @@ declare global {
 
 /// <reference types="vitest" />
 /// <reference types="vitest/globals" />
+/// <reference types="@testing-library/jest-dom" />
 
 declare module 'framer-motion' {
   export interface MotionProps extends HTMLMotionProps<"div"> {

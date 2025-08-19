@@ -17,12 +17,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const response = await fetch('/api/auth/check-admin', { method: 'GET', credentials: 'include' })
       if (!response.ok) throw new Error('Admin check failed')
       const { isAdmin } = await response.json()
+      console.log('Admin check result:', { isAdmin, url: window.location.href })
       if (!isAdmin) {
-        router.push('/')
+        console.log('Non-admin user - will show access denied message')
+        setIsAuthenticated(false)
         return
       }
       setIsAuthenticated(true)
-    } catch {
+    } catch (error) {
+      console.error('Admin check error:', error)
       router.push('/')
     } finally {
       setIsLoading(false)
@@ -40,7 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     )
   }
 
-  if (!isAuthenticated && !ADSENSE_APPROVAL_MODE) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

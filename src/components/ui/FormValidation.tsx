@@ -44,49 +44,49 @@ export interface FormValidation {
 // Built-in validation rules
 export const validationRules = {
   required: (value: unknown): string | null => {
-    if (value === null || value === undefined || value === '') {
+    if (!value || (typeof value === 'string' && value.trim() === '')) {
       return 'This field is required'
     }
     return null
   },
 
   minLength: (value: unknown, min: number): string | null => {
-    if (value && value.length < min) {
+    if (value && typeof value === 'string' && value.length < min) {
       return `Must be at least ${min} characters`
     }
     return null
   },
 
   maxLength: (value: unknown, max: number): string | null => {
-    if (value && value.length > max) {
+    if (value && typeof value === 'string' && value.length > max) {
       return `Must be no more than ${max} characters`
     }
     return null
   },
 
   pattern: (value: unknown, pattern: RegExp): string | null => {
-    if (value && !pattern.test(value)) {
+    if (value && typeof value === 'string' && !pattern.test(value)) {
       return 'Invalid format'
     }
     return null
   },
 
   email: (value: unknown): string | null => {
-    if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    if (value && typeof value === 'string' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
       return 'Invalid email address'
     }
     return null
   },
 
   phone: (value: unknown): string | null => {
-    if (value && !/^[\+]?[1-9][\d]{0,15}$/.test(value.replace(/[\s\-\(\)]/g, ''))) {
+    if (value && typeof value === 'string' && !/^[\+]?[1-9][\d]{0,15}$/.test(value.replace(/[\s\-\(\)]/g, ''))) {
       return 'Invalid phone number'
     }
     return null
   },
 
   url: (value: unknown): string | null => {
-    if (value && !/^https?:\/\/.+/.test(value)) {
+    if (value && typeof value === 'string' && !/^https?:\/\/.+/.test(value)) {
       return 'Invalid URL'
     }
     return null
@@ -107,14 +107,14 @@ export const validationRules = {
   },
 
   futureDate: (value: unknown): string | null => {
-    if (value && new Date(value) <= new Date()) {
+    if (value && typeof value === 'string' && new Date(value) <= new Date()) {
       return 'Must be a future date'
     }
     return null
   },
 
   pastDate: (value: unknown): string | null => {
-    if (value && new Date(value) >= new Date()) {
+    if (value && typeof value === 'string' && new Date(value) >= new Date()) {
       return 'Must be a past date'
     }
     return null
@@ -362,8 +362,8 @@ export function useFormValidation<T extends Record<string, unknown>>(
 interface FormFieldProps {
   name: string
   label: string
-  value: unknown
-  onChangeAction: (value: unknown) => void
+  value: string | number | undefined
+  onChangeAction: (value: string | number) => void
   onBlur?: () => void
   errors?: string[]
   touched?: boolean

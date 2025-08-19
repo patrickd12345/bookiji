@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from '@/app/api/bookings/[id]/messages/route';
 import { NextRequest } from 'next/server';
 
-// Mock the Supabase auth helpers
-vi.mock('@supabase/auth-helpers-nextjs', () => ({
-  createRouteHandlerClient: vi.fn()
+// Mock the Supabase SSR package
+vi.mock('@supabase/ssr', () => ({
+  createServerClient: vi.fn()
 }));
 
 // Mock the cookies
@@ -56,8 +56,8 @@ const mockSupabaseClient = {
 };
 
 // Set up the mock to return our client
-const { createRouteHandlerClient } = await import('@supabase/auth-helpers-nextjs');
-vi.mocked(createRouteHandlerClient).mockReturnValue(mockSupabaseClient as any);
+const { createServerClient } = await import('@supabase/ssr');
+vi.mocked(createServerClient).mockReturnValue(mockSupabaseClient as any);
 
 const BASE = 'http://localhost:3000';
 

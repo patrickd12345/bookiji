@@ -183,7 +183,15 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                     </div>
                     
                     <div className="bg-purple-50 p-6 rounded-lg">
-                      <h3 className="text-lg font-semibold text-purple-900 mb-3">🎯 AI Features</h3>
+                      <h3 className="text-lg font-semibold text-purple-900 mb-3 flex items-center gap-2">
+                        🎯 AI Features
+                        <span 
+                          className="text-purple-500 cursor-help text-lg" 
+                          title="Our AI intelligently expands your search radius while protecting provider privacy. When no immediate availability is found, it broadcasts your request to nearby providers."
+                        >
+                          ℹ️
+                        </span>
+                      </h3>
                       <ul className="space-y-2 text-purple-800">
                         <li>• Chat with our AI to find perfect services</li>
                         <li>• AI expands search radius when needed</li>
@@ -215,7 +223,15 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                     </div>
                     
                     <div className="bg-purple-50 p-6 rounded-lg">
-                      <h3 className="text-lg font-semibent text-purple-900 mb-3">⚙️ Managing Your Business</h3>
+                      <h3 className="text-lg font-semibold text-purple-900 mb-3 flex items-center gap-2">
+                        ⚙️ Managing Your Business
+                        <span 
+                          className="text-purple-500 cursor-help text-lg" 
+                          title="When customers can't find immediate availability, our system automatically broadcasts their requests to nearby providers, helping you discover new business opportunities."
+                        >
+                          ℹ️
+                        </span>
+                      </h3>
                       <ul className="space-y-2 text-purple-800">
                         <li>• Use dual availability modes (subtractive/additive)</li>
                         <li>• Set exceptions and special schedules</li>
@@ -263,7 +279,15 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                   {type === 'customer' ? (
                     <>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
-                        <h3 className="font-semibold text-gray-900 mb-2">$1 Booking Fee</h3>
+                        <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                          $1 Booking Fee
+                          <span 
+                            className="text-blue-500 cursor-help text-lg" 
+                            title="This small fee guarantees your booking slot and helps reduce no-shows. It's separate from the service price and is refunded if the provider doesn't show up."
+                          >
+                            ℹ️
+                          </span>
+                        </h3>
                         <p className="text-gray-600">$1 booking fee, charged only when your booking is confirmed. This fee is non-refundable and not applied to the service price.</p>
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">

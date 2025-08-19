@@ -22,3 +22,39 @@ This document lists the automated tests in the repository and captures the resul
 | `tests/picasso.test.ts` | Sanity test ensuring no deprecated `/marketplace` route exists | Should find no references | Blocked | Vitest dependencies missing |
 
 All tests were blocked from execution because `vitest` and other node modules are not installed in the environment. Installing dependencies requires network access which is currently unavailable.
+
+## Chaos E2E Test Pack
+
+The following Playwright tests are designed to deliberately simulate network failures and prove that our resilience patterns hold under adverse conditions:
+
+### Network Chaos Tests
+| Test File | Description | Expected Resilience Behavior |
+| --- | --- | --- |
+| `tests/chaos/network-slow.spec.ts` | Simulates slow network (2-5s delays) | Optimistic UI shows immediately, graceful fallback on timeout |
+| `tests/chaos/network-unreliable.spec.ts` | Random 50% failure rate on API calls | Retry logic kicks in, optimistic rollback on persistent failures |
+| `tests/chaos/network-offline.spec.ts` | Simulates offline conditions | Error boundaries show offline state, graceful degradation |
+| `tests/chaos/duplicate-clicks.spec.ts` | Rapid-fire button clicks (10x/second) | Debounced clicks prevent duplicate actions, optimistic state management |
+| `tests/chaos/api-timeout.spec.ts` | API endpoints return 408/504 timeouts | Resilient queries retry with exponential backoff, loading skeletons persist |
+
+### Resilience Pattern Validation
+| Pattern | Test Coverage | Success Criteria |
+| --- | --- | --- |
+| **Optimistic UI** | All action buttons show immediate feedback | UI updates instantly, rollback on failure |
+| **Debounced Clicks** | Rapid clicking during network calls | Only first click processed, duplicates ignored |
+| **Error Boundaries** | Component crashes during rendering | Graceful error display with retry options |
+| **Loading Skeletons** | Network delays during data fetching | Smooth loading states, no blank screens |
+| **Retry Logic** | API failures with exponential backoff | Automatic retries, user-visible progress |
+
+### Test Implementation Notes
+- Use Playwright's `page.route()` to intercept and modify network requests
+- Implement network throttling with `page.setExtraHTTPHeaders()`
+- Simulate offline mode with `page.setOffline(true)`
+- Test optimistic rollback by forcing API failures after UI updates
+- Validate that user data is never lost during network chaos
+
+### Performance Benchmarks
+- **Action Response Time**: <100ms for optimistic UI updates
+- **Rollback Speed**: <200ms for error state recovery
+- **Duplicate Suppression**: 100% of rapid clicks ignored
+- **Error Recovery**: 95%+ success rate after network restoration
+- **User Experience**: No more than 2s total delay for any action

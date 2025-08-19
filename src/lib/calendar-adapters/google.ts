@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import type { CalendarAdapter, CalendarEvent, CalendarCredentials, CalendarSystemConfig } from './types';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 import { CalendarProvider, ExternalCalendarConfig } from './types'
 
 const GOOGLE_CALENDAR_API = 'https://www.googleapis.com/calendar/v3'
@@ -88,7 +88,10 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
   };
   private credentials: CalendarCredentials | null = null;
   private config: CalendarSystemConfig;
-  private supabase = createClientComponentClient()
+  private supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   private oauthConfig: GoogleOAuthConfig
 
   constructor(config: CalendarSystemConfig, oauthConfig: GoogleOAuthConfig) {

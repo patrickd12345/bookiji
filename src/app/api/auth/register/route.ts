@@ -43,17 +43,22 @@ export async function POST(request: Request) {
     }
 
     // Create profile in database
-    const profile = await userService.upsertProfile({
-      id: authData.user.id,
-      full_name,
-      email,
-      role,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    })
+    // Don't use userService.upsertProfile since we don't have auth context yet
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: authData.user.id,
+        full_name,
+        email,
+        role,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single()
 
-    if (!profile) {
-      console.error('Failed to create user profile')
+    if (profileError) {
+      console.error('Failed to create user profile:', profileError)
       // Note: User was created in auth but profile failed
       // You might want to handle this cleanup
     }
