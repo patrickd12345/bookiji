@@ -266,7 +266,14 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 - [ ] **Work:** Add error monitoring (Sentry) + alert channel (Slack/Email) for P0 endpoints and notification DLQ
 - [ ] **Acceptance:** Dashboards show conversion by day; alerts fire on 5xx rate spikes, send failures >2%/10min
 
-#### **9. Documentation Reality Check**
+#### **9. User Behavior Analytics (Hotjar)**
+- [ ] **Goal:** Understand user behavior and optimize conversion funnels
+- [ ] **Work:** Implement Hotjar initialization in main layout (`initAnalytics()` call)
+- [ ] **Work:** Configure real Hotjar account and upgrade from free plan
+- [ ] **Work:** Test session recordings, heatmaps, and funnel tracking
+- [ ] **Acceptance:** Hotjar tracking active; session recordings working; heatmaps generating data
+
+#### **10. Documentation Reality Check**
 - [ ] **Goal:** Docs match product truth
 - [ ] **Work:** Update README/marketing to reflect what is truly live (map v1, chat messaging state, heatmaps "later")
 - [ ] **Work:** Add "What's next" roadmap section users can see
@@ -276,28 +283,51 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 
 ### **📈 P2 — Experience & Scale (Next 30–45 Days)**
 
-#### **10. Dispute & No-Show Process (Policy + Tooling)**
+#### **11. Dispute & No-Show Process (Policy + Tooling)**
 - [ ] **Goal:** Clear, fair, defensible outcomes
 - [ ] **Work:** Publish policy page; add "Report an issue" on booking detail → creates dispute ticket with category
 - [ ] **Work:** Admin triage view; canned resolutions (refund, credit, warning)
 - [ ] **Acceptance:** Dispute SLAs measured; outcomes logged; customers notified
 
-#### **11. Notifications 2.0**
+#### **12. Notifications 2.0**
 - [ ] **Goal:** Bulletproof comms across channels
 - [ ] **Work:** Per-user channel prefs; batching windows; quiet hours; digest for non-critical items
 - [ ] **Work:** Web push (PWA) for on-site users
 - [ ] **Acceptance:** Channel matrix honored; opt-out works; push registered + received
 
-#### **12. i18n Completeness Pass**
+#### **13. i18n Completeness Pass**
 - [ ] **Goal:** No stray English strings in supported locales
 - [ ] **Work:** Extract audit, fill missing 5–10% strings; RTL visual pass
 - [ ] **Acceptance:** Smoke tour in FR/ES/AR completes without English fallback
 
-#### **13. Performance & Cost Guardrails**
+#### **14. Performance & Cost Guardrails**
 - [ ] **Goal:** Keep it fast and cheap
 - [ ] **Work:** Cache static geo/PPP data; index search queries; lazy-load maps; prefetch common routes
 - [ ] **Work:** AI assistant: queue + timeouts; fallbacks; monitoring for latency
 - [ ] **Acceptance:** P95 TTFB < 300ms on SSR routes; P95 interactive map paint < 2.5s on 4G
+
+#### **15. Customer Review System Enhancement**
+- [ ] **Goal:** Comprehensive review and rating system for service quality: usual 5 stars system, allowing for half star)
+- [ ] **Work:** Multi-criteria rating (punctuality, quality, communication, value) and overall quality(compounded from the others)
+- [ ] **Work:** Review moderation system with AI-powered spam detection
+- [ ] **Work:** Review analytics dashboard for providers
+- [ ] **Work:** Review response system for providers
+- [ ] **Acceptance:** Review submission flow works end-to-end; moderation catches 95%+ spam; providers can respond to reviews
+
+#### **16. External Booking Platform API Integration**
+- [ ] **Goal:** Integrate with popular external booking platforms (Calendly, Acuity, etc.)
+- [ ] **Work:** Read-only API access to external platform provider calendars (availability only)
+- [ ] **Work:** Write-only API endpoints to send booking confirmations back to external platforms
+- [ ] **Work:** Provider dashboard for managing external platform integrations and viewing unified availability
+- [ ] **Acceptance:** Can read external platform availability; can send booking confirmations back; providers see unified calendar across all platforms
+
+#### **17. Multi-Platform Calendar Sync**
+- [ ] **Goal:** Seamless calendar synchronization across all platforms
+- [ ] **Work:** Calendar sync with external booking platforms (Calendly, Acuity)
+- [ ] **Work:** Google Calendar OAuth2 integration enhancement
+- [ ] **Work:** Outlook/Exchange calendar support
+- [ ] **Work:** Real-time calendar conflict detection and resolution
+- [ ] **Acceptance:** All calendars stay in sync; conflicts are automatically detected and resolved; providers can see unified availability across platforms
 
 ---
 
@@ -308,6 +338,9 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 - [ ] **Heatmap visualizations for admin analytics**
 - [ ] **Loyalty/credits & referrals surfaced in UI** (only if already implemented server-side)
 - [ ] **Provider catalog depth: rich profiles, portfolios, tags, minimums**
+- [ ] **Advanced review analytics** (sentiment analysis, trend tracking, competitor benchmarking)
+- [ ] **Multi-platform scheduling sync** (Calendly, Acuity, Google Calendar, Outlook)
+- [ ] **Review gamification** (badges, levels, rewards for quality reviews)
 
 ---
 
@@ -342,6 +375,11 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 
 #### **Go-Live Checklist (Day-0)**
 - [ ] **Domain + TLS; env vars loaded in prod; Stripe live keys; email/SMS live keys**
+- [ ] **MailerSend account upgraded from trial to paid plan** (required for customer email delivery)
+- [ ] **Mapbox account upgraded from free to paid plan** (required for map functionality)
+- [ ] **PostHog account upgraded from free to paid plan** (required for analytics)
+- [ ] **Twilio account upgraded from trial to paid plan** (required for SMS notifications)
+- [ ] **IPInfo account upgraded from free to paid plan** (required for geolocation services)
 - [ ] **Staging freeze lifted; feature flags set; admin logins verified**
 - [ ] **Backup taken; restore tested last 7 days; maintenance window posted**
 - [ ] **Beta feedback form linked in header/footer; help center populated**

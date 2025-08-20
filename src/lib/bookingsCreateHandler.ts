@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { sendEmail } from './mailer'
+import { generateBookingConfirmationEmail } from './emailTemplates'
 
 interface BookingRequest {
   vendorId: string
@@ -58,6 +60,29 @@ export function makeBookingsCreateHandler() {
         email: bookingData.customerEmail,
         full_name: bookingData.customerName,
         phone: bookingData.customerPhone || null
+      }
+
+      // Send confirmation email
+      try {
+        const emailHtml = generateBookingConfirmationEmail({
+          customerName: bookingData.customerName,
+          vendorName: 'Your Service Provider', // TODO: Fetch actual vendor name from database
+          serviceName: 'Service', // TODO: Fetch actual service name from database
+          slotStart: bookingData.slotStart,
+          slotEnd: bookingData.slotEnd,
+          totalAmount: `$${(bookingData.totalAmountCents / 100).toFixed(2)}`,
+          bookingId: bookingId,
+          notes: bookingData.notes
+        });
+
+        await sendEmail({
+          to: bookingData.customerEmail,
+          subject: 'Booking Confirmation - Bookiji',
+          html: emailHtml
+        });
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError);
+        // Don't fail the booking creation if email fails
       }
 
       return NextResponse.json({
