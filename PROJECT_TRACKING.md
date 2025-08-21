@@ -318,6 +318,7 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 - [ ] **Goal:** Integrate with popular external booking platforms (Calendly, Acuity, etc.)
 - [ ] **Work:** Read-only API access to external platform provider calendars (availability only)
 - [ ] **Work:** Write-only API endpoints to send booking confirmations back to external platforms
+- [x] **Work:** Mentionned on the homepage
 - [ ] **Work:** Provider dashboard for managing external platform integrations and viewing unified availability
 - [ ] **Acceptance:** Can read external platform availability; can send booking confirmations back; providers see unified calendar across all platforms
 
