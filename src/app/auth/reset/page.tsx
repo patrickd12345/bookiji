@@ -1,192 +1,221 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useParams } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabaseClient';
 
-export default function ResetPage() {
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
-  const [error, setError] = useState<string | null>(null)
+export default function ResetPasswordPage() {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
   
-  const params = useParams()
-  const token = params?.token as string
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const tokenFromUrl = searchParams.get('token');
+    if (!tokenFromUrl) {
+      setError('No reset token provided. Please check your email for the correct link.');
+      return;
+    }
+    setToken(tokenFromUrl);
+  }, [searchParams]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // Validation
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (!token) {
+      setError('No reset token found. Please check your email for the correct link.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Try to use the recovery token to reset the password
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: 'recovery'
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // If OTP verification succeeds, update the user's password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setSuccess(true);
+      
+      // Redirect to login after 3 seconds
+      setTimeout(() => {
+        router.push('/login');
+      }, 3000);
+
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message || 'Failed to reset password');
+      } else {
+        setError('Failed to reset password');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+              ✅ Password Reset Successful!
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Your password has been updated successfully. You will be redirected to the login page shortly.
+            </p>
+            <div className="mt-4">
+              <Link
+                href="/login"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
+                Go to Login Now
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-red-600">Invalid Reset Link</CardTitle>
-            <CardDescription>
-              This password reset link is invalid or has expired.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/login">
-                Return to Login
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+              ❌ Invalid Reset Link
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              {error || 'This password reset link is invalid or has expired.'}
+            </p>
+            <div className="mt-4">
+              <Link
+                href="/forgot-password"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
+                Request New Reset Link
               </Link>
-            </Button>
-          </CardContent>
-        </Card>
+            </div>
+          </div>
+        </div>
       </div>
-    )
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
-
-    if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters long')
-      return
-    }
-
-    // Additional password validation
-    if (!/[A-Z]/.test(newPassword)) {
-      setError('Password must contain at least one uppercase letter')
-      return
-    }
-
-    if (!/[a-z]/.test(newPassword)) {
-      setError('Password must contain at least one lowercase letter')
-      return
-    }
-
-    if (!/[0-9]/.test(newPassword)) {
-      setError('Password must contain at least one number')
-      return
-    }
-
-    setIsSubmitting(true)
-    setError(null)
-
-    try {
-      const response = await fetch('/api/auth/reset', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          token, 
-          newPassword 
-        }),
-      })
-
-      const responseData = await response.json()
-
-      if (response.ok && responseData.success) {
-        setStatus('success')
-        // Clear sensitive data from state
-        setNewPassword('')
-        setConfirmPassword('')
-      } else {
-        setStatus('error')
-        setError(responseData.error || responseData.message || 'Failed to reset password')
-      }
-    } catch {
-      setStatus('error')
-      setError('Network error occurred')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  if (status === 'success') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-green-600">Password Reset Successfully</CardTitle>
-            <CardDescription>
-              Your password has been updated. You can now log in with your new password.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/login">
-                Continue to Login
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
+    );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Reset Your Password</CardTitle>
-          <CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Reset your password
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
             Enter your new password below
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="text-red-600 text-sm bg-red-50 p-3 rounded">
-                {error}
+          </p>
+        </div>
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="text-sm text-red-700">{error}</div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                New Password
+              </label>
+              <div className="mt-1">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                  placeholder="Enter your new password"
+                />
               </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-                required
-                minLength={8}
-              />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                required
-                minLength={8}
-              />
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                Confirm New Password
+              </label>
+              <div className="mt-1">
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                  placeholder="Confirm your new password"
+                />
+              </div>
             </div>
+          </div>
 
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={isSubmitting}
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                isLoading ? 'opacity-75 cursor-not-allowed' : ''
+              }`}
             >
-              {isSubmitting ? 'Resetting...' : 'Reset Password'}
-            </Button>
+              {isLoading ? 'Resetting...' : 'Reset Password'}
+            </button>
+          </div>
 
-            <div className="text-center">
-              <Link 
-                href="/login" 
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Back to Login
-              </Link>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          <div className="text-center">
+            <Link
+              href="/login"
+              className="text-sm font-medium text-blue-600 hover:text-blue-500"
+            >
+              Back to login
+            </Link>
+          </div>
+        </form>
+      </div>
     </div>
-  )
+  );
 }
