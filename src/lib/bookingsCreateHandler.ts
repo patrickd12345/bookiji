@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendEmail } from './mailer'
-import { generateBookingConfirmationEmail } from './emailTemplates'
+import { sendBookingConfirmation, sendVendorNotification } from '@/utils/sendEmail';
 
 interface BookingRequest {
   vendorId: string
@@ -64,24 +63,22 @@ export function makeBookingsCreateHandler() {
 
       // Send confirmation email
       try {
-        const emailHtml = generateBookingConfirmationEmail({
-          customerName: bookingData.customerName,
+        await sendBookingConfirmation({
+          customerEmail: bookingData.customerEmail,
+          customerName: bookingData.customerName || 'Customer',
           vendorName: 'Your Service Provider', // TODO: Fetch actual vendor name from database
           serviceName: 'Service', // TODO: Fetch actual service name from database
-          slotStart: bookingData.slotStart,
-          slotEnd: bookingData.slotEnd,
-          totalAmount: `$${(bookingData.totalAmountCents / 100).toFixed(2)}`,
-          bookingId: bookingId,
-          notes: bookingData.notes
+          bookingDate: new Date(bookingData.slotStart).toLocaleDateString(),
+          bookingTime: new Date(bookingData.slotStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          bookingId: booking.id,
         });
-
-        await sendEmail({
-          to: bookingData.customerEmail,
-          subject: 'Booking Confirmation - Bookiji',
-          html: emailHtml
-        });
+        
+        // TODO: Also notify the vendor when we have vendor profile data
+        // if (vendorProfile?.email) {
+        //   await sendVendorNotification({...});
+        // }
       } catch (emailError) {
-        console.error('Failed to send confirmation email:', emailError);
+        console.error('Failed to send confirmation emails:', emailError);
         // Don't fail the booking creation if email fails
       }
 

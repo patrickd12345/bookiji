@@ -77,10 +77,10 @@ export async function POST(request: NextRequest) {
       .from('reviews')
       .insert({
         booking_id,
-        user_id,
-        vendor_id,
+        reviewer_id: user_id,
+        provider_id: vendor_id,
         rating,
-        review_text: review_text || null,
+        comment: review_text || null,
         service_quality: service_quality || null,
         communication: communication || null,
         punctuality: punctuality || null,
@@ -88,7 +88,8 @@ export async function POST(request: NextRequest) {
         would_recommend: would_recommend !== undefined ? would_recommend : null,
         photos: photos || null,
         created_at: new Date().toISOString(),
-        status: 'published',
+        status: 'pending',
+        moderation_status: 'pending',
         helpful_count: 0,
         reported_count: 0
       })
@@ -132,11 +133,12 @@ export async function POST(request: NextRequest) {
         session_id: 'server-side',
         page_url: '/api/reviews/create',
         properties: {
-          vendor_id,
+          provider_id: vendor_id,
           booking_id,
           rating,
           has_text: !!review_text,
-          would_recommend
+          would_recommend,
+          has_detailed_ratings: !!(service_quality && communication && punctuality && value_for_money)
         }
       })
     })
@@ -161,30 +163,35 @@ async function updateVendorRatingStats(vendorId: string) {
     // Get all reviews for vendor
     const { data: reviews } = await supabase
       .from('reviews')
-      .select('rating')
-      .eq('vendor_id', vendorId)
+      .select('overall_quality, rating')
+      .eq('provider_id', vendorId)
       .eq('status', 'published')
 
     if (!reviews || reviews.length === 0) return
 
     // Calculate statistics
     const totalReviews = reviews.length
-    const averageRating = reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) / totalReviews
+    const averageRating = reviews.reduce((sum: number, review: { overall_quality?: number; rating: number }) => 
+      sum + (review.overall_quality || review.rating), 0) / totalReviews
+    
     const ratingDistribution = {
-      5: reviews.filter((r: { rating: number }) => r.rating === 5).length,
-      4: reviews.filter((r: { rating: number }) => r.rating === 4).length,
-      3: reviews.filter((r: { rating: number }) => r.rating === 3).length,
-      2: reviews.filter((r: { rating: number }) => r.rating === 2).length,
-      1: reviews.filter((r: { rating: number }) => r.rating === 1).length
+      5: reviews.filter((r: { overall_quality?: number; rating: number }) => 
+        (r.overall_quality || r.rating) >= 4.5).length,
+      4: reviews.filter((r: { overall_quality?: number; rating: number }) => 
+        (r.overall_quality || r.rating) >= 3.5 && (r.overall_quality || r.rating) < 4.5).length,
+      3: reviews.filter((r: { overall_quality?: number; rating: number }) => 
+        (r.overall_quality || r.rating) >= 2.5 && (r.overall_quality || r.rating) < 3.5).length,
+      2: reviews.filter((r: { overall_quality?: number; rating: number }) => 
+        (r.overall_quality || r.rating) >= 1.5 && (r.overall_quality || r.rating) < 2.5).length,
+      1: reviews.filter((r: { overall_quality?: number; rating: number }) => 
+        (r.overall_quality || r.rating) < 1.5).length
     }
 
     // Update vendor profile
     await supabase
       .from('profiles')
       .update({
-        average_rating: parseFloat(averageRating.toFixed(2)),
-        total_reviews: totalReviews,
-        rating_distribution: ratingDistribution,
+        rating: parseFloat(averageRating.toFixed(2)),
         updated_at: new Date().toISOString()
       })
       .eq('id', vendorId)
@@ -210,7 +217,7 @@ export async function GET(request: NextRequest) {
       .from('reviews')
       .select(`
         *,
-        users:user_id(name, avatar_url),
+        users:reviewer_id(full_name, avatar_url),
         bookings:booking_id(service_name, service_date)
       `)
       .eq('status', 'published')

@@ -21,3 +21,6 @@ export function Progress({ value = 0, max = 100, className }: ProgressProps) {
   )
 }
 
+
+
+

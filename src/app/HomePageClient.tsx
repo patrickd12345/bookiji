@@ -386,6 +386,32 @@ export default function HomePageClient() {
         </div>
       </section>
 
+      {/* External Platform Integration Section */}
+      <section className="py-12 px-4 bg-muted/20">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted/50 text-muted-foreground rounded-full text-sm mb-6">
+            <span>🔗</span>
+            <span>Platform Integration</span>
+          </div>
+          <h3 className="text-xl font-semibold mb-4 text-foreground">
+            Own a booking platform?
+          </h3>
+          <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+            Expose your providers' availability on Bookiji and gain exposure for your customers. 
+            Integrate seamlessly with Calendly, Acuity, and other popular scheduling platforms.
+          </p>
+          <Link href="/vendor/integrations">
+            <Button
+              variant="ghost"
+              className="px-6 py-3 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              suppressHydrationWarning
+            >
+              Learn about platform integration →
+            </Button>
+          </Link>
+        </div>
+      </section>
+
       {/* AI Chat Modal */}
       {showAIChat && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">

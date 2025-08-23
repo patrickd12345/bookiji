@@ -11,16 +11,18 @@ import {
   Calendar, 
   Radio, 
   Settings,
-  Gauge,
   Menu,
-  X
+  X,
+  Plus
 } from 'lucide-react'
 
 const navItems = [
   { href: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
-  { href: '/admin/performance', icon: Gauge, label: 'Performance' },
   { href: '/admin/vendors', icon: Users, label: 'Vendors' },
+  { href: '/admin/customers', icon: Users, label: 'Customers' },
+  { href: '/admin/specialties', icon: Settings, label: 'Specialties' },
+  { href: '/admin/suggestions', icon: Plus, label: 'Suggestions' },
   { href: '/admin/bookings', icon: Calendar, label: 'Bookings' },
   { href: '/admin/broadcasts', icon: Radio, label: 'Broadcasts' },
   { href: '/admin/settings', icon: Settings, label: 'Settings' }
@@ -60,7 +62,7 @@ export default function Sidebar() {
         initial={{ x: -280 }}
         animate={{ x: isOpen ? 0 : -280 }}
         transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-70 bg-white border-r border-gray-200 shadow-xl lg:shadow-none`}
+        className={`fixed lg:relative inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 shadow-xl lg:shadow-none`}
       >
         <div className="flex flex-col h-full">
           {/* Logo/Brand */}

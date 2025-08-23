@@ -271,3 +271,4 @@ export const VERIFICATION_STATUS = [
   { value: 'rejected', label: 'Rejected', color: 'red' },
   { value: 'expired', label: 'Expired', color: 'gray' }
 ] as const;
+

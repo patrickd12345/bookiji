@@ -1,6 +1,26 @@
 ﻿import '@testing-library/jest-dom'
 import { vi } from 'vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup, waitFor } from '@testing-library/react'
+import { act } from 'react-dom/test-utils'
+
+// Global test utilities to reduce act() warnings
+;(global as any).waitFor = waitFor
+;(global as any).act = act
+
+// Suppress console warnings for act() in tests
+const originalError = console.error
+beforeAll(() => {
+  console.error = (...args) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('Warning: An update to') &&
+      args[0].includes('inside a test was not wrapped in act')
+    ) {
+      return
+    }
+    originalError.call(console, ...args)
+  }
+})
 
 // Set up environment variables for integration tests
 process.env.DEPLOY_ENV = 'test'

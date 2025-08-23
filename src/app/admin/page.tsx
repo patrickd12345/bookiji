@@ -12,9 +12,6 @@ const dashboardStats = {
 }
 
 export default function AdminDashboard() {
-  // Debug: Check if dashboardStats is defined
-  console.log('AdminDashboard: dashboardStats =', dashboardStats)
-  
   return (
     <div className="space-y-6">
       {/* Page Header */}

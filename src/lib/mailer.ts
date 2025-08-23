@@ -30,7 +30,8 @@ export async function sendEmail({
     console.log('Email sent successfully to:', to, 'MessageID:', result.messageId);
     return result;
   } catch (error) {
-    console.error('Failed to send email to:', to, 'Error:', error.message);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Failed to send email to:', to, 'Error:', errorMessage);
     throw error;
   }
 }

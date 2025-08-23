@@ -195,3 +195,6 @@ function MyComponent() {
 
 For more detailed implementation examples, see the source code in `src/lib/performance/` and `src/hooks/usePerformanceMonitoring.ts`.
 
+
+
+
