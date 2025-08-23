@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,6 +44,7 @@ interface ApiResponse {
 }
 
 export default function AdminAuditViewer() {
+  const searchParams = useSearchParams()
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -59,8 +61,25 @@ export default function AdminAuditViewer() {
     action: '',
     adminUserId: '',
     startDate: '',
-    endDate: ''
+    endDate: '',
+    endpoint: ''
   })
+
+  // Handle URL parameters for drill-through from performance dashboard
+  useEffect(() => {
+    const endpoint = searchParams.get('endpoint')
+    const from = searchParams.get('from')
+    const to = searchParams.get('to')
+    
+    if (endpoint || from || to) {
+      setFilters(prev => ({
+        ...prev,
+        endpoint: endpoint || '',
+        startDate: from || '',
+        endDate: to || ''
+      }))
+    }
+  }, [searchParams])
 
   const fetchAuditLogs = async (page = 1) => {
     setLoading(true)
@@ -74,7 +93,8 @@ export default function AdminAuditViewer() {
         ...(filters.action && { action: filters.action }),
         ...(filters.adminUserId && { admin_user_id: filters.adminUserId }),
         ...(filters.startDate && { start_date: filters.startDate }),
-        ...(filters.endDate && { end_date: filters.endDate })
+        ...(filters.endDate && { end_date: filters.endDate }),
+        ...(filters.endpoint && { endpoint: filters.endpoint })
       })
 
       const response = await fetch(`/api/admin/audit-log?${params}`)
@@ -227,6 +247,16 @@ export default function AdminAuditViewer() {
                 type="date"
                 value={filters.endDate}
                 onChange={(e) => handleFilterChange('endDate', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="endpoint">Endpoint</Label>
+              <Input
+                id="endpoint"
+                placeholder="Filter by API endpoint"
+                value={filters.endpoint}
+                onChange={(e) => handleFilterChange('endpoint', e.target.value)}
               />
             </div>
 

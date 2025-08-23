@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -67,6 +68,7 @@ interface PerformanceDashboardProps {
 }
 
 export default function PerformanceDashboard() {
+  const router = useRouter()
   const [data, setData] = useState<ApiResponse['data'] | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -76,6 +78,19 @@ export default function PerformanceDashboard() {
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [isVisible, setIsVisible] = useState(true)
+
+  // Helper function to convert time range to milliseconds
+  const getTimeRangeMs = (range: string): number => {
+    switch (range) {
+      case '5m': return 5 * 60 * 1000
+      case '15m': return 15 * 60 * 1000
+      case '1h': return 60 * 60 * 1000
+      case '6h': return 6 * 60 * 60 * 1000
+      case '24h': return 24 * 60 * 60 * 1000
+      case '7d': return 7 * 24 * 60 * 60 * 1000
+      default: return 60 * 60 * 1000 // 1h default
+    }
+  }
 
   // Pause auto-refresh when tab is not visible
   useEffect(() => {
@@ -353,7 +368,12 @@ export default function PerformanceDashboard() {
                        variant="outline" 
                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
                        onClick={() => {
-                         // Emit event for parent component to handle
+                         // Direct navigation to audit view
+                         const fromISO = new Date(Date.now() - getTimeRangeMs(timeRange)).toISOString()
+                         const toISO = new Date().toISOString()
+                         router.push(`/admin/operational-insights?tab=audit&endpoint=${encodeURIComponent(item.endpoint)}&from=${fromISO}&to=${toISO}`)
+                         
+                         // Also send message for iframe scenarios
                          if (window.parent && window.parent !== window) {
                            window.parent.postMessage({
                              type: 'PERFORMANCE_DRILL_THROUGH',
@@ -425,7 +445,19 @@ export default function PerformanceDashboard() {
                       {metric.status_code}
                     </Badge>
                     <div>
-                      <div className="font-medium">{metric.method} {metric.endpoint}</div>
+                      <div className="font-medium">
+                        {metric.method} 
+                        <span 
+                          className="cursor-pointer hover:text-primary transition-colors ml-1"
+                          onClick={() => {
+                            const fromISO = new Date(Date.now() - getTimeRangeMs(timeRange)).toISOString()
+                            const toISO = new Date().toISOString()
+                            router.push(`/admin/operational-insights?tab=audit&endpoint=${encodeURIComponent(metric.endpoint)}&from=${fromISO}&to=${toISO}`)
+                          }}
+                        >
+                          {metric.endpoint}
+                        </span>
+                      </div>
                       <div className="text-sm text-muted-foreground">
                         {formatTime(metric.created_at)}
                       </div>
