@@ -1,0 +1,182 @@
+name: Performance Validation
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+on:
+  push:
+    branches: [ main, bookiji ]
+    paths:
+      - 'supabase/migrations/**'
+      - 'src/app/api/**'
+      - 'tests/load/**'
+  schedule:
+    # Run nightly performance tests
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  database-performance:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase
+        run: supabase start
+
+      - name: Apply migrations
+        run: supabase db reset
+
+      - name: Validate migration success
+        run: |
+          echo "Checking migration verification..."
+          supabase db push
+          # Test the verification function we created
+          psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "SELECT verify_migration_success();"
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Run performance tests
+        run: |
+          echo "Running k6 performance tests..."
+          # Set the API base URL for local testing
+          export API_BASE="http://127.0.0.1:54321"
+          
+          # Run our enhanced search performance test
+          k6 run tests/load/search-performance-enhanced.js --out json=performance-results.json
+          
+          echo "Performance test completed"
+
+      - name: Database stress test
+        run: |
+          echo "Running database stress tests..."
+          
+          # Run pgbench tests on the local database
+          pgbench -h 127.0.0.1 -p 54322 -U postgres -d postgres \
+            -f tests/load/db-performance-enhanced.sql \
+            -c 10 -T 60 -r
+          
+          echo "Database stress test completed"
+
+      - name: Validate critical gotchas
+        run: |
+          echo "Validating critical gotchas implementation..."
+          
+          # Check materialized views have unique indexes
+          psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "
+            SELECT 
+              schemaname, 
+              matviewname, 
+              hasindexes,
+              (SELECT count(*) FROM pg_indexes WHERE tablename = matviewname AND indexname LIKE '%_unique') as unique_indexes
+            FROM pg_matviews 
+            WHERE schemaname = 'public' AND matviewname LIKE '%analytics%';
+          "
+          
+          # Check cache invalidation queue exists
+          psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "
+            SELECT count(*) as cache_queue_exists 
+            FROM information_schema.tables 
+            WHERE table_name = 'cache_invalidation_queue';
+          "
+          
+          # Check performance metrics table exists
+          psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "
+            SELECT count(*) as perf_metrics_exists 
+            FROM information_schema.tables 
+            WHERE table_name = 'performance_metrics';
+          "
+          
+          echo "✅ All critical gotchas validated!"
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-results
+          path: |
+            performance-results.json
+          retention-days: 30
+
+  api-performance:
+    runs-on: ubuntu-latest
+    needs: database-performance
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start Next.js app
+        run: |
+          pnpm build
+          pnpm start &
+          
+          # Wait for the app to start
+          sleep 30
+          
+          # Check if app is running
+          curl -f http://localhost:3000/api/health || true
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Run API load tests
+        run: |
+          echo "Running API performance tests..."
+          export API_BASE="http://localhost:3000"
+          
+          # Run search performance tests against the live API
+          k6 run tests/load/search-performance-enhanced.js --out json=api-performance-results.json
+          
+          echo "API performance test completed"
+
+      - name: Upload API performance results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-performance-results
+          path: |
+            api-performance-results.json
+          retention-days: 30

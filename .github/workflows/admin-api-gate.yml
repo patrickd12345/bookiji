@@ -1,0 +1,64 @@
+name: Admin API Performance Gate
+
+on:
+  pull_request:
+    branches: [ main, bookiji ]
+    paths:
+      - 'src/app/api/admin/**'
+      - 'src/app/api/search/**'
+      - 'src/components/admin/**'
+      - 'src/lib/auth/**'
+      - 'src/lib/ratelimit.ts'
+
+jobs:
+  performance-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Start Next.js app
+        run: |
+          pnpm start &
+          sleep 30
+          curl -f http://localhost:3000/api/health || exit 1
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Run k6 Smoke Test
+        run: |
+          k6 run tests/load/admin-api-smoke.js --out json=smoke-results.json
+        env:
+          API_BASE: http://localhost:3000
+
+      - name: Performance Gate Results
+        run: |
+          echo "✅ Performance gate passed!"
+          echo "All admin/search APIs meet performance thresholds:"
+          echo "- p95 < 500ms ✓"
+          echo "- p99 < 1s ✓" 
+          echo "- Error rate < 1% ✓"

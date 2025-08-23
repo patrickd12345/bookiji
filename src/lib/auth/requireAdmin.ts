@@ -1,21 +1,49 @@
-import { cookies } from 'next/headers'
-import { getSupabaseServerClient } from '@/lib/supabaseServerClient'
+import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
 
-export async function requireAdmin(): Promise<{ userId: string }> {
-  const cookieStore = await cookies()
-  const accessToken = cookieStore.get('sb-access-token')?.value
-  if (!accessToken) throw new Error('Unauthorized: no session')
+export interface AdminUser {
+  id: string
+  email: string
+  role: string
+  organization_id?: string
+}
 
-  const supabase = getSupabaseServerClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-  if (error || !user) throw new Error('Unauthorized: invalid user')
+export async function requireAdmin(session: any): Promise<AdminUser> {
+  if (!session?.user?.id) {
+    throw new Error('unauthenticated')
+  }
 
-  const { data: profile } = await supabase
+  const supabase = createSupabaseServerClient()
+  
+  // Get user profile with role
+  const { data: profile, error } = await supabase
     .from('profiles')
-    .select('id, role')
-    .eq('id', user.id)
+    .select('id, email, role, organization_id')
+    .eq('id', session.user.id)
     .single()
 
-  if (!profile || profile.role !== 'admin') throw new Error('Forbidden: admin only')
-  return { userId: user.id }
+  if (error || !profile) {
+    throw new Error('profile_not_found')
+  }
+
+  if (profile.role !== 'admin') {
+    throw new Error('forbidden')
+  }
+
+  return profile
+}
+
+export async function isAdminEmail(email: string): Promise<boolean> {
+  const supabase = createSupabaseServerClient()
+  
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('email', email)
+    .single()
+
+  if (error || !profile) {
+    return false
+  }
+
+  return profile.role === 'admin'
 }

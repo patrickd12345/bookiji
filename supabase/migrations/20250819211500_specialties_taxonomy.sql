@@ -5,9 +5,6 @@
 -- Safe to re-run: uses IF EXISTS checks and idempotent patterns
 -- ======================================================================
 
--- Extensions
-CREATE EXTENSION IF NOT EXISTS ltree;
-
 -- ======================================================================
 -- DROP LEGACY (SAFE) - Drop in reverse dependency order
 -- ======================================================================
@@ -17,15 +14,15 @@ DROP TABLE IF EXISTS specialty_aliases CASCADE;
 DROP TABLE IF EXISTS specialties CASCADE;
 
 -- ======================================================================
--- SPECIALTIES (taxonomy)
+-- SPECIALTIES (taxonomy) - Simplified without ltree for now
 -- ======================================================================
 CREATE TABLE specialties (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name         text NOT NULL,
   slug         text GENERATED ALWAYS AS (regexp_replace(lower(name), '[^a-z0-9]+', '-', 'g')) STORED,
   parent_id    uuid REFERENCES specialties(id) ON DELETE CASCADE,
-  -- ltree path (e.g., 'home-improvement.plumbing.drain-cleaning')
-  path         ltree,
+  -- Simple path for now (can be enhanced later)
+  path         text,
   is_active    boolean NOT NULL DEFAULT true,
   created_at   timestamptz NOT NULL DEFAULT now(),
   updated_at   timestamptz NOT NULL DEFAULT now()
@@ -34,7 +31,7 @@ CREATE TABLE specialties (
 -- Uniqueness: same name cannot repeat under the same parent
 CREATE UNIQUE INDEX uq_specialties_parent_name ON specialties(parent_id, name);
 -- Path & slug helpers
-CREATE UNIQUE INDEX uq_specialties_path ON specialties USING gist (path);
+CREATE INDEX ix_specialties_path ON specialties(path);
 CREATE INDEX ix_specialties_slug ON specialties(slug);
 CREATE INDEX ix_specialties_parent ON specialties(parent_id);
 
@@ -49,13 +46,13 @@ CREATE TRIGGER tg_specialties_updated_at
 BEFORE UPDATE ON specialties
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
--- Path maintenance function
+-- Path maintenance function - simplified text-based approach
 CREATE OR REPLACE FUNCTION update_specialty_path() RETURNS trigger AS $$
 BEGIN
   IF NEW.parent_id IS NULL THEN
-    NEW.path = NEW.name::ltree;
+    NEW.path = NEW.name;
   ELSE
-    SELECT parent.path || NEW.name::ltree INTO NEW.path
+    SELECT parent.path || '.' || NEW.name INTO NEW.path
     FROM specialties parent
     WHERE parent.id = NEW.parent_id;
   END IF;
@@ -116,17 +113,26 @@ CREATE INDEX ix_specialty_suggestions_parent ON specialty_suggestions(parent_id)
 -- ======================================================================
 -- SEED DATA (common specialties)
 -- ======================================================================
+-- Insert parent specialties first
 INSERT INTO specialties (name, parent_id) VALUES
--- Home Improvement
 ('Home Improvement', NULL),
+('Technology', NULL),
+('Health & Wellness', NULL),
+('Professional Services', NULL);
+
+-- Insert child specialties with proper parent references
+INSERT INTO specialties (name, parent_id) VALUES
+-- Home Improvement sub-specialties
 ('Plumbing', (SELECT id FROM specialties WHERE name='Home Improvement')),
 ('Electrical', (SELECT id FROM specialties WHERE name='Home Improvement')),
 ('HVAC', (SELECT id FROM specialties WHERE name='Home Improvement')),
 ('Roofing', (SELECT id FROM specialties WHERE name='Home Improvement')),
 ('Painting', (SELECT id FROM specialties WHERE name='Home Improvement')),
 ('Carpentry', (SELECT id FROM specialties WHERE name='Home Improvement')),
-('Landscaping', (SELECT id FROM specialties WHERE name='Home Improvement')),
+('Landscaping', (SELECT id FROM specialties WHERE name='Home Improvement'));
 
+-- Insert sub-sub-specialties
+INSERT INTO specialties (name, parent_id) VALUES
 -- Plumbing sub-specialties
 ('Drain Cleaning', (SELECT id FROM specialties WHERE name='Plumbing')),
 ('Pipe Repair', (SELECT id FROM specialties WHERE name='Plumbing')),
@@ -137,24 +143,23 @@ INSERT INTO specialties (name, parent_id) VALUES
 ('Wiring', (SELECT id FROM specialties WHERE name='Electrical')),
 ('Panel Upgrades', (SELECT id FROM specialties WHERE name='Electrical')),
 ('Lighting Installation', (SELECT id FROM specialties WHERE name='Electrical')),
-('EV Charger Installation', (SELECT id FROM specialties WHERE name='Electrical')),
+('EV Charger Installation', (SELECT id FROM specialties WHERE name='Electrical'));
 
--- Technology
-('Technology', NULL),
+-- Insert remaining child specialties
+INSERT INTO specialties (name, parent_id) VALUES
+-- Technology sub-specialties
 ('Computer Repair', (SELECT id FROM specialties WHERE name='Technology')),
 ('Software Development', (SELECT id FROM specialties WHERE name='Technology')),
 ('Web Design', (SELECT id FROM specialties WHERE name='Technology')),
 ('IT Support', (SELECT id FROM specialties WHERE name='Technology')),
 
--- Health & Wellness
-('Health & Wellness', NULL),
+-- Health & Wellness sub-specialties
 ('Personal Training', (SELECT id FROM specialties WHERE name='Health & Wellness')),
 ('Massage Therapy', (SELECT id FROM specialties WHERE name='Health & Wellness')),
 ('Nutrition Counseling', (SELECT id FROM specialties WHERE name='Health & Wellness')),
 ('Yoga Instruction', (SELECT id FROM specialties WHERE name='Health & Wellness')),
 
--- Professional Services
-('Professional Services', NULL),
+-- Professional Services sub-specialties
 ('Legal Services', (SELECT id FROM specialties WHERE name='Professional Services')),
 ('Accounting', (SELECT id FROM specialties WHERE name='Professional Services')),
 ('Consulting', (SELECT id FROM specialties WHERE name='Professional Services')),

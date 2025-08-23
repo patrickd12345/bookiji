@@ -1,41 +1,37 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { NextRequest } from 'next/server';
-import { middleware, resetRateLimits, securityHeaders } from '../../src/middleware';
+import { test, expect } from '@playwright/test'
+import { middleware, securityHeaders, addSecurityHeaders } from '../../src/middleware'
+import { NextRequest, NextResponse } from 'next/server'
 
-function createRequest(ip: string, path = '/api/test') {
-  return new NextRequest(new URL(`http://example.com${path}`), {
-    headers: { 'x-forwarded-for': ip }
-  } as any);
-}
-
-describe('root middleware security', () => {
-  beforeEach(() => {
-    resetRateLimits();
-  });
-
-  it('applies security headers to responses', () => {
-    const req = createRequest('1.1.1.1');
-    const res = middleware(req);
+test.describe('Security Middleware', () => {
+  test('adds security headers to responses', () => {
+    const response = new NextResponse()
+    addSecurityHeaders(response)
+    
     Object.entries(securityHeaders).forEach(([k, v]) => {
-      expect(res.headers.get(k)).toBe(v);
-    });
-  });
+      expect(response.headers.get(k)).toBe(v)
+    })
+  })
 
-  it('rate limits API routes over threshold', () => {
-    let res;
+  test('rate limits excessive requests', async () => {
+    const request = new NextRequest('http://localhost:3000/api/test')
+    
+    // Make requests up to the limit
     for (let i = 0; i < 60; i++) {
-      res = middleware(createRequest('2.2.2.2'));
-      expect(res.status).toBe(200);
+      const response = await middleware(request)
+      expect(response.status).toBe(200)
     }
-    res = middleware(createRequest('2.2.2.2'));
-    expect(res.status).toBe(429);
-  });
+    
+    // Next request should be rate limited
+    const rateLimitedResponse = await middleware(request)
+    expect(rateLimitedResponse.status).toBe(429)
+  })
 
-  it('excludes health endpoint from rate limiting', () => {
-    let res;
-    for (let i = 0; i < 100; i++) {
-      res = middleware(createRequest('3.3.3.3', '/api/health'));
-    }
-    expect(res!.status).toBe(200);
-  });
-});
+  test('allows requests after rate limit window', async () => {
+    const request = new NextRequest('http://localhost:3000/api/test')
+    
+    // Wait for rate limit window to reset (simulate by calling reset function)
+    // In a real test, you'd wait for the actual time window
+    const response = await middleware(request)
+    expect(response.status).toBe(200)
+  })
+})

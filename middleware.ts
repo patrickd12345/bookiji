@@ -1,31 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { buildCSPHeader } from '@/lib/security/csp'
+import { adminGuard } from './src/middleware/adminGuard'
 
 // In-memory rate limiter storage
 const rateLimitMap = new Map<string, number[]>()
+const adminRateLimitMap = new Map<string, number[]>()
 
 // Rate limit configuration
 const MAX_REQUESTS = 60
 const WINDOW_MS = 60 * 1000 // 60 seconds
 
-function isRateLimited(ip: string): boolean {
+// Admin-specific rate limiting (stricter)
+const ADMIN_MAX_REQUESTS = 30
+const ADMIN_WINDOW_MS = 60 * 1000 // 60 seconds
+
+function isRateLimited(ip: string, isAdmin: boolean = false): boolean {
   const now = Date.now()
-  const windowStart = now - WINDOW_MS
+  const windowStart = now - (isAdmin ? ADMIN_WINDOW_MS : WINDOW_MS)
+  const maxRequests = isAdmin ? ADMIN_MAX_REQUESTS : MAX_REQUESTS
+  const rateLimitMapToUse = isAdmin ? adminRateLimitMap : rateLimitMap
   
   // Get existing timestamps for this IP
-  const timestamps = rateLimitMap.get(ip) || []
+  const timestamps = rateLimitMapToUse.get(ip) || []
   
   // Filter timestamps within current window
   const validTimestamps = timestamps.filter(timestamp => timestamp > windowStart)
   
   // Check if limit exceeded
-  if (validTimestamps.length >= MAX_REQUESTS) {
+  if (validTimestamps.length >= maxRequests) {
     return true
   }
   
   // Add current timestamp and update map
   validTimestamps.push(now)
-  rateLimitMap.set(ip, validTimestamps)
+  rateLimitMapToUse.set(ip, validTimestamps)
   
   return false
 }
@@ -50,22 +58,14 @@ function getClientIP(request: NextRequest): string {
   return 'unknown'
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
-  // Admin guard for /admin and /api/admin/*
+  
+  // Apply admin guard first for all admin routes
   if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
-    const hasSession = request.cookies.has('sb-access-token') || request.cookies.has('supabase-auth-token')
-    
-    if (!hasSession) {
-      if (pathname.startsWith('/api/')) {
-        return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { 'content-type': 'application/json' }
-        })
-      }
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
+    const adminGuardResult = await adminGuard(request)
+    if (adminGuardResult.status !== 200) {
+      return adminGuardResult
     }
   }
   
@@ -92,18 +92,19 @@ export function middleware(request: NextRequest) {
   // Apply rate limiting to all API routes
   if (pathname.startsWith('/api/')) {
     const clientIP = getClientIP(request)
+    const isAdminRoute = pathname.startsWith('/api/admin')
     
-    if (isRateLimited(clientIP)) {
+    if (isRateLimited(clientIP, isAdminRoute)) {
       const response = new NextResponse(
         JSON.stringify({ error: 'Too many requests' }),
         {
           status: 429,
           headers: {
             'Content-Type': 'application/json',
-            'X-RateLimit-Limit': MAX_REQUESTS.toString(),
-            'X-RateLimit-Window': WINDOW_MS.toString(),
+            'X-RateLimit-Limit': (isAdminRoute ? ADMIN_MAX_REQUESTS : MAX_REQUESTS).toString(),
+            'X-RateLimit-Window': (isAdminRoute ? ADMIN_WINDOW_MS : WINDOW_MS).toString(),
             'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': new Date(Date.now() + WINDOW_MS).toISOString(),
+            'X-RateLimit-Reset': new Date(Date.now() + (isAdminRoute ? ADMIN_WINDOW_MS : WINDOW_MS)).toISOString(),
           }
         }
       )
@@ -114,9 +115,12 @@ export function middleware(request: NextRequest) {
     // Add rate limit headers to successful responses
     const response = NextResponse.next()
     addSecurityHeaders(response)
-    response.headers.set('X-RateLimit-Limit', MAX_REQUESTS.toString())
-    response.headers.set('X-RateLimit-Window', WINDOW_MS.toString())
-    response.headers.set('X-RateLimit-Remaining', String(MAX_REQUESTS - (rateLimitMap.get(clientIP)?.length || 0)))
+    response.headers.set('X-RateLimit-Limit', (isAdminRoute ? ADMIN_MAX_REQUESTS : MAX_REQUESTS).toString())
+    response.headers.set('X-RateLimit-Window', (isAdminRoute ? ADMIN_WINDOW_MS : WINDOW_MS).toString())
+    
+    const rateLimitMapToUse = isAdminRoute ? adminRateLimitMap : rateLimitMap
+    const remaining = (isAdminRoute ? ADMIN_MAX_REQUESTS : MAX_REQUESTS) - (rateLimitMapToUse.get(clientIP)?.length || 0)
+    response.headers.set('X-RateLimit-Remaining', String(Math.max(0, remaining)))
     
     return response
   }
