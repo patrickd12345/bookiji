@@ -49,6 +49,7 @@ interface SearchFilters {
   radius?: number // in miles (legacy)
   maxTravelDistance?: number // in kilometers
   service_category?: string
+  specialty_ids?: string[] // New: filter by specific specialties
   min_rating?: number
   max_price?: number
   availability_date?: string
@@ -93,6 +94,7 @@ export async function GET(request: NextRequest) {
         ? parseFloat(searchParams.get('maxTravelDistance')!)
         : 20,
       service_category: searchParams.get('service_category') || searchParams.get('category') || undefined,
+      specialty_ids: searchParams.get('specialty_ids')?.split(',').filter(Boolean) || undefined,
       min_rating: searchParams.get('min_rating') ? parseFloat(searchParams.get('min_rating')!) : undefined,
       max_price: searchParams.get('max_price') ? parseFloat(searchParams.get('max_price')!) : undefined,
       availability_date: searchParams.get('availability_date') || undefined,
@@ -174,6 +176,10 @@ async function performAdvancedSearch(filters: SearchFilters) {
         rating,
         review_text,
         created_at
+      ),
+      vendor_specialties:vendor_specialties(
+        specialty_id,
+        is_primary
       )
     `)
     .eq('user_type', 'provider')
@@ -194,6 +200,11 @@ async function performAdvancedSearch(filters: SearchFilters) {
   // Service category filter
   if (filters.service_category) {
     query = query.eq('services.category', filters.service_category)
+  }
+
+  // Specialty filter
+  if (filters.specialty_ids && filters.specialty_ids.length > 0) {
+    query = query.in('vendor_specialties.specialty_id', filters.specialty_ids)
   }
 
   // Rating filter

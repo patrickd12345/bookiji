@@ -71,55 +71,55 @@ test.describe('Admin Cockpit', () => {
     // Test Analytics navigation - navigate directly instead of clicking
     console.log('Testing Analytics navigation...')
     await page.goto('/admin/analytics')
-    await page.waitForLoadState('domcontentloaded')
+    await page.waitForLoadState('networkidle')
     await expect(page.locator('h1').filter({ hasText: 'Analytics' })).toBeVisible()
     
     // Test Vendors navigation
     console.log('Testing Vendors navigation...')
     await page.goto('/admin/vendors')
-    await page.waitForLoadState('domcontentloaded')
+    await page.waitForLoadState('networkidle')
     await expect(page.locator('h1').filter({ hasText: 'Vendors' })).toBeVisible()
     
     // Test Customers navigation
     console.log('Testing Customers navigation...')
     await page.goto('/admin/customers')
-    await page.waitForLoadState('domcontentloaded')
+    await page.waitForLoadState('networkidle')
     await expect(page.locator('h1').filter({ hasText: 'Customers' })).toBeVisible()
     
     // Test Specialties navigation
     console.log('Testing Specialties navigation...')
     await page.goto('/admin/specialties')
-    await page.waitForLoadState('domcontentloaded')
+    await page.waitForLoadState('networkidle')
     await expect(page.locator('h1').filter({ hasText: 'Specialties' })).toBeVisible()
     
     // Test Suggestions navigation
     console.log('Testing Suggestions navigation...')
     await page.goto('/admin/suggestions')
-    await page.waitForLoadState('domcontentloaded')
+    await page.waitForLoadState('networkidle')
     await expect(page.locator('h1').filter({ hasText: 'Suggestions' })).toBeVisible()
     
     // Test Bookings navigation
     console.log('Testing Bookings navigation...')
     await page.goto('/admin/bookings')
-    await page.waitForLoadState('domcontentloaded')
+    await page.waitForLoadState('networkidle')
     await expect(page.locator('h1').filter({ hasText: 'Bookings' })).toBeVisible()
     
     // Test Broadcasts navigation
     console.log('Testing Broadcasts navigation...')
     await page.goto('/admin/broadcasts')
-    await page.waitForLoadState('load')
+    await page.waitForLoadState('networkidle')
     await expect(page.locator('h1').filter({ hasText: 'Broadcasts' })).toBeVisible()
     
     // Test Settings navigation
     console.log('Testing Settings navigation...')
     await page.goto('/admin/settings')
-    await page.waitForLoadState('domcontentloaded')
+    await page.waitForLoadState('networkidle')
     await expect(page.locator('h1').filter({ hasText: 'Settings' })).toBeVisible()
     
     // Test Dashboard navigation
     console.log('Testing Dashboard navigation...')
     await page.goto('/admin')
-    await page.waitForLoadState('domcontentloaded')
+    await page.waitForLoadState('networkidle')
     await expect(page.locator('h1').filter({ hasText: 'Dashboard' })).toBeVisible()
   })
 
@@ -307,15 +307,16 @@ test.describe('Admin Cockpit', () => {
   test('Search functionality works in tables', async ({ page }) => {
     await page.goto('/admin/vendors')
     
-    // Find search input - target the one in the DataTable component specifically
-    const searchInput = page.locator('input[placeholder="Search..."]').first()
+    // Find search input - use the one in the main content area, not the navbar
+    // Look for search input that's not in the header
+    const searchInput = page.locator('main input[placeholder="Search..."]').first()
     await expect(searchInput).toBeVisible()
     
     // Search for specific vendor
     await searchInput.fill('Tech')
     
-    // Wait for search results and re-render
-    await page.waitForTimeout(1000)
+    // Wait for search results
+    await page.waitForTimeout(500)
     
     // Verify search results
     await expect(page.locator('text=TechFix Pro')).toBeVisible()

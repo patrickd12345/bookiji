@@ -146,5 +146,3 @@ console.log('4. Test vendor registration flow');
 console.log('5. Test admin specialty management');
 
 console.log('\n✨ All tests completed successfully!');
-
-

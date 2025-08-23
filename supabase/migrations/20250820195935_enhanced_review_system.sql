@@ -360,4 +360,8 @@ GRANT ALL ON review_moderation_log TO authenticated;
 
 COMMIT;
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> cabcd21e4478cfabeefaf7d414b823f4652e3fa9
 

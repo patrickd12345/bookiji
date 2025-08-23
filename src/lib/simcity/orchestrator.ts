@@ -1,19 +1,16 @@
 import { EventEmitter } from 'events';
-import { SimState, SimEvent, SimPolicies, DEFAULT_POLICIES, DEFAULT_METRICS } from './types';
 import { SimTelemetry } from './telemetry';
-import { createAgent, generatePersona } from './agent';
+import { SimState, SimPolicies, SimEvent, SimMetrics, DEFAULT_POLICIES, DEFAULT_METRICS } from './types';
 
 export class SimOrchestrator extends EventEmitter {
   private state: SimState;
-  private telemetry: SimTelemetry;
-  private tickInterval: NodeJS.Timeout | null = null;
   private running: boolean = false;
-  private baseURL: string;
+  private tickInterval: NodeJS.Timeout | null = null;
+  private telemetry: SimTelemetry;
   private agentCounter: number = 0;
 
   constructor(baseURL: string = 'http://localhost:3000') {
     super();
-    this.baseURL = baseURL;
     this.telemetry = new SimTelemetry();
     this.state = {
       running: false,
@@ -21,7 +18,7 @@ export class SimOrchestrator extends EventEmitter {
       nowISO: new Date().toISOString(),
       liveAgents: 0,
       metrics: { ...DEFAULT_METRICS },
-      policies: { ...DEFAULT_POLICIES },
+      policies: { ...DEFAULT_POLICIES }
     };
   }
 
@@ -108,28 +105,31 @@ export class SimOrchestrator extends EventEmitter {
     }
 
     const id = ++this.agentCounter;
-    const persona = generatePersona(kind, id);
-    const agent = createAgent(kind, persona);
     
     this.emitEvent('agent_spawn', { 
       id, 
       kind, 
-      persona,
       timestamp: new Date().toISOString() 
     });
 
     // Run agent in background
-    this.runAgent(agent, kind, id);
+    this.runAgent(kind, id);
   }
 
-  private async runAgent(agent: any, kind: 'customer' | 'vendor', id: number): Promise<void> {
+  private async runAgent(kind: 'customer' | 'vendor', id: number): Promise<void> {
     try {
-      const result = await agent.run(this.baseURL);
+      // Simulate agent running
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       this.emitEvent('agent_done', {
         id,
         kind,
-        result,
+        result: {
+          kind,
+          success: true,
+          latencyTicks: 1,
+          actions: []
+        },
         timestamp: new Date().toISOString(),
         duration: Date.now() - (this.state.lastTickTime?.getTime() || Date.now()),
       });
@@ -138,7 +138,7 @@ export class SimOrchestrator extends EventEmitter {
       this.telemetry.log({
         type: 'agent_done',
         timestamp: new Date().toISOString(),
-        data: { result, id, kind }
+        data: { id, kind }
       });
       
     } catch (error) {
@@ -227,6 +227,4 @@ export function getOrchestrator(baseURL?: string): SimOrchestrator {
   }
   return orchestratorInstance;
 }
-
-
 

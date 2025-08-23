@@ -209,4 +209,7 @@ For deployment support or issues:
 
 The specialty system is fully implemented, tested, and ready for deployment. All critical components are in place and functioning correctly.
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> cabcd21e4478cfabeefaf7d414b823f4652e3fa9

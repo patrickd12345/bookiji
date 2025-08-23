@@ -1,50 +1,48 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Save, CheckCircle, AlertCircle } from 'lucide-react'
-import { Switch } from '@/components/ui/switch'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Save, CheckCircle, AlertCircle, Settings as SettingsIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { AnimatePresence } from 'framer-motion'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 
-interface SettingsFormProps {
-  initialSettings?: {
-    darkMode: boolean
-    email: string
-    notifications: boolean
-    language: string
-  }
+interface AdminSettings {
+  theme: 'light' | 'dark' | 'auto'
+  timezone: string
+  dateFormat: string
+  notifications: boolean
+  language: string
 }
 
-export default function SettingsForm({ initialSettings }: SettingsFormProps) {
-  const [settings, setSettings] = useState({
-    darkMode: initialSettings?.darkMode ?? false,
-    email: initialSettings?.email ?? 'admin@bookiji.com',
-    notifications: initialSettings?.notifications ?? true,
-    language: initialSettings?.language ?? 'en'
+export default function SettingsForm() {
+  const [settings, setSettings] = useState<AdminSettings>({
+    theme: 'auto',
+    timezone: 'UTC',
+    dateFormat: 'MM/DD/YYYY',
+    notifications: true,
+    language: 'en'
   })
 
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
-  const handleSettingChange = (key: string, value: any) => {
+  const handleSettingChange = (key: keyof AdminSettings, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }))
   }
 
   const handleSave = async () => {
     setIsSaving(true)
     setSaveStatus('idle')
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      // Simulate success
-      setSaveStatus('success')
+      // Save to localStorage for demo
+      localStorage.setItem('adminSettings', JSON.stringify(settings))
       
-      // Reset status after 3 seconds
+      setSaveStatus('success')
       setTimeout(() => setSaveStatus('idle'), 3000)
     } catch (error) {
       setSaveStatus('error')
@@ -54,23 +52,11 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
     }
   }
 
-  const formVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut"
-      }
-    }
-  }
-
   const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
+    hidden: { opacity: 0, y: 20 },
     visible: (i: number) => ({
       opacity: 1,
-      x: 0,
+      y: 0,
       transition: {
         delay: i * 0.1,
         duration: 0.5,
@@ -81,40 +67,31 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
 
   return (
     <motion.div
-      variants={formVariants}
-      initial="hidden"
-      animate="visible"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       className="max-w-2xl mx-auto"
     >
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Admin Settings</h3>
-          <p className="text-sm text-gray-600">Configure your admin panel preferences and notifications</p>
+      {/* Header */}
+      <motion.div
+        custom={0}
+        variants={itemVariants}
+        initial="hidden"
+        animate="visible"
+        className="mb-8"
+      >
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
+            <SettingsIcon className="text-white" size={20} />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Settings</h1>
         </div>
+        <p className="text-gray-600">Customize your admin dashboard preferences and system configuration</p>
+      </motion.div>
 
+      {/* Settings Form */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="space-y-6">
-          {/* Dark Mode Toggle */}
-          <motion.div
-            custom={0}
-            variants={itemVariants}
-            initial="hidden"
-            animate="visible"
-            className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl"
-          >
-            <div>
-              <Label htmlFor="darkMode" className="text-sm font-medium text-gray-900">
-                Dark Mode
-              </Label>
-              <p className="text-xs text-gray-600 mt-1">Switch between light and dark themes</p>
-            </div>
-            <Switch
-              id="darkMode"
-              checked={settings.darkMode}
-              onCheckedChange={(checked) => handleSettingChange('darkMode', checked)}
-            />
-          </motion.div>
-
-          {/* Email Settings */}
+          {/* Theme Selection */}
           <motion.div
             custom={1}
             variants={itemVariants}
@@ -122,18 +99,74 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
             animate="visible"
             className="space-y-3"
           >
-            <Label htmlFor="email" className="text-sm font-medium text-gray-900">
-              Admin Email
+            <Label htmlFor="theme" className="text-sm font-medium text-gray-900">
+              Theme
             </Label>
-            <Input
-              id="email"
-              type="email"
-              value={settings.email}
-              onChange={(e) => handleSettingChange('email', e.target.value)}
-              placeholder="admin@bookiji.com"
-              className="rounded-2xl"
-            />
-            <p className="text-xs text-gray-600">This email will receive all admin notifications</p>
+            <select
+              id="theme"
+              value={settings.theme}
+              onChange={(e) => handleSettingChange('theme', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="auto">Auto (System)</option>
+            </select>
+            <p className="text-xs text-gray-600">Choose your preferred color scheme</p>
+          </motion.div>
+
+          {/* Timezone Selection */}
+          <motion.div
+            custom={2}
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            className="space-y-3"
+          >
+            <Label htmlFor="timezone" className="text-sm font-medium text-gray-900">
+              Timezone
+            </Label>
+            <select
+              id="timezone"
+              value={settings.timezone}
+              onChange={(e) => handleSettingChange('timezone', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="UTC">UTC</option>
+              <option value="America/New_York">Eastern Time</option>
+              <option value="America/Chicago">Central Time</option>
+              <option value="America/Denver">Mountain Time</option>
+              <option value="America/Los_Angeles">Pacific Time</option>
+              <option value="Europe/London">London</option>
+              <option value="Europe/Paris">Paris</option>
+              <option value="Asia/Tokyo">Tokyo</option>
+            </select>
+            <p className="text-xs text-gray-600">Set your local timezone for accurate time display</p>
+          </motion.div>
+
+          {/* Date Format */}
+          <motion.div
+            custom={2}
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            className="space-y-3"
+          >
+            <Label htmlFor="dateFormat" className="text-sm font-medium text-gray-900">
+              Date Format
+            </Label>
+            <select
+              id="dateFormat"
+              value={settings.dateFormat}
+              onChange={(e) => handleSettingChange('dateFormat', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+              <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+              <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+              <option value="DD.MM.YYYY">DD.MM.YYYY</option>
+            </select>
+            <p className="text-xs text-gray-600">Choose your preferred date format</p>
           </motion.div>
 
           {/* Notifications Toggle */}
@@ -142,13 +175,13 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
             variants={itemVariants}
             initial="hidden"
             animate="visible"
-            className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl"
+            className="flex items-center justify-between"
           >
             <div>
               <Label htmlFor="notifications" className="text-sm font-medium text-gray-900">
                 Email Notifications
               </Label>
-              <p className="text-xs text-gray-600 mt-1">Receive email alerts for important events</p>
+              <p className="text-xs text-gray-600">Receive email alerts for important events</p>
             </div>
             <Switch
               id="notifications"
@@ -241,7 +274,6 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
     </motion.div>
   )
 }
-
 
 
 

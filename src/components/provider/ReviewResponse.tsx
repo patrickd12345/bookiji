@@ -1,139 +1,145 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { MessageSquare, Edit, CheckCircle, AlertCircle } from 'lucide-react'
 
-interface ReviewResponseProps {
-  reviewId: string
-  providerId: string
-  onResponseSubmitted?: () => void
-  existingResponse?: {
-    id: string
-    response_text: string
-    is_public: boolean
-    created_at: string
-  }
+interface Review {
+  id: string
+  customer_name: string
+  rating: number
+  comment: string
+  created_at: string
+  service_name: string
 }
 
-export default function ReviewResponse({ 
-  reviewId, 
-  providerId, 
-  onResponseSubmitted,
-  existingResponse 
-}: ReviewResponseProps) {
-  const [responseText, setResponseText] = useState(existingResponse?.response_text || '')
-  const [isPublic, setIsPublic] = useState(existingResponse?.is_public ?? true)
-  const [isEditing, setIsEditing] = useState(!existingResponse)
+interface ReviewResponse {
+  id?: string
+  review_id: string
+  provider_id: string
+  response_text: string
+  is_public: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+interface ReviewResponseProps {
+  review: Review
+  providerId: string
+  onResponseSubmitted?: (response: ReviewResponse) => void
+}
+
+export default function ReviewResponse({ review, providerId, onResponseSubmitted }: ReviewResponseProps) {
+  const [responseText, setResponseText] = useState('')
+  const [isPublic, setIsPublic] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [existingResponse, setExistingResponse] = useState<ReviewResponse | null>(null)
+  const [showForm, setShowForm] = useState(false)
+
+  useEffect(() => {
+    // Check if there's an existing response
+    checkExistingResponse()
+  }, [review.id, providerId])
+
+  const checkExistingResponse = async () => {
+    try {
+      const response = await fetch(`/api/reviews/${review.id}/response?provider_id=${providerId}`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.response) {
+          setExistingResponse(data.response)
+          setResponseText(data.response.response_text)
+          setIsPublic(data.response.is_public)
+        }
+      }
+    } catch (error) {
+      console.error('Error checking existing response:', error)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!responseText.trim()) {
-      setError('Please enter a response')
-      return
-    }
+    setSubmitting(true)
+    setError(null)
 
     try {
-      setSubmitting(true)
-      setError('')
+      const endpoint = existingResponse 
+        ? `/api/reviews/${review.id}/response/${existingResponse.id}`
+        : `/api/reviews/${review.id}/response`
 
-      const url = existingResponse ? `/api/reviews/response/${existingResponse.id}` : '/api/reviews/response'
       const method = existingResponse ? 'PUT' : 'POST'
-      
-      const response = await fetch(url, {
+
+      const response = await fetch(endpoint, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          review_id: reviewId,
+          review_id: review.id,
           provider_id: providerId,
           response_text: responseText.trim(),
-          is_public: isPublic
-        })
+          is_public: isPublic,
+        }),
       })
 
-      if (response.ok) {
-        if (onResponseSubmitted) {
-          onResponseSubmitted()
-        }
-        setIsEditing(false)
-        alert(existingResponse ? 'Response updated successfully!' : 'Response submitted successfully!')
-      } else {
-        const errorData = await response.json()
-        setError(errorData.message || 'Failed to submit response')
+      if (!response.ok) {
+        throw new Error('Failed to submit response')
       }
+
+      const data = await response.json()
+      
+      if (existingResponse) {
+        setExistingResponse({ ...existingResponse, ...data.response })
+      } else {
+        setExistingResponse(data.response)
+      }
+
+      setShowForm(false)
+      onResponseSubmitted?.(data.response)
+      
+      // Show success message
+      setError(null)
     } catch (error) {
-      console.error('Failed to submit response:', error)
       setError('Failed to submit response. Please try again.')
+      console.error('Error submitting response:', error)
     } finally {
       setSubmitting(false)
     }
   }
 
-  const handleEdit = () => {
-    setIsEditing(true)
-    setError('')
-  }
-
   const handleCancel = () => {
+    setShowForm(false)
     if (existingResponse) {
       setResponseText(existingResponse.response_text)
       setIsPublic(existingResponse.is_public)
-      setIsEditing(false)
     } else {
       setResponseText('')
       setIsPublic(true)
     }
-    setError('')
+    setError(null)
   }
 
-  const handleDelete = async () => {
-    if (!existingResponse || !confirm('Are you sure you want to delete this response?')) {
-      return
-    }
-
-    try {
-      setSubmitting(true)
-      const response = await fetch(`/api/reviews/response/${existingResponse.id}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        if (onResponseSubmitted) {
-          onResponseSubmitted()
-        }
-        alert('Response deleted successfully!')
-      } else {
-        const errorData = await response.json()
-        setError(errorData.message || 'Failed to delete response')
-      }
-    } catch (error) {
-      console.error('Failed to delete response:', error)
-      setError('Failed to delete response. Please try again.')
-    } finally {
-      setSubmitting(false)
-    }
+  const handleEdit = () => {
+    setShowForm(true)
   }
 
-  if (!isEditing && existingResponse) {
+  // If there's an existing response and we're not editing, show it
+  if (existingResponse && !showForm) {
     return (
       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-        <div className="flex items-start justify-between mb-3">
-          <h4 className="font-medium text-blue-800">Your Response</h4>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleEdit}
-              className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-            >
-              Edit
-            </button>
-            <button
-              onClick={handleDelete}
-              className="text-sm text-red-600 hover:text-red-800 transition-colors"
-            >
-              Delete
-            </button>
-          </div>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-medium text-blue-800 flex items-center gap-2">
+            <CheckCircle size={16} />
+            Your Response
+          </h4>
+          <button
+            onClick={handleEdit}
+            className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
+          >
+            <Edit size={14} />
+            Edit
+          </button>
         </div>
         
         <p className="text-blue-700 mb-2">{existingResponse.response_text}</p>
@@ -143,7 +149,7 @@ export default function ReviewResponse({
             {existingResponse.is_public ? 'Public response' : 'Private response'}
           </span>
           <span>
-            {new Date(existingResponse.created_at).toLocaleDateString('en-US', {
+            {existingResponse.created_at && new Date(existingResponse.created_at).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'short',
               day: 'numeric'
@@ -229,5 +235,3 @@ export default function ReviewResponse({
     </div>
   )
 }
-
-

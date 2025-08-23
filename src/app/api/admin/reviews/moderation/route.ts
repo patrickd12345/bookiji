@@ -1,153 +1,60 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
-    const moderationStatus = searchParams.get('moderation_status')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = parseInt(searchParams.get('offset') || '0')
-
-    let query = supabase
-      .from('reviews')
-      .select(`
-        *,
-        reviewer:reviewer_id(
-          id,
-          full_name,
-          email
-        ),
-        provider:provider_id(
-          id,
-          full_name,
-          email
-        ),
-        booking:booking_id(
-          service_name,
-          service_date
-        )
-      `)
-      .order('created_at', { ascending: false })
-
-    // Apply filters
-    if (status) {
-      query = query.eq('status', status)
-    }
-    if (moderationStatus) {
-      query = query.eq('moderation_status', moderationStatus)
-    }
-
-    // Apply pagination
-    query = query.range(offset, offset + limit - 1)
-
-    const { data: reviews, error } = await query
-
-    if (error) {
-      console.error('Reviews fetch error:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch reviews' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      reviews: reviews || []
-    })
-
-  } catch (error) {
-    console.error('Reviews fetch error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    
-    const {
-      reviewId,
-      action,
-      reason,
-      moderatorId
-    } = body
+    const { reviewId, action, reason, moderatorId } = await request.json();
 
-    // Validate required fields
-    if (!reviewId || !action) {
+    if (!reviewId || !action || !moderatorId) {
       return NextResponse.json(
-        { error: 'Missing required fields: reviewId, action' },
+        { error: 'Missing required fields: reviewId, action, moderatorId' },
         { status: 400 }
-      )
+      );
     }
 
     // Validate action
-    const validActions = ['approve', 'reject', 'flag', 'remove', 'restore']
+    const validActions = ['approve', 'reject', 'remove', 'restore'];
     if (!validActions.includes(action)) {
       return NextResponse.json(
-        { error: 'Invalid action. Must be one of: ' + validActions.join(', ') },
+        { error: 'Invalid action. Must be one of: approve, reject, remove, restore' },
         { status: 400 }
-      )
+      );
     }
 
     // Get the review
-    const { data: review, error: reviewError } = await supabase
+    const { data: review, error: fetchError } = await supabase
       .from('reviews')
       .select('*')
       .eq('id', reviewId)
-      .single()
+      .single();
 
-    if (reviewError || !review) {
+    if (fetchError || !review) {
       return NextResponse.json(
         { error: 'Review not found' },
         { status: 404 }
-      )
+      );
     }
 
-    // Prepare update data
+    // Determine update data based on action
     const updateData: any = {
-      updated_at: new Date().toISOString()
-    }
+      moderation_status: action === 'approve' ? 'approved' : 
+                         action === 'reject' ? 'rejected' : 
+                         action === 'remove' ? 'removed' : 'pending',
+      moderated_at: new Date().toISOString(),
+      moderated_by: moderatorId
+    };
 
-    switch (action) {
-      case 'approve':
-        updateData.status = 'published'
-        updateData.moderation_status = 'approved'
-        updateData.moderated_at = new Date().toISOString()
-        updateData.moderated_by = moderatorId
-        break
-      
-      case 'reject':
-        updateData.status = 'removed'
-        updateData.moderation_status = 'rejected'
-        updateData.moderated_at = new Date().toISOString()
-        updateData.moderated_by = moderatorId
-        break
-      
-      case 'flag':
-        updateData.status = 'flagged'
-        updateData.moderation_status = 'needs_review'
-        updateData.flagged_reason = reason
-        updateData.moderated_at = new Date().toISOString()
-        updateData.moderated_by = moderatorId
-        break
-      
-      case 'remove':
-        updateData.status = 'removed'
-        updateData.moderation_status = 'rejected'
-        updateData.moderated_at = new Date().toISOString()
-        updateData.moderated_by = moderatorId
-        break
-      
-      case 'restore':
-        updateData.status = 'published'
-        updateData.moderation_status = 'approved'
-        updateData.moderated_at = new Date().toISOString()
-        updateData.moderated_by = moderatorId
-        updateData.flagged_reason = null
-        break
+    if (action === 'approve' || action === 'restore') {
+      updateData.status = 'active';
+      updateData.moderation_status = 'approved';
+    } else if (action === 'reject' || action === 'remove') {
+      updateData.status = 'hidden';
+      updateData.moderation_status = action === 'reject' ? 'rejected' : 'removed';
     }
 
     // Update the review
@@ -247,5 +154,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-

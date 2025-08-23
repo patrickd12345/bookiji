@@ -269,4 +269,8 @@ DEBUG=simcity:* npm run dev
 *The SimCity Testing Engine transforms static testing into a living, breathing simulation of your platform's real-world usage patterns.*
 
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> cabcd21e4478cfabeefaf7d414b823f4652e3fa9
 

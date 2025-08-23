@@ -13,7 +13,8 @@ import {
   Settings,
   Menu,
   X,
-  Plus
+  Plus,
+  MessageSquare
 } from 'lucide-react'
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
   { href: '/admin/specialties', icon: Settings, label: 'Specialties' },
   { href: '/admin/suggestions', icon: Plus, label: 'Suggestions' },
   { href: '/admin/bookings', icon: Calendar, label: 'Bookings' },
+  { href: '/admin/reviews', icon: MessageSquare, label: 'Review Moderation' },
   { href: '/admin/broadcasts', icon: Radio, label: 'Broadcasts' },
   { href: '/admin/settings', icon: Settings, label: 'Settings' }
 ]

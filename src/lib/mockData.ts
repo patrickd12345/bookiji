@@ -1,15 +1,15 @@
-export interface DashboardStats {
-  activeUsers: number
-  bookingsToday: number
-  revenue: number
-  errors: number
-}
-
 export interface AnalyticsData {
   date: string
   users: number
   bookings: number
   revenue: number
+}
+
+export interface DashboardStats {
+  activeUsers: number
+  bookingsToday: number
+  revenue: number
+  errors: number
 }
 
 export interface Vendor {
@@ -28,7 +28,7 @@ export interface Booking {
   vendor: string
   service: string
   date: string
-  status: 'confirmed' | 'pending' | 'cancelled' | 'completed'
+  status: 'confirmed' | 'pending' | 'completed' | 'cancelled'
   amount: number
 }
 
@@ -118,7 +118,6 @@ export const broadcasts: Broadcast[] = [
     vendorResponses: []
   }
 ]
-
 
 
 
