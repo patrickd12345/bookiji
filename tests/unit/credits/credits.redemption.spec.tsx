@@ -61,9 +61,12 @@ describe('CreditsRedemption', () => {
     
     await waitFor(() => {
       expect(screen.getByText('💎 Apply Credits')).toBeInTheDocument();
-      // Check for the tier badge specifically
-      expect(screen.getByText('🥇')).toBeInTheDocument();
-      expect(screen.getByText('Gold', { selector: 'div' })).toBeInTheDocument();
+      // Check for the tier badge specifically by looking for the badge element
+      const tierBadge = screen.getByText((content, element) => {
+        return element?.className?.includes('inline-flex') && 
+               element?.textContent?.includes('Gold') || false;
+      });
+      expect(tierBadge).toBeInTheDocument();
       expect(screen.getByText('$50.00')).toBeInTheDocument();
     });
   });

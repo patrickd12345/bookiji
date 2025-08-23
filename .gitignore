@@ -10,6 +10,11 @@
 !.yarn/releases
 !.yarn/versions
 
+# Python virtual environment
+.venv/
+venv/
+env/
+
 # testing
 /coverage
 
@@ -40,6 +45,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+*.tsbuildinfo.*
 
 # test files
 # /tests  # Keep tests under version control
@@ -47,4 +53,19 @@ next-env.d.ts
 # packages
 /packages/pw-tests/
 
+# Playwright reports
+/playwright-report/
+/test-results/
+
+# Coverage reports
+/coverage/
+
+# Build artifacts
+/.next/
+/out/
+/build/
+
+# Temporary files
 nul
+*.tmp
+*.temp

@@ -392,7 +392,7 @@ export class CreditsService implements CreditsCalculator {
       'Silver': '🥈',
       'Gold': '🥇',
       'Platinum': '💎',
-      'Diamond': '💠'
+      'Diamond': '⭐'
     };
     return tierIcons[tierName] || '⭐';
   }
@@ -403,7 +403,7 @@ export class CreditsService implements CreditsCalculator {
       'Silver': 'text-gray-400',
       'Gold': 'text-yellow-500',
       'Platinum': 'text-purple-500',
-      'Diamond': 'text-purple-600'
+      'Diamond': 'text-gray-600'
     };
     return tierColors[tierName] || 'text-gray-600';
   }

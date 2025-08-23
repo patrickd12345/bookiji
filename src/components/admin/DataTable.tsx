@@ -61,6 +61,8 @@ export default function DataTable({ columns, data, title, expandable = false, ex
       return 0
     })
 
+
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'active':
@@ -224,4 +226,10 @@ export default function DataTable({ columns, data, title, expandable = false, ex
     </div>
   )
 }
+
+
+
+
+
+
 

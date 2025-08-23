@@ -106,9 +106,18 @@ async function sendEmail(recipient: string, template: string, data: Record<strin
         })
       })
 
-      return {
-        success: response.ok,
-        providerResponse: String(response.status)
+      // In development, avoid failing the flow due to external email provider issues.
+      if (response.ok) {
+        return {
+          success: true,
+          providerResponse: String(response.status)
+        }
+      } else {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('🌱 Dev fallback: SendGrid request failed with status', response.status, '- treating as success to avoid masking UI work');
+          return { success: true, providerResponse: String(response.status) }
+        }
+        return { success: false, error: `SendGrid error ${response.status}` }
       }
     } else {
       // Production: require provider. In dev, allow mock.

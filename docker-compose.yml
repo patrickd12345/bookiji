@@ -1,5 +1,20 @@
 version: "3.8"
 services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+      - SUPABASE_URL=http://kong:8000
+      - NEXT_PUBLIC_SUPABASE_URL=http://kong:8000
+    depends_on:
+      - db
+      - kong
+    volumes:
+      - ./.env.local:/app/.env.local:ro
+
   db:
     image: supabase/postgres:15.1.0
     restart: always

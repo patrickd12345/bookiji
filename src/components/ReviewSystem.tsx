@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
+import StarRating from '@/components/ui/StarRating'
 
 interface Review {
   id: string
   rating: number
+  overall_quality?: number
   review_text?: string
   service_quality?: number
   communication?: number
@@ -14,6 +16,10 @@ interface Review {
   would_recommend?: boolean
   photos?: string[]
   created_at: string
+  status: string
+  spam_score?: number
+  helpful_count?: number
+  reported_count?: number
   users: {
     name: string
     avatar_url?: string
@@ -22,6 +28,18 @@ interface Review {
     service_name: string
     service_date: string
   }
+  responses?: ReviewResponse[]
+}
+
+interface ReviewResponse {
+  id: string
+  response_text: string
+  is_public: boolean
+  created_at: string
+  provider: {
+    name: string
+    avatar_url?: string
+  }
 }
 
 interface ReviewSystemProps {
@@ -29,13 +47,15 @@ interface ReviewSystemProps {
   showSubmissionForm?: boolean
   bookingId?: string
   userId?: string
+  showModerationTools?: boolean
 }
 
 export default function ReviewSystem({ 
   vendorId, 
   showSubmissionForm = false,
   bookingId,
-  userId 
+  userId,
+  showModerationTools = false
 }: ReviewSystemProps) {
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
@@ -52,6 +72,7 @@ export default function ReviewSystem({
   const [punctuality, setPunctuality] = useState(0)
   const [valueForMoney, setValueForMoney] = useState(0)
   const [wouldRecommend, setWouldRecommend] = useState<boolean | null>(null)
+  const [photos, setPhotos] = useState<string[]>([])
 
   const loadReviews = useCallback(async (page = 0) => {
     try {
@@ -100,7 +121,8 @@ export default function ReviewSystem({
           communication: communication || null,
           punctuality: punctuality || null,
           value_for_money: valueForMoney || null,
-          would_recommend: wouldRecommend
+          would_recommend: wouldRecommend,
+          photos: photos.length > 0 ? photos : null
         })
       })
 
@@ -115,6 +137,7 @@ export default function ReviewSystem({
         setPunctuality(0)
         setValueForMoney(0)
         setWouldRecommend(null)
+        setPhotos([])
         setShowForm(false)
         
         // Reload reviews
@@ -132,52 +155,18 @@ export default function ReviewSystem({
     }
   }
 
-  const StarRating = ({ 
-    value, 
-    onChange, 
-    readonly = false,
-    size = 'normal'
-  }: { 
-    value: number
-    onChange?: (value: number) => void
-    readonly?: boolean
-    size?: 'small' | 'normal' | 'large'
-  }) => {
-    const sizeClass = {
-      small: 'w-4 h-4',
-      normal: 'w-5 h-5',
-      large: 'w-6 h-6'
-    }[size]
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files) {
+      // In a real implementation, you'd upload these to a storage service
+      // For now, we'll just create placeholder URLs
+      const newPhotos = Array.from(files).map(file => URL.createObjectURL(file))
+      setPhotos(prev => [...prev, ...newPhotos])
+    }
+  }
 
-    return (
-      <div className="flex items-center gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            disabled={readonly}
-            onClick={() => !readonly && onChange?.(star)}
-            className={`${sizeClass} ${
-              readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110'
-            } transition-all duration-200`}
-          >
-            <svg
-              className={`w-full h-full ${
-                star <= value
-                  ? 'text-yellow-400 fill-current'
-                  : 'text-gray-300'
-              }`}
-              viewBox="0 0 20 20"
-            >
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-          </button>
-        ))}
-        <span className="ml-2 text-sm text-gray-600">
-          {value > 0 && `${value}/5`}
-        </span>
-      </div>
-    )
+  const removePhoto = (index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index))
   }
 
   const formatDate = (dateString: string) => {
@@ -190,16 +179,36 @@ export default function ReviewSystem({
 
   const calculateAverageRating = () => {
     if (reviews.length === 0) return 0
-    const sum = reviews.reduce((acc, review) => acc + review.rating, 0)
-    return (sum / reviews.length).toFixed(1)
+    const publishedReviews = reviews.filter(r => r.status === 'published')
+    if (publishedReviews.length === 0) return 0
+    
+    const sum = publishedReviews.reduce((acc, review) => acc + (review.overall_quality || review.rating), 0)
+    return (sum / publishedReviews.length).toFixed(1)
   }
 
   const getRatingDistribution = () => {
     const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
-    reviews.forEach(review => {
-      distribution[review.rating as keyof typeof distribution]++
+    const publishedReviews = reviews.filter(r => r.status === 'published')
+    
+    publishedReviews.forEach(review => {
+      const rating = Math.round(review.overall_quality || review.rating)
+      if (rating >= 1 && rating <= 5) {
+        distribution[rating as keyof typeof distribution]++
+      }
     })
     return distribution
+  }
+
+  const getPublishedReviews = () => {
+    return reviews.filter(review => review.status === 'published')
+  }
+
+  const getPendingReviews = () => {
+    return reviews.filter(review => review.status === 'pending')
+  }
+
+  const getFlaggedReviews = () => {
+    return reviews.filter(review => review.status === 'flagged')
   }
 
   return (
@@ -212,13 +221,18 @@ export default function ReviewSystem({
           </h3>
           <div className="flex items-center gap-4 mt-2">
             <div className="flex items-center gap-2">
-              <StarRating value={Number(calculateAverageRating())} readonly size="large" />
+              <StarRating 
+                value={Number(calculateAverageRating())} 
+                readonly 
+                size="large" 
+                allowHalfStars={true}
+              />
               <span className="text-2xl font-bold text-gray-900">
                 {calculateAverageRating()}
               </span>
             </div>
             <span className="text-gray-600">
-              ({reviews.length} review{reviews.length !== 1 ? 's' : ''})
+              ({getPublishedReviews().length} review{getPublishedReviews().length !== 1 ? 's' : ''})
             </span>
           </div>
         </div>
@@ -234,7 +248,7 @@ export default function ReviewSystem({
       </div>
 
       {/* Rating Distribution */}
-      {reviews.length > 0 && (
+      {getPublishedReviews().length > 0 && (
         <div className="mb-8">
           <h4 className="text-lg font-semibold mb-4">Rating Breakdown</h4>
           <div className="space-y-2">
@@ -247,13 +261,34 @@ export default function ReviewSystem({
                     <div
                       className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
                       style={{
-                        width: `${reviews.length > 0 ? (count / reviews.length) * 100 : 0}%`
+                        width: `${getPublishedReviews().length > 0 ? (count / getPublishedReviews().length) * 100 : 0}%`
                       }}
                     />
                   </div>
                   <span className="text-sm text-gray-600 w-8">{count}</span>
                 </div>
               ))}
+          </div>
+        </div>
+      )}
+
+      {/* Moderation Summary (if enabled) */}
+      {showModerationTools && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h4 className="text-lg font-semibold text-yellow-800 mb-2">Moderation Summary</h4>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="text-yellow-700">Pending:</span>
+              <span className="ml-2 font-semibold">{getPendingReviews().length}</span>
+            </div>
+            <div>
+              <span className="text-yellow-700">Flagged:</span>
+              <span className="ml-2 font-semibold">{getFlaggedReviews().length}</span>
+            </div>
+            <div>
+              <span className="text-yellow-700">Published:</span>
+              <span className="ml-2 font-semibold">{getPublishedReviews().length}</span>
+            </div>
           </div>
         </div>
       )}
@@ -269,7 +304,12 @@ export default function ReviewSystem({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Overall Rating *
               </label>
-              <StarRating value={rating} onChange={setRating} size="large" />
+              <StarRating 
+                value={rating} 
+                onChange={setRating} 
+                size="large" 
+                allowHalfStars={true}
+              />
             </div>
 
             {/* Detailed Ratings */}
@@ -278,25 +318,41 @@ export default function ReviewSystem({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Service Quality
                 </label>
-                <StarRating value={serviceQuality} onChange={setServiceQuality} />
+                <StarRating 
+                  value={serviceQuality} 
+                  onChange={setServiceQuality} 
+                  allowHalfStars={true}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Communication
                 </label>
-                <StarRating value={communication} onChange={setCommunication} />
+                <StarRating 
+                  value={communication} 
+                  onChange={setCommunication} 
+                  allowHalfStars={true}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Punctuality
                 </label>
-                <StarRating value={punctuality} onChange={setPunctuality} />
+                <StarRating 
+                  value={punctuality} 
+                  onChange={setPunctuality} 
+                  allowHalfStars={true}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Value for Money
                 </label>
-                <StarRating value={valueForMoney} onChange={setValueForMoney} />
+                <StarRating 
+                  value={valueForMoney} 
+                  onChange={setValueForMoney} 
+                  allowHalfStars={true}
+                />
               </div>
             </div>
 
@@ -312,6 +368,39 @@ export default function ReviewSystem({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Share details about your experience..."
               />
+            </div>
+
+            {/* Photo Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Add Photos (Optional)
+              </label>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              {photos.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {photos.map((photo, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={photo}
+                        alt={`Review photo ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                      <button
+                        onClick={() => removePhoto(index)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Recommendation */}
@@ -372,12 +461,12 @@ export default function ReviewSystem({
             <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
             <p className="text-gray-600">Loading reviews...</p>
           </div>
-        ) : reviews.length === 0 ? (
+        ) : getPublishedReviews().length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-600">No reviews yet. Be the first to share your experience!</p>
           </div>
         ) : (
-          reviews.map((review) => (
+          getPublishedReviews().map((review) => (
             <div key={review.id} className="border-b border-gray-200 pb-6">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -406,13 +495,24 @@ export default function ReviewSystem({
                         {review.bookings.service_name} • {formatDate(review.bookings.service_date)}
                       </p>
                     </div>
-                    <span className="text-sm text-gray-500">
-                      {formatDate(review.created_at)}
-                    </span>
+                    <div className="text-right">
+                      <span className="text-sm text-gray-500">
+                        {formatDate(review.created_at)}
+                      </span>
+                      {review.spam_score && review.spam_score > 0.7 && (
+                        <div className="text-xs text-red-600 mt-1">
+                          ⚠️ High spam score
+                        </div>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="mb-3">
-                    <StarRating value={review.rating} readonly />
+                    <StarRating 
+                      value={review.overall_quality || review.rating} 
+                      readonly 
+                      allowHalfStars={true}
+                    />
                   </div>
                   
                   {review.review_text && (
@@ -421,29 +521,53 @@ export default function ReviewSystem({
                   
                   {/* Detailed Ratings */}
                   {(review.service_quality || review.communication || review.punctuality || review.value_for_money) && (
-                    <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="grid grid-cols-2 gap-3 text-sm mb-3">
                       {review.service_quality && (
                         <div className="flex items-center justify-between">
                           <span className="text-gray-600">Service Quality:</span>
-                          <StarRating value={review.service_quality} readonly size="small" />
+                          <StarRating 
+                            value={review.service_quality} 
+                            readonly 
+                            size="small" 
+                            allowHalfStars={true}
+                            showValue={false}
+                          />
                         </div>
                       )}
                       {review.communication && (
                         <div className="flex items-center justify-between">
                           <span className="text-gray-600">Communication:</span>
-                          <StarRating value={review.communication} readonly size="small" />
+                          <StarRating 
+                            value={review.communication} 
+                            readonly 
+                            size="small" 
+                            allowHalfStars={true}
+                            showValue={false}
+                          />
                         </div>
                       )}
                       {review.punctuality && (
                         <div className="flex items-center justify-between">
                           <span className="text-gray-600">Punctuality:</span>
-                          <StarRating value={review.punctuality} readonly size="small" />
+                          <StarRating 
+                            value={review.punctuality} 
+                            readonly 
+                            size="small" 
+                            allowHalfStars={true}
+                            showValue={false}
+                          />
                         </div>
                       )}
                       {review.value_for_money && (
                         <div className="flex items-center justify-between">
                           <span className="text-gray-600">Value for Money:</span>
-                          <StarRating value={review.value_for_money} readonly size="small" />
+                          <StarRating 
+                            value={review.value_for_money} 
+                            readonly 
+                            size="small" 
+                            allowHalfStars={true}
+                            showValue={false}
+                          />
                         </div>
                       )}
                     </div>
@@ -457,6 +581,64 @@ export default function ReviewSystem({
                       </span>
                     </div>
                   )}
+
+                  {/* Photos */}
+                  {review.photos && review.photos.length > 0 && (
+                    <div className="mt-3 flex gap-2">
+                      {review.photos.map((photo, index) => (
+                        <img
+                          key={index}
+                          src={photo}
+                          alt={`Review photo ${index + 1}`}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Provider Response */}
+                  {review.responses && review.responses.length > 0 && (
+                    <div className="mt-4 pl-4 border-l-2 border-blue-200">
+                      {review.responses.map((response) => (
+                        <div key={response.id} className="bg-blue-50 p-3 rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center">
+                              {response.provider.avatar_url ? (
+                                <Image
+                                  src={response.provider.avatar_url}
+                                  alt={response.provider.name}
+                                  width={24}
+                                  height={24}
+                                  className="w-6 h-6 rounded-full"
+                                />
+                              ) : (
+                                <span className="text-blue-600 text-xs font-semibold">
+                                  {response.provider.name.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-sm font-medium text-blue-800">
+                              {response.provider.name} (Provider)
+                            </span>
+                            <span className="text-xs text-blue-600">
+                              {formatDate(response.created_at)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-blue-700">{response.response_text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="mt-3 flex items-center gap-4 text-sm">
+                    <button className="text-gray-600 hover:text-blue-600 transition-colors">
+                      👍 Helpful ({review.helpful_count || 0})
+                    </button>
+                    <button className="text-gray-600 hover:text-red-600 transition-colors">
+                      ⚠️ Report
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -464,7 +646,7 @@ export default function ReviewSystem({
         )}
 
         {/* Load More */}
-        {hasMore && reviews.length > 0 && (
+        {hasMore && getPublishedReviews().length > 0 && (
           <div className="text-center">
             <button
               onClick={() => {

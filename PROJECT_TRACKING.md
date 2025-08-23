@@ -381,6 +381,7 @@ TOTAL TESTS: 247/247 PASSING (100% SUCCESS RATE)
 - [ ] **PostHog account upgraded from free to paid plan** (required for analytics)
 - [ ] **Twilio account upgraded from trial to paid plan** (required for SMS notifications)
 - [ ] **IPInfo account upgraded from free to paid plan** (required for geolocation services)
+- [x] **Password reset page created** (`/app/auth/reset/page.tsx`) - email system working but page missing
 - [ ] **Staging freeze lifted; feature flags set; admin logins verified**
 - [ ] **Backup taken; restore tested last 7 days; maintenance window posted**
 - [ ] **Beta feedback form linked in header/footer; help center populated**

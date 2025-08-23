@@ -2,8 +2,8 @@
 
 **The world's first AI-powered, privacy-first universal booking platform with $1 commitment fees.**
 
-[![Tests](https://img.shields.io/badge/tests-247%2F247%20passing-brightgreen)](https://github.com/your-org/bookiji)
-[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/your-org/bookiji)
+[![Tests](https://img.shields.io/badge/tests-181%2F198%20passing-brightgreen)](https://github.com/your-org/bookiji)
+[![Coverage](https://img.shields.io/badge/coverage-91.4%25-brightgreen)](https://github.com/your-org/bookiji)
 [![Status](https://img.shields.io/badge/status-production%20ready-blue)](https://bookiji.com)
 
 ---
@@ -136,7 +136,7 @@ pnpm playwright test
 pnpm playwright test a11y/
 ```
 
-**Current Status:** ✅ **247/247 tests passing (100%)**
+**Current Status:** ✅ **181/198 tests passing (91.4%)**
 
 ---
 

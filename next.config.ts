@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 import { securityHeaders } from './src/middleware/security';
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   eslint: {
     ignoreDuringBuilds: false,
   },

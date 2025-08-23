@@ -64,11 +64,6 @@ const cards = [
 ]
 
 export default function DashboardCards({ stats }: DashboardCardsProps) {
-  // Debug: Check what props we're receiving
-  console.log('DashboardCards: received stats =', stats)
-  console.log('DashboardCards: stats type =', typeof stats)
-  console.log('DashboardCards: stats keys =', stats ? Object.keys(stats) : 'undefined')
-  
   // Add error handling for undefined stats
   if (!stats) {
     console.error('DashboardCards: stats prop is undefined')
