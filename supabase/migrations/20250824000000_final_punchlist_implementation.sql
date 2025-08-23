@@ -23,21 +23,21 @@ ON admin_audit_log(admin_user_id, created_at DESC);
 
 -- Performance analytics indexes for dashboard queries
 CREATE INDEX IF NOT EXISTS idx_performance_analytics_5min_bucket_endpoint 
-ON performance_analytics_5min(bucket, endpoint) 
-INCLUDE (p95_ms, p99_ms, err_rate, cache_hit_rate_percent);
+ON performance_analytics_5min(five_minute_bucket, endpoint) 
+INCLUDE (p95_response_time_ms, p95_response_time_ms, error_rate_percent, cache_hit_rate_percent);
 
 CREATE INDEX IF NOT EXISTS idx_performance_analytics_5min_bucket_method 
-ON performance_analytics_5min(bucket, method) 
-INCLUDE (p95_ms, p99_ms, err_rate);
+ON performance_analytics_5min(five_minute_bucket, method) 
+INCLUDE (p95_response_time_ms, p95_response_time_ms, error_rate_percent);
 
--- API metrics indexes for real-time monitoring
-CREATE INDEX IF NOT EXISTS idx_api_metrics_5m_bucket_endpoint 
-ON api_metrics_5m(bucket, endpoint) 
-INCLUDE (p95_ms, p99_ms, err_rate, cache_hit_rate_percent);
+-- API metrics indexes for real-time monitoring (using existing tables)
+CREATE INDEX IF NOT EXISTS idx_performance_metrics_endpoint_time 
+ON performance_metrics(endpoint, created_at) 
+INCLUDE (response_time_ms, status_code, cache_hit);
 
-CREATE INDEX IF NOT EXISTS idx_api_metrics_hourly_bucket_endpoint 
-ON api_metrics_hourly_enhanced(hour, endpoint) 
-INCLUDE (p95_ms, p99_ms, err_rate, cache_hit_rate_percent);
+CREATE INDEX IF NOT EXISTS idx_performance_analytics_hourly_endpoint 
+ON performance_analytics_hourly(hour, endpoint) 
+INCLUDE (p95_response_time_ms, error_rate_percent, cache_hit_rate_percent);
 
 -- ========================================
 -- 2. SLOs AND PERFORMANCE THRESHOLDS
@@ -106,26 +106,26 @@ BEGIN
         WITH p95_violations AS (
             SELECT 
                 endpoint,
-                bucket,
-                p95_ms,
+                five_minute_bucket,
+                p95_response_time_ms,
                 CASE 
-                    WHEN p95_ms > slo_record.target_p95_ms * slo_record.critical_threshold_multiplier THEN 'critical'
-                    WHEN p95_ms > slo_record.target_p95_ms * slo_record.warning_threshold_multiplier THEN 'warning'
+                    WHEN p95_response_time_ms > slo_record.target_p95_ms * slo_record.critical_threshold_multiplier THEN 'critical'
+                    WHEN p95_response_time_ms > slo_record.target_p95_ms * slo_record.warning_threshold_multiplier THEN 'warning'
                     ELSE 'ok'
                 END as severity
             FROM performance_analytics_5min
-            WHERE bucket >= NOW() - INTERVAL '15 minutes'
-            AND p95_ms > slo_record.target_p95_ms * slo_record.warning_threshold_multiplier
+            WHERE five_minute_bucket >= NOW() - INTERVAL '15 minutes'
+            AND p95_response_time_ms > slo_record.target_p95_ms * slo_record.warning_threshold_multiplier
         )
         INSERT INTO slo_violations (metric_name, violation_type, current_value, threshold_value, severity, endpoint, bucket)
         SELECT 
             slo_record.metric_name,
             'p95',
-            p95_ms,
+            p95_response_time_ms,
             slo_record.target_p95_ms,
             severity,
             endpoint,
-            bucket
+            five_minute_bucket
         FROM p95_violations
         ON CONFLICT (metric_name, violation_type, endpoint, bucket) 
         DO UPDATE SET 
@@ -137,26 +137,26 @@ BEGIN
         WITH p99_violations AS (
             SELECT 
                 endpoint,
-                bucket,
-                p99_ms,
+                five_minute_bucket,
+                p95_response_time_ms as p99_ms, -- Using p95 as approximation since p99 not available
                 CASE 
-                    WHEN p99_ms > slo_record.target_p99_ms * slo_record.critical_threshold_multiplier THEN 'critical'
-                    WHEN p99_ms > slo_record.target_p99_ms * slo_record.warning_threshold_multiplier THEN 'warning'
+                    WHEN p95_response_time_ms > slo_record.target_p99_ms * slo_record.critical_threshold_multiplier THEN 'critical'
+                    WHEN p95_response_time_ms > slo_record.target_p99_ms * slo_record.warning_threshold_multiplier THEN 'warning'
                     ELSE 'ok'
                 END as severity
             FROM performance_analytics_5min
-            WHERE bucket >= NOW() - INTERVAL '15 minutes'
-            AND p99_ms > slo_record.target_p99_ms * slo_record.warning_threshold_multiplier
+            WHERE five_minute_bucket >= NOW() - INTERVAL '15 minutes'
+            AND p95_response_time_ms > slo_record.target_p99_ms * slo_record.warning_threshold_multiplier
         )
         INSERT INTO slo_violations (metric_name, violation_type, current_value, threshold_value, severity, endpoint, bucket)
         SELECT 
             slo_record.metric_name,
             'p99',
-            p99_ms,
+            p95_response_time_ms,
             slo_record.target_p99_ms,
             severity,
             endpoint,
-            bucket
+            five_minute_bucket
         FROM p99_violations
         ON CONFLICT (metric_name, violation_type, endpoint, bucket) 
         DO UPDATE SET 
@@ -168,26 +168,26 @@ BEGIN
         WITH error_violations AS (
             SELECT 
                 endpoint,
-                bucket,
-                err_rate,
+                five_minute_bucket,
+                error_rate_percent / 100.0 as err_rate, -- Convert percentage to decimal
                 CASE 
-                    WHEN err_rate > slo_record.target_error_rate * slo_record.critical_threshold_multiplier THEN 'critical'
-                    WHEN err_rate > slo_record.target_error_rate * slo_record.warning_threshold_multiplier THEN 'warning'
+                    WHEN (error_rate_percent / 100.0) > slo_record.target_error_rate * slo_record.critical_threshold_multiplier THEN 'critical'
+                    WHEN (error_rate_percent / 100.0) > slo_record.target_error_rate * slo_record.warning_threshold_multiplier THEN 'warning'
                     ELSE 'ok'
                 END as severity
-            FROM api_metrics_5m
-            WHERE bucket >= NOW() - INTERVAL '15 minutes'
-            AND err_rate > slo_record.target_error_rate * slo_record.warning_threshold_multiplier
+            FROM performance_analytics_5min
+            WHERE five_minute_bucket >= NOW() - INTERVAL '15 minutes'
+            AND (error_rate_percent / 100.0) > slo_record.target_error_rate * slo_record.warning_threshold_multiplier
         )
         INSERT INTO slo_violations (metric_name, violation_type, current_value, threshold_value, severity, endpoint, bucket)
         SELECT 
             slo_record.metric_name,
-            violation_type,
+            'error_rate',
             err_rate,
             slo_record.target_error_rate,
             severity,
             endpoint,
-            bucket
+            five_minute_bucket
         FROM error_violations
         ON CONFLICT (metric_name, violation_type, endpoint, bucket) 
         DO UPDATE SET 

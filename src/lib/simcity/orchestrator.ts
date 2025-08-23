@@ -1,6 +1,8 @@
 import { EventEmitter } from 'events';
 import { SimTelemetry } from './telemetry';
 import { SimState, SimPolicies, SimEvent, SimMetrics, DEFAULT_POLICIES, DEFAULT_METRICS } from './types';
+import { InvariantChecker, InvariantViolation } from './invariants';
+import { ScenarioExecutor, SimEvent as ScenarioEvent } from './scenarios';
 
 export class SimOrchestrator extends EventEmitter {
   private state: SimState;
@@ -8,6 +10,11 @@ export class SimOrchestrator extends EventEmitter {
   private tickInterval: NodeJS.Timeout | null = null;
   private telemetry: SimTelemetry;
   private agentCounter: number = 0;
+  private invariantChecker: InvariantChecker | null = null;
+  private scenarioExecutor: ScenarioExecutor | null = null;
+  private runId: string | null = null;
+  private seed: number | null = null;
+  private violations: InvariantViolation[] = [];
 
   constructor(baseURL: string = 'http://localhost:3000') {
     super();
@@ -22,9 +29,45 @@ export class SimOrchestrator extends EventEmitter {
     };
   }
 
-  async start(): Promise<void> {
+  async start(options?: { seed?: number; scenario?: string; policies?: Partial<SimPolicies> }): Promise<void> {
     if (this.running) {
       throw new Error('Simulation is already running');
+    }
+
+    // Generate run ID and seed
+    this.runId = `simcity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.seed = options?.seed || Math.floor(Math.random() * 1000000);
+    
+    // Set random seed for reproducible runs
+    const seedRandom = (seed: number) => {
+      // Simple but effective seeding
+      const m = 0x80000000;
+      const a = 1103515245;
+      const c = 12345;
+      let state = seed ? seed : Math.floor(Math.random() * (m - 1));
+      
+      return () => {
+        state = (a * state + c) % m;
+        return state / (m - 1);
+      };
+    };
+    
+    const random = seedRandom(this.seed);
+    
+    // Initialize invariant checker
+    this.invariantChecker = new InvariantChecker(this.runId, this.seed);
+    
+    // Initialize scenario executor if scenario specified
+    if (options?.scenario) {
+      this.scenarioExecutor = new ScenarioExecutor((event: ScenarioEvent) => {
+        this.handleScenarioEvent(event);
+      });
+      await this.scenarioExecutor.startScenario(options.scenario);
+    }
+    
+    // Apply custom policies if provided
+    if (options?.policies) {
+      this.state.policies = { ...this.state.policies, ...options.policies };
     }
 
     this.running = true;
@@ -34,7 +77,12 @@ export class SimOrchestrator extends EventEmitter {
     this.state.nowISO = new Date().toISOString();
     
     this.telemetry.start();
-    this.emitEvent('start', { startTime: this.state.startTime });
+    this.emitEvent('start', { 
+      startTime: this.state.startTime,
+      runId: this.runId,
+      seed: this.seed,
+      scenario: options?.scenario || 'manual'
+    });
     
     this.tickInterval = setInterval(() => {
       this.tick();
@@ -215,6 +263,102 @@ export class SimOrchestrator extends EventEmitter {
 
   getUptime(): number {
     return this.telemetry.getUptime();
+  }
+
+  // Handle scenario events
+  private handleScenarioEvent(event: ScenarioEvent): void {
+    console.log(`🔴 SimCity Scenario Event: ${event.type}`);
+    
+    switch (event.type) {
+      case 'CACHE_INVALIDATION_STORM':
+        this.triggerCacheInvalidationStorm(event.parameters?.invalidationRate || 0.8);
+        break;
+      case 'PAUSE_MV_REFRESH':
+        this.pauseMaterializedViewRefresh(event.parameters?.pauseDuration || 60);
+        break;
+      case 'RLS_MISCONFIG':
+        this.triggerRLSMisconfig(event.parameters?.misconfigType || 'admin_access');
+        break;
+      case 'RATE_LIMIT_BURST':
+        this.triggerRateLimitBurst(event.parameters?.multiplier || 2.0);
+        break;
+    }
+    
+    this.emitEvent('scenario_event', { event, timestamp: new Date().toISOString() });
+  }
+
+  // Trigger cache invalidation storm
+  private triggerCacheInvalidationStorm(invalidationRate: number): void {
+    // Simulate cache invalidation storm
+    this.emitEvent('cache_invalidation_storm', { 
+      invalidationRate, 
+      timestamp: new Date().toISOString() 
+    });
+  }
+
+  // Pause materialized view refresh
+  private pauseMaterializedViewRefresh(durationMinutes: number): void {
+    // Simulate pausing MV refresh
+    this.emitEvent('mv_refresh_paused', { 
+      durationMinutes, 
+      timestamp: new Date().toISOString() 
+    });
+  }
+
+  // Trigger RLS misconfiguration
+  private triggerRLSMisconfig(misconfigType: string): void {
+    // Simulate RLS misconfiguration
+    this.emitEvent('rls_misconfig', { 
+      misconfigType, 
+      timestamp: new Date().toISOString() 
+    });
+  }
+
+  // Trigger rate limit burst
+  private triggerRateLimitBurst(multiplier: number): void {
+    // Simulate rate limit burst
+    this.emitEvent('rate_limit_burst', { 
+      multiplier, 
+      timestamp: new Date().toISOString() 
+    });
+  }
+
+  // Check invariants
+  async checkInvariants(): Promise<InvariantViolation[]> {
+    if (!this.invariantChecker) {
+      return [];
+    }
+    
+    const metrics = this.getMetrics();
+    const state = this.getState();
+    
+    this.violations = await this.invariantChecker.checkAll(metrics, state);
+    
+    // Emit violations
+    if (this.violations.length > 0) {
+      this.emitEvent('invariant_violation', {
+        violations: this.violations,
+        runId: this.runId,
+        seed: this.seed,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    return this.violations;
+  }
+
+  // Get current violations
+  getViolations(): InvariantViolation[] {
+    return this.violations;
+  }
+
+  // Get run information
+  getRunInfo(): { runId: string | null; seed: number | null; scenario: string | null } {
+    return {
+      runId: this.runId,
+      seed: this.seed,
+      scenario: this.scenarioExecutor?.getCurrentScenario()?.id || null
+    };
   }
 }
 

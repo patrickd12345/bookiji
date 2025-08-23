@@ -44,7 +44,9 @@ export interface SimPolicies {
 }
 
 export interface SimEvent {
-  type: 'start' | 'stop' | 'tick' | 'agent_spawn' | 'agent_done' | 'policy_change' | 'reset';
+  type: 'start' | 'stop' | 'tick' | 'agent_spawn' | 'agent_done' | 'policy_change' | 'reset' | 
+         'scenario_event' | 'cache_invalidation_storm' | 'mv_refresh_paused' | 'rls_misconfig' | 
+         'rate_limit_burst' | 'invariant_violation';
   timestamp: string;
   data: any;
 }
