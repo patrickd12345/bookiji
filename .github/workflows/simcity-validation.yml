@@ -1,0 +1,249 @@
+name: SimCity Validation
+
+on:
+  pull_request:
+    paths: ['src/**', 'supabase/**', 'src/lib/simcity/**']
+  schedule:
+    - cron: '0 2 * * *' # Daily at 2 AM
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: 'Scenario to run'
+        required: false
+        default: 'baseline'
+        type: choice
+        options:
+          - baseline
+          - payments_lite
+          - auth_lite
+          - abuse_lite
+
+jobs:
+  simcity-validation:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        scenario: 
+          - baseline
+          - payments_lite
+          - auth_lite
+          - abuse_lite
+        include:
+          - scenario: baseline
+            duration: 12
+            description: "Baseline validation (12 min)"
+          - scenario: payments_lite
+            duration: 5
+            description: "Payments validation (5 min)"
+          - scenario: auth_lite
+            duration: 3
+            description: "Auth validation (3 min)"
+          - scenario: abuse_lite
+            duration: 2
+            description: "Abuse protection (2 min)"
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Setup Supabase
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+          
+      - name: Start Supabase
+        run: |
+          supabase start
+          echo "SUPABASE_URL=$(supabase status --output json | jq -r '.api.url')" >> $GITHUB_ENV
+          echo "SUPABASE_ANON_KEY=$(supabase status --output json | jq -r '.api.anon_key')" >> $GITHUB_ENV
+          
+      - name: Apply migrations
+        run: |
+          supabase db reset
+          supabase db push
+          
+      - name: Start SimCity
+        run: |
+          echo "🚀 Starting SimCity scenario: ${{ matrix.scenario }}"
+          echo "⏱️  Expected duration: ${{ matrix.duration }} minutes"
+          
+          # Start the scenario with a deterministic seed
+          RESPONSE=$(curl -s -X POST http://localhost:3000/api/simcity/start \
+            -H 'Content-Type: application/json' \
+            -d "{\"seed\": 42, \"scenario\": \"${{ matrix.scenario }}\"}")
+          
+          echo "Response: $RESPONSE"
+          
+          # Extract run ID for tracking
+          RUN_ID=$(echo $RESPONSE | jq -r '.data.runId')
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          
+          if [ "$RUN_ID" = "null" ] || [ -z "$RUN_ID" ]; then
+            echo "❌ Failed to start SimCity scenario"
+            echo "$RESPONSE"
+            exit 1
+          fi
+          
+          echo "✅ SimCity started successfully with run ID: $RUN_ID"
+          
+      - name: Wait for completion
+        run: |
+          echo "⏳ Waiting for ${{ matrix.duration }} minutes for scenario completion..."
+          
+          # Wait for the scenario to complete
+          sleep $(({{ matrix.duration }} * 60))
+          
+          echo "✅ Scenario duration completed"
+          
+      - name: Get results
+        run: |
+          echo "📊 Getting SimCity results..."
+          
+          SUMMARY=$(curl -s "http://localhost:3000/api/simcity/summary?runId=$RUN_ID")
+          
+          if [ $? -ne 0 ]; then
+            echo "❌ Failed to get summary"
+            exit 1
+          fi
+          
+          echo "Summary response: $SUMMARY"
+          
+          # Extract violation count
+          VIOLATIONS=$(echo $SUMMARY | jq -r '.data.violations | length')
+          echo "VIOLATIONS=$VIOLATIONS" >> $GITHUB_ENV
+          
+          if [ "$VIOLATIONS" = "null" ]; then
+            VIOLATIONS=0
+            echo "VIOLATIONS=0" >> $GITHUB_ENV
+          fi
+          
+          echo "🔍 Found $VIOLATIONS invariant violations"
+          
+      - name: Check results
+        run: |
+          if [ "$VIOLATIONS" -gt 0 ]; then
+            echo "❌ SimCity validation FAILED with $VIOLATIONS violations"
+            echo ""
+            echo "🚨 SCENARIO: ${{ matrix.scenario }}"
+            echo "⏱️  DURATION: ${{ matrix.duration }} minutes"
+            echo "🆔 RUN ID: $RUN_ID"
+            echo "🌱 SEED: 42"
+            echo ""
+            echo "📋 VIOLATION DETAILS:"
+            echo "$SUMMARY" | jq -r '.data.violations[] | "  • \(.invariant.name): \(.result.message)"'
+            echo ""
+            echo "🔗 ADMIN LINKS:"
+            echo "  • SimCity Dashboard: http://localhost:3000/admin/simcity"
+            echo "  • Performance Dashboard: http://localhost:3000/admin/performance"
+            echo "  • Audit Logs: http://localhost:3000/admin/operational-insights?tab=audit"
+            echo ""
+            echo "🔄 TO REPRODUCE:"
+            echo "  curl -X POST http://localhost:3000/api/simcity/start \\"
+            echo "    -d '{\"seed\": 42, \"scenario\": \"${{ matrix.scenario }}\"}'"
+            echo ""
+            
+            # Create a detailed failure report
+            echo "## ❌ SimCity Validation Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Scenario:** ${{ matrix.scenario }}" >> $GITHUB_STEP_SUMMARY
+            echo "**Duration:** ${{ matrix.duration }} minutes" >> $GITHUB_STEP_SUMMARY
+            echo "**Run ID:** $RUN_ID" >> $GITHUB_STEP_SUMMARY
+            echo "**Seed:** 42" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Violations:** $VIOLATIONS" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Add violation details to step summary
+            echo "$SUMMARY" | jq -r '.data.violations[] | "- **\(.invariant.name):** \(.result.message)"' >> $GITHUB_STEP_SUMMARY
+            
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**To Reproduce:**" >> $GITHUB_STEP_SUMMARY
+            echo "```bash" >> $GITHUB_STEP_SUMMARY
+            echo "curl -X POST http://localhost:3000/api/simcity/start \\" >> $GITHUB_STEP_SUMMARY
+            echo "  -d '{\"seed\": 42, \"scenario\": \"${{ matrix.scenario }}\"}'" >> $GITHUB_STEP_SUMMARY
+            echo "```" >> $GITHUB_STEP_SUMMARY
+            
+            exit 1
+          else
+            echo "✅ SimCity validation PASSED for ${{ matrix.scenario }}"
+            echo ""
+            echo "🎉 SCENARIO: ${{ matrix.scenario }}"
+            echo "⏱️  DURATION: ${{ matrix.duration }} minutes"
+            echo "🆔 RUN ID: $RUN_ID"
+            echo "🌱 SEED: 42"
+            echo ""
+            echo "🔗 ADMIN LINKS:"
+            echo "  • SimCity Dashboard: http://localhost:3000/admin/simcity"
+            echo "  • Performance Dashboard: http://localhost:3000/admin/performance"
+            
+            # Create success report
+            echo "## ✅ SimCity Validation Passed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Scenario:** ${{ matrix.scenario }}" >> $GITHUB_STEP_SUMMARY
+            echo "**Duration:** ${{ matrix.duration }} minutes" >> $GITHUB_STEP_SUMMARY
+            echo "**Run ID:** $RUN_ID" >> $GITHUB_STEP_SUMMARY
+            echo "**Seed:** 42" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+      - name: Stop simulation
+        if: always()
+        run: |
+          echo "🛑 Stopping SimCity simulation..."
+          curl -s -X POST http://localhost:3000/api/simcity/stop || echo "Simulation already stopped"
+          
+      - name: Stop Supabase
+        if: always()
+        run: |
+          echo "🛑 Stopping Supabase..."
+          supabase stop || echo "Supabase already stopped"
+          
+      - name: Create issue on failure
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '🚨 SimCity Validation Failed: ' + context.matrix.scenario;
+            const body = '## SimCity Validation Failure\n\n' +
+              '**Scenario:** ' + context.matrix.scenario + '\n' +
+              '**Duration:** ' + context.matrix.duration + ' minutes\n' +
+              '**Run ID:** ' + process.env.RUN_ID + '\n' +
+              '**Seed:** 42\n' +
+              '**Violations:** ' + process.env.VIOLATIONS + '\n\n' +
+              '### Violation Details\n' +
+              (process.env.SUMMARY ? JSON.parse(process.env.SUMMARY).data.violations.map(v => '- **' + v.invariant.name + ':** ' + v.result.message).join('\n') : 'No details available') + '\n\n' +
+              '### To Reproduce\n' +
+              '```bash\n' +
+              'curl -X POST http://localhost:3000/api/simcity/start \\\n' +
+              '  -d \'{"seed": 42, "scenario": "' + context.matrix.scenario + '"}\'\n' +
+              '```\n\n' +
+              '### Admin Links\n' +
+              '- [SimCity Dashboard](http://localhost:3000/admin/simcity)\n' +
+              '- [Performance Dashboard](http://localhost:3000/admin/performance)\n' +
+              '- [Audit Logs](http://localhost:3000/admin/operational-insights?tab=audit)\n\n' +
+              '### Next Steps\n' +
+              '1. Investigate the violations above\n' +
+              '2. Fix the underlying issues\n' +
+              '3. Re-run the scenario to verify fixes\n' +
+              '4. Update this issue with resolution details\n\n' +
+              '---\n' +
+              '*Auto-generated by SimCity CI validation*';
+            
+            const { data: violations } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['simcity', 'validation-failed', 'bug'],
+              assignees: [context.payload.pull_request.user.login]
+            });
+            
+            console.log('Created issue #' + violations.number + ' for SimCity validation failure');

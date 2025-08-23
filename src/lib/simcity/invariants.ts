@@ -2,7 +2,7 @@ export interface SimInvariant {
   id: string;
   name: string;
   description: string;
-  category: 'api' | 'business' | 'system' | 'data';
+  category: 'api' | 'business' | 'system' | 'data' | 'security';
   severity: 'critical' | 'warning';
   check: (metrics: any, state: any) => Promise<InvariantResult>;
 }

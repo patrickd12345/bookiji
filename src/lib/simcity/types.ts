@@ -46,7 +46,13 @@ export interface SimPolicies {
 export interface SimEvent {
   type: 'start' | 'stop' | 'tick' | 'agent_spawn' | 'agent_done' | 'policy_change' | 'reset' | 
          'scenario_event' | 'cache_invalidation_storm' | 'mv_refresh_paused' | 'rls_misconfig' | 
-         'rate_limit_burst' | 'invariant_violation';
+         'rate_limit_burst' | 'invariant_violation' |
+         // Extended chaos events
+         'PAYMENT_GATEWAY_OUTAGE' | 'PAYMENT_TIMEOUTS' | 'WEBHOOK_DELAY_JITTER' |
+         'FORCE_JWT_EXPIRY' | 'CLOCK_SKEW' | 'RLS_POLICY_TOGGLE' | 'TENANT_MIXER' |
+         'SIMULATE_DST_TRANSITION' | 'USER_TZ_FLAP' | 'PATHOLOGICAL_INPUTS' | 'IP_BURST' |
+         'WEBHOOK_STORM' | 'SMTP_BACKPRESSURE' | 'BLUE_GREEN_SWITCH' | 'SCHEMA_MIGRATION_IN_FLIGHT' |
+         'FTS_REINDEX' | 'MATVIEW_REFRESH_THROTTLE' | 'S3_LATENCY_SPIKES' | 'SIGNED_URL_EARLY_EXPIRY';
   timestamp: string;
   data: any;
 }
