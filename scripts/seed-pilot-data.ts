@@ -12,7 +12,7 @@ import { config } from 'dotenv'
 import { faker } from '@faker-js/faker'
 
 // Load environment variables
-config()
+config({ path: '.env.local' })
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -411,8 +411,6 @@ async function seedPilotData(): Promise<void> {
 }
 
 // Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  seedPilotData()
-}
+seedPilotData()
 
 export { seedPilotData, generateVendors, generateUsers, generateServices }

@@ -4,6 +4,30 @@ export interface FeatureFlags {
   ai_radius_scaling: boolean
   loyalty_system: boolean
   provider_onboarding: boolean
+  beta: {
+    core_booking_flow: boolean
+    map_abstraction: boolean
+    ai_radius_scaling: boolean
+    loyalty_system: boolean
+    provider_onboarding: boolean
+  }
+  payments: {
+    enabled: boolean
+    stripe: boolean
+    refunds: boolean
+    hold_amount_cents: number
+    hold_timeout_minutes: number
+  }
+  provider: {
+    onboarding: boolean
+    analytics: boolean
+    reviews: boolean
+  }
+  slo: {
+    response_time: boolean
+    availability: boolean
+    quality: boolean
+  }
 }
 
 // Pilot configuration - only enable for pilot organizations
@@ -18,11 +42,35 @@ export const getFeatureFlags = (orgId?: string): FeatureFlags => {
   const isPilotOrg = orgId && PILOT_ORGS.includes(orgId)
   
   return {
-    core_booking_flow: isPilotOrg,
-    map_abstraction: isPilotOrg,
-    ai_radius_scaling: isPilotOrg,
-    loyalty_system: isPilotOrg,
-    provider_onboarding: isPilotOrg
+    core_booking_flow: Boolean(isPilotOrg),
+    map_abstraction: Boolean(isPilotOrg),
+    ai_radius_scaling: Boolean(isPilotOrg),
+    loyalty_system: Boolean(isPilotOrg),
+    provider_onboarding: Boolean(isPilotOrg),
+    beta: {
+      core_booking_flow: Boolean(isPilotOrg),
+      map_abstraction: Boolean(isPilotOrg),
+      ai_radius_scaling: Boolean(isPilotOrg),
+      loyalty_system: Boolean(isPilotOrg),
+      provider_onboarding: Boolean(isPilotOrg)
+    },
+    payments: {
+      enabled: Boolean(isPilotOrg),
+      stripe: Boolean(isPilotOrg),
+      refunds: Boolean(isPilotOrg),
+      hold_amount_cents: 0, // Default value, will be overridden by development overrides
+      hold_timeout_minutes: 0 // Default value, will be overridden by development overrides
+    },
+    provider: {
+      onboarding: Boolean(isPilotOrg),
+      analytics: Boolean(isPilotOrg),
+      reviews: Boolean(isPilotOrg)
+    },
+    slo: {
+      response_time: Boolean(isPilotOrg),
+      availability: Boolean(isPilotOrg),
+      quality: Boolean(isPilotOrg)
+    }
   }
 }
 
@@ -34,7 +82,31 @@ export const getDevelopmentFlags = (): FeatureFlags => {
       map_abstraction: true,
       ai_radius_scaling: true,
       loyalty_system: true,
-      provider_onboarding: true
+      provider_onboarding: true,
+      beta: {
+        core_booking_flow: true,
+        map_abstraction: true,
+        ai_radius_scaling: true,
+        loyalty_system: true,
+        provider_onboarding: true
+      },
+      payments: {
+        enabled: true,
+        stripe: true,
+        refunds: true,
+        hold_amount_cents: 1000, // Override default for development
+        hold_timeout_minutes: 10 // Override default for development
+      },
+      provider: {
+        onboarding: true,
+        analytics: true,
+        reviews: true
+      },
+      slo: {
+        response_time: true,
+        availability: true,
+        quality: true
+      }
     }
   }
   
@@ -43,24 +115,81 @@ export const getDevelopmentFlags = (): FeatureFlags => {
     map_abstraction: false,
     ai_radius_scaling: false,
     loyalty_system: false,
-    provider_onboarding: false
+    provider_onboarding: false,
+    beta: {
+      core_booking_flow: false,
+      map_abstraction: false,
+      ai_radius_scaling: false,
+      loyalty_system: false,
+      provider_onboarding: false
+    },
+    payments: {
+      enabled: false,
+      stripe: false,
+      refunds: false,
+      hold_amount_cents: 0, // Override default for development
+      hold_timeout_minutes: 0 // Override default for development
+    },
+    provider: {
+      onboarding: false,
+      analytics: false,
+      reviews: false
+    },
+    slo: {
+      response_time: false,
+      availability: false,
+      quality: false
+    }
   }
 }
 
+// Default feature flags for development
+export const featureFlags: FeatureFlags = getDevelopmentFlags()
+
 // Feature flag hook for components
-export const useFeatureFlag = (flag: keyof FeatureFlags, orgId?: string): boolean => {
+export const useFeatureFlag = (flag: string, orgId?: string): boolean => {
   const flags = getFeatureFlags(orgId)
   const devFlags = getDevelopmentFlags()
   
-  return devFlags[flag] || flags[flag]
+  // Handle nested properties
+  if (flag.includes('.')) {
+    const [category, subFlag] = flag.split('.')
+    return (devFlags[category as keyof FeatureFlags] as any)?.[subFlag] || (flags[category as keyof FeatureFlags] as any)?.[subFlag] || false
+  }
+  
+  // Handle flat properties
+  const flatFlag = flag as keyof FeatureFlags
+  if (typeof devFlags[flatFlag] === 'boolean') {
+    return devFlags[flatFlag] as boolean
+  }
+  if (typeof flags[flatFlag] === 'boolean') {
+    return flags[flatFlag] as boolean
+  }
+  
+  return false
 }
 
 // Feature flag guard for API routes
-export const requireFeatureFlag = (flag: keyof FeatureFlags, orgId?: string): boolean => {
+export const requireFeatureFlag = (flag: string, orgId?: string): boolean => {
   const flags = getFeatureFlags(orgId)
   const devFlags = getDevelopmentFlags()
   
-  return devFlags[flag] || flags[flag]
+  // Handle nested properties
+  if (flag.includes('.')) {
+    const [category, subFlag] = flag.split('.')
+    return (devFlags[category as keyof FeatureFlags] as any)?.[subFlag] || (flags[category as keyof FeatureFlags] as any)?.[subFlag] || false
+  }
+  
+  // Handle flat properties
+  const flatFlag = flag as keyof FeatureFlags
+  if (typeof devFlags[flatFlag] === 'boolean') {
+    return devFlags[flatFlag] as boolean
+  }
+  if (typeof flags[flatFlag] === 'boolean') {
+    return flags[flatFlag] as boolean
+  }
+  
+  return false
 }
 
 // Pilot organization management

@@ -567,9 +567,6 @@ BEGIN
     IF TG_TABLE_NAME = 'profiles' THEN
         PERFORM enqueue_cache_invalidation('search:vendors', 2);
         PERFORM enqueue_cache_invalidation('search:provider', 2);
-        IF NEW.primary_specialty_id IS NOT NULL THEN
-            PERFORM enqueue_cache_invalidation('search:specialty:' || NEW.primary_specialty_id, 2);
-        END IF;
     END IF;
     
     -- Invalidate specialty cache when specialties change
