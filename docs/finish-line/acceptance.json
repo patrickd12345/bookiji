@@ -1,0 +1,94 @@
+{
+  "version": "1.0.0",
+  "name": "bookiji_finish_line_acceptance",
+  "mvp_pilot": {
+    "vendors_min": 5,
+    "users_min": 20,
+    "private_invite_only": true,
+    "no_public_provider_listing": true
+  },
+  "functional": [
+    {
+      "id": "F-001",
+      "desc": "User completes intent \u2192 quote \u2192 $1 hold \u2192 provider confirm \u2192 receipt."
+    },
+    {
+      "id": "F-002",
+      "desc": "Invite-only provider onboarding flow usable end-to-end."
+    },
+    {
+      "id": "F-003",
+      "desc": "Ops panel v0 supports refund and force-cancel using same service layer as webhooks."
+    },
+    {
+      "id": "F-004",
+      "desc": "Map abstraction v1 renders using adapter interface; fallback tiles available when provider down."
+    },
+    {
+      "id": "F-005",
+      "desc": "Complete audit trail for every booking state change (who, when, why)."
+    },
+    {
+      "id": "F-006",
+      "desc": "Stripe webhooks are idempotent; outbox pattern achieves exactly-once effects."
+    }
+  ],
+  "non_functional": {
+    "latency": {
+      "desc": "Under pilot load",
+      "p95_ms_max": 500,
+      "p99_ms_max": 1000,
+      "endpoints": [
+        "POST /api/quote",
+        "POST /api/bookings/confirm"
+      ]
+    },
+    "privacy": {
+      "pii_export_delete_seconds_max": 60,
+      "access_logs_required": true,
+      "data_map_required": true
+    },
+    "reliability": {
+      "double_charge_rate_max": 0.0,
+      "error_budget_30d_pct": 1.0,
+      "idempotency_required": true
+    },
+    "operability": {
+      "rollback_command_required": true,
+      "rollback_executes_in_seconds_max": 60,
+      "runbook_required": true
+    }
+  },
+  "simulator": {
+    "enabled": true,
+    "scenarios_required": [
+      "provider_timeout",
+      "provider_slow_confirm",
+      "webhook_redelivery",
+      "payment_gateway_transient_error"
+    ],
+    "max_auto_cancel_minutes": 15
+  },
+  "exit_criteria": [
+    {
+      "id": "E-001",
+      "desc": "All functional items green in E2E suite."
+    },
+    {
+      "id": "E-002",
+      "desc": "Latency SLOs met over a 24h pilot window."
+    },
+    {
+      "id": "E-003",
+      "desc": "PII export/delete validated for 3 random pilot users."
+    },
+    {
+      "id": "E-004",
+      "desc": "Rollback drill executed and audit evidence stored."
+    },
+    {
+      "id": "E-005",
+      "desc": "Ops panel actions verified to route via same domain services as webhooks."
+    }
+  ]
+}

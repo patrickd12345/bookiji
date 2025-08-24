@@ -1,0 +1,122 @@
+{
+  "version": "1.0.0",
+  "name": "bookiji_finish_line_plan",
+  "tasks": [
+    {
+      "id": "T01",
+      "name": "Contracts & Error Envelope",
+      "estimate_days": 4,
+      "owner": "Architect",
+      "depends_on": [],
+      "risk": "Scope ambiguity",
+      "mitigation": "OpenAPI first + examples"
+    },
+    {
+      "id": "T02",
+      "name": "Booking Flow v1 (intent\u2192quote\u2192$1 hold\u2192confirm\u2192receipt)",
+      "estimate_days": 10,
+      "owner": "Coder",
+      "depends_on": [
+        "T01"
+      ],
+      "risk": "Stripe/webhook races",
+      "mitigation": "Outbox + idempotency keys + DLQ"
+    },
+    {
+      "id": "T03",
+      "name": "Map Abstraction v1 (adapter + fallback tiles)",
+      "estimate_days": 5,
+      "owner": "Coder",
+      "depends_on": [
+        "T01"
+      ],
+      "risk": "Provider churn",
+      "mitigation": "Strict adapter interface"
+    },
+    {
+      "id": "T04",
+      "name": "Seed CLI + E2E Harness (5 vendors, 20 users)",
+      "estimate_days": 6,
+      "owner": "Coder",
+      "depends_on": [
+        "T01"
+      ],
+      "risk": "Seed realism",
+      "mitigation": "Fixture library + randomized delays"
+    },
+    {
+      "id": "T05",
+      "name": "Observability & SLO Dashboard",
+      "estimate_days": 5,
+      "owner": "Architect",
+      "depends_on": [
+        "T02",
+        "T04"
+      ],
+      "risk": "Noisy metrics",
+      "mitigation": "Cardinality control + sampling"
+    },
+    {
+      "id": "T06",
+      "name": "Ops Panel v0 (refund, force-cancel)",
+      "estimate_days": 5,
+      "owner": "Coder",
+      "depends_on": [
+        "T02"
+      ],
+      "risk": "Bypass logic",
+      "mitigation": "Reuse domain services + policy checks"
+    },
+    {
+      "id": "T07",
+      "name": "Privacy & Audit v0 (PII map, export/delete, access logs)",
+      "estimate_days": 5,
+      "owner": "Architect",
+      "depends_on": [
+        "T02"
+      ],
+      "risk": "Data spread",
+      "mitigation": "Data map + scanners"
+    },
+    {
+      "id": "T08",
+      "name": "Simulator Harness Integration (\"SimCity\" module)",
+      "estimate_days": 4,
+      "owner": "Coder",
+      "depends_on": [
+        "T02",
+        "T04"
+      ],
+      "risk": "Divergent behavior from prod",
+      "mitigation": "Converge on same service interfaces"
+    },
+    {
+      "id": "T09",
+      "name": "Pilot Dry-Run (5 vendors/20 users)",
+      "estimate_days": 7,
+      "owner": "Architect",
+      "depends_on": [
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07",
+        "T08"
+      ],
+      "risk": "Vendor latency",
+      "mitigation": "SLA + auto-cancel"
+    },
+    {
+      "id": "T10",
+      "name": "Staged Public Beta",
+      "estimate_days": 12,
+      "owner": "Architect",
+      "depends_on": [
+        "T09"
+      ],
+      "risk": "Traffic spikes",
+      "mitigation": "Feature flags + rate limits"
+    }
+  ]
+}

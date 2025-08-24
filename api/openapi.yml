@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  title: Bookiji MVP API
+  version: 0.1.0
+servers:
+  - url: https://bookiji.local
+paths:
+  /api/quote:
+    post:
+      summary: Create a quote from a booking intent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+      responses:
+        '200':
+          description: Quote produced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkQuoteResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/bookings/confirm:
+    post:
+      summary: Confirm a booking after $1 hold
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmRequest'
+      responses:
+        '200':
+          description: Booking confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkConfirmResponse'
+        '409':
+          description: Idempotent duplicate or state conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/bookings/cancel:
+    post:
+      summary: User cancels a pending booking before provider confirm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelRequest'
+      responses:
+        '200':
+          description: Cancelled/refunded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkCancelResponse'
+  /api/ops/refund:
+    post:
+      summary: Admin-initiated refund (uses same service layer as webhooks)
+      responses:
+        '200':
+          description: Refunded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+  /api/ops/force-cancel:
+    post:
+      summary: Admin-initiated force-cancel
+      responses:
+        '200':
+          description: Force-cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ok'
+components:
+  schemas:
+    ErrorEnvelope:
+      type: object
+      required: [ok, code, message, correlation_id]
+      properties:
+        ok: { type: boolean, example: false }
+        code: { type: string, example: 'VALIDATION_ERROR' }
+        message: { type: string }
+        details: { type: object, additionalProperties: true }
+        correlation_id: { type: string }
+    Ok:
+      type: object
+      properties:
+        ok: { type: boolean, example: true }
+        data:
+          type: object
+    QuoteRequest:
+      type: object
+      required: [intent, location]
+      properties:
+        intent: { type: string, example: 'haircut' }
+        location:
+          type: object
+          required: [lat, lon]
+          properties:
+            lat: { type: number }
+            lon: { type: number }
+        when_iso: { type: string, format: date-time }
+    OkQuoteResponse:
+      allOf:
+        - $ref: '#/components/schemas/Ok'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                quote_id: { type: string, format: uuid }
+                candidates:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      provider_id: { type: string, format: uuid }
+                      price_cents: { type: integer }
+                      eta_minutes: { type: integer }
+    ConfirmRequest:
+      type: object
+      required: [quote_id, provider_id, idempotency_key, stripe_payment_intent_id]
+      properties:
+        quote_id: { type: string, format: uuid }
+        provider_id: { type: string, format: uuid }
+        idempotency_key: { type: string }
+        stripe_payment_intent_id: { type: string }
+    OkConfirmResponse:
+      allOf:
+        - $ref: '#/components/schemas/Ok'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                booking_id: { type: string, format: uuid }
+                receipt_url: { type: string, format: uri }
+    CancelRequest:
+      type: object
+      required: [quote_id]
+      properties:
+        quote_id: { type: string, format: uuid }
+    OkCancelResponse:
+      allOf:
+        - $ref: '#/components/schemas/Ok'
