@@ -27,10 +27,12 @@
     "ai:test": "node scripts/ai-test-loop.mjs",
     "maintenance:calendar": "node scripts/setup-maintenance-calendar.mjs",
     "i18n:check": "node scripts/i18n-check.js",
+    "seed:pilot": "tsx scripts/seed-pilot-data.ts",
     "prebuild": "npm run i18n:check",
     "prepare": "husky install"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.0.0",
     "@formspree/react": "^3.0.0",
     "@fullcalendar/core": "^6.1.17",
     "@fullcalendar/daygrid": "^6.1.17",
@@ -116,6 +118,7 @@
     "supabase": "^2.34.3",
     "supertest": "^6.3.3",
     "tailwindcss": "^3.3.0",
+    "tsx": "^4.20.5",
     "typescript": "^5",
     "vitest": "^3.2.4"
   },
