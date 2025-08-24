@@ -1,0 +1,479 @@
+{
+  "plan_id": "pilot_two_weeks_2024_08",
+  "baseline_tag": "v0.1.0-pilot-ready",
+  "target_date": "2024-09-07",
+  "description": "2-week sprint to launch private pilot with real vendors and users",
+  "lanes": {
+    "infra": {
+      "name": "Infrastructure & Map Abstraction",
+      "color": "#3B82F6",
+      "description": "Map adapter with fallback tiles and provider data seeding"
+    },
+    "provider_ux": {
+      "name": "Provider UX & Dashboard",
+      "color": "#10B981",
+      "description": "Pilot vendor management interface and booking controls"
+    },
+    "user_admin_ux": {
+      "name": "User & Admin UX",
+      "color": "#8B5CF6",
+      "description": "Pilot user onboarding and admin monitoring"
+    },
+    "ops": {
+      "name": "Operations & Chaos Testing",
+      "color": "#F59E0B",
+      "description": "Weekly drills, chaos expansion, and SLO monitoring"
+    }
+  },
+  "tasks": {
+    "P01": {
+      "id": "P01",
+      "name": "Map Adapter Interface",
+      "description": "Implement MapAdapter with fallback tiles and provider integration",
+      "lane": "infra",
+      "estimate_days": 2,
+      "start_offset_days": 0,
+      "depends_on": [],
+      "owner": "dev-team-a",
+      "acceptance_criteria": [
+        "MapAdapter interface with mount/updateMarkers/teardown",
+        "Client-only import (dynamic with ssr: false)",
+        "Fallback to OpenStreetMap on Mapbox failure",
+        "Provider markers tied to /api/quote results",
+        "Offline tile caching for core areas"
+      ],
+      "risks": [
+        "Next.js hydration bugs with map components",
+        "Mapbox rate limiting in production"
+      ],
+      "mitigations": [
+        "Use dynamic imports with ssr: false",
+        "Implement aggressive tile caching",
+        "Fallback to OpenStreetMap tiles"
+      ]
+    },
+    "P02": {
+      "id": "P02",
+      "name": "Provider Data Seeding CLI",
+      "description": "Create deterministic seeding script for 5 real vendors + 20 pilot users",
+      "lane": "infra",
+      "estimate_days": 1,
+      "start_offset_days": 0,
+      "depends_on": [],
+      "owner": "dev-team-b",
+      "acceptance_criteria": [
+        "scripts/seed_pilot_data.ts CLI tool",
+        "5 real vendor profiles with complete data",
+        "20 diverse pilot user accounts",
+        "Deterministic seeds for stable tests",
+        "Service catalog with pricing and availability"
+      ],
+      "risks": [
+        "Data quality issues from scraping",
+        "Privacy compliance for real business data"
+      ],
+      "mitigations": [
+        "Manual validation of all seeded data",
+        "Use publicly available business information only",
+        "GDPR-compliant data handling"
+      ]
+    },
+    "P03": {
+      "id": "P03",
+      "name": "Database Seeding & Validation",
+      "description": "Seed real vendor and user data, validate booking flow end-to-end",
+      "lane": "infra",
+      "estimate_days": 1,
+      "start_offset_days": 1,
+      "depends_on": ["P02"],
+      "owner": "dev-team-b",
+      "acceptance_criteria": [
+        "5 vendors inserted with complete profiles",
+        "20 users created with auth context",
+        "Service relationships established",
+        "End-to-end booking validation with real data",
+        "Email receipts delivered successfully"
+      ],
+      "risks": [
+        "Database constraint violations",
+        "Email delivery failures"
+      ],
+      "mitigations": [
+        "Test seeding in staging first",
+        "Use multiple email providers",
+        "Validate all foreign key relationships"
+      ]
+    },
+    "P04": {
+      "id": "P04",
+      "name": "Map Integration Testing",
+      "description": "Test map adapter with real provider data and chaos scenarios",
+      "lane": "infra",
+      "estimate_days": 1,
+      "start_offset_days": 2,
+      "depends_on": ["P01", "P03"],
+      "owner": "dev-team-a",
+      "acceptance_criteria": [
+        "Map loads in <2s on 3G connection",
+        "Provider locations update in real-time",
+        "Fallback tiles render on Mapbox failure",
+        "Offline support for core metro areas",
+        "Chaos test: provider map source cut → fallback works"
+      ],
+      "risks": [
+        "Performance degradation with real data",
+        "Fallback tile loading failures"
+      ],
+      "mitigations": [
+        "Performance testing with real data volumes",
+        "Multiple fallback tile sources",
+        "Graceful degradation on failures"
+      ]
+    },
+    "P05": {
+      "id": "P05",
+      "name": "Provider Dashboard Skeleton",
+      "description": "Basic provider management interface for pilot vendors",
+      "lane": "provider_ux",
+      "estimate_days": 1,
+      "start_offset_days": 2,
+      "depends_on": ["P03"],
+      "owner": "dev-team-c",
+      "acceptance_criteria": [
+        "/admin/providers page skeleton",
+        "Bookings list and management",
+        "Cancel/refund controls",
+        "Status and availability management",
+        "Parity with Ops panel functionality"
+      ],
+      "risks": [
+        "Over-engineering the dashboard",
+        "Provider UX complexity"
+      ],
+      "mitigations": [
+        "Keep it simple - only essential features",
+        "Follow existing admin panel patterns",
+        "User testing with pilot vendors"
+      ]
+    },
+    "P06": {
+      "id": "P06",
+      "name": "Weekly Ops Drill",
+      "description": "Document rollback drill and schedule weekly drill cadence",
+      "lane": "ops",
+      "estimate_days": 0.5,
+      "start_offset_days": 4,
+      "depends_on": [],
+      "owner": "ops-team",
+      "acceptance_criteria": [
+        "Rollback drill documented in /ops/drills/",
+        "Weekly drill schedule established (every Friday)",
+        "Drill templates and procedures documented",
+        "Team trained on drill execution"
+      ],
+      "risks": [
+        "Drill procedures not followed",
+        "Team unfamiliar with new processes"
+      ],
+      "mitigations": [
+        "Clear documentation and checklists",
+        "Regular training and practice",
+        "Automated drill validation where possible"
+      ]
+    },
+    "P07": {
+      "id": "P07",
+      "name": "Chaos Test Expansion",
+      "description": "Implement GATEWAY_502 backoff and SLOW_CONFIRM auto-cancel scenarios",
+      "lane": "ops",
+      "estimate_days": 1,
+      "start_offset_days": 5,
+      "depends_on": ["P06"],
+      "owner": "dev-team-a",
+      "acceptance_criteria": [
+        "GATEWAY_502 backoff scenario in SimCity",
+        "SLOW_CONFIRM auto-cancel scenario",
+        "Both scenarios integrated into E2E suite",
+        "Chaos quadrant coverage complete",
+        "Documentation of expected behaviors"
+      ],
+      "risks": [
+        "Chaos scenarios too aggressive",
+        "False positive test failures"
+      ],
+      "mitigations": [
+        "Gradual chaos intensity increase",
+        "Clear expected behavior documentation",
+        "Automated chaos test validation"
+      ]
+    },
+    "P08": {
+      "id": "P08",
+      "name": "Feature Flag Configuration",
+      "description": "Configure pilot feature flags and gradual rollout",
+      "lane": "user_admin_ux",
+      "estimate_days": 0.5,
+      "start_offset_days": 6,
+      "depends_on": ["P03", "P05"],
+      "owner": "dev-team-c",
+      "acceptance_criteria": [
+        "beta.core_booking_flow ON for pilot orgs only",
+        "Feature flag dark for public users",
+        "Gradual rollout configuration",
+        "Feature adoption monitoring setup",
+        "Rollback capability tested"
+      ],
+      "risks": [
+        "Feature flag misconfiguration",
+        "Unauthorized access to pilot features"
+      ],
+      "mitigations": [
+        "Test feature flags in staging",
+        "Implement proper access controls",
+        "Monitor feature flag usage"
+      ]
+    },
+    "P09": {
+      "id": "P09",
+      "name": "Pilot User Onboarding",
+      "description": "Create pilot user guide and feedback collection",
+      "lane": "user_admin_ux",
+      "estimate_days": 1,
+      "start_offset_days": 6,
+      "depends_on": ["P08"],
+      "owner": "dev-team-c",
+      "acceptance_criteria": [
+        "Pilot user guide created",
+        "Feedback collection system operational",
+        "Usage analytics tracking",
+        "Onboarding flow documented",
+        "Support contact information provided"
+      ],
+      "risks": [
+        "Poor user onboarding experience",
+        "Insufficient feedback collection"
+      ],
+      "mitigations": [
+        "User testing of onboarding flow",
+        "Multiple feedback collection methods",
+        "Regular user check-ins"
+      ]
+    },
+    "P10": {
+      "id": "P10",
+      "name": "SLO Dashboard Deployment",
+      "description": "Deploy SLO monitoring to production and configure alerts",
+      "lane": "ops",
+      "estimate_days": 1,
+      "start_offset_days": 7,
+      "depends_on": ["P07"],
+      "owner": "ops-team",
+      "acceptance_criteria": [
+        "SLO dashboard active in production",
+        "Alert configuration complete",
+        "Performance metrics tracking",
+        "Violation resolution workflow",
+        "24/7 monitoring operational"
+      ],
+      "risks": [
+        "SLO dashboard performance issues",
+        "Alert fatigue from false positives"
+      ],
+      "mitigations": [
+        "Load test SLO dashboard",
+        "Tune alert thresholds",
+        "Implement alert escalation"
+      ]
+    },
+    "P11": {
+      "id": "P11",
+      "name": "Stripe Real Mode Testing",
+      "description": "Test live $1 holds and refunds with pilot users",
+      "lane": "ops",
+      "estimate_days": 1,
+      "start_offset_days": 8,
+      "depends_on": ["P09"],
+      "owner": "ops-team",
+      "acceptance_criteria": [
+        "Stripe real mode configured",
+        "Live $1 holds tested successfully",
+        "Refunds processed correctly",
+        "Webhook handling validated",
+        "Pilot user consent obtained"
+      ],
+      "risks": [
+        "Real charges to pilot users",
+        "Webhook delivery failures"
+      ],
+      "mitigations": [
+        "Clear communication about $1 holds",
+        "Immediate refund processing",
+        "Webhook retry and fallback logic"
+      ]
+    },
+    "P12": {
+      "id": "P12",
+      "name": "Integration Testing",
+      "name": "End-to-end integration testing of all pilot components",
+      "lane": "ops",
+      "estimate_days": 1,
+      "start_offset_days": 9,
+      "depends_on": ["P10", "P11"],
+      "owner": "dev-team-a",
+      "acceptance_criteria": [
+        "All pilot components integrated",
+        "End-to-end booking flow tested",
+        "Provider dashboard functional",
+        "SLO monitoring active",
+        "Chaos tests passing"
+      ],
+      "risks": [
+        "Integration issues between components",
+        "Performance degradation with full system"
+      ],
+      "mitigations": [
+        "Incremental integration testing",
+        "Performance testing at each stage",
+        "Rollback plan for each component"
+      ]
+    },
+    "P13": {
+      "id": "P13",
+      "name": "Pilot Launch",
+      "description": "Launch private pilot with real vendors and users",
+      "lane": "user_admin_ux",
+      "estimate_days": 0.5,
+      "start_offset_days": 10,
+      "depends_on": ["P12"],
+      "owner": "dev-team-c",
+      "acceptance_criteria": [
+        "Private pilot live and operational",
+        "5 vendors, 20 users successfully complete bookings",
+        "SLO dashboard stays green (P95 ≤500ms, P99 ≤1s)",
+        "At least 2 chaos drills completed and logged",
+        "Provider dashboard operational for pilot vendors"
+      ],
+      "risks": [
+        "Pilot launch failures",
+        "User experience issues",
+        "Performance problems under load"
+      ],
+      "mitigations": [
+        "Gradual user rollout",
+        "24/7 monitoring during launch",
+        "Immediate rollback capability",
+        "Support team on standby"
+      ]
+    }
+  },
+  "dependencies": [
+    {
+      "from": "P03",
+      "to": "P01",
+      "type": "data_ready"
+    },
+    {
+      "from": "P03",
+      "to": "P05",
+      "type": "data_ready"
+    },
+    {
+      "from": "P08",
+      "to": "P03",
+      "type": "feature_ready"
+    },
+    {
+      "from": "P08",
+      "to": "P05",
+      "type": "feature_ready"
+    },
+    {
+      "from": "P09",
+      "to": "P08",
+      "type": "feature_ready"
+    },
+    {
+      "from": "P10",
+      "to": "P07",
+      "type": "chaos_ready"
+    },
+    {
+      "from": "P11",
+      "to": "P09",
+      "type": "user_ready"
+    },
+    {
+      "from": "P12",
+      "to": "P10",
+      "type": "monitoring_ready"
+    },
+    {
+      "from": "P12",
+      "to": "P11",
+      "type": "payment_ready"
+    },
+    {
+      "from": "P13",
+      "to": "P12",
+      "type": "integration_ready"
+    }
+  ],
+  "milestones": {
+    "week1_complete": {
+      "name": "Week 1 Complete",
+      "date": "2024-08-31",
+      "tasks": ["P01", "P02", "P03", "P04", "P05", "P06"],
+      "description": "Map abstraction, provider seeding, and ops drills complete"
+    },
+    "pilot_ready": {
+      "name": "Pilot Ready",
+      "date": "2024-09-05",
+      "tasks": ["P07", "P08", "P09", "P10", "P11"],
+      "description": "All pilot components ready for launch"
+    },
+    "pilot_live": {
+      "name": "Pilot Live",
+      "date": "2024-09-07",
+      "tasks": ["P12", "P13"],
+      "description": "Private pilot launched and operational"
+    }
+  },
+  "acceptance_gates": {
+    "pilot_launch": {
+      "name": "Pilot Launch Gates",
+      "criteria": [
+        "5 vendors, 20 users successfully complete real bookings",
+        "SLO dashboard stays green (P95 ≤500ms, P99 ≤1s)",
+        "At least 2 chaos drills completed and logged",
+        "Provider dashboard operational for pilot vendors",
+        "Stripe real mode tested with live $1 holds/refunds"
+      ],
+      "required_for": "P13"
+    }
+  },
+  "fail_if_missing_tasks": [
+    "P01", "P03", "P06", "P10", "P13"
+  ],
+  "merge_policy": {
+    "require_all_critical_tasks": true,
+    "prevent_dependency_cycles": true,
+    "validate_acceptance_gates": true,
+    "slo_compliance_check": true
+  },
+  "rollback_plan": {
+    "trigger_conditions": [
+      "SLO violations (P95 > 500ms, P99 > 1s)",
+      "Critical user experience failures",
+      "Data integrity issues",
+      "Security vulnerabilities"
+    ],
+    "rollback_steps": [
+      "Disable pilot feature flags",
+      "Revert to v0.1.0-pilot-ready baseline",
+      "Notify pilot users of temporary unavailability",
+      "Investigate and resolve issues",
+      "Re-test before re-enabling"
+    ],
+    "estimated_rollback_time": "5 minutes"
+  }
+}
