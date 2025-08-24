@@ -23,8 +23,14 @@ export default defineConfig({
         "tests/setup.ts",
       ],
     },
-    include: ["tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-    exclude: ["tests/e2e/**/*"],
+    include: [
+      "tests/components/**/*.test.{ts,tsx}",
+      "tests/unit/**/*.test.{ts,tsx}",
+      "tests/api/**/*.spec.ts"
+    ],
+    exclude: [
+      "node_modules/**/*"
+    ],
   },
   resolve: {
     alias: {

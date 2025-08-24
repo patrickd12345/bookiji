@@ -85,7 +85,7 @@ export default function SpecialtyDemo() {
                     <div className="mt-2">
                       <SpecialtyTreeSelect
                         value={selectedSpecialty?.id}
-                        onChange={handleSpecialtyChange}
+                        onChangeAction={handleSpecialtyChange}
                         placeholder="Select your primary service specialty"
                       />
                     </div>

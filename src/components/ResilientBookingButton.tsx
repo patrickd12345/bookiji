@@ -18,20 +18,26 @@ interface BookingResult {
 }
 
 interface ResilientBookingButtonProps {
-  onBook: (data: BookingData) => Promise<BookingResult>;
+  onBookAction: (data: BookingData) => Promise<BookingResult>;
   serviceId: string;
   date: string;
   time: string;
+  onSuccess?: (result: BookingResult) => void;
+  onError?: (error: Error) => void;
+  onRollback?: () => void;
+  className?: string;
+  disabled?: boolean;
+  children: React.ReactNode;
 }
 
-export function ResilientBookingButton({ onBook, serviceId, date, time }: ResilientBookingButtonProps) {
+export function ResilientBookingButton({ onBookAction, serviceId, date, time }: ResilientBookingButtonProps) {
   const [isOptimistic, setIsOptimistic] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
 
   // 1. OPTIMISTIC UI + GRACEFUL ROLLBACK with TELEMETRY
   const { execute, isLoading, error } = useOptimisticActionWithTelemetry({
     action: async () => {
-      const result = await onBook({ serviceId, date, time });
+      const result = await onBookAction({ serviceId, date, time });
       if (!result.success) {
         throw new Error('Booking failed');
       }

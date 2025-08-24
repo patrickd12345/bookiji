@@ -15,12 +15,14 @@ import {
   X,
   Plus,
   MessageSquare,
-  Database
+  Database,
+  Activity
 } from 'lucide-react'
 
 const navItems = [
   { href: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
+  { href: '/admin/slo', icon: Activity, label: 'SLO Monitoring' },
   { href: '/admin/cache', icon: Database, label: 'Cache Management' },
   { href: '/admin/vendors', icon: Users, label: 'Vendors' },
   { href: '/admin/customers', icon: Users, label: 'Customers' },

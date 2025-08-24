@@ -147,6 +147,16 @@ vi.mock('@/lib/i18n/useI18n', () => ({
       return translations[key] || key
     },
     formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
+    formatDate: (date: Date) => date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    }),
+    formatTime: (date: Date) => date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    }),
     setLocale: vi.fn(),
     locale: 'en-US'
   })

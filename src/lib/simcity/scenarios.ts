@@ -12,7 +12,12 @@ export interface SimScenario {
 }
 
 export interface SimEvent {
-  type: 'CACHE_INVALIDATION_STORM' | 'PAUSE_MV_REFRESH' | 'RLS_MISCONFIG' | 'RATE_LIMIT_BURST';
+  type: 'CACHE_INVALIDATION_STORM' | 'PAUSE_MV_REFRESH' | 'RLS_MISCONFIG' | 'RATE_LIMIT_BURST' | 
+         'PAYMENT_GATEWAY_OUTAGE' | 'PAYMENT_TIMEOUTS' | 'WEBHOOK_DELAY_JITTER' | 'FORCE_JWT_EXPIRY' |
+         'CLOCK_SKEW' | 'RLS_POLICY_TOGGLE' | 'TENANT_MIXER' | 'SIMULATE_DST_TRANSITION' | 'USER_TZ_FLAP' |
+         'PATHOLOGICAL_INPUTS' | 'IP_BURST' | 'WEBHOOK_STORM' | 'SMTP_BACKPRESSURE' | 'BLUE_GREEN_SWITCH' |
+         'SCHEMA_MIGRATION_IN_FLIGHT' | 'FTS_REINDEX' | 'MATVIEW_REFRESH_THROTTLE' | 'S3_LATENCY_SPIKES' |
+         'SIGNED_URL_EARLY_EXPIRY';
   triggerAt: number; // Simulated minutes from start
   duration: number; // Duration in simulated minutes
   parameters?: Record<string, any>;

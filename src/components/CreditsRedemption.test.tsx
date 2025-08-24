@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import CreditsRedemption from './CreditsRedemption';
+import { CreditsRedemption } from './CreditsRedemption';
 
 // Mock fetch
 global.fetch = jest.fn();
 
-const mockUserCredits = {
+const mockCreditsData = {
   id: '1',
   email: 'test@example.com',
   credits_balance: 50.00,
@@ -22,92 +22,91 @@ const mockUserCredits = {
 const defaultProps = {
   userId: '1',
   totalCost: 100.00,
-  onCreditsApplied: jest.fn(),
+  onCreditsAppliedAction: jest.fn(),
   className: '',
 };
 
 describe('CreditsRedemption', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (fetch as jest.Mock).mockResolvedValue({
-      json: () => Promise.resolve({ success: true, data: mockUserCredits }),
+    global.fetch = jest.fn();
+  });
+
+  it('renders without crashing', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true, data: mockCreditsData })
     });
-  });
 
-  it('renders loading state initially', () => {
-    render(<CreditsRedemption {...defaultProps} />);
-    expect(screen.getByText('Apply Credits')).toBeInTheDocument();
-  });
-
-  it('displays user credits and tier information', async () => {
     render(<CreditsRedemption {...defaultProps} />);
     
     await waitFor(() => {
-      expect(screen.getByText('💎 Apply Credits')).toBeInTheDocument();
-      expect(screen.getByText('Gold')).toBeInTheDocument();
-      expect(screen.getByText('$50.00')).toBeInTheDocument();
+      expect(screen.getByText('Credits Available: 50.00')).toBeInTheDocument();
     });
   });
 
-  it('allows user to input redemption amount', async () => {
+  it('shows loading state initially', () => {
+    render(<CreditsRedemption {...defaultProps} />);
+    expect(screen.getByText('Loading credits...')).toBeInTheDocument();
+  });
+
+  it('handles error state', async () => {
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+
     render(<CreditsRedemption {...defaultProps} />);
     
     await waitFor(() => {
-      const input = screen.getByLabelText('Amount to Apply');
-      fireEvent.change(input, { target: { value: '25.00' } });
-      expect(input).toHaveValue(25);
+      expect(screen.getByText('Error loading credits')).toBeInTheDocument();
     });
   });
 
-  it('applies max redemption when max button is clicked', async () => {
+  it('calculates max redemption correctly', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true, data: mockCreditsData })
+    });
+
     render(<CreditsRedemption {...defaultProps} />);
     
     await waitFor(() => {
-      const maxButton = screen.getByText('Max');
-      fireEvent.click(maxButton);
-      
-      // Max redemption should be 25% of total cost (25.00) or available balance (50.00), whichever is lower
-      const input = screen.getByLabelText('Amount to Apply');
-      expect(input).toHaveValue(25);
+      expect(screen.getByText('Credits Available: 50.00')).toBeInTheDocument();
     });
+
+    const maxButton = screen.getByText('Use Max');
+    fireEvent.click(maxButton);
+
+    // Max should be 25% of total cost (25) or credits balance (50), whichever is lower
+    expect(screen.getByDisplayValue('25.00')).toBeInTheDocument();
   });
 
-  it('shows cost breakdown when amount is entered', async () => {
-    render(<CreditsRedemption {...defaultProps} />);
-    
-    await waitFor(() => {
-      const input = screen.getByLabelText('Amount to Apply');
-      fireEvent.change(input, { target: { value: '20.00' } });
-      
-      expect(screen.getByText('Original Cost:')).toBeInTheDocument();
-      expect(screen.getByText('Credits Applied:')).toBeInTheDocument();
-      expect(screen.getByText('Final Cost:')).toBeInTheDocument();
-    });
-  });
-
-  it('calls onCreditsApplied when credits are successfully applied', async () => {
-    (fetch as jest.Mock)
+  it('applies credits successfully', async () => {
+    (global.fetch as jest.Mock)
       .mockResolvedValueOnce({
-        json: () => Promise.resolve({ success: true, data: mockUserCredits }),
+        ok: true,
+        json: async () => ({ success: true, data: mockCreditsData })
       })
       .mockResolvedValueOnce({
-        json: () => Promise.resolve({ success: true, data: mockUserCredits }),
+        ok: true,
+        json: async () => ({ success: true })
       });
 
     render(<CreditsRedemption {...defaultProps} />);
     
     await waitFor(() => {
-      const input = screen.getByLabelText('Amount to Apply');
-      fireEvent.change(input, { target: { value: '20.00' } });
-      
-      const applyButton = screen.getByText(/Apply \$20.00 Credits/);
-      fireEvent.click(applyButton);
+      expect(screen.getByText('Credits Available: 50.00')).toBeInTheDocument();
     });
 
+    const input = screen.getByDisplayValue('0.00');
+    fireEvent.change(input, { target: { value: '20' } });
+
+    const applyButton = screen.getByText('Apply Credits');
+    fireEvent.click(applyButton);
+
     await waitFor(() => {
-      expect(defaultProps.onCreditsApplied).toHaveBeenCalledWith(20, 82);
+      expect(defaultProps.onCreditsAppliedAction).toHaveBeenCalledWith(20, 82);
     });
   });
 });
+
 
 

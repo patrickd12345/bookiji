@@ -15,7 +15,7 @@ vi.mock('@/lib/supabaseClient', () => ({
 }));
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import CreditsRedemption from '../../../src/components/CreditsRedemption';
+import { CreditsRedemption } from '../../../src/components/CreditsRedemption';
 
 // Mock fetch
 global.fetch = vi.fn();
@@ -38,7 +38,7 @@ const mockUserCredits = {
 const defaultProps = {
   userId: '1',
   totalCost: 100.00,
-  onCreditsApplied: vi.fn(),
+  onCreditsAppliedAction: jest.fn(),
   className: '',
 };
 
@@ -127,7 +127,7 @@ describe('CreditsRedemption', () => {
     });
 
     await waitFor(() => {
-      expect(defaultProps.onCreditsApplied).toHaveBeenCalledWith(20, 82);
+      expect(defaultProps.onCreditsAppliedAction).toHaveBeenCalledWith(20, 82);
     });
   });
 });

@@ -1,7 +1,11 @@
 // NOTE: Skeleton Next.js 15 route handlers with a consistent envelope
 import { NextRequest, NextResponse } from 'next/server';
 
-type CancelRequest = { quote_id: string };
+type ForceCancelRequest = {
+  booking_id: string;
+  reason: string;
+  admin_override?: boolean;
+};
 
 function ok(data: any) { return NextResponse.json({ ok: true, data }); }
 function err(code: string, message: string, details?: any, status = 400) {
@@ -11,12 +15,15 @@ function err(code: string, message: string, details?: any, status = 400) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as CancelRequest;
-    if (!body?.quote_id) return err('VALIDATION_ERROR', 'quote_id is required');
-    // TODO: execute domain cancel + refund if needed
-    return ok({ cancelled: true });
+    const body = (await req.json()) as ForceCancelRequest;
+    if (!body?.booking_id) return err('VALIDATION_ERROR', 'booking_id is required');
+    if (!body?.reason) return err('VALIDATION_ERROR', 'reason is required');
+    
+    // TODO: execute domain force-cancel logic + refund if needed
+    const cancellation_id = '44444444-4444-4444-4444-444444444444';
+    
+    return ok({ cancellation_id, status: 'force_cancelled' });
   } catch (e: any) {
     return err('INTERNAL_ERROR', e?.message ?? 'Unknown error', undefined, 500);
   }
 }
-

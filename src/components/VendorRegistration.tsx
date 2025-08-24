@@ -216,7 +216,7 @@ export default function VendorRegistration({ onSuccess }: { onSuccess?: () => vo
           <CardContent className="space-y-4">
             <SpecialtyTreeSelect
               value=""
-              onChange={addSpecialty}
+              onChangeAction={addSpecialty}
               placeholder="Search and select specialties..."
               className="w-full"
             />

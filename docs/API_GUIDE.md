@@ -17,7 +17,32 @@ Authorization: Bearer <token>
 
 Obtain tokens by signing up or authenticating through endpoints in `/api/auth`.
 
-## Endpoints
+## Core Booking Flow (Starter Commit)
+
+### Quote Generation
+- `POST /api/quote` – Create a quote from a booking intent
+  - Body: `{ "intent": string, "location": { "lat": number, "lon": number }, "when_iso"?: string }`
+  - Returns: `{ "ok": true, "data": { "quote_id": string, "candidates": Array } }`
+
+### Booking Management
+- `POST /api/bookings/confirm` – Confirm a booking after $1 hold
+  - Body: `{ "quote_id": string, "provider_id": string, "idempotency_key": string, "stripe_payment_intent_id": string }`
+  - Returns: `{ "ok": true, "data": { "booking_id": string, "receipt_url": string } }`
+
+- `POST /api/bookings/cancel` – User cancels a pending booking before provider confirm
+  - Body: `{ "quote_id": string }`
+  - Returns: `{ "ok": true, "data": { "cancelled": boolean } }`
+
+### Operations & Admin
+- `POST /api/ops/refund` – Admin-initiated refund (uses same service layer as webhooks)
+  - Body: `{ "booking_id": string, "amount_cents"?: number, "reason"?: string }`
+  - Returns: `{ "ok": true, "data": { "refund_id": string, "status": string } }`
+
+- `POST /api/ops/force-cancel` – Admin-initiated force-cancel
+  - Body: `{ "booking_id": string, "reason": string, "admin_override"?: boolean }`
+  - Returns: `{ "ok": true, "data": { "cancellation_id": string, "status": string } }`
+
+## Legacy Endpoints
 
 ### Authentication
 
@@ -40,7 +65,6 @@ Obtain tokens by signing up or authenticating through endpoints in `/api/auth`.
 ### Bookings
 
 - `POST /api/bookings/create` – Create a booking
-- `POST /api/bookings/cancel` – Cancel a booking
 - `GET /api/bookings/user` – List bookings for the authenticated user
 
 ### Search & Availability
@@ -88,6 +112,29 @@ This list covers common routes. Explore the `src/app/api` directory for more exa
 Dev helpers (local only):
 - `POST /api/test/support/seed_kb` – Seed KB with a canonical reschedule policy
 - `GET /api/test/support/list_suggestions?ticket=[id]&status=[status]` – Inspect suggestions
+
+## Response Format
+
+All API endpoints follow a consistent response envelope:
+
+### Success Response
+```json
+{
+  "ok": true,
+  "data": { ... }
+}
+```
+
+### Error Response
+```json
+{
+  "ok": false,
+  "code": "ERROR_CODE",
+  "message": "Human readable error message",
+  "details": { "field": "additional context" },
+  "correlation_id": "request_id_for_tracking"
+}
+```
 
 ## Rate Limits
 

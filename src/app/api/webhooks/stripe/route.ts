@@ -1,0 +1,300 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { headers } from 'next/headers'
+import Stripe from 'stripe'
+import { featureFlags } from '@/config/featureFlags'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-06-20'
+})
+
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
+
+async function webhookHandler(req: NextRequest): Promise<NextResponse> {
+  if (!featureFlags.beta.core_booking_flow) {
+    return NextResponse.json(
+      { error: 'Core booking flow not enabled' },
+      { status: 403 }
+    )
+  }
+
+  try {
+    const body = await req.text()
+    const headersList = await headers()
+    const sig = headersList.get('stripe-signature')
+
+    if (!sig) {
+      return NextResponse.json(
+        { error: 'Missing stripe signature' },
+        { status: 400 }
+      )
+    }
+
+    let event: Stripe.Event
+
+    try {
+      event = stripe.webhooks.constructEvent(body, sig, endpointSecret)
+    } catch (err) {
+      console.error('Webhook signature verification failed:', err)
+      return NextResponse.json(
+        { error: 'Invalid signature' },
+        { status: 400 }
+      )
+    }
+
+    console.log(`Processing webhook: ${event.type}`)
+
+    // Handle the event
+    switch (event.type) {
+      case 'payment_intent.succeeded':
+        await handlePaymentSuccess(event.data.object as Stripe.PaymentIntent)
+        break
+      
+      case 'payment_intent.payment_failed':
+        await handlePaymentFailure(event.data.object as Stripe.PaymentIntent)
+        break
+      
+      case 'payment_intent.canceled':
+        await handlePaymentCanceled(event.data.object as Stripe.PaymentIntent)
+        break
+      
+      default:
+        console.log(`Unhandled event type: ${event.type}`)
+    }
+
+    return NextResponse.json({ received: true })
+
+  } catch (error) {
+    console.error('Webhook error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promise<void> {
+  try {
+    // Find the booking for this payment intent
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('stripe_payment_intent_id', paymentIntent.id)
+      .eq('state', 'hold_placed')
+      .single()
+
+    if (bookingError || !booking) {
+      console.error('Booking not found for payment intent:', paymentIntent.id)
+      return
+    }
+
+    // Check if this payment intent was already processed (idempotency)
+    const { data: existingOutbox } = await supabase
+      .from('payments_outbox')
+      .select('*')
+      .eq('event_data->>payment_intent_id', paymentIntent.id)
+      .eq('status', 'committed')
+      .single()
+
+    if (existingOutbox) {
+      console.log(`Payment intent ${paymentIntent.id} already processed, skipping`)
+      return
+    }
+
+    // Update booking state to provider_confirmed
+    const { error: updateError } = await supabase
+      .from('bookings')
+      .update({
+        state: 'provider_confirmed',
+        confirmed_at: new Date().toISOString()
+      })
+      .eq('id', booking.id)
+
+    if (updateError) {
+      console.error('Failed to update booking state:', updateError)
+      return
+    }
+
+    // Mark outbox entry as committed
+    const { error: outboxError } = await supabase
+      .from('payments_outbox')
+      .update({
+        status: 'committed',
+        processed_at: new Date().toISOString()
+      })
+      .eq('event_data->>payment_intent_id', paymentIntent.id)
+      .eq('status', 'pending')
+
+    if (outboxError) {
+      console.error('Failed to update outbox status:', outboxError)
+    }
+
+    // Log the state transition
+    await supabase
+      .from('booking_audit_log')
+      .insert({
+        booking_id: booking.id,
+        from_state: 'hold_placed',
+        to_state: 'provider_confirmed',
+        action: 'state_change',
+        actor_type: 'webhook',
+        actor_id: 'stripe',
+        metadata: {
+          payment_intent: paymentIntent.id,
+          amount_received: paymentIntent.amount,
+          customer_id: paymentIntent.customer,
+          webhook_event: 'payment_intent.succeeded'
+        }
+      })
+
+    console.log(`Booking ${booking.id} confirmed via payment success`)
+
+  } catch (error) {
+    console.error('Error handling payment success:', error)
+  }
+}
+
+async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent): Promise<void> {
+  try {
+    // Find the booking for this payment intent
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('stripe_payment_intent_id', paymentIntent.id)
+      .eq('state', 'hold_placed')
+      .single()
+
+    if (bookingError || !booking) {
+      console.error('Booking not found for payment intent:', paymentIntent.id)
+      return
+    }
+
+    // Update booking state to cancelled
+    const { error: updateError } = await supabase
+      .from('bookings')
+      .update({
+        state: 'cancelled',
+        cancelled_at: new Date().toISOString(),
+        cancelled_reason: 'Payment failed'
+      })
+      .eq('id', booking.id)
+
+    if (updateError) {
+      console.error('Failed to update booking state:', updateError)
+      return
+    }
+
+    // Mark outbox entry as failed
+    const { error: outboxError } = await supabase
+      .from('payments_outbox')
+      .update({
+        status: 'failed',
+        processed_at: new Date().toISOString(),
+        error_message: 'Payment failed'
+      })
+      .eq('event_data->>payment_intent_id', paymentIntent.id)
+      .eq('status', 'pending')
+
+    if (outboxError) {
+      console.error('Failed to update outbox status:', outboxError)
+    }
+
+    // Log the state transition
+    await supabase
+      .from('booking_audit_log')
+      .insert({
+        booking_id: booking.id,
+        from_state: 'hold_placed',
+        to_state: 'cancelled',
+        action: 'state_change',
+        actor_type: 'webhook',
+        actor_id: 'stripe',
+        metadata: {
+          payment_intent: paymentIntent.id,
+          failure_reason: paymentIntent.last_payment_error?.message || 'Unknown payment failure',
+          webhook_event: 'payment_intent.payment_failed'
+        }
+      })
+
+    console.log(`Booking ${booking.id} cancelled due to payment failure`)
+
+  } catch (error) {
+    console.error('Error handling payment failure:', error)
+  }
+}
+
+async function handlePaymentCanceled(paymentIntent: Stripe.PaymentIntent): Promise<void> {
+  try {
+    // Find the booking for this payment intent
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('stripe_payment_intent_id', paymentIntent.id)
+      .eq('state', 'hold_placed')
+      .single()
+
+    if (bookingError || !booking) {
+      console.error('Booking not found for payment intent:', paymentIntent.id)
+      return
+    }
+
+    // Update booking state to cancelled
+    const { error: updateError } = await supabase
+      .from('bookings')
+      .update({
+        state: 'cancelled',
+        cancelled_at: new Date().toISOString(),
+        cancelled_reason: 'Payment cancelled'
+      })
+      .eq('id', booking.id)
+
+    if (updateError) {
+      console.error('Failed to update booking state:', updateError)
+      return
+    }
+
+    // Mark outbox entry as failed
+    const { error: outboxError } = await supabase
+      .from('payments_outbox')
+      .update({
+        status: 'failed',
+        processed_at: new Date().toISOString(),
+        error_message: 'Payment cancelled'
+      })
+      .eq('event_data->>payment_intent_id', paymentIntent.id)
+      .eq('status', 'pending')
+
+    if (outboxError) {
+      console.error('Failed to update outbox status:', outboxError)
+    }
+
+    // Log the state transition
+    await supabase
+      .from('booking_audit_log')
+      .insert({
+        booking_id: booking.id,
+        from_state: 'hold_placed',
+        to_state: 'cancelled',
+        action: 'state_change',
+        actor_type: 'webhook',
+        actor_id: 'stripe',
+        metadata: {
+          payment_intent: paymentIntent.id,
+          cancellation_reason: 'Payment cancelled by customer or system',
+          webhook_event: 'payment_intent.canceled'
+        }
+      })
+
+    console.log(`Booking ${booking.id} cancelled due to payment cancellation`)
+
+  } catch (error) {
+    console.error('Error handling payment cancellation:', error)
+  }
+}
+
+export const POST = webhookHandler

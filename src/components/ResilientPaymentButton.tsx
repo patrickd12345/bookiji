@@ -15,16 +15,18 @@ interface PaymentDetails {
 }
 
 interface ResilientPaymentButtonProps {
-  onPaymentSuccess: (paymentId: string) => void
-  onPaymentError: (error: Error) => void
+  onPaymentSuccessAction: (paymentId: string) => void
+  onPaymentErrorAction: (error: Error) => void
   paymentDetails: PaymentDetails
+  onSuccess?: (paymentId: string) => void
+  onError?: (error: Error) => void
   className?: string
   disabled?: boolean
 }
 
 export function ResilientPaymentButton({
-  onPaymentSuccess,
-  onPaymentError,
+  onPaymentSuccessAction,
+  onPaymentErrorAction,
   paymentDetails,
   className = '',
   disabled = false
@@ -56,11 +58,11 @@ export function ResilientPaymentButton({
     onSuccess: (paymentId: string, details: PaymentDetails) => {
       setPaymentStatus('success')
       setPaymentId(paymentId)
-      onPaymentSuccess(paymentId)
+      onPaymentSuccessAction(paymentId)
     },
     onError: (error: Error, details: PaymentDetails) => {
       setPaymentStatus('failed')
-      onPaymentError(error)
+      onPaymentErrorAction(error)
     },
     onRollback: (details: PaymentDetails) => {
       setPaymentStatus('idle')
@@ -191,8 +193,8 @@ export function BookijiCommitmentButton({
         currency: 'USD',
         description: 'Bookiji Commitment Fee'
       }}
-      onPaymentSuccess={onSuccess}
-      onPaymentError={onError}
+      onPaymentSuccessAction={onSuccess}
+      onPaymentErrorAction={onError}
       className={className}
     />
   )

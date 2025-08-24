@@ -120,7 +120,13 @@ export default function VendorCalendar() {
   // Removed unused 'availability' state
   const [view, setView] = useState<'month' | 'week' | 'day'>('week')
   const [isLoading, setIsLoading] = useState(true)
-  const { formatDate, formatCurrency } = useI18n() // Removed unused 'formatTime'
+  const i18n = useI18n()
+  const formatDate = i18n.formatDate || ((date: Date) => date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  }))
+  const formatCurrency = i18n.formatCurrency || ((amount: number) => `$${amount.toFixed(2)}`)
   const [action, setAction] = useState<null | 'availability' | 'block' | 'service'>(null)
   const { user } = useAuth()
   const vendorId = user?.id || ''

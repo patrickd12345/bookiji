@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { ChevronRight, ArrowLeft, Plus, Search, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useDebounce } from "@/hooks/useDebounce";
+import { Textarea } from "@/components/ui/textarea";
 
 type SpecialtyNode = { 
   id: string; 
@@ -22,7 +22,7 @@ type Breadcrumb = { id: string; name: string };
 
 interface SpecialtyTreeSelectProps {
   value?: string;
-  onChange: (id: string, name: string) => void;
+  onChangeAction: (id: string, name: string) => void;
   placeholder?: string;
   className?: string;
   maxHeight?: string;
@@ -97,13 +97,13 @@ async function submitSuggestion(proposedName: string, parentId?: string, details
 
 export function SpecialtyTreeSelectOptimized({ 
   value, 
-  onChange, 
+  onChangeAction, 
   placeholder = "Select specialty", 
   className,
   maxHeight = "max-h-96"
 }: SpecialtyTreeSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentParent, setCurrentParent] = useState<string | null>(null);
+  const [currentParent, setCurrentParent] = useState<string | undefined>(undefined);
   const [breadcrumbs, setBreadcrumbs] = useState<Breadcrumb[]>([]);
   const [children, setChildren] = useState<SpecialtyNode[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -117,8 +117,18 @@ export function SpecialtyTreeSelectOptimized({
   const [virtualizedItems, setVirtualizedItems] = useState<SpecialtyNode[]>([]);
   const [scrollTop, setScrollTop] = useState(0);
   
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  // Create a debounced search query using useEffect and setTimeout
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Debounce the search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const selectedSpecialty = useMemo(() => {
     if (!value) return null;
@@ -140,7 +150,7 @@ export function SpecialtyTreeSelectOptimized({
   }, [isOpen, currentParent]);
 
   useEffect(() => {
-    if (debouncedSearchQuery) {
+    if (debouncedSearchQuery && debouncedSearchQuery.length >= 2) {
       void performSearch();
     } else {
       setSearchResults([]);
@@ -157,7 +167,7 @@ export function SpecialtyTreeSelectOptimized({
     const rootSpecialties = await fetchSpecialtiesWithCache(null);
     setChildren(rootSpecialties);
     setBreadcrumbs([]);
-    setCurrentParent(null);
+    setCurrentParent(undefined);
     setIsLoading(false);
   };
 
@@ -181,7 +191,7 @@ export function SpecialtyTreeSelectOptimized({
   };
 
   const performSearch = async () => {
-    if (debouncedSearchQuery.length < 2) return;
+    if (!debouncedSearchQuery || debouncedSearchQuery.length < 2) return;
     
     setIsSearching(true);
     const results = await searchSpecialtiesOptimized(debouncedSearchQuery);
@@ -228,7 +238,7 @@ export function SpecialtyTreeSelectOptimized({
           if (hasChildren) {
             loadChildren(specialty.id, specialty.name);
           } else {
-            onChange(specialty.id, specialty.name);
+            onChangeAction(specialty.id, specialty.name);
             setIsOpen(false);
           }
         }}
@@ -329,7 +339,7 @@ export function SpecialtyTreeSelectOptimized({
                       key={specialty.id}
                       className="flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
                       onClick={() => {
-                        onChange(specialty.id, specialty.name);
+                        onChangeAction(specialty.id, specialty.name);
                         setIsOpen(false);
                       }}
                     >

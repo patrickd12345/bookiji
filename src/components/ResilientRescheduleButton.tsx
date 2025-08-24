@@ -16,18 +16,18 @@ interface RescheduleDetails {
 }
 
 interface ResilientRescheduleButtonProps {
-  onRescheduleSuccess: (rescheduleId: string) => void
-  onRescheduleError: (error: Error) => void
-  onRollback: () => void
+  onRescheduleSuccessAction: (rescheduleId: string) => void
+  onRescheduleErrorAction: (error: Error) => void
+  onRollbackAction: () => void
   rescheduleDetails: RescheduleDetails
   className?: string
   disabled?: boolean
 }
 
 export function ResilientRescheduleButton({
-  onRescheduleSuccess,
-  onRescheduleError,
-  onRollback,
+  onRescheduleSuccessAction,
+  onRescheduleErrorAction,
+  onRollbackAction,
   rescheduleDetails,
   className = '',
   disabled = false
@@ -65,17 +65,17 @@ export function ResilientRescheduleButton({
     onSuccess: (rescheduleId: string) => {
       setRescheduleStatus('success')
       setRescheduleId(rescheduleId)
-      onRescheduleSuccess(rescheduleId)
+      onRescheduleSuccessAction(rescheduleId)
     },
     onError: (error: Error) => {
       setRescheduleStatus('failed')
-      onRescheduleError(error)
+      onRescheduleErrorAction(error)
     },
     onRollback: () => {
       setRescheduleStatus('idle')
       setRescheduleId(null)
       setOldSlot(null)
-      onRollback()
+      onRollbackAction()
     },
     component: 'ResilientRescheduleButton' // Required for telemetry
   })
@@ -219,9 +219,9 @@ export function BookijiRescheduleButton({
   return (
     <ResilientRescheduleButton
       rescheduleDetails={rescheduleDetails}
-      onRescheduleSuccess={onSuccess}
-      onRescheduleError={onError}
-      onRollback={onRollback}
+      onRescheduleSuccessAction={onSuccess}
+      onRescheduleErrorAction={onError}
+      onRollbackAction={onRollback}
       className={className}
     />
   )

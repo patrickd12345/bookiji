@@ -12,14 +12,14 @@ import { getTierIcon, getTierColor, formatCredits } from '@/lib/credits';
 interface CreditsRedemptionProps {
   userId: string;
   totalCost: number;
-  onCreditsApplied: (amount: number, finalCost: number) => void;
+  onCreditsAppliedAction: (amount: number, finalCost: number) => void;
   className?: string;
 }
 
-export default function CreditsRedemption({ 
+export function CreditsRedemption({ 
   userId, 
   totalCost, 
-  onCreditsApplied, 
+  onCreditsAppliedAction, 
   className = '' 
 }: CreditsRedemptionProps) {
   const [credits, setCredits] = useState<UserCreditsSummary | null>(null);
@@ -108,7 +108,7 @@ export default function CreditsRedemption({
       
       if (result.success) {
         const finalCost = calculateFinalCost(redemptionAmount);
-        onCreditsApplied(redemptionAmount, finalCost);
+        onCreditsAppliedAction(redemptionAmount, finalCost);
         
         // Refresh credits
         await fetchUserCredits();

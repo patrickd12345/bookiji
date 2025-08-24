@@ -57,12 +57,13 @@ async function submitSuggestion(proposedName: string, parentId?: string, details
 
 interface SpecialtyTreeSelectProps {
   value?: string;
-  onChange: (id: string, name: string) => void;
+  onChangeAction: (id: string, name: string) => void;
   placeholder?: string;
   className?: string;
+  maxHeight?: string;
 }
 
-export function SpecialtyTreeSelect({ value, onChange, placeholder = "Select specialty", className }: SpecialtyTreeSelectProps) {
+export function SpecialtyTreeSelect({ value, onChangeAction, placeholder = "Select specialty", className }: SpecialtyTreeSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentParent, setCurrentParent] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<Breadcrumb[]>([]);
@@ -130,7 +131,7 @@ export function SpecialtyTreeSelect({ value, onChange, placeholder = "Select spe
   };
 
   const handleSelect = (specialty: SpecialtyNode) => {
-    onChange(specialty.id, specialty.name);
+    onChangeAction(specialty.id, specialty.name);
     setIsOpen(false);
     setSearchQuery("");
     setSearchResults([]);

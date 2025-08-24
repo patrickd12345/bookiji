@@ -8,11 +8,12 @@ import { Mic, MicOff, Volume2, VolumeX, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface VoiceInputProps {
-  onTranscript: (text: string) => void
-  onError?: (error: string) => void
-  disabled?: boolean
-  className?: string
-  placeholder?: string
+  onTranscriptAction: (transcript: string) => void;
+  onError?: (error: string) => void;
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
+  autoStart?: boolean;
 }
 
 interface SpeechRecognition extends EventTarget {
@@ -64,7 +65,7 @@ declare global {
 }
 
 export default function VoiceInput({ 
-  onTranscript, 
+  onTranscriptAction, 
   onError, 
   disabled = false,
   className,
@@ -253,10 +254,10 @@ export default function VoiceInput({
   // Confirm and send transcript
   const confirmTranscript = useCallback(() => {
     if (transcript.trim()) {
-      onTranscript(transcript.trim())
+      onTranscriptAction(transcript.trim())
       clearTranscript()
     }
-  }, [transcript, onTranscript, clearTranscript])
+  }, [transcript, onTranscriptAction, clearTranscript])
 
   // Cleanup on unmount
   useEffect(() => {
