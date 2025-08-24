@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createSupabaseClient } from '@/lib/supabaseClient';
+import { SeoManager } from '@/lib/seo/seoManager';
 import { useUIStore } from '@/stores/uiStore';
 import type { AdminStats, AdminAction, AdminNotification } from '@/types/global.d';
 
@@ -41,6 +42,10 @@ export default function AdminCockpit() {
   const { showAdminCockpit, setShowAdminCockpit } = useUIStore();
 
   const supabase = createSupabaseClient();
+
+  useEffect(() => {
+    SeoManager.callAbel();
+  }, []);
 
   const [activeTab, setActiveTab] = useState('overview');
   const [stats] = useState<AdminStats>({
