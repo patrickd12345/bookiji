@@ -1,30 +1,82 @@
-export const featureFlags = {
-  // Core Booking Flow - Beta Phase
-  beta: {
-    core_booking_flow: process.env.NODE_ENV === 'development' || process.env.BETA_CORE_BOOKING_FLOW === 'true',
-  },
-  
-  // SLO Monitoring
-  slo: {
-    enabled: true,
-    quote_endpoint_target_p95_ms: 500,
-    quote_endpoint_target_p99_ms: 1000,
-    confirm_endpoint_target_p95_ms: 500,
-    confirm_endpoint_target_p99_ms: 1000,
-  },
-  
-  // Payment Flow
-  payments: {
-    hold_amount_cents: 100, // $1.00
-    hold_timeout_minutes: 15,
-    auto_refund_on_timeout: true,
-  },
-  
-  // Provider Confirmation
-  provider: {
-    confirmation_timeout_minutes: 15,
-    auto_cancel_on_timeout: true,
-  }
-} as const
+export interface FeatureFlags {
+  core_booking_flow: boolean
+  map_abstraction: boolean
+  ai_radius_scaling: boolean
+  loyalty_system: boolean
+  provider_onboarding: boolean
+}
 
-export type FeatureFlags = typeof featureFlags
+// Pilot configuration - only enable for pilot organizations
+export const PILOT_ORGS = [
+  'pilot-org-1',
+  'pilot-org-2',
+  'pilot-org-3'
+]
+
+// Feature flag configuration
+export const getFeatureFlags = (orgId?: string): FeatureFlags => {
+  const isPilotOrg = orgId && PILOT_ORGS.includes(orgId)
+  
+  return {
+    core_booking_flow: isPilotOrg,
+    map_abstraction: isPilotOrg,
+    ai_radius_scaling: isPilotOrg,
+    loyalty_system: isPilotOrg,
+    provider_onboarding: isPilotOrg
+  }
+}
+
+// Development overrides
+export const getDevelopmentFlags = (): FeatureFlags => {
+  if (process.env.NODE_ENV === 'development') {
+    return {
+      core_booking_flow: true,
+      map_abstraction: true,
+      ai_radius_scaling: true,
+      loyalty_system: true,
+      provider_onboarding: true
+    }
+  }
+  
+  return {
+    core_booking_flow: false,
+    map_abstraction: false,
+    ai_radius_scaling: false,
+    loyalty_system: false,
+    provider_onboarding: false
+  }
+}
+
+// Feature flag hook for components
+export const useFeatureFlag = (flag: keyof FeatureFlags, orgId?: string): boolean => {
+  const flags = getFeatureFlags(orgId)
+  const devFlags = getDevelopmentFlags()
+  
+  return devFlags[flag] || flags[flag]
+}
+
+// Feature flag guard for API routes
+export const requireFeatureFlag = (flag: keyof FeatureFlags, orgId?: string): boolean => {
+  const flags = getFeatureFlags(orgId)
+  const devFlags = getDevelopmentFlags()
+  
+  return devFlags[flag] || flags[flag]
+}
+
+// Pilot organization management
+export const addPilotOrg = (orgId: string): void => {
+  if (!PILOT_ORGS.includes(orgId)) {
+    PILOT_ORGS.push(orgId)
+  }
+}
+
+export const removePilotOrg = (orgId: string): void => {
+  const index = PILOT_ORGS.indexOf(orgId)
+  if (index > -1) {
+    PILOT_ORGS.splice(index, 1)
+  }
+}
+
+export const isPilotOrg = (orgId?: string): boolean => {
+  return orgId ? PILOT_ORGS.includes(orgId) : false
+}
