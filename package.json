@@ -32,6 +32,8 @@
     "seo:check": "tsx scripts/check-sitemap.ts",
     "seo:test": "concurrently -k -s first \"pnpm start:ci\" \"wait-on http://localhost:3000 && pnpm seo:check\"",
     "seo:indexnow": "tsx scripts/indexnow-push.ts",
+    "bootstrap-kb": "tsx scripts/bootstrap-bookiji-kb.ts",
+
     "prebuild": "npm run i18n:check",
     "prepare": "husky install"
   },
@@ -114,9 +116,10 @@
     "concurrently": "^9.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
+    "gray-matter": "^4.0.3",
     "husky": "^9.0.0",
     "jsdom": "^26.1.0",
-    "lint-staged": "^2.3.0",
+    "lint-staged": "^15.0.0",
     "msw": "^2.3.0",
     "openai": "^4.34.0",
     "postcss": "^8.4.31",

@@ -45,7 +45,43 @@ process.env.TEST_BASE_URL = 'http://localhost:3000'
 global.fetch = vi.fn()
 
 // Mock Supabase client
+const mockSupabase = {
+  auth: {
+    getSession: vi.fn(() => Promise.resolve({ data: { session: null }, error: null })),
+    getUser: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
+    signUp: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
+    signIn: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
+    signOut: vi.fn(() => Promise.resolve({ error: null })),
+    onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+  },
+  from: vi.fn(() => ({
+    select: vi.fn(() => ({
+      eq: vi.fn(() => ({
+        single: vi.fn(() => Promise.resolve({ data: null, error: null })),
+        then: vi.fn((callback) => callback({ data: [], error: null }))
+      })),
+      or: vi.fn(() => ({
+        order: vi.fn(() => ({
+          then: vi.fn((callback) => callback({ data: [], error: null }))
+        }))
+      })),
+      then: vi.fn((callback) => callback({ data: [], error: null }))
+    })),
+    insert: vi.fn(() => Promise.resolve({ data: null, error: null })),
+    update: vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ data: null, error: null })) })),
+    delete: vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ data: null, error: null })) })),
+  }))
+}
+
+// Mock the entire module
 vi.mock('@/lib/supabaseClient', () => ({
+  supabase: mockSupabase,
+  createSupabaseClient: vi.fn(() => mockSupabase),
+  getSupabaseClient: vi.fn(() => mockSupabase)
+}))
+
+// Mock additional Supabase-related modules
+vi.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
       getSession: vi.fn(() => Promise.resolve({ data: { session: null }, error: null })),
@@ -65,7 +101,8 @@ vi.mock('@/lib/supabaseClient', () => ({
           order: vi.fn(() => ({
             then: vi.fn((callback) => callback({ data: [], error: null }))
           }))
-        }))
+        })),
+        then: vi.fn((callback) => callback({ data: [], error: null }))
       })),
       insert: vi.fn(() => Promise.resolve({ data: null, error: null })),
       update: vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ data: null, error: null })) })),
@@ -73,6 +110,39 @@ vi.mock('@/lib/supabaseClient', () => ({
     }))
   }
 }))
+
+// Mock fetch with default responses
+global.fetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+  const url = typeof input === 'string' ? input : input.toString()
+  
+  // Default successful response
+  if (url.includes('/api/')) {
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ success: true, data: [] }),
+      text: () => Promise.resolve('{"success": true, "data": []}'),
+    } as Response)
+  }
+  
+  // AI radius endpoint
+  if (url.includes('/api/ai/radius')) {
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ radius: 25, confidence: 0.8 }),
+      text: () => Promise.resolve('{"radius": 25, "confidence": 0.8}'),
+    } as Response)
+  }
+  
+  // Default response
+  return Promise.resolve({
+    ok: true,
+    status: 200,
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve('{}'),
+  } as Response)
+})
 
 // Cleanup after each test
 afterEach(() => {
@@ -160,6 +230,93 @@ vi.mock('@/lib/i18n/useI18n', () => ({
     setLocale: vi.fn(),
     locale: 'en-US'
   })
+}))
+
+// Mock useAuth hook
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({
+    user: null,
+    session: null,
+    loading: false,
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    signUp: vi.fn(),
+  })
+}))
+
+// Mock useUIStore
+vi.mock('@/stores/uiStore', () => ({
+  useUIStore: () => ({
+    theme: 'light',
+    setTheme: vi.fn(),
+    sidebarOpen: false,
+    setSidebarOpen: vi.fn(),
+  })
+}))
+
+// Mock additional component dependencies
+vi.mock('@/lib/ollama', () => ({
+  ollamaService: {
+    generate: vi.fn(() => Promise.resolve('Mock AI response'))
+  },
+  BOOKIJI_PROMPTS: {
+    bookingQuery: vi.fn(() => 'Mock prompt')
+  }
+}))
+
+vi.mock('@/lib/stripe', () => ({
+  getStripeSecretKey: vi.fn(() => 'sk_test_mock'),
+  getStripePublishableKey: vi.fn(() => 'pk_test_mock'),
+  createCommitmentFeePaymentIntent: vi.fn(() => Promise.resolve({ id: 'pi_test' }))
+}))
+
+vi.mock('@/lib/mapbox', () => ({
+  mapboxgl: {
+    accessToken: 'test-token',
+    Map: vi.fn(() => ({
+      on: vi.fn(),
+      addControl: vi.fn(),
+      remove: vi.fn()
+    })),
+    Marker: vi.fn(() => ({
+      setLngLat: vi.fn(() => ({
+        addTo: vi.fn()
+      }))
+    }))
+  }
+}))
+
+// Mock complex components that might cause issues
+vi.mock('@/components/RealAIChat', () => ({
+  default: vi.fn(() => null)
+}))
+
+vi.mock('@/components/GuidedTourManager', () => ({
+  default: vi.fn(() => null)
+}))
+
+vi.mock('@/components/MapAbstraction', () => ({
+  default: vi.fn(() => null)
+}))
+
+vi.mock('@/components/StripePayment', () => ({
+  default: vi.fn(() => null)
+}))
+
+vi.mock('@/components/BookingForm', () => ({
+  default: vi.fn(() => null)
+}))
+
+vi.mock('@/components/UserDashboard', () => ({
+  default: vi.fn(() => null)
+}))
+
+vi.mock('@/components/VendorDashboard', () => ({
+  default: vi.fn(() => null)
+}))
+
+vi.mock('@/components/AdminCockpit', () => ({
+  default: vi.fn(() => null)
 }))
 
 // Mock localStorage

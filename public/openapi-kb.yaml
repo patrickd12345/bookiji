@@ -1,0 +1,297 @@
+openapi: 3.1.0
+info:
+  title: Bookiji KB API
+  version: "1.0.1"
+  description: Knowledge Base API for Bookiji Support GPT Actions
+servers:
+  - url: https://api.bookiji.com
+paths:
+  /kb/feedback:
+    post:
+      operationId: kbFeedback
+      summary: Submit feedback on KB answers for learning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [locale, query]
+              properties:
+                sessionId: { type: string, format: uuid }
+                locale: { type: string, enum: [en, fr] }
+                query: { type: string, minLength: 2 }
+                sectionBias: { type: string, enum: [faq, vendor, policy, troubleshooting] }
+                chosenArticleId: { type: string, format: uuid }
+                chosenChunkId: { type: string, format: uuid }
+                helpful: { type: boolean }
+                clicked: { type: boolean }
+                dwellMs: { type: integer, minimum: 0 }
+                overrideText: { type: string }
+                overrideAuthor: { type: string }
+                requestId: { type: string, format: uuid }
+                client: { type: string, default: "chatgpt_action" }
+      responses:
+        '200':
+          description: Feedback recorded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+                  id: { type: string, format: uuid }
+                  receivedAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /kb/insights:
+    get:
+      operationId: kbInsights
+      summary: Get learning insights and gap analysis
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [overview, gaps, articles-needing-love, overrides]
+            default: overview
+        - name: locale
+          in: query
+          schema:
+            type: string
+            enum: [en, fr]
+            default: en
+        - name: days
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 90
+            default: 7
+      responses:
+        '200':
+          description: Insights data retrieved successfully
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/InsightsOverview'
+                  - $ref: '#/components/schemas/InsightsGaps'
+                  - $ref: '#/components/schemas/InsightsArticlesNeedingLove'
+                  - $ref: '#/components/schemas/InsightsOverrides'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /kb/answer:
+    post:
+      operationId: kbAnswer
+      summary: Get a synthesized answer with citations from the KB
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query: { type: string }
+                locale: { type: string, enum: [en, fr], default: en }
+                actor: { type: string, enum: [user, vendor] }
+                section: { type: string, enum: [faq, vendor, policy, troubleshooting] }
+                maxTokens: { type: integer, minimum: 64, maximum: 1200, default: 400 }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer: { type: string }
+                  citations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        title: { type: string }
+                        url: { type: string, format: uri }
+                        excerpt: { type: string }
+                  followups:
+                    type: array
+                    items: { type: string }
+        "422":
+          description: No relevant KB content found
+        "429":
+          description: Rate limited
+          headers: { Retry-After: { schema: { type: integer } } }
+  /kb/search:
+    get:
+      operationId: kbSearch
+      summary: Semantic/keyword search over the KB
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema: { type: string }
+        - in: query
+          name: locale
+          schema: { type: string, enum: [en, fr], default: en }
+        - in: query
+          name: section
+          schema: { type: string, enum: [faq, vendor, policy, troubleshooting] }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 20, default: 5 }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        title: { type: string }
+                        url: { type: string, format: uri }
+                        snippet: { type: string }
+                        score: { type: number }
+        "422":
+          description: No matches
+        "429":
+          description: Rate limited
+          headers: { Retry-After: { schema: { type: integer } } }
+  /kb/article/{id}:
+    get:
+      operationId: kbArticle
+      summary: Fetch a full KB article by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  title: { type: string }
+                  url: { type: string, format: uri }
+                  content: { type: string }
+        "404":
+          description: Article not found
+        "429":
+          description: Rate limited
+          headers: { Retry-After: { schema: { type: integer } } }
+components:
+  schemas:
+    # Feedback & Learning Schemas
+    KBFeedbackIn:
+      type: object
+      required: [locale, query]
+      properties:
+        sessionId: { type: string, format: uuid }
+        locale: { type: string, enum: [en, fr] }
+        query: { type: string, minLength: 2 }
+        sectionBias: { type: string, enum: [faq, vendor, policy, troubleshooting] }
+        chosenArticleId: { type: string, format: uuid }
+        chosenChunkId: { type: string, format: uuid }
+        helpful: { type: boolean }
+        clicked: { type: boolean, default: false }
+        dwellMs: { type: integer, minimum: 0 }
+        overrideText: { type: string }
+        overrideAuthor: { type: string }
+        requestId: { type: string, format: uuid }
+        client: { type: string, default: "chatgpt_action" }
+
+    KBFeedbackOut:
+      type: object
+      properties:
+        ok: { type: boolean, example: true }
+        id: { type: string, format: uuid }
+        receivedAt: { type: string, format: date-time }
+
+    # Insights Schemas
+    InsightsOverview:
+      type: object
+      properties:
+        type: { type: string, example: "overview" }
+        data:
+          type: object
+          properties:
+            totalArticles: { type: integer }
+            totalFeedback: { type: integer }
+            avgHelpfulRate: { type: number, minimum: 0, maximum: 1 }
+            topPerformingSection: { type: string }
+            recentGaps: { type: integer }
+            articlesNeedingLove: { type: integer }
+            highSignalOverrides: { type: integer }
+
+    InsightsGaps:
+      type: object
+      properties:
+        type: { type: string, example: "gaps" }
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              query: { type: string }
+              locale: { type: string }
+              n: { type: integer }
+              helpfulRate: { type: number, minimum: 0, maximum: 1 }
+              lastSeen: { type: string, format: date-time }
+
+    InsightsArticlesNeedingLove:
+      type: object
+      properties:
+        type: { type: string, example: "articles_needing_love" }
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              title: { type: string }
+              section: { type: string }
+              locale: { type: string }
+              feedbackCount: { type: integer }
+              helpfulRate: { type: number, minimum: 0, maximum: 1 }
+
+    InsightsOverrides:
+      type: object
+      properties:
+        type: { type: string, example: "high_signal_overrides" }
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              query: { type: string }
+              locale: { type: string }
+              overrideText: { type: string }
+              overrideAuthor: { type: string }
+              articleTitle: { type: string }
+              articleSection: { type: string }
+              createdAt: { type: string, format: date-time }
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+security:
+  - ApiKeyAuth: []
