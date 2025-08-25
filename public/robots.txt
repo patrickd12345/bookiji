@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://bookiji.com/sitemap.xml 
-
-User-agent: Mediapartners-Google
-Allow: / 

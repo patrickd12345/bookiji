@@ -7,6 +7,7 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
+    "start:ci": "next start -p 3000",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
@@ -28,6 +29,9 @@
     "maintenance:calendar": "node scripts/setup-maintenance-calendar.mjs",
     "i18n:check": "node scripts/i18n-check.js",
     "seed:pilot": "tsx scripts/seed-pilot-data.ts",
+    "seo:check": "tsx scripts/check-sitemap.ts",
+    "seo:test": "concurrently -k -s first \"pnpm start:ci\" \"wait-on http://localhost:3000 && pnpm seo:check\"",
+    "seo:indexnow": "tsx scripts/indexnow-push.ts",
     "prebuild": "npm run i18n:check",
     "prepare": "husky install"
   },
@@ -107,11 +111,12 @@
     "@vitejs/plugin-react": "^4.6.0",
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.15",
+    "concurrently": "^9.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "husky": "^9.0.0",
     "jsdom": "^26.1.0",
-    "lint-staged": "^15.0.0",
+    "lint-staged": "^2.3.0",
     "msw": "^2.3.0",
     "openai": "^4.34.0",
     "postcss": "^8.4.31",
@@ -120,7 +125,8 @@
     "tailwindcss": "^3.3.0",
     "tsx": "^4.20.5",
     "typescript": "^5",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wait-on": "^8.0.0"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.1.10",

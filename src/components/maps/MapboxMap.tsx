@@ -96,6 +96,8 @@ export default class MapboxMap implements MapAdapterInterface {
     if (!this.map) return null
 
     const bounds = this.map.getBounds()
+    if (!bounds) return null
+    
     return {
       north: bounds.getNorth(),
       south: bounds.getSouth(),

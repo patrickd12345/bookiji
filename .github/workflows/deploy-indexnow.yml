@@ -1,0 +1,24 @@
+name: deploy-indexnow
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  indexnow:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+      CANONICAL_HOST: ${{ secrets.CANONICAL_HOST }}
+      INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+      # Optional: CHANGED_URLS: ${{ steps.diff.outputs.urls }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm seo:indexnow

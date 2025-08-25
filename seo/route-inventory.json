@@ -1,0 +1,5 @@
+{
+  "baseUrlEnv": "NEXT_PUBLIC_APP_URL",
+  "required": ["/", "/vendors", "/services", "/pricing", "/contact"],
+  "forbidden": ["/admin", "/preview", "/api"]
+}

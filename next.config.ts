@@ -1,8 +1,9 @@
 import type { NextConfig } from 'next';
 import { securityHeaders } from './src/middleware/security';
 
+const isProd = process.env.VERCEL_ENV === 'production';
+
 const nextConfig: NextConfig = {
-  output: 'standalone',
   eslint: {
     ignoreDuringBuilds: false,
   },
@@ -13,15 +14,19 @@ const nextConfig: NextConfig = {
     optimizeCss: true,
   },
   async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: Object.entries(securityHeaders).map(([key, value]) => ({
-          key,
-          value,
-        })),
-      },
-    ];
+    const headers = [];
+    
+    // Add security headers
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      headers.push({ key, value });
+    });
+    
+    // Add non-prod noindex header
+    if (!isProd) {
+      headers.push({ key: 'X-Robots-Tag', value: 'noindex, nofollow' });
+    }
+    
+    return [{ source: '/:path*', headers }];
   },
 };
 

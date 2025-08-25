@@ -22,11 +22,17 @@ export interface FeatureFlags {
     onboarding: boolean
     analytics: boolean
     reviews: boolean
+    confirmation_timeout_minutes: number
   }
   slo: {
+    enabled: boolean
     response_time: boolean
     availability: boolean
     quality: boolean
+    quote_endpoint_target_p95_ms: number
+    confirm_endpoint_target_p95_ms: number
+    quote_endpoint_target_p99_ms: number
+    confirm_endpoint_target_p99_ms: number
   }
 }
 
@@ -64,12 +70,18 @@ export const getFeatureFlags = (orgId?: string): FeatureFlags => {
     provider: {
       onboarding: Boolean(isPilotOrg),
       analytics: Boolean(isPilotOrg),
-      reviews: Boolean(isPilotOrg)
+      reviews: Boolean(isPilotOrg),
+      confirmation_timeout_minutes: 0 // Default value, will be overridden by development overrides
     },
     slo: {
+      enabled: Boolean(isPilotOrg),
       response_time: Boolean(isPilotOrg),
       availability: Boolean(isPilotOrg),
-      quality: Boolean(isPilotOrg)
+      quality: Boolean(isPilotOrg),
+      quote_endpoint_target_p95_ms: 0, // Default value, will be overridden by development overrides
+      confirm_endpoint_target_p95_ms: 0, // Default value, will be overridden by development overrides
+      quote_endpoint_target_p99_ms: 0, // Default value, will be overridden by development overrides
+      confirm_endpoint_target_p99_ms: 0 // Default value, will be overridden by development overrides
     }
   }
 }
@@ -100,12 +112,18 @@ export const getDevelopmentFlags = (): FeatureFlags => {
       provider: {
         onboarding: true,
         analytics: true,
-        reviews: true
+        reviews: true,
+        confirmation_timeout_minutes: 15 // Override default for development
       },
       slo: {
+        enabled: true,
         response_time: true,
         availability: true,
-        quality: true
+        quality: true,
+        quote_endpoint_target_p95_ms: 0, // Override default for development
+        confirm_endpoint_target_p95_ms: 0, // Override default for development
+        quote_endpoint_target_p99_ms: 0, // Override default for development
+        confirm_endpoint_target_p99_ms: 0 // Override default for development
       }
     }
   }
@@ -133,12 +151,18 @@ export const getDevelopmentFlags = (): FeatureFlags => {
     provider: {
       onboarding: false,
       analytics: false,
-      reviews: false
+      reviews: false,
+      confirmation_timeout_minutes: 0 // Override default for development
     },
     slo: {
+      enabled: false,
       response_time: false,
       availability: false,
-      quality: false
+      quality: false,
+      quote_endpoint_target_p95_ms: 0, // Override default for development
+      confirm_endpoint_target_p95_ms: 0, // Override default for development
+      quote_endpoint_target_p99_ms: 0, // Override default for development
+      confirm_endpoint_target_p99_ms: 0 // Override default for development
     }
   }
 }
