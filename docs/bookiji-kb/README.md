@@ -203,3 +203,4 @@ supabase logs
 ---
 
 For questions or support with the knowledge base system, contact the development team or refer to the project documentation.
+

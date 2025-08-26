@@ -66,3 +66,4 @@ Bookiji is a universal booking platform that connects customers with service pro
 ## Next Steps
 
 Ready to get started? [Create your account](https://bookiji.com/register) and begin your Bookiji journey today!
+

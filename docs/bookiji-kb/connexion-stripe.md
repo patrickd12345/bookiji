@@ -101,3 +101,4 @@ R : Non, c'est un processus automatique géré par votre banque.
 
 **Q : Que se passe-t-il si ma carte expire ?**
 R : L'empreinte sera automatiquement libérée, mais vous devrez ajouter une nouvelle carte pour continuer à utiliser Bookiji.
+

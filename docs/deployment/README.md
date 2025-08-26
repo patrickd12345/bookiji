@@ -4,45 +4,41 @@ Production deployment guides, environment setup, and CI/CD procedures.
 
 ## 📚 Available Guides
 
-### 🎯 **Launch Checklists**
-- [**Pre-Beta Must-Haves**](./PRE_BETA_MUST_HAVES.md) - **🚨 CRITICAL: Essential modules before beta**
-- [**Beta Launch Checklist**](./BETA_LAUNCH_CHECKLIST.md) - **FOCUSED: 48-hour beta launch plan**
-- [**Production Go-Live Checklist**](./PRODUCTION_GO_LIVE_CHECKLIST.md) - **CRITICAL: Production launch after beta**
+### 🚀 Production Deployment
+- [Deployment Runbook](../DEPLOYMENT_RUNBOOK.md) - Complete production deployment guide
+- [Deployment Checklist Critical Gotchas](../DEPLOYMENT_CHECKLIST_CRITICAL_GOTCHAS.md) - Critical deployment considerations
+- [Domain Configuration](../DOMAIN_CONFIGURATION.md) - Domain and SSL setup
+- [Google Calendar Integration](../google-calendar-integration.md) - Calendar integration setup
 
 ### 🔧 Environment Setup
-- [Database Setup](./DATABASE_SETUP.md) - Database configuration
-- [Supabase Migration Guide](./SUPABASE_MIGRATION_GUIDE.md) - Database migration procedures
-- [Supabase Setup](./SUPABASE_SETUP.md) - Supabase configuration
-- [Domain Configuration](./DOMAIN_CONFIGURATION.md) - Domain and SSL setup
-- [Google Calendar Integration](./google-calendar-integration.md) - Calendar integration setup
+- [Database Setup](../DATABASE_SETUP.md) - Database configuration
+- [Supabase Migration Guide](../SUPABASE_MIGRATION_GUIDE.md) - Database migration procedures
+- [Supabase Setup](../SUPABASE_SETUP.md) - Supabase configuration
 
 ### 📊 Monitoring & Analytics
-- [Analytics Implementation Complete](./ANALYTICS_IMPLEMENTATION_COMPLETE.md) - Analytics system setup
-- [Post Launch Analytics](./POST_LAUNCH_ANALYTICS.md) - Post-deployment analytics
-- [Resilience Telemetry Setup](./RESILIENCE_TELEMETRY_SETUP.md) - Monitoring and alerting
+- [Analytics Implementation Complete](../ANALYTICS_IMPLEMENTATION_COMPLETE.md) - Analytics system setup
+- [Post Launch Analytics](../POST_LAUNCH_ANALYTICS.md) - Post-deployment analytics
+- [Resilience Telemetry Setup](../RESILIENCE_TELEMETRY_SETUP.md) - Monitoring and alerting
 
-## 🎯 **Deployment Phases**
+## 🎯 Deployment Phases
 
-### **Phase 0: Pre-Beta Must-Haves (Complete First!)**
-- [Pre-Beta Must-Haves](./PRE_BETA_MUST_HAVES.md) - Essential modules checklist
-- **Target:** 100% functional core platform
-- **Focus:** Zero critical failures, polished user experience
+### 1. Pre-Deployment
+- Environment configuration
+- Database setup and migration
+- SSL and domain configuration
+- Environment variable setup
 
-### **Phase 1: Beta Launch (After must-haves complete)**
-- [Beta Launch Checklist](./BETA_LAUNCH_CHECKLIST.md) - Complete beta launch plan
-- **Target:** 100 beta users for feedback and validation
-- **Focus:** Feature validation and user feedback collection
+### 2. Deployment
+- CI/CD pipeline execution
+- Database migration
+- Service deployment
+- Health checks
 
-### **Phase 2: Production Go-Live (After beta success)**
-- [Production Go-Live Checklist](./PRODUCTION_GO_LIVE_CHECKLIST.md) - Production launch plan
-- **Target:** Public launch on bookiji.com
-- **Focus:** Scale, performance, and business metrics
-
-### **Phase 3: Post-Launch Optimization**
-- Performance monitoring and optimization
-- User feedback integration
-- Infrastructure scaling
-- Business metrics optimization
+### 3. Post-Deployment
+- Monitoring setup
+- Analytics verification
+- Performance testing
+- User acceptance testing
 
 ## 🔐 Environment Variables
 
@@ -61,4 +57,4 @@ Critical environment variables for production:
 
 ---
 
-**🚨 Start with the [Pre-Beta Must-Haves](./PRE_BETA_MUST_HAVES.md) checklist first!**
+*Start with the [Deployment Runbook](../DEPLOYMENT_RUNBOOK.md) for complete deployment instructions.*

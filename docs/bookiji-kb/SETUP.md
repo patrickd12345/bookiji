@@ -324,3 +324,4 @@ tar -czf kb_source_backup.tar.gz docs/bookiji-kb/
 ---
 
 For additional support or questions, contact the development team or refer to the project documentation.
+

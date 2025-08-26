@@ -156,3 +156,4 @@ Before starting your onboarding, ensure you have:
 Ready to start your Bookiji journey? Complete your onboarding and go live to start receiving bookings from customers in your area!
 
 **Need help?** Our team is here to support you every step of the way.
+

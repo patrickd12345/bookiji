@@ -190,3 +190,4 @@ If you've tried all the troubleshooting steps and are still experiencing problem
 4. **Consider booking later** when technical issues are resolved
 
 Our support team is committed to resolving payment issues quickly and ensuring you can complete your bookings successfully.
+

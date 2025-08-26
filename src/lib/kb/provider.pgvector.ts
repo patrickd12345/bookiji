@@ -40,36 +40,76 @@ export class PgVectorProvider implements KBProvider {
     sectionBias?: Section, 
     limit: number = 10
   ): Promise<KBSearchResult[]> {
-    // First, get the query embedding
-    const { data: embeddingData, error: embeddingError } = await this.supabase.rpc(
-      'get_query_embedding',
-      { query_text: query }
-    );
+    try {
+      // First, get the query embedding
+      const { data: embeddingData, error: embeddingError } = await this.supabase.rpc(
+        'get_query_embedding',
+        { query_text: query }
+      );
 
-    if (embeddingError || !embeddingData) {
-      throw new Error('Failed to generate query embedding');
+      if (embeddingError || !embeddingData) {
+        throw new Error('Failed to generate query embedding');
+      }
+
+      // Execute vector similarity search with chunking support
+      const { data, error } = await this.supabase.rpc(
+        'kb_search',
+        {
+          q_embedding: embeddingData,
+          k: limit,
+          in_locale: locale,
+          in_section: sectionBias || null
+        }
+      );
+
+      if (error) {
+        // If the search fails (e.g., no chunks/embeddings yet), fall back to simple text search
+        console.warn('Vector search failed, falling back to text search:', error.message);
+        return await this.fallbackTextSearch(query, locale, sectionBias, limit);
+      }
+
+      return (data || []).map((item: any) => ({
+        id: item.article_id,
+        title: item.title,
+        snippet: item.snippet,
+        score: item.score || 0,
+        url: item.url
+      }));
+    } catch (error) {
+      console.warn('Search error, falling back to text search:', error);
+      return await this.fallbackTextSearch(query, locale, sectionBias, limit);
+    }
+  }
+
+  private async fallbackTextSearch(
+    query: string, 
+    locale: Locale, 
+    sectionBias?: Section, 
+    limit: number = 10
+  ): Promise<KBSearchResult[]> {
+    let queryBuilder = this.supabase
+      .from('kb_articles')
+      .select('id, title, content, section, url')
+      .eq('locale', locale)
+      .ilike('title', `%${query}%`)
+      .limit(limit);
+
+    if (sectionBias) {
+      queryBuilder = queryBuilder.eq('section', sectionBias);
     }
 
-    // Execute vector similarity search with chunking support
-    const { data, error } = await this.supabase.rpc(
-      'kb_search',
-      {
-        q_embedding: embeddingData,
-        k: limit,
-        in_locale: locale,
-        in_section: sectionBias || null
-      }
-    );
+    const { data, error } = await queryBuilder;
 
     if (error) {
-      throw new Error(`Search failed: ${error.message}`);
+      console.error('Fallback search failed:', error);
+      return [];
     }
 
     return (data || []).map((item: any) => ({
-      id: item.article_id,
+      id: item.id,
       title: item.title,
-      snippet: item.snippet,
-      score: item.score || 0,
+      snippet: item.content?.substring(0, 240) || '',
+      score: 0.5, // Default score for text search
       url: item.url
     }));
   }

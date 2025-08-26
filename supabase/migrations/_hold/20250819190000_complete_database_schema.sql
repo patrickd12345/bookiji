@@ -5,6 +5,9 @@
 
 BEGIN;
 
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "vector";
+
 -- ========================================
 -- 1. COMPLETE DATABASE CLEANUP
 -- ========================================
@@ -307,11 +310,38 @@ CREATE TABLE kb_articles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
-    category_id UUID REFERENCES support_categories(id),
-    is_active BOOLEAN DEFAULT true,
+    locale TEXT NOT NULL DEFAULT 'en',
+    section TEXT NOT NULL DEFAULT 'faq',
+    url TEXT,
+    embedding vector(1536),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Add constraints for kb_articles
+ALTER TABLE kb_articles 
+ADD CONSTRAINT kb_articles_locale_check CHECK (locale IN ('en', 'fr'));
+
+ALTER TABLE kb_articles 
+ADD CONSTRAINT kb_articles_section_check CHECK (section IN ('faq', 'vendor', 'policy', 'troubleshooting'));
+
+-- Create unique index for title per locale
+CREATE UNIQUE INDEX kb_articles_title_locale_ux 
+ON kb_articles (lower(title), locale);
+
+-- Create updated_at trigger for kb_articles
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_kb_articles_updated_at 
+    BEFORE UPDATE ON kb_articles 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
 
 -- Create knowledge base chunks table for vector search
 CREATE TABLE kb_chunks (
@@ -508,8 +538,10 @@ CREATE INDEX idx_support_conversations_ticket_id ON support_conversations(ticket
 CREATE INDEX idx_support_messages_conversation_id ON support_messages(conversation_id);
 
 -- Knowledge base indexes
-CREATE INDEX idx_kb_articles_category_id ON kb_articles(category_id);
-CREATE INDEX idx_kb_articles_active ON kb_articles(is_active);
+CREATE INDEX idx_kb_articles_locale ON kb_articles(locale);
+CREATE INDEX idx_kb_articles_section ON kb_articles(section);
+CREATE INDEX idx_kb_articles_created_at ON kb_articles(created_at);
+CREATE INDEX idx_kb_articles_embedding ON kb_articles USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 CREATE INDEX idx_kb_chunks_article_id ON kb_chunks(article_id);
 CREATE INDEX idx_kb_suggestions_article_id ON kb_suggestions(article_id);
 
@@ -687,8 +719,11 @@ CREATE POLICY "Users can create messages" ON support_messages
     );
 
 -- Knowledge base policies
-CREATE POLICY "Anyone can view active KB articles" ON kb_articles
-    FOR SELECT USING (is_active = true);
+CREATE POLICY "Anyone can view KB articles" ON kb_articles
+    FOR SELECT USING (true);
+
+CREATE POLICY "Authenticated users can manage KB articles" ON kb_articles
+    FOR ALL USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Anyone can view KB chunks" ON kb_chunks
     FOR SELECT USING (true);

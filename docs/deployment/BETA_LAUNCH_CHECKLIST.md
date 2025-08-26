@@ -129,3 +129,7 @@ NEXTAUTH_URL=https://beta.bookiji.com
 ---
 
 *Last updated: August 24, 2025*
+
+
+
+

@@ -41,6 +41,19 @@ create trigger update_kb_embeddings_updated_at
     for each row 
     execute function update_embeddings_updated_at();
 
+-- Function to generate query embeddings (requires OpenAI API)
+create or replace function get_query_embedding(query_text text)
+returns vector(1536)
+language plpgsql
+as $$
+begin
+  -- This function will be called by the edge function
+  -- For now, return a placeholder vector
+  -- In production, the edge function will call OpenAI to get real embeddings
+  return array_fill(0.0, ARRAY[1536])::vector;
+end;
+$$;
+
 -- Enhanced search function with chunking support
 create or replace function kb_search(
   q_embedding vector(1536),
