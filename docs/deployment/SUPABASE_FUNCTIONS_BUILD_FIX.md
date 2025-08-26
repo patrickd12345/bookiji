@@ -32,9 +32,9 @@ These Deno-specific imports are incompatible with the Node.js-based Next.js buil
 
 Created `scripts/build-without-supabase-functions.js` that:
 
-- Temporarily renames/moves Supabase function files during build
+- Temporarily renames the specific Supabase function file during build
 - Runs the Next.js build without Deno import conflicts
-- Restores the files after successful build
+- Automatically restores the file after successful build
 
 ### 2. Package.json Updates
 
@@ -83,7 +83,7 @@ supabase/functions/**/*
 ✅ **Build Success**: Eliminates Deno import errors  
 ✅ **File Preservation**: Supabase functions remain intact  
 ✅ **Automated**: No manual intervention required  
-✅ **Robust**: Handles both file and directory scenarios  
+✅ **Simple & Robust**: Uses basic file operations compatible with all Node.js versions  
 ✅ **Vercel Compatible**: Works in production deployments  
 
 ## Usage
@@ -165,4 +165,4 @@ If you encounter issues:
 ---
 
 *Last updated: $(date)*
-*Build script version: 2.0*
+*Build script version: 3.0 (Simplified)*
