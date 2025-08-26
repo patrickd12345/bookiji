@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build",
+    "build": "node scripts/build-without-supabase-functions.js",
+    "vercel:build": "node scripts/build-without-supabase-functions.js",
     "start": "next start",
     "start:ci": "next start -p 3000",
     "lint": "next lint",

@@ -98,12 +98,34 @@ pnpm dev
 # Run tests
 pnpm test
 pnpm vitest run
-
-# Test starter commit endpoints
-curl -X POST http://localhost:3000/api/quote \
-  -H "Content-Type: application/json" \
-  -d '{"intent":"test","location":{"lat":40.7128,"lon":-74.0060}}'
 ```
+
+## 🔧 **Build & Deployment**
+
+### **Local Build**
+```bash
+# Standard build (handles Supabase functions automatically)
+pnpm run build
+
+# Direct Next.js build (if needed)
+npx next build
+```
+
+### **Vercel Deployment**
+The project includes automatic handling of Supabase Edge Functions during build:
+
+- **Build Script**: `scripts/build-without-supabase-functions.js` temporarily moves Deno functions
+- **Configuration**: `.vercelignore` and `tsconfig.json` exclude incompatible files
+- **Result**: Clean builds without Deno import conflicts
+
+For detailed information, see [SUPABASE_FUNCTIONS_BUILD_FIX.md](docs/deployment/SUPABASE_FUNCTIONS_BUILD_FIX.md).
+
+### **Build Issues**
+If you encounter build problems:
+
+1. **Deno Import Errors**: The build script automatically handles these
+2. **TypeScript Issues**: Check `tsconfig.json` exclusions
+3. **Vercel Failures**: Verify `.vercelignore` is committed
 
 ---
 
