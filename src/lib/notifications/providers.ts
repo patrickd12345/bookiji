@@ -6,6 +6,7 @@ export interface NotificationResult {
   error?: string
   providerResponse?: string
   id?: string
+  message?: string
 }
 
 // Email notification handler
@@ -192,4 +193,3 @@ function generatePushContent(template: string, data: Record<string, unknown>) {
     icon: '/icons/default.png'
   }
 }
-

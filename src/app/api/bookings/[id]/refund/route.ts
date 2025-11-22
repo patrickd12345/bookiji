@@ -5,9 +5,10 @@ import { processRefund } from '@/lib/services/refundService'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await props.params;
     const supabase = createSupabaseServerClient()
     
     // Get user session
@@ -20,7 +21,7 @@ export async function POST(
     const adminUser = await requireAdmin(session)
 
     const body = await request.json().catch(() => ({}))
-    const result = await processRefund(params.id, body)
+    const result = await processRefund(id, body)
     const status = result.status === 'failed' ? 400 : 200
     return NextResponse.json(result, { status })
   } catch (e: unknown) {

@@ -48,3 +48,7 @@ export const CardDescription = ({ className = "", ...props }: CardProps) => (
     {...props} 
   />
 );
+
+export const CardFooter = ({ className = "", ...props }: CardProps) => (
+  <div className={combineClasses("flex items-center p-6 pt-0", className)} {...props} />
+);

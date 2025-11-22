@@ -3,7 +3,7 @@ import { join } from 'path'
 
 export default function CompliancePage() {
   // Read the audit markdown file
-  const auditPath = join(process.cwd(), 'ADSENSE_COMPLIANCE_AUDIT.md')
+  const auditPath = join(process.cwd(), 'docs', 'user-guides', 'ADSENSE_COMPLIANCE_AUDIT.md')
   const auditContent = readFileSync(auditPath, 'utf-8')
 
   return (
@@ -40,4 +40,4 @@ export default function CompliancePage() {
       </div>
     </div>
   )
-} 
+}
