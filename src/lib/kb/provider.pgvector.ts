@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { KBProvider, KBArticle, KBSearchResult, Locale, Section } from './types';
+import { ollamaService } from '@/lib/ollama';
 
 // This will be the production provider using pgvector
 export class PgVectorProvider implements KBProvider {
@@ -132,7 +133,7 @@ export class PgVectorProvider implements KBProvider {
     // For now, synthesize a simple answer from the top result
     // In production, you'd send this to an LLM for proper synthesis
     const topResult = searchResults[0];
-    const answer = this.synthesizeAnswer(query, topResult, searchResults);
+    const answer = await this.synthesizeAnswer(query, topResult, searchResults);
 
     return {
       text: answer,
@@ -172,24 +173,28 @@ export class PgVectorProvider implements KBProvider {
     return snippet;
   }
 
-  private synthesizeAnswer(query: string, topResult: KBSearchResult, allResults: KBSearchResult[]): string {
-    // Simple answer synthesis - in production, use LLM
-    const queryLower = query.toLowerCase();
-    
-    if (queryLower.includes('hold') || queryLower.includes('charge')) {
-      return 'We place a temporary $1 authorization to verify your payment method. It is not a charge and disappears automatically within 1-3 business days.';
+  private async synthesizeAnswer(query: string, topResult: KBSearchResult, allResults: KBSearchResult[]): Promise<string> {
+    try {
+      // Use Ollama to synthesize a better answer based on the context
+      const context = allResults.map(r => r.snippet).join('\n\n');
+      
+      const prompt = `
+You are Bookiji's Knowledge Base AI. A user asked: "${query}"
+
+Use the following context from our knowledge base to answer the question.
+If the context doesn't contain the answer, say "I don't have enough information to answer that specifically."
+
+Context:
+${context}
+
+Answer in a helpful, friendly tone. Keep it under 100 words.
+`;
+
+      return await ollamaService.generate(prompt);
+    } catch (error) {
+      console.error('AI synthesis failed, falling back to snippet:', error);
+      return topResult.snippet;
     }
-    
-    if (queryLower.includes('payout') || queryLower.includes('payment')) {
-      return 'Vendors receive payouts on a weekly schedule after bookings are confirmed and completed. Payments are typically processed every Tuesday.';
-    }
-    
-    if (queryLower.includes('cancel') || queryLower.includes('refund')) {
-      return 'Bookings can be cancelled up to 24 hours before the scheduled time for a full refund. Cancellations within 24 hours may incur a cancellation fee.';
-    }
-    
-    // Default to top result snippet
-    return topResult.snippet;
   }
 }
 
