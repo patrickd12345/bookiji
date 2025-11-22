@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { OllamaService } from '../../lib/ollama'
+import { OllamaService } from '@/lib/ollama'
 
 // Mock the entire fetch module
 vi.mock('node-fetch', () => ({

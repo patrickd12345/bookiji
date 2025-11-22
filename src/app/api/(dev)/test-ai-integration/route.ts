@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { ollamaService } from '../../../../lib/ollama'
+import { ollamaService } from '@/lib/ollama'
 
 export async function GET() {
   const testResults = {

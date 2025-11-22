@@ -1,4 +1,4 @@
-import { ollamaService, BOOKIJI_PROMPTS } from '../../lib/ollama';
+import { ollamaService, BOOKIJI_PROMPTS } from '@/lib/ollama';
 
 export const generateAIResponse = async (input: string): Promise<string> => {
   try {

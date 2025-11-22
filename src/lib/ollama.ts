@@ -2,7 +2,7 @@
 // Handles local AI interactions for Bookiji with robust timeout handling
 
 import fetch from 'node-fetch'
-import { getAIConfig } from '../src/config/ai'
+import { getAIConfig } from '@/config/ai'
 
 const OLLAMA_ENDPOINT = process.env.OLLAMA_ENDPOINT || process.env.NEXT_PUBLIC_LLM_URL || 'http://localhost:11434'
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'codellama'

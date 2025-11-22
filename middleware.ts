@@ -6,6 +6,8 @@ import { adminGuard } from './src/middleware/adminGuard'
 const rateLimitMap = new Map<string, number[]>()
 const adminRateLimitMap = new Map<string, number[]>()
 
+const isProd = process.env.NODE_ENV === 'production'
+
 // Rate limit configuration
 const MAX_REQUESTS = 60
 const WINDOW_MS = 60 * 1000 // 60 seconds
@@ -60,6 +62,16 @@ function getClientIP(request: NextRequest): string {
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
+  
+  // Block test routes in production
+  if (isProd && (
+    pathname.includes('/test-') || 
+    pathname.includes('/simple-test') ||
+    pathname.includes('/theme-demo') ||
+    pathname.startsWith('/api/test')
+  )) {
+    return new NextResponse('Not Found', { status: 404 })
+  }
   
   // Apply admin guard first for all admin routes
   if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {

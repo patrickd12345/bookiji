@@ -15,7 +15,7 @@
     "context": "node startup-context.js",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run",
+    "test:run": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vitest run",
     "test:coverage": "vitest run --coverage",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
@@ -34,7 +34,6 @@
     "seo:test": "concurrently -k -s first \"pnpm start:ci\" \"wait-on http://localhost:3000 && pnpm seo:check\"",
     "seo:indexnow": "tsx scripts/indexnow-push.ts",
     "bootstrap-kb": "tsx scripts/bootstrap-bookiji-kb.ts",
-
     "prebuild": "npm run i18n:check",
     "prepare": "husky install"
   },
@@ -115,6 +114,7 @@
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.15",
     "concurrently": "^9.0.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
     "gray-matter": "^4.0.3",

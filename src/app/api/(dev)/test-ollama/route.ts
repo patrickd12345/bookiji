@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { ollamaService, BOOKIJI_PROMPTS } from '../../../../lib/ollama'
+import { ollamaService, BOOKIJI_PROMPTS } from '@/lib/ollama'
 
 export async function GET() {
   try {

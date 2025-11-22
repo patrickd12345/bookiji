@@ -138,7 +138,7 @@ vi.mock('@/lib/referrals', () => ({
 }))
 
 // Mock Ollama service
-vi.mock('../../../../lib/ollama', () => ({
+vi.mock('@/lib/ollama', () => ({
   ollamaService: {
     generate: vi.fn(() => Promise.resolve("Hi there! I'm Bookiji, your AI booking assistant. I'd be happy to help you with your booking request."))
   },

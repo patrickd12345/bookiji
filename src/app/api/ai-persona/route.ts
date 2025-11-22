@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { limitRequest } from '@/middleware/requestLimiter'
-import { ollamaService, BOOKIJI_PROMPTS } from '../../../../lib/ollama'
+import { ollamaService, BOOKIJI_PROMPTS } from '@/lib/ollama'
 
 export async function POST(request: Request) {
   try {
