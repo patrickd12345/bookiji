@@ -48,18 +48,25 @@ export default function ProviderMap({
   }
 
   // Convert quote candidates to map markers
-  const convertCandidatesToMarkers = useCallback((candidates: any[]): ProviderMarker[] => {
-    return candidates.map(candidate => ({
-      id: candidate.provider_id,
-      position: [candidate.location?.lat || 0, candidate.location?.lon || 0],
-      title: candidate.provider_name || 'Provider',
-      description: candidate.specialty || 'Service provider',
-      price: candidate.price_cents,
-      rating: candidate.rating,
-      specialty: candidate.specialty,
-      isAvailable: candidate.is_available !== false,
-      data: candidate
-    }))
+  // Note: We need to fetch provider locations separately since quote API doesn't return lat/lng
+  const convertCandidatesToMarkers = useCallback(async (candidates: any[], centerLat: number, centerLng: number): Promise<ProviderMarker[]> => {
+    // For now, use center location with jitter for visualization
+    // In production, you'd fetch actual provider_locations from Supabase
+    return candidates.map((candidate, index) => {
+      // Add small random offset for visualization (in production, use real location)
+      const jitter = 0.01 * (Math.random() - 0.5)
+      return {
+        id: candidate.id,
+        position: [centerLat + jitter, centerLng + jitter] as [number, number],
+        title: candidate.name || 'Provider',
+        description: `Distance: ${candidate.distance_km?.toFixed(1)}km`,
+        price: candidate.estimated_price_cents,
+        rating: candidate.rating,
+        specialty: undefined,
+        isAvailable: candidate.availability_score > 0.5,
+        data: candidate
+      }
+    })
   }, [])
 
   // Fetch providers from quote API
@@ -70,34 +77,48 @@ export default function ProviderMap({
       setIsLoading(true)
       setError(null)
 
+      const centerLat = bounds?.center?.[0] || mapConfig.center[0]
+      const centerLng = bounds?.center?.[1] || mapConfig.center[1]
+      const radiusKm = (bounds?.radius || 5000) / 1000 // Convert meters to km
+
+      // Format date_time for 1 hour from now
+      const dateTime = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+
       const response = await fetch('/api/quote', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          intent: 'haircut',
+          service_type: 'haircut',
           location: {
-            lat: bounds?.center?.[0] || mapConfig.center[0],
-            lon: bounds?.center?.[1] || mapConfig.center[1]
+            latitude: centerLat,
+            longitude: centerLng,
+            radius_km: radiusKm
           },
-          radius: bounds?.radius || 5000 // 5km radius
+          date_time: dateTime,
+          duration_minutes: 60
         })
       })
 
       if (!response.ok) {
-        throw new Error(`Quote API failed: ${response.status}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Quote API failed: ${response.status}`)
       }
 
       const data = await response.json()
       
-      if (data.ok && data.data?.candidates) {
-        const newMarkers = convertCandidatesToMarkers(data.data.candidates)
+      // API returns { quote_id, candidates, ... }
+      if (data.candidates && Array.isArray(data.candidates)) {
+        const newMarkers = await convertCandidatesToMarkers(data.candidates, centerLat, centerLng)
         setMarkers(newMarkers)
+      } else {
+        setMarkers([])
       }
     } catch (err) {
       console.error('Failed to fetch providers:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch providers')
+      setMarkers([]) // Clear markers on error
     } finally {
       setIsLoading(false)
     }
@@ -180,8 +201,18 @@ export default function ProviderMap({
       
       {/* Error overlay */}
       {error && (
-        <div className="absolute bottom-4 left-4 bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded text-sm">
-          {error}
+        <div className="absolute bottom-4 left-4 bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded text-sm max-w-md z-50">
+          <div className="font-medium mb-1">⚠️ Failed to fetch</div>
+          <div className="text-xs mb-2">{error}</div>
+          <button
+            onClick={() => {
+              setError(null)
+              fetchProviders()
+            }}
+            className="text-xs underline hover:no-underline font-medium"
+          >
+            Try again
+          </button>
         </div>
       )}
       

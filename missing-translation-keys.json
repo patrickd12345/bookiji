@@ -1,0 +1,105 @@
+{
+  "totalMissing": 32,
+  "missingKeys": [
+    "buttons.book_appointment",
+    "buttons.close",
+    "buttons.offer_services",
+    "buttons.start_interactive_tour",
+    "buttons.try_again",
+    "buttons.watch_demo",
+    "cta.explore_features",
+    "cta.see_it_action",
+    "demo.experience_body",
+    "demo.experience_title",
+    "demo.platform_title",
+    "demo.step1.body",
+    "demo.step1.title",
+    "demo.step2.body",
+    "demo.step2.title",
+    "demo.step3.body",
+    "demo.step3.title",
+    "demo.step4.body",
+    "demo.step4.title",
+    "density.dense",
+    "density.medium",
+    "density.sparse",
+    "feature.map_protection.desc",
+    "feature.map_protection.title",
+    "label.provider_density",
+    "label.service",
+    "locale.select_language_region",
+    "privacy.active",
+    "privacy.explainer",
+    "radius.analyzing",
+    "radius.recommended",
+    "radius.refresh"
+  ],
+  "incompleteLocales": [
+    "ar-SA",
+    "cs-CZ",
+    "da-DK",
+    "en-IN",
+    "fi-FI",
+    "hu-HU",
+    "id-ID",
+    "ms-MY",
+    "nl-NL",
+    "no-NO",
+    "pl-PL",
+    "ru-RU",
+    "sv-SE",
+    "tr-TR",
+    "uk-UA"
+  ],
+  "categories": {
+    "demo.*": [
+      "demo.experience_body",
+      "demo.experience_title",
+      "demo.platform_title",
+      "demo.step1.body",
+      "demo.step1.title",
+      "demo.step2.body",
+      "demo.step2.title",
+      "demo.step3.body",
+      "demo.step3.title",
+      "demo.step4.body",
+      "demo.step4.title"
+    ],
+    "chat.*": [],
+    "home.*": [],
+    "feature.*": [
+      "feature.map_protection.desc",
+      "feature.map_protection.title"
+    ],
+    "radius.*": [
+      "radius.analyzing",
+      "radius.recommended",
+      "radius.refresh"
+    ],
+    "privacy.*": [
+      "privacy.active",
+      "privacy.explainer"
+    ],
+    "theme.*": [],
+    "buttons.*": [
+      "buttons.book_appointment",
+      "buttons.close",
+      "buttons.offer_services",
+      "buttons.start_interactive_tour",
+      "buttons.try_again",
+      "buttons.watch_demo"
+    ],
+    "cta.*": [
+      "cta.explore_features",
+      "cta.see_it_action"
+    ],
+    "other": [
+      "density.dense",
+      "density.medium",
+      "density.sparse",
+      "label.provider_density",
+      "label.service",
+      "locale.select_language_region"
+    ]
+  }
+}

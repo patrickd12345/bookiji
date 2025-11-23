@@ -1,60 +1,8 @@
 {
-    "version": 2,
-    "routes": [
-      {
-        "src": "/api/v1/support/ping",
-        "dest": "/api/v1/support/ping",
-        "methods": ["GET"],
-        "headers": {
-          "Access-Control-Allow-Origin": "*",
-          "Cache-Control": "no-store"
-        }
-      },
-      {
-        "src": "/api/v1/support/health",
-        "dest": "/api/v1/support/health",
-        "methods": ["GET"],
-        "headers": {
-          "Access-Control-Allow-Origin": "*",
-          "Cache-Control": "no-store"
-        }
-      },
-      {
-        "src": "/api/v1/support/health-alt",
-        "dest": "/api/v1/support/health-alt",
-        "methods": ["GET"],
-        "headers": {
-          "Access-Control-Allow-Origin": "*",
-          "Cache-Control": "no-store"
-        }
-      },
-      {
-        "src": "/api/v1/support/digest",
-        "dest": "/api/v1/support/digest",
-        "methods": ["GET", "POST"],
-        "headers": {
-          "Access-Control-Allow-Origin": "*",
-          "Cache-Control": "no-store"
-        }
-      },
-      {
-        "src": "/api/v1/support/tickets",
-        "dest": "/api/v1/support/tickets",
-        "methods": ["GET", "POST", "PATCH"],
-        "headers": {
-          "Access-Control-Allow-Origin": "*",
-          "Cache-Control": "no-store"
-        }
-      },
-      {
-        "src": "/api/v1/support/privacy",
-        "dest": "/api/v1/support/privacy",
-        "methods": ["GET"],
-        "headers": {
-          "Access-Control-Allow-Origin": "*",
-          "Cache-Control": "no-store"
-        }
-      }
-    ]
-  }
-  
+  "crons": [
+    {
+      "path": "/api/notifications/batch/process",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

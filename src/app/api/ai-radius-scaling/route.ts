@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       // Fallback heuristic if AI is unavailable or fails
       const density = (providerDensity || 'medium').toLowerCase()
       if (density === 'dense') recommendedRadius = 3
-      else if (density === 'sparse') recommendedRadius = 10
+      else if (density === 'sparse') recommendedRadius = 15 // Increased to match AI recommendation
       else recommendedRadius = 5
       explanation = `AI unavailable. Applied heuristic for ${density} areas.`
     }

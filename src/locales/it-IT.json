@@ -92,5 +92,16 @@
   "density.dense": "alta",
   "density.medium": "media",
   "density.sparse": "bassa",
-  "cta.explore_features": "Esplora le funzionalità di Bookiji"
+  "cta.explore_features": "Esplora le funzionalità di Bookiji",
+  "demo.platform_title": "Demo Piattaforma Bookiji",
+  "demo.experience_title": "Vivi Bookiji in Azione",
+  "demo.experience_body": "Guarda quanto è facile prenotare servizi con la nostra piattaforma con IA. Dalla ricerca di fornitori al completamento dei pagamenti in secondi.",
+  "demo.step1.title": "Passo 1: Trova il Tuo Servizio",
+  "demo.step1.body": "Usa la nostra chat IA o la ricerca per trovare esattamente ciò di cui hai bisogno",
+  "demo.step2.title": "Passo 2: Scegli la Posizione",
+  "demo.step2.body": "Il nostro sistema di raggio intelligente trova fornitori vicini proteggendo la privacy",
+  "demo.step3.title": "Passo 3: Impegno $1",
+  "demo.step3.body": "Paga solo $1 per confermare la tua prenotazione - nessun costo nascosto",
+  "demo.step4.title": "Passo 4: Conferma Istantanea",
+  "demo.step4.body": "Ricevi conferma immediata e dettagli del fornitore"
 }
