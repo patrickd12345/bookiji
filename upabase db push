@@ -1,0 +1,25 @@
+[33m0a32444[m[33m ([m[1;32mfeat/phone-only-cancel[m[33m)[m checkpoint before checking out bookiji
+[33ma8c8062[m[33m ([m[1;31morigin/feat/phone-only-cancel[m[33m)[m fix: Improve TypeScript typings in shout-out flow tests and ThemeSwitcher component
+[33mb1d4e30[m fix: Resolve TypeScript errors in shout-out API routes
+[33m52da1d2[m refactor: enhance fetch mock implementations in shout-out flow tests
+[33m245edc6[m fix: update performance thresholds and test results
+[33m5ec1c05[m docs: Add migration guard system and documentation
+[33md95844c[m chore: Update dependencies and quality system
+[33m381e5bb[m feat: Add shout-out system and update migrations
+[33mc496118[m feat: Complete admin system with operational controls
+[33m3c7ec31[m Misscelaneous
+[33mb441c3f[m docs(tracking): add Status vs. Recommendations + 2-week sprint; update last-updated date
+[33m9cf2ec8[m chore: update pnpm-lock.yaml to include fast-glob@3.3.3 and prettier@3.6.2; add devDependencies for playwright testing
+[33ma273f21[m chore(husky): remove deprecated husky.sh sourcing; simplify hook to pnpm lint-staged
+[33m922cc52[m feat: add dialog focus-trap probe + weekly content audit; complete a11y testing suite
+[33me439076[m feat: implement lock-in guards and comprehensive ops card for development reliability
+[33mb31951b[m test: verify husky pre-commit hook working
+[33m8a33c8f[m fix: resolve playwright webServer configuration and improve test stability
+[33mda6a750[m feat: restore hardened setup with modern husky, a11y tests, and skip-link accessibility
+[33m56915aa[m chore: finalize husky v9 pre-commit hook
+[33mce97c69[m fix: update husky to v9 format and fix eslint config
+[33mf8df5ff[m chore: update GitHub Actions workflows to specify environments for production and preview; adjust secret usage for sensitive variables
+[33m9487106[m refactor: streamline middleware for admin route protection, enhance security headers, and update Playwright testing configurations; improve documentation on QA safety nets and booking fee clarity
+[33m90790ea[m feat: implement comprehensive CI/CD pipeline with GitHub Actions, Vercel, and Playwright testing
+[33md52516b[m feat: introduce user feedback mechanism for booking confirmations and enhance notification system for improved user experience
+[33m99aa433[m feat: implement phone-only cancellation policy and update related messaging across the application; enhance middleware for legacy route redirection

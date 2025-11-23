@@ -18,7 +18,7 @@ export interface ProviderMarker {
   rating?: number
   specialty?: string
   isAvailable?: boolean
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 }
 
 export interface MapBounds {
@@ -30,7 +30,7 @@ export interface MapBounds {
 
 export interface MapEvent {
   type: 'click' | 'drag' | 'zoom' | 'bounds_change'
-  data: any
+  data: unknown
 }
 
 export interface MapAdapterInterface {
@@ -39,6 +39,8 @@ export interface MapAdapterInterface {
   teardown: () => void
   getBounds: () => MapBounds | null
   fitBounds: (bounds: MapBounds) => void
+  setCenter: (center: [number, number]) => void
+  setZoom: (zoom: number) => void
   on: (event: string, callback: (event: MapEvent) => void) => void
   off: (event: string, callback: (event: MapEvent) => void) => void
 }

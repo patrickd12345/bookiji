@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import mapboxgl from 'mapbox-gl'
 import { MapConfig, ProviderMarker, MapBounds, MapEvent, MapAdapterInterface } from '@/types/maps'
 
@@ -31,7 +30,7 @@ export default class MapboxMap implements MapAdapterInterface {
     this.map = new mapboxgl.Map({
       container,
       style: this.config.style || 'mapbox://styles/mapbox/streets-v11',
-      center: this.config.center,
+      center: [this.config.center[1], this.config.center[0]], // [lng, lat]
       zoom: this.config.zoom,
       attributionControl: true
     })
@@ -63,7 +62,7 @@ export default class MapboxMap implements MapAdapterInterface {
         color: markerData.isAvailable ? '#10B981' : '#6B7280',
         scale: 0.8
       })
-        .setLngLat(markerData.position)
+        .setLngLat([markerData.position[1], markerData.position[0]]) // [lng, lat]
         .setPopup(
           new mapboxgl.Popup({ offset: 25 })
             .setHTML(this.createMarkerPopup(markerData))
@@ -114,6 +113,16 @@ export default class MapboxMap implements MapAdapterInterface {
       [bounds.east, bounds.north]
     )
     this.map.fitBounds(mapboxBounds, { padding: 50 })
+  }
+
+  setCenter(center: [number, number]): void {
+    if (!this.map) return
+    this.map.setCenter([center[1], center[0]]) // [lng, lat]
+  }
+
+  setZoom(zoom: number): void {
+    if (!this.map) return
+    this.map.setZoom(zoom)
   }
 
   on(event: string, callback: (event: MapEvent) => void): void {

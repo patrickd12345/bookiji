@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import { MapConfig, ProviderMarker, MapBounds, MapEvent, MapAdapterInterface } from '@/types/maps'
 
@@ -8,6 +7,7 @@ import { MapConfig, ProviderMarker, MapBounds, MapEvent, MapAdapterInterface } f
 import 'leaflet/dist/leaflet.css'
 
 // Fix Leaflet marker icons
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -126,6 +126,16 @@ export default class LeafletMap implements MapAdapterInterface {
       [bounds.north, bounds.east]
     )
     this.map.fitBounds(leafletBounds, { padding: [50, 50] })
+  }
+
+  setCenter(center: [number, number]): void {
+    if (!this.map) return
+    this.map.setView(center, this.map.getZoom())
+  }
+
+  setZoom(zoom: number): void {
+    if (!this.map) return
+    this.map.setZoom(zoom)
   }
 
   on(event: string, callback: (event: MapEvent) => void): void {

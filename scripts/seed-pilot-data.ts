@@ -159,14 +159,20 @@ function generateUsers(): UserData[] {
 /**
  * Generate services for vendors
  */
-function generateServices(vendors: VendorData[]): ServiceData[] {
+function generateServices(vendors: VendorData[], idMap: Record<string, string>): ServiceData[] {
   const services: ServiceData[] = []
   
   vendors.forEach(vendor => {
+    const realProviderId = idMap[vendor.id]
+    if (!realProviderId) {
+      console.warn(`Skipping services for vendor ${vendor.id} (no real ID found)`)
+      return
+    }
+
     // Base service
     services.push({
-      id: `service-${vendor.id}-base`,
-      vendorId: vendor.id,
+      id: faker.string.uuid(),
+      vendorId: realProviderId,
       name: `${vendor.specialty.charAt(0).toUpperCase() + vendor.specialty.slice(1)}`,
       description: vendor.description,
       priceCents: vendor.basePrice,
@@ -176,8 +182,8 @@ function generateServices(vendors: VendorData[]): ServiceData[] {
     
     // Premium service
     services.push({
-      id: `service-${vendor.id}-premium`,
-      vendorId: vendor.id,
+      id: faker.string.uuid(),
+      vendorId: realProviderId,
       name: `Premium ${vendor.specialty}`,
       description: `Enhanced ${vendor.specialty} with premium products`,
       priceCents: vendor.basePrice + 2000, // +$20.00
@@ -187,8 +193,8 @@ function generateServices(vendors: VendorData[]): ServiceData[] {
     
     // Express service
     services.push({
-      id: `service-${vendor.id}-express`,
-      vendorId: vendor.id,
+      id: faker.string.uuid(),
+      vendorId: realProviderId,
       name: `Express ${vendor.specialty}`,
       description: `Quick ${vendor.specialty} service`,
       priceCents: vendor.basePrice - 1000, // -$10.00
@@ -203,8 +209,9 @@ function generateServices(vendors: VendorData[]): ServiceData[] {
 /**
  * Seed vendors to database
  */
-async function seedVendors(vendors: VendorData[]): Promise<void> {
+async function seedVendors(vendors: VendorData[]): Promise<Record<string, string>> {
   console.log('🌱 Seeding vendors...')
+  const idMap: Record<string, string> = {}
   
   for (const vendor of vendors) {
     try {
@@ -223,12 +230,15 @@ async function seedVendors(vendors: VendorData[]): Promise<void> {
         console.error(`Failed to create vendor user ${vendor.email}:`, userError)
         continue
       }
+
+      const realId = userData.user.id
+      idMap[vendor.id] = realId
       
       // Create vendor profile
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
-          id: userData.user.id,
+          id: realId,
           email: vendor.email,
           first_name: vendor.name.split(' ')[0],
           last_name: vendor.name.split(' ').slice(1).join(' '),
@@ -247,7 +257,7 @@ async function seedVendors(vendors: VendorData[]): Promise<void> {
       const { error: locationError } = await supabase
         .from('provider_locations')
         .insert({
-          provider_id: userData.user.id,
+          provider_id: realId,
           latitude: vendor.lat,
           longitude: vendor.lng,
           city: vendor.city,
@@ -265,7 +275,7 @@ async function seedVendors(vendors: VendorData[]): Promise<void> {
       const { error: specialtyError } = await supabase
         .from('vendor_specialties')
         .insert({
-          provider_id: userData.user.id,
+          provider_id: realId,
           specialty: vendor.specialty,
           is_primary: true,
           created_at: new Date().toISOString(),
@@ -282,6 +292,7 @@ async function seedVendors(vendors: VendorData[]): Promise<void> {
       console.error(`Failed to seed vendor ${vendor.name}:`, error)
     }
   }
+  return idMap
 }
 
 /**
@@ -380,19 +391,21 @@ async function seedPilotData(): Promise<void> {
     // Generate data
     const vendors = generateVendors()
     const users = generateUsers()
-    const services = generateServices(vendors)
     
-    console.log(`📊 Generated data:`)
+    console.log(`📊 Data plan:`)
     console.log(`   Vendors: ${vendors.length}`)
     console.log(`   Users: ${users.length}`)
-    console.log(`   Services: ${services.length}`)
     console.log('')
     
     // Seed data
-    await seedVendors(vendors)
+    const idMap = await seedVendors(vendors)
     console.log('')
+    
     await seedUsers(users)
     console.log('')
+    
+    const services = generateServices(vendors, idMap)
+    console.log(`   Services: ${services.length}`)
     await seedServices(services)
     
     console.log('=====================================')
