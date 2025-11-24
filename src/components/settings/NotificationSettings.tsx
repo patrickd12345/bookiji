@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Bell, Mail, MessageSquare, Smartphone } from 'lucide-react'
+import { pushNotificationManager } from '@/lib/notifications/pushNotifications'
 
 interface Preferences {
   email_enabled: boolean
@@ -42,12 +43,41 @@ export function NotificationSettings() {
     }
   }
 
-  const handleToggle = (key: keyof Preferences) => {
+  const handleToggle = async (key: keyof Preferences) => {
     if (!preferences) return
+    
+    // Handle Push Notification Logic
+    if (key === 'push_enabled' && !preferences.push_enabled) {
+      // Enabling push - request permission
+      try {
+        // Initialize manager if needed (it might have failed init if permission was default/denied)
+        // We can't access private init, but we can try requestPermission logic via manager if exposed,
+        // or just rely on the fact that we are toggling it.
+        
+        // NOTE: pushNotificationManager.init() is private and called in constructor.
+        // But requestPermission is private too. 
+        // We need to expose a public method to enable notifications or just check permission here.
+        
+        // Since the manager is already instantiated, we might need to check browser permission directly 
+        // or add a public method to manager. 
+        // For now, let's assume we just toggle state, but ideally we should request permission.
+        
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          setMessage({ type: 'error', text: 'Permission denied for push notifications' });
+          return; // Don't toggle if denied
+        }
+        
+        // Update manager preferences
+        pushNotificationManager.updatePreferences({ enabled: true });
+      } catch (error) {
+        console.error('Error requesting push permission:', error);
+      }
+    } else if (key === 'push_enabled' && preferences.push_enabled) {
+        pushNotificationManager.updatePreferences({ enabled: false });
+    }
+
     setPreferences(prev => prev ? { ...prev, [key]: !prev[key] } : null)
-    // We can either auto-save or wait for save button. Auto-save is modern.
-    // Let's do auto-save with debounce or immediate for toggles?
-    // User explicit save is safer for now to show feedback.
   }
 
   const handleSave = async () => {

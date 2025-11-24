@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
 import { aiChatTutorialSteps, aiChatTutorialTourId } from '@/tours/aiChatTutorial'
+import VoiceInput from './VoiceInput'
+import { Mic } from 'lucide-react'
 
 interface Message {
   id: string
@@ -39,6 +41,7 @@ export default function AIConversationalInterface({
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState(initialMessage)
   const [isTyping, setIsTyping] = useState(false)
+  const [showVoiceInput, setShowVoiceInput] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const { startTour, hasCompletedTour } = useGuidedTour()
@@ -149,6 +152,13 @@ export default function AIConversationalInterface({
     setMessages([])
     aiChat.reset()
   }, [aiChat])
+
+  const handleVoiceTranscript = useCallback((transcript: string) => {
+    setInputValue(transcript)
+    setShowVoiceInput(false)
+    // Optional: Auto-send if desired, but letting user review is usually better
+    // sendMessage(transcript)
+  }, [])
 
   return (
     <div className={cn('flex flex-col h-full bg-white rounded-lg border shadow-sm', className)}>
@@ -302,48 +312,81 @@ export default function AIConversationalInterface({
         <div className="mb-2 text-xs text-gray-500" data-tour="example-queries">
           Try questions like &quot;Book a haircut tomorrow&quot; or &quot;Find a spa near me&quot;.
         </div>
-        <form onSubmit={handleSubmit} className="flex gap-3">
-          <div className="flex-1 relative">
-            <textarea
-              ref={inputRef}
-              id="aiChatInput"
-              data-tour="chat-input"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={placeholder}
-              disabled={aiChat.loading}
-              className={cn(
-                'w-full resize-none rounded-lg border border-gray-300 p-3 pr-12',
-                'focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                'min-h-[44px] max-h-32'
-              )}
-              rows={1}
-            />
-            
-            {aiChat.loading && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <LoadingSpinner size="sm" variant="primary" />
-              </div>
-            )}
+
+        {showVoiceInput ? (
+          <div className="mb-4">
+             <div className="flex justify-between items-center mb-2">
+               <span className="text-sm font-medium">Voice Input</span>
+               <Button 
+                 variant="ghost" 
+                 size="sm" 
+                 onClick={() => setShowVoiceInput(false)}
+                 className="h-6 px-2"
+               >
+                 Cancel
+               </Button>
+             </div>
+             <VoiceInput 
+               onTranscriptAction={handleVoiceTranscript}
+               onError={(err) => console.error(err)}
+               autoStart={true}
+             />
           </div>
-          
-          <Button
-            type="submit"
-            disabled={!inputValue.trim() || aiChat.loading}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {aiChat.loading ? (
-              <InlineLoader text="Sending..." />
-            ) : (
-              <>
-                <span>Send</span>
-                <span className="ml-2">🚀</span>
-              </>
-            )}
-          </Button>
-        </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex gap-3">
+            <div className="flex-1 relative">
+              <textarea
+                ref={inputRef}
+                id="aiChatInput"
+                data-tour="chat-input"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={placeholder}
+                disabled={aiChat.loading}
+                className={cn(
+                  'w-full resize-none rounded-lg border border-gray-300 p-3 pr-12',
+                  'focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                  'disabled:opacity-50 disabled:cursor-not-allowed',
+                  'min-h-[44px] max-h-32'
+                )}
+                rows={1}
+              />
+              
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                {aiChat.loading ? (
+                  <LoadingSpinner size="sm" variant="primary" />
+                ) : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 text-gray-500"
+                    onClick={() => setShowVoiceInput(true)}
+                    title="Use voice input"
+                  >
+                    <Mic className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <Button
+              type="submit"
+              disabled={!inputValue.trim() || aiChat.loading}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {aiChat.loading ? (
+                <InlineLoader text="Sending..." />
+              ) : (
+                <>
+                  <span>Send</span>
+                  <span className="ml-2">🚀</span>
+                </>
+              )}
+            </Button>
+          </form>
+        )}
         
         {/* Help Text */}
         <p className="text-xs text-gray-500 mt-2 text-center">
