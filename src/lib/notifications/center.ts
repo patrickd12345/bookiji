@@ -71,7 +71,38 @@ export async function notifyUser(
     await logNotification(userId, 'sms', phone, template, res)
   }
 
-  // 5. In-App Notification (Always insert into notifications table)
+  // 5. Send Push Notification (if enabled and user has subscription)
+  if (preferences.push_enabled) {
+    // Check if user has push subscriptions
+    const { data: subscriptions } = await supabase
+      .from('push_subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .limit(1)
+
+    if (subscriptions && subscriptions.length > 0) {
+      // Check if batching is enabled (from preferences or default)
+      const shouldBatch = true // TODO: Add batching preference to notification_preferences table
+      
+      if (shouldBatch) {
+        // Queue for batching
+        const { queueNotification } = await import('./batching')
+        await queueNotification(userId, {
+          title: formatTitle(template, data),
+          body: formatMessage(template, data),
+          type: template,
+          data: data
+        })
+      } else {
+        // Send immediately
+        const res = await sendPushNotification(subscriptions[0].endpoint, template, data)
+        results.push({ type: 'push', ...res })
+        await logNotification(userId, 'push', subscriptions[0].endpoint, template, res)
+      }
+    }
+  }
+
+  // 6. In-App Notification (Always insert into notifications table)
   // This assumes there is a 'notifications' table for the UI inbox
   try {
     await supabase.from('notifications').insert({

@@ -92,5 +92,16 @@
   "density.dense": "hoch",
   "density.medium": "mittel",
   "density.sparse": "gering",
-  "cta.explore_features": "Bookiji‑Funktionen erkunden"
+  "cta.explore_features": "Bookiji‑Funktionen erkunden",
+  "demo.platform_title": "Bookiji Plattform Demo",
+  "demo.experience_title": "Erleben Sie Bookiji in Aktion",
+  "demo.experience_body": "Sehen Sie, wie einfach es ist, Services mit unserer KI-gestützten Plattform zu buchen. Von der Anbietersuche bis zur Zahlungsabwicklung in Sekunden.",
+  "demo.step1.title": "Schritt 1: Finden Sie Ihren Service",
+  "demo.step1.body": "Nutzen Sie unseren KI-Chat oder die Suche, um genau das zu finden, was Sie brauchen",
+  "demo.step2.title": "Schritt 2: Standort Wählen",
+  "demo.step2.body": "Unser intelligentes Radius-System findet nahe Anbieter und schützt gleichzeitig die Privatsphäre",
+  "demo.step3.title": "Schritt 3: $1 Verpflichtung",
+  "demo.step3.body": "Zahlen Sie nur $1, um Ihre Buchung zu bestätigen - keine versteckten Gebühren",
+  "demo.step4.title": "Schritt 4: Sofortige Bestätigung",
+  "demo.step4.body": "Erhalten Sie sofortige Bestätigung und Anbieterdetails"
 }

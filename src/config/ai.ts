@@ -27,7 +27,7 @@ export interface AIConfig {
  */
 export const defaultAIConfig: AIConfig = {
   ollama: {
-    timeout: 15000, // 15 seconds
+    timeout: 60000, // 60 seconds (increased for slower AI operations)
     maxRetries: 2,
     retryDelay: 1000, // 1 second
     healthCheckTimeout: 5000, // 5 seconds
@@ -50,7 +50,7 @@ export const defaultAIConfig: AIConfig = {
 export function getAIConfig(): AIConfig {
   return {
     ollama: {
-      timeout: parseInt(process.env.OLLAMA_TIMEOUT || '15000', 10),
+      timeout: parseInt(process.env.OLLAMA_TIMEOUT || '60000', 10),
       maxRetries: parseInt(process.env.OLLAMA_MAX_RETRIES || '2', 10),
       retryDelay: parseInt(process.env.OLLAMA_RETRY_DELAY || '1000', 10),
       healthCheckTimeout: parseInt(process.env.OLLAMA_HEALTH_CHECK_TIMEOUT || '5000', 10),
@@ -72,7 +72,7 @@ export function getAIConfig(): AIConfig {
  * Environment variable documentation
  */
 export const AI_ENV_VARS = {
-  OLLAMA_TIMEOUT: 'Timeout for Ollama requests in milliseconds (default: 15000)',
+  OLLAMA_TIMEOUT: 'Timeout for Ollama requests in milliseconds (default: 60000)',
   OLLAMA_MAX_RETRIES: 'Maximum number of retry attempts (default: 2)',
   OLLAMA_RETRY_DELAY: 'Base delay between retries in milliseconds (default: 1000)',
   OLLAMA_HEALTH_CHECK_TIMEOUT: 'Timeout for health check requests (default: 5000)',

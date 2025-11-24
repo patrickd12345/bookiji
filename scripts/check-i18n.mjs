@@ -2,7 +2,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const localesDir = path.resolve('locales')
+const localesDir = path.resolve('src/locales')
 const baseLocale = 'en-US'
 const basePath = path.join(localesDir, `${baseLocale}.json`)
 const base = JSON.parse(fs.readFileSync(basePath, 'utf8'))
