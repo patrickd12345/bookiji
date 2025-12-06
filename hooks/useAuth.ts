@@ -34,6 +34,29 @@ export function getUserCapabilities(profile: UserProfile | null): UserCapabiliti
   }
 }
 
+const mapToUserProfile = (record: any, fallbackUserId?: string): UserProfile => {
+  const roles = Array.isArray(record?.roles)
+    ? record.roles
+    : record?.role
+      ? [record.role]
+      : ['customer']
+
+  const isAdmin = record?.is_admin ?? roles.includes('admin')
+
+  return {
+    user_id: record?.user_id || record?.id || fallbackUserId || 'unknown-user',
+    email: record?.email || 'unknown@example.com',
+    full_name: record?.full_name || 'User',
+    beta_status: record?.beta_status ?? null,
+    roles,
+    can_book_services: record?.can_book_services ?? (roles.includes('customer') || isAdmin),
+    can_offer_services: record?.can_offer_services ?? (roles.includes('vendor') || isAdmin),
+    is_admin: isAdmin,
+    created_at: record?.created_at ?? new Date().toISOString(),
+    updated_at: record?.updated_at ?? new Date().toISOString()
+  }
+}
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -41,6 +64,7 @@ export function useAuth() {
   const lastFetchedUserIdRef = useRef<string | null>(null)
   const initialProfileFetchedRef = useRef(false)
   const profileRef = useRef<UserProfile | null>(null)
+  const creationAttemptedRef = useRef<Set<string>>(new Set())
 
   // Temporary bypass for AdSense approval
   const isAdSenseApprovalMode = ADSENSE_APPROVAL_MODE
@@ -132,18 +156,7 @@ export function useAuth() {
             if (profileError.code === '500' || profileError.message.includes('500')) {
               console.error('❌ Server error (500) accessing profiles table - table may be corrupted')
               // Return a minimal profile to prevent app crashes
-              return {
-                user_id: userId,
-                email: 'unknown@example.com',
-                full_name: 'User',
-                beta_status: null,
-                roles: ['customer'],
-                can_book_services: true,
-                can_offer_services: false,
-                is_admin: false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              }
+              return mapToUserProfile({ user_id: userId, role: 'customer' }, userId)
             }
             console.error('Fallback profile query also failed:', profileError)
             return null
@@ -155,110 +168,80 @@ export function useAuth() {
           }
           
           // Create a basic UserProfile from profiles table data
-          const fallbackProfile: UserProfile = {
-            user_id: profileData.id,
-            email: profileData.email,
-            full_name: profileData.full_name,
-            beta_status: null, // Not available in profiles table
-            roles: profileData.role ? [profileData.role] : ['customer'],
-            can_book_services: profileData.role === 'customer' || profileData.role === 'admin',
-            can_offer_services: profileData.role === 'vendor' || profileData.role === 'admin',
-            is_admin: profileData.role === 'admin',
-            created_at: profileData.created_at,
-            updated_at: profileData.updated_at
-          }
+          const fallbackProfile: UserProfile = mapToUserProfile(profileData, userId)
           
           console.log('Created fallback profile:', fallbackProfile)
           return fallbackProfile
         } catch (fallbackError) {
           console.error('❌ Exception in fallback profile query:', fallbackError)
           // Return a minimal profile to prevent app crashes
-          return {
-            user_id: userId,
-            email: 'unknown@example.com',
-            full_name: 'User',
-            beta_status: null,
-            roles: ['customer'],
-            can_book_services: true,
-            can_offer_services: false,
-            is_admin: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
+          return mapToUserProfile({ user_id: userId, role: 'customer' }, userId)
         }
       }
 
       if (!data) {
         console.log('No user profile found for:', userId)
-        // Attempt to auto-create a minimal profile row for the user to stabilize UX
-        try {
-          const { data: existingProfile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', userId)
-            .maybeSingle()
-
-          if (!existingProfile) {
-            const { error: upsertError } = await supabase
-              .from('profiles')
-              .upsert({ id: userId, full_name: 'User', role: 'customer' }, { onConflict: 'id' })
-
-            if (upsertError) {
-              console.warn('Profile upsert error (non-fatal):', upsertError)
-            }
-          }
-
-          // Re-fetch after ensuring profile row exists
-          const { data: profileRow } = await supabase
-            .from('profiles')
-            .select('id, full_name, email, role, created_at, updated_at')
-            .eq('id', userId)
-            .maybeSingle()
-
-          if (profileRow) {
-            const fallbackProfile: UserProfile = {
-              user_id: profileRow.id,
-              email: profileRow.email,
-              full_name: profileRow.full_name,
-              beta_status: null,
-              roles: profileRow.role ? [profileRow.role] : ['customer'],
-              can_book_services: profileRow.role === 'customer' || profileRow.role === 'admin',
-              can_offer_services: profileRow.role === 'vendor' || profileRow.role === 'admin',
-              is_admin: profileRow.role === 'admin',
-              created_at: profileRow.created_at,
-              updated_at: profileRow.updated_at
-            }
-            return fallbackProfile
-          }
-        } catch (createErr) {
-          console.warn('Could not auto-create/fetch profile (non-fatal):', createErr)
-        }
+        // Return null - let server-side API handle profile creation/repair
+        // Client-side profile creation is unsafe and can pollute data without proper validation
+        console.warn('Profile creation should happen through authenticated API endpoints, not client-side')
         return null
       }
 
       // Ensure beta_status is present (set to null if missing)
-      const profile: UserProfile = {
-        ...data,
-        beta_status: data.beta_status || null
-      }
+      const profile = mapToUserProfile({ ...data, beta_status: data.beta_status || null }, userId)
 
       console.log('User profile fetched successfully:', profile)
       return profile
     } catch (error) {
       console.error('Exception in fetchUserProfile:', error)
       // Return a minimal profile to prevent app crashes
-      return {
-        user_id: userId,
-        email: 'unknown@example.com',
-        full_name: 'User',
-        beta_status: null,
-        roles: ['customer'],
-        can_book_services: true,
-        can_offer_services: false,
-        is_admin: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+      return mapToUserProfile({ user_id: userId, role: 'customer' }, userId)
+    }
+  }
+
+  const createProfileViaApi = async (userId: string): Promise<UserProfile | null> => {
+    if (creationAttemptedRef.current.has(userId)) {
+      return null
+    }
+
+    creationAttemptedRef.current.add(userId)
+
+    try {
+      const response = await fetch('/api/auth/profile/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'customer' }),
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        console.warn('Profile creation request failed:', response.status)
+        return null
       }
+
+      const result = await response.json()
+      if (result?.profile) {
+        return mapToUserProfile(result.profile, userId)
+      }
+    } catch (error) {
+      console.error('Error creating profile via API:', error)
+    }
+
+    return null
+  }
+
+  const loadProfileForUser = async (userId: string) => {
+    const userProfile = await fetchUserProfile(userId)
+    if (userProfile) {
+      setProfile(userProfile)
+      return
+    }
+
+    const createdProfile = await createProfileViaApi(userId)
+    if (createdProfile) {
+      setProfile(createdProfile)
+    } else {
+      setProfile(null)
     }
   }
 
@@ -292,8 +275,7 @@ export function useAuth() {
       
       if (session?.user) {
         console.log('User authenticated:', session.user.id)
-        fetchUserProfile(session.user.id).then((p) => {
-          setProfile(p)
+        loadProfileForUser(session.user.id).then(() => {
           initialProfileFetchedRef.current = true
         })
       } else {
@@ -323,8 +305,7 @@ export function useAuth() {
             return
           }
           console.log('Fetching profile for user:', session.user.id)
-          const userProfile = await fetchUserProfile(session.user.id)
-          setProfile(userProfile)
+          await loadProfileForUser(session.user.id)
         } else {
           console.log('Clearing user profile')
           setProfile(null)

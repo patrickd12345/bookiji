@@ -2,11 +2,23 @@ import NotifyForm from '@/components/NotifyForm'
 import HomePageClient from './HomePageClient'
 
 import { ADSENSE_APPROVAL_MODE } from "@/lib/adsense"
-// TEMPORARY: Show real site during AdSense approval mode (do not show maintenance page)
-const isProduction = process.env.NODE_ENV === 'production'
+
+/**
+ * LAUNCH_MODE controls which page is shown:
+ * - 'live': Show the real landing page (default for production)
+ * - 'maintenance': Show the maintenance/coming soon page
+ * - 'adsense': Show real site for AdSense approval (controlled by ADSENSE_APPROVAL_MODE)
+ * 
+ * Default: 'live' - production launches with real experience by default
+ * Override with NEXT_PUBLIC_LAUNCH_MODE env variable
+ */
+const LAUNCH_MODE = process.env.NEXT_PUBLIC_LAUNCH_MODE || 'live'
+const isMaintenanceMode = LAUNCH_MODE === 'maintenance' && process.env.NODE_ENV === 'production'
+const isAdSenseMode = ADSENSE_APPROVAL_MODE || LAUNCH_MODE === 'adsense'
+
 export default function HomePage() {
-  // In production, show the temporary landing page unless AdSense approval mode is enabled
-  if (isProduction && !ADSENSE_APPROVAL_MODE) {
+  // Show maintenance page only if explicitly set to maintenance mode in production
+  if (isMaintenanceMode && !isAdSenseMode) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-background text-center p-8 gap-6">
         <div>
@@ -23,6 +35,6 @@ export default function HomePage() {
     )
   }
 
-  // In development or AdSense approval mode, show the real landing page
+  // Default: Show the real landing page (live mode)
   return <HomePageClient />
 } 

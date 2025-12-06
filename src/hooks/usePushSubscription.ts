@@ -70,6 +70,13 @@ export function usePushSubscription() {
         applicationServerKey: urlBase64ToUint8Array(publicKey)
       })
 
+      const p256dhKey = subscription.getKey('p256dh')
+      const authKey = subscription.getKey('auth')
+
+      if (!p256dhKey || !authKey) {
+        throw new Error('Push subscription keys missing')
+      }
+
       // Send subscription to server
       const response = await fetch('/api/notifications/push/subscribe', {
         method: 'POST',
@@ -77,8 +84,8 @@ export function usePushSubscription() {
         body: JSON.stringify({
           endpoint: subscription.endpoint,
           keys: {
-            p256dh: uint8ArrayToBase64(subscription.getKey('p256dh')!),
-            auth: uint8ArrayToBase64(subscription.getKey('auth')!)
+            p256dh: uint8ArrayToBase64(new Uint8Array(p256dhKey)),
+            auth: uint8ArrayToBase64(new Uint8Array(authKey))
           }
         })
       })

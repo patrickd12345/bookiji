@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { getSupabaseConfig } from '@/lib/supabase/config'
+import { getSupabaseConfig } from '@/config/supabase'
 
 /**
  * Cron job endpoint to detect and process no-shows
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const config = getSupabaseConfig()
-    const supabase = createClient(config.url, config.serviceKey)
+    const supabase = createClient(config.url, config.secretKey || config.publishableKey)
 
     // Detect no-shows using database function
     const { data: noShows, error: detectError } = await supabase.rpc('detect_no_shows')
