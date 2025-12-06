@@ -48,13 +48,12 @@ export default function HomePageClient() {
 
   // Note: Locale is now managed through i18n hook internally
 
-  // Handle search functionality
+  // Handle search functionality - redirect to search with query
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      // For now, redirect to search results or open AI chat with the query
-      setShowAIChat(true)
-      // You can implement actual search functionality here
-      console.log('Searching for:', searchQuery)
+      // Navigate to search page with the query parameter
+      const encoded = encodeURIComponent(searchQuery.trim())
+      window.location.href = `/search?q=${encoded}`
     }
   }
 

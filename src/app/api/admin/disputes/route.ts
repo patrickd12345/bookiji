@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { getSupabaseConfig } from '@/lib/supabase/config'
+import { getSupabaseConfig } from '@/config/supabase'
 import { requireAdmin } from '@/lib/auth/requireAdmin'
 
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin(request)
 
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const config = getSupabaseConfig()
     const supabase = createServerClient(
       config.url,

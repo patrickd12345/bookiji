@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { getSupabaseConfig } from '@/lib/supabase/config'
+import { getSupabaseConfig } from '@/config/supabase'
 import { requireAdmin } from '@/lib/auth/requireAdmin'
 import { bookingStateMachine } from '@/lib/services/bookingStateMachine'
 import { processRefund } from '@/lib/services/refundService'
@@ -19,10 +19,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { user } = await requireAdmin(request)
-    const { id: disputeId } = await params
-
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const config = getSupabaseConfig()
     const supabase = createServerClient(
       config.url,
@@ -35,6 +32,14 @@ export async function POST(
         }
       }
     )
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const adminUser = await requireAdmin({ user })
+    const { id: disputeId } = await params
 
     const body: ResolveDisputeRequest = await request.json()
     const { status, resolution, resolution_amount, resolution_type, admin_notes } = body
@@ -82,7 +87,7 @@ export async function POST(
     // Use database function to resolve dispute
     const { data: resolved, error: resolveError } = await supabase.rpc('resolve_dispute', {
       p_dispute_id: disputeId,
-      p_admin_id: user.id,
+      p_admin_id: adminUser.id,
       p_resolution: resolution,
       p_resolution_amount: resolution_amount || null,
       p_resolution_type: resolution_type,
@@ -106,7 +111,7 @@ export async function POST(
           refundResult = await processRefund(booking.id, {
             idempotencyKey: booking.idempotency_key,
             reason: `Dispute resolution: ${resolution}`,
-            adminId: user.id
+            adminId: adminUser.id
           })
         } catch (refundError) {
           console.error('Refund processing error:', refundError)
@@ -120,7 +125,7 @@ export async function POST(
       try {
         await bookingStateMachine.transition(dispute.bookings.id, 'no_show', {
           reason: 'No-show confirmed via dispute resolution',
-          adminId: user.id,
+          adminId: adminUser.id,
           adminOverride: true,
           skipRefund: true // Refund already handled above
         })
