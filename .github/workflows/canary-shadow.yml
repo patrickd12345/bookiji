@@ -1,0 +1,77 @@
+name: Canary Traffic Shadowing
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/canary-shadow.yml'
+      - 'scripts/traffic-shadow.ts'
+
+jobs:
+  shadow-canary:
+    name: Shadow Traffic to Canary
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Get canary URL
+        id: canary
+        run: |
+          # Try to get from previous canary deploy
+          if [ -f .canary.json ]; then
+            CANARY_URL=$(cat .canary.json | jq -r '.url')
+          else
+            CANARY_URL=${CANARY_URL:-https://canary.bookiji.com}
+          fi
+          echo "url=$CANARY_URL" >> $GITHUB_OUTPUT
+          echo "Canary URL: $CANARY_URL"
+
+      - name: Run traffic shadowing
+        env:
+          CANARY_URL: ${{ steps.canary.outputs.url }}
+          TRAFFIC_LOG_PATH: ${{ env.TRAFFIC_LOG_PATH }}
+        run: npx tsx scripts/traffic-shadow.ts
+
+      - name: Upload shadow results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: traffic-shadow-results
+          path: traffic-shadow-results.json
+          retention-days: 30
+
+      - name: Analyze canary with traffic metrics
+        if: always()
+        env:
+          CANARY_URL: ${{ steps.canary.outputs.url }}
+        run: |
+          if [ -f traffic-shadow-results.json ]; then
+            echo "📊 Traffic shadow results:"
+            cat traffic-shadow-results.json | jq '.summary'
+            
+            # Run canary analysis if script exists
+            if [ -f scripts/analyze-canary.ts ]; then
+              npx tsx scripts/analyze-canary.ts || true
+            fi
+          fi
+
+      - name: Upload enhanced canary analysis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canary-analysis-enhanced
+          path: |
+            .canary-analysis.json
+            traffic-shadow-results.json
+          if-no-files-found: ignore
+          retention-days: 30

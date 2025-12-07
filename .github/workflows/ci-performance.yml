@@ -32,6 +32,23 @@ jobs:
       - name: Run Lighthouse on Staging
         run: lhci autorun --collect.url=https://staging.bookiji.com/ || true
 
+      - name: Export CI metrics
+        if: always()
+        env:
+          CI_JOB_TYPE: performance-staging
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: npx tsx scripts/export-ci-metrics.ts
+
+      - name: Upload CI metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-metrics-performance-staging
+          path: ci-metrics/
+          if-no-files-found: ignore
+          retention-days: 90
+
   lighthouse:
     name: Lighthouse – Production
     runs-on: ubuntu-latest
@@ -55,6 +72,23 @@ jobs:
       - name: Run Lighthouse with Performance Budgets
         run: lhci autorun || true
 
+      - name: Export CI metrics
+        if: always()
+        env:
+          CI_JOB_TYPE: performance
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: npx tsx scripts/export-ci-metrics.ts
+
+      - name: Upload CI metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-metrics-performance
+          path: ci-metrics/
+          if-no-files-found: ignore
+          retention-days: 90
+
   sentry:
     name: Sentry Release Check
     runs-on: ubuntu-latest
@@ -63,18 +97,37 @@ jobs:
     environment:
       name: production
 
-    env:
-      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      SENTRY_ORG: ${{ vars.SENTRY_ORG }}
-      SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
-
     steps:
       - uses: actions/checkout@v4
+
+      # Note: SENTRY_ORG and SENTRY_PROJECT must be set as repository variables
+      # in Settings → Secrets and variables → Actions → Variables
+      # Linter warnings about vars.* are false positives - the syntax is correct
+      - name: Validate Sentry configuration
+        id: sentry-config
+        run: |
+          if [ -z "${{ vars.SENTRY_ORG }}" ]; then
+            echo "❌ SENTRY_ORG variable is not set in repository variables"
+            exit 1
+          fi
+          if [ -z "${{ vars.SENTRY_PROJECT }}" ]; then
+            echo "❌ SENTRY_PROJECT variable is not set in repository variables"
+            exit 1
+          fi
+          if [ -z "${{ secrets.SENTRY_AUTH_TOKEN }}" ]; then
+            echo "❌ SENTRY_AUTH_TOKEN secret is not set in repository secrets"
+            exit 1
+          fi
+          echo "✅ Sentry configuration validated"
 
       - name: Install sentry-cli
         run: curl -sL https://sentry.io/get-cli/ | bash
 
       - name: Check Sentry release wiring
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         run: |
           export SENTRY_RELEASE=$(git rev-parse HEAD)
           sentry-cli releases propose-version

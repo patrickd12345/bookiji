@@ -1,0 +1,58 @@
+name: SLO Dashboard Export
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # Daily at 3 AM UTC
+  workflow_dispatch:
+
+jobs:
+  export-slo:
+    name: Export SLO Metrics
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Download recent CI metrics
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: ci-metrics-*
+          path: ci-metrics/
+          merge-multiple: true
+
+      - name: Generate metrics if needed
+        run: |
+          # If no metrics found, try to generate from recent runs
+          if [ ! -d ci-metrics ] || [ -z "$(ls -A ci-metrics 2>/dev/null)" ]; then
+            echo "ℹ️  No existing metrics found. This is expected for first run."
+          fi
+
+      - name: Export SLO metrics
+        env:
+          SLO_TARGET_BOOKING_LATENCY_MS: ${{ vars.SLO_TARGET_BOOKING_LATENCY_MS || '500' }}
+          SLO_TARGET_UPTIME: ${{ vars.SLO_TARGET_UPTIME || '99.9' }}
+        run: npx tsx scripts/export-slo.ts
+
+      - name: Upload SLO dashboard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slo-dashboard
+          path: slo/
+          retention-days: 90
+
+      - name: Log SLO summary
+        if: always()
+        run: |
+          if [ -f slo/slo-summary.json ]; then
+            echo "📊 SLO Summary:"
+            cat slo/slo-summary.json | jq '.'
+          fi

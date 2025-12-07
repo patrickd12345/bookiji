@@ -1,0 +1,47 @@
+[
+  {
+    "method": "GET",
+    "path": "/",
+    "query": ""
+  },
+  {
+    "method": "GET",
+    "path": "/get-started",
+    "query": ""
+  },
+  {
+    "method": "GET",
+    "path": "/dashboard",
+    "query": ""
+  },
+  {
+    "method": "GET",
+    "path": "/api/search/providers",
+    "query": "userLat=45.5&userLon=-73.6&category=plumbing"
+  },
+  {
+    "method": "POST",
+    "path": "/api/bookings/create",
+    "body": {
+      "providerId": "p1",
+      "serviceId": "s1",
+      "slotId": "slot1",
+      "customerNotes": "Test booking"
+    }
+  },
+  {
+    "method": "GET",
+    "path": "/api/health",
+    "query": ""
+  },
+  {
+    "method": "GET",
+    "path": "/api/bookings/user",
+    "query": "userId=user1"
+  },
+  {
+    "method": "GET",
+    "path": "/vendor/dashboard",
+    "query": ""
+  }
+]

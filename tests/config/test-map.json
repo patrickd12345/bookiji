@@ -1,0 +1,33 @@
+{
+  "auth": [
+    "tests/e2e/auth.spec.ts"
+  ],
+  "booking": [
+    "tests/e2e/booking-flow.spec.ts",
+    "tests/e2e/booking-reschedule.spec.ts"
+  ],
+  "payments": [
+    "tests/e2e/payment-errors.spec.ts",
+    "tests/e2e/stripe-replay.spec.ts"
+  ],
+  "admin": [
+    "tests/e2e/admin-smoke.spec.ts"
+  ],
+  "vendor": [
+    "tests/e2e/vendor.spec.ts",
+    "tests/e2e/services.spec.ts"
+  ],
+  "email": [
+    "tests/e2e/email-mock.spec.ts",
+    "tests/e2e/email-real.spec.ts"
+  ],
+  "navigation": [
+    "tests/e2e/navigation.spec.ts"
+  ],
+  "visual": [
+    "tests/e2e/visual-regression.spec.ts"
+  ],
+  "production": [
+    "tests/e2e/production-smoke.spec.ts"
+  ]
+}

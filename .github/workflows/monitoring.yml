@@ -29,7 +29,6 @@ jobs:
             method: GET
             expectedStatus: 200
             timeout: 5000
-            body: null
           - name: booking-api
             url: https://www.bookiji.com/api/bookings/create
             method: POST
@@ -57,7 +56,6 @@ jobs:
             method: GET
             expectedStatus: 200
             timeout: 5000
-            body: null
 
     steps:
       - name: Check ${{ matrix.check.name }} (${{ matrix.region }})
@@ -66,13 +64,22 @@ jobs:
           
           START_TIME=$(date +%s)
           
-          RESPONSE=$(curl -s -w "\n%{http_code}\n%{time_total}" \
-            -X ${{ matrix.check.method }} \
-            -H "Content-Type: application/json" \
-            -H "User-Agent: Bookiji-Monitor/1.0" \
-            --max-time ${{ matrix.check.timeout }} \
-            --data-raw '${{ matrix.check.body }}' \
-            "${{ matrix.check.url }}" || echo -e "\n000\n999")
+          if [ -n "${{ matrix.check.body }}" ] && [ "${{ matrix.check.body }}" != "null" ]; then
+            RESPONSE=$(curl -s -w "\n%{http_code}\n%{time_total}" \
+              -X ${{ matrix.check.method }} \
+              -H "Content-Type: application/json" \
+              -H "User-Agent: Bookiji-Monitor/1.0" \
+              --max-time ${{ matrix.check.timeout }} \
+              --data-raw '${{ matrix.check.body }}' \
+              "${{ matrix.check.url }}" || echo -e "\n000\n999")
+          else
+            RESPONSE=$(curl -s -w "\n%{http_code}\n%{time_total}" \
+              -X ${{ matrix.check.method }} \
+              -H "Content-Type: application/json" \
+              -H "User-Agent: Bookiji-Monitor/1.0" \
+              --max-time ${{ matrix.check.timeout }} \
+              "${{ matrix.check.url }}" || echo -e "\n000\n999")
+          fi
           
           HTTP_CODE=$(echo "$RESPONSE" | tail -n 2 | head -n 1)
           TIME_TOTAL=$(echo "$RESPONSE" | tail -n 1)

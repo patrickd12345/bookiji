@@ -1,0 +1,52 @@
+name: Ephemeral Environment Setup
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  create-ephemeral-env:
+    name: Create Ephemeral Environment
+    runs-on: ubuntu-latest
+    environment:
+      name: preview
+
+    env:
+      APP_ENV: pr_${{ github.event.pull_request.number }}
+      NEXT_PUBLIC_APP_ENV: pr_${{ github.event.pull_request.number }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Create ephemeral environment
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: npx tsx scripts/create-ephemeral-env.ts
+
+      - name: Upload environment descriptor
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephemeral-env-${{ github.event.pull_request.number }}
+          path: |
+            .ephemeral-env.json
+            env-descriptors/
+          retention-days: 7
+
+      - name: Log environment details
+        if: always()
+        run: |
+          if [ -f .ephemeral-env.json ]; then
+            echo "✅ Ephemeral environment created:"
+            cat .ephemeral-env.json | jq '.'
+          else
+            echo "ℹ️  Using default environment (Vercel previews handle deployment)"
+          fi

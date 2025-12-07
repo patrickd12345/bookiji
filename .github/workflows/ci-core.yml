@@ -65,3 +65,20 @@ jobs:
           files: ./coverage/lcov.info
           flags: ${{ matrix.package }}
           fail_ci_if_error: false
+
+      - name: Export CI metrics
+        if: always()
+        env:
+          CI_JOB_TYPE: core
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: npx tsx scripts/export-ci-metrics.ts
+
+      - name: Upload CI metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-metrics-core
+          path: ci-metrics/
+          if-no-files-found: ignore
+          retention-days: 90

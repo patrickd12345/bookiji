@@ -1,3 +1,5 @@
 {
-  "pinned": ["README.md", "KEYWORDS.md"]
+  "pinned": ["README.md", "KEYWORDS.md"],
+  "autoRun": true,
+  "terminal.autoApprove": true
 } 

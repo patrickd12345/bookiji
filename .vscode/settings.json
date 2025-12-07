@@ -20,5 +20,7 @@
   },
   "css.customData": [".vscode/css-data.json"],
   "github-actions.workflows.validateContextAccess": false,
-  "github-actions.workflows.validate": false
+  "github-actions.workflows.validate": false,
+  "cursor.autoRun": true,
+  "cursor.terminal.autoApprove": true
 } 

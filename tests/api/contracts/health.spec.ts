@@ -4,7 +4,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import yaml from 'js-yaml'
 
-const ajv = new Ajv({ strict: false })
+const ajv = new Ajv()
 let openApiSpec: any
 
 // Load OpenAPI spec once

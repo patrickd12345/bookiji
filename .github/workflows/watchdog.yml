@@ -1,0 +1,48 @@
+name: Production Watchdog
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # Every 10 minutes
+  workflow_dispatch:
+
+jobs:
+  watchdog:
+    name: Production Health Check
+    runs-on: ubuntu-latest
+    if: github.repository == 'your-org/bookiji' # Update with your repo
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Run production watchdog
+        env:
+          WATCHDOG_TARGET_URL: ${{ vars.WATCHDOG_TARGET_URL || 'https://www.bookiji.com' }}
+          WATCHDOG_HEALTH_ENDPOINT: ${{ vars.WATCHDOG_HEALTH_ENDPOINT || 'https://www.bookiji.com/api/health' }}
+          SENTRY_API_TOKEN: ${{ secrets.SENTRY_API_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
+        run: npx tsx scripts/production-watchdog.ts
+
+      - name: Upload watchdog results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: watchdog-result
+          path: watchdog-result.json
+          retention-days: 30
+
+      - name: Log watchdog status
+        if: always()
+        run: |
+          if [ -f watchdog-result.json ]; then
+            echo "🐕 Watchdog Status:"
+            cat watchdog-result.json | jq '.overall, .checks[].name, .checks[].passed'
+          fi

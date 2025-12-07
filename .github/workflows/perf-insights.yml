@@ -1,0 +1,73 @@
+name: Performance Insights
+
+on:
+  workflow_run:
+    workflows: ["CI – E2E & Canary"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  generate-insights:
+    name: Generate Performance Insights
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Download CI metrics
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: ci-metrics-*
+          path: ci-metrics/
+          merge-multiple: true
+
+      - name: Download SLO metrics
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: slo-dashboard
+          path: slo/
+          merge-multiple: true
+
+      - name: Download Lighthouse results
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: lighthouse-*
+          path: .lighthouseci/
+          merge-multiple: true
+
+      - name: Analyze performance trends
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: npx tsx scripts/analyze-performance-trends.ts
+
+      - name: Upload performance insights
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-insights
+          path: perf-insights/
+          retention-days: 30
+
+      - name: Create performance issue if needed
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f perf-insights/perf-report.json ]; then
+            HIGH_PRIORITY=$(cat perf-insights/perf-report.json | jq -r '.summary.highPriority')
+            if [ "$HIGH_PRIORITY" -gt 0 ]; then
+              npx tsx scripts/create-performance-issue.ts || true
+            fi
+          fi
