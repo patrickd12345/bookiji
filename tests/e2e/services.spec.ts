@@ -9,3 +9,4 @@ test('vendor can create and edit a service', async ({ vendor, services, page }) 
     page.locator('[data-test="service-row"][data-name="E2E Massage – Updated"]'),
   ).toBeVisible()
 })
+

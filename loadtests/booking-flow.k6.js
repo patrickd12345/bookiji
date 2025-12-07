@@ -91,3 +91,4 @@ Load Test Summary:
   P95 Latency: ${data.metrics.http_req_duration.values['p(95)'].toFixed(2)}ms
   `
 }
+

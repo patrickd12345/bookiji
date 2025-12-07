@@ -316,3 +316,4 @@ main().catch(error => {
   console.error('Fatal error:', error)
   process.exit(0) // Don't fail CI
 })
+

@@ -244,3 +244,4 @@ npx playwright test tests/api/contracts/
 - [OWASP ZAP](https://www.zaproxy.org/)
 - [MailHog](https://github.com/mailhog/MailHog)
 - [OpenAPI Specification](https://swagger.io/specification/)
+

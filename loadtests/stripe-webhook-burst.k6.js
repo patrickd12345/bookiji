@@ -63,3 +63,4 @@ export default function () {
   errorRate.add(!success)
   sleep(0.1) // Minimal sleep for burst testing
 }
+

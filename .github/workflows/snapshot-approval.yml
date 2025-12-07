@@ -107,3 +107,4 @@ jobs:
               repo: context.repo.repo,
               body: '🖼️ **Visual Regression Tests Failed**\n\nPlease review the [visual test results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) to ensure the visual changes are expected.'
             })
+

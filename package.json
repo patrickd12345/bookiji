@@ -38,6 +38,9 @@
     "seo:test": "concurrently -k -s first \"pnpm start:ci\" \"wait-on http://localhost:3000 && pnpm seo:check\"",
     "seo:indexnow": "tsx scripts/indexnow-push.ts",
     "bootstrap-kb": "tsx scripts/bootstrap-bookiji-kb.ts",
+    "healthai": "tsx scripts/healthai-monitor.ts",
+    "deployai": "tsx scripts/deployai-monitor.ts",
+    "anomalyai": "tsx scripts/anomalyai-monitor.ts",
     "prebuild": "npm run i18n:check",
     "prepare": "husky install"
   },

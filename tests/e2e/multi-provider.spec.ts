@@ -14,3 +14,4 @@ test('user can book with different providers in separate sessions', async ({ pag
   await page.waitForURL(/confirmation/)
   await expect(page.locator('text=Booking Confirmed')).toBeVisible()
 })
+
