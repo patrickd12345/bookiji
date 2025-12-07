@@ -50,6 +50,9 @@ export { default as FeedbackCollector } from './FeedbackCollector'
 export { default as NoShowFeedbackModal } from './NoShowFeedbackModal'
 export { default as ReviewSystem } from './ReviewSystem'
 
+// Layout Components
+export { default as RootLayoutWrapper } from './RootLayoutWrapper'
+
 // Utility Components
 export { default as AsyncWarning } from './AsyncWarning'
 export { default as AuthEntry } from './AuthEntry'

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { useAsyncData } from '@/hooks/useAsyncState'
 import { PageLoader } from '@/components/ui/LoadingSpinner'
 import { NetworkError } from '@/components/ui/ErrorDisplay'
@@ -79,6 +79,9 @@ export default function VendorDashboard() {
   const loadVendorProfile = useCallback(async () => {
     try {
       const result = await profileData.fetch(async () => {
+        const supabase = supabaseBrowserClient()
+        if (!supabase) throw new Error('Supabase client not available')
+        
         const { data: { session } } = await supabase.auth.getSession()
         if (!session?.user) {
           throw new Error('No authenticated user')
@@ -123,6 +126,9 @@ export default function VendorDashboard() {
 
     try {
       const result = await statsData.fetch(async () => {
+        const supabase = supabaseBrowserClient()
+        if (!supabase) throw new Error('Supabase client not available')
+        
         const { data: bookings, error } = await supabase
           .from('bookings')
           .select('*')
@@ -177,6 +183,9 @@ export default function VendorDashboard() {
 
     try {
       const result = await bookingsData.fetch(async () => {
+        const supabase = supabaseBrowserClient()
+        if (!supabase) throw new Error('Supabase client not available')
+        
         const { data, error } = await supabase
           .from('bookings')
           .select('*')

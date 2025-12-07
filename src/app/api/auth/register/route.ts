@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { limitRequest } from '@/middleware/requestLimiter'
-import { supabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseClient'
+
+const supabase = getServerSupabase()
 import { userService } from '@/lib/database'
 import { referralService } from '@/lib/referrals'
 

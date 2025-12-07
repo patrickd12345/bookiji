@@ -91,13 +91,13 @@ export default function MapAdapter({
         // Event listeners
         adapter.on('click', (e) => {
           if (onMarkerClick && e.type === 'click') {
-            onMarkerClick(e.data)
+            onMarkerClick(e.data as ProviderMarker)
           }
         })
 
         adapter.on('bounds_change', (e) => {
           if (onBoundsChange && e.type === 'bounds_change') {
-            onBoundsChange(e.data)
+            onBoundsChange(e.data as MapBounds)
           }
         })
 

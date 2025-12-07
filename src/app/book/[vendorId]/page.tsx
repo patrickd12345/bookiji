@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useParams } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { ADSENSE_APPROVAL_MODE } from '@/lib/adsense'
 
 interface Service {
@@ -36,6 +36,9 @@ export default function BookVendorPage() {
 
   const fetchVendorAndServices = useCallback(async () => {
     if (!vendorId) return;
+    
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
     
     try {
       // Fetch vendor details

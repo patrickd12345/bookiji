@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState, useCallback } from 'react'
-import { createSupabaseClient } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
+
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -16,7 +17,6 @@ interface Article {
 }
 
 export default function AdminFAQPage() {
-  const supabase = createSupabaseClient()
   const [articles, setArticles] = useState<Article[]>([])
   const [loading, setLoading] = useState(false)
   const [editing, setEditing] = useState<Article | null>(null)
@@ -27,6 +27,9 @@ export default function AdminFAQPage() {
   })
 
   const fetchArticles = useCallback(async () => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     setLoading(true)
     const { data, error } = await supabase
       .from('knowledge_base')
@@ -38,7 +41,7 @@ export default function AdminFAQPage() {
       setArticles(data as Article[])
     }
     setLoading(false)
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     fetchArticles()
@@ -65,6 +68,9 @@ export default function AdminFAQPage() {
 
   async function saveArticle() {
     if (!form.title || !form.content) return alert('Title and content required')
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     setLoading(true)
     if (editing?.id) {
       // update
@@ -96,6 +102,9 @@ export default function AdminFAQPage() {
 
   async function deleteArticle(id: string) {
     if (!confirm('Delete this article?')) return
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     const { error } = await supabase.from('knowledge_base').delete().eq('id', id)
     if (error) console.error(error)
     fetchArticles()

@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState, useCallback } from 'react'
-import { createSupabaseClient } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
+
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
@@ -14,11 +15,13 @@ interface Unanswered {
 }
 
 export default function UnansweredPage() {
-  const supabase = createSupabaseClient()
   const [items, setItems] = useState<Unanswered[]>([])
   const [loading, setLoading] = useState(false)
 
   const fetchItems = useCallback(async () => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     setLoading(true)
     const { data, error } = await supabase
       .from('support_unanswered_questions')
@@ -27,13 +30,16 @@ export default function UnansweredPage() {
     if (error) console.error(error)
     else setItems(data as Unanswered[])
     setLoading(false)
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     fetchItems()
   }, [fetchItems])
 
   async function markProcessed(id: string) {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     const { error } = await supabase
       .from('support_unanswered_questions')
       .update({ processed: true, processed_at: new Date().toISOString() })

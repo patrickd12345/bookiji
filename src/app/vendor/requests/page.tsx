@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 
 interface ServiceRequest {
   id: string
@@ -19,6 +19,9 @@ export default function VendorRequestsPage() {
 
   useEffect(() => {
     const loadRequests = async () => {
+      const supabase = supabaseBrowserClient()
+      if (!supabase) return
+      
       setLoading(true)
       try {
         // Load vendor profile to determine relevant service type/location

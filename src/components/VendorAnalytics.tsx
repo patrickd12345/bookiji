@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { TooltipProps } from 'recharts'
 import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
@@ -56,6 +56,14 @@ export default function VendorAnalytics() {
   const loadAnalytics = useCallback(async () => {
     setLoading(true)
     setError(null)
+    
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setError('Supabase client not available')
+      setLoading(false)
+      return
+    }
+    
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('No session found')

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '../../../../lib/supabaseClient'
+import { getServerSupabase } from '../../../../lib/supabaseClient'
+
+const supabase = getServerSupabase()
 
 // GET /api/user/roles - Get user's roles
 export async function GET(request: NextRequest) {

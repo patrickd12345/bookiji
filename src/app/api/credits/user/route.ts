@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabaseClient';
+import { getServerSupabase } from '@/lib/supabaseClient';
 import { CreditsResponse, UserCreditsSummary } from '@/types/credits';
 
 export async function GET(
   request: NextRequest
 ): Promise<NextResponse<CreditsResponse>> {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getServerSupabase();
     
     // Get user from auth
     const { data: { user }, error: authError } = await supabase.auth.getUser();

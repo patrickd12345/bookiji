@@ -204,24 +204,24 @@ export function ResilientRescheduleButton({
 
 // Specialized reschedule button for Bookiji's non-refundable $1 rule
 export function BookijiRescheduleButton({
-  onSuccess,
-  onError,
-  onRollback,
+  onSuccessAction,
+  onErrorAction,
+  onRollbackAction,
   rescheduleDetails,
   className = ''
 }: {
-  onSuccess: (rescheduleId: string) => void
-  onError: (error: Error) => void
-  onRollback: () => void
+  onSuccessAction: (rescheduleId: string) => void
+  onErrorAction: (error: Error) => void
+  onRollbackAction: () => void
   rescheduleDetails: RescheduleDetails
   className?: string
 }) {
   return (
     <ResilientRescheduleButton
       rescheduleDetails={rescheduleDetails}
-      onRescheduleSuccessAction={onSuccess}
-      onRescheduleErrorAction={onError}
-      onRollbackAction={onRollback}
+      onRescheduleSuccessAction={onSuccessAction}
+      onRescheduleErrorAction={onErrorAction}
+      onRollbackAction={onRollbackAction}
       className={className}
     />
   )

@@ -1,39 +1,57 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { getSupabaseConfig } from '@/config/supabase';
+// lib/supabaseClient.ts
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-// Create a function to get the Supabase client
-// This prevents the config from being evaluated at module load time
-export function getSupabaseClient(): SupabaseClient {
-  try {
-    const config = getSupabaseConfig();
-    return createClient(config.url, config.publishableKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-      }
-    });
-  } catch (error) {
-    console.error('Failed to create Supabase client:', error);
-    // Return a dummy client that will fail gracefully
-    return createClient('https://dummy.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0');
+// We NEVER evaluate env vars or config at module load.
+// We NEVER create a client server-side unless explicitly requested.
+
+function getBrowserEnv() {
+  return {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   }
 }
 
-// Export a default client instance (for backward compatibility)
-// This will be created when first accessed
-let _supabase: SupabaseClient | null = null;
-
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(target, prop) {
-    if (!_supabase) {
-      _supabase = getSupabaseClient();
-    }
-    return _supabase![prop as keyof SupabaseClient];
+// ---------- Browser client (auth, sessions) ----------
+export function getBrowserSupabase(): SupabaseClient | null {
+  if (typeof window === 'undefined') {
+    // Prevent server-side execution
+    return null
   }
-});
 
-// Export function to create new client instances (for server-side use)
-export const createSupabaseClient = (): SupabaseClient => {
-  return getSupabaseClient();
-}; 
+  const { url, key } = getBrowserEnv()
+
+  if (!url || !key) {
+    console.warn('Supabase env vars missing (browser)')
+    return null
+  }
+
+  return createClient(url, key, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  })
+}
+
+// Lazy singleton for convenience
+let browserInstance: SupabaseClient | null = null
+
+export function supabaseBrowserClient() {
+  if (!browserInstance) {
+    browserInstance = getBrowserSupabase()
+  }
+  return browserInstance
+}
+
+// ---------- Server-side client (NEVER for auth/session) ----------
+export function getServerSupabase(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!url || !key) {
+    throw new Error('Missing Supabase env vars (server)')
+  }
+
+  return createClient(url, key)
+}

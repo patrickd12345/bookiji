@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { createSupabaseClient } from '@/lib/supabaseClient';
+import { supabaseBrowserClient } from '@/lib/supabaseClient';
 import { SeoManager } from '@/lib/seo/seoManager';
 import { useUIStore } from '@/stores/uiStore';
 import type { AdminStats, AdminAction, AdminNotification } from '@/types/global.d';
@@ -40,8 +40,6 @@ function ActionModal({ action, onClose }: { action: AdminAction; onClose: () => 
 
 export default function AdminCockpit() {
   const { showAdminCockpit, setShowAdminCockpit } = useUIStore();
-
-  const supabase = createSupabaseClient();
 
   useEffect(() => {
     SeoManager.callAbel();
@@ -266,6 +264,9 @@ export default function AdminCockpit() {
                     <button
                       onClick={async () => {
                         // call API
+                        const supabase = supabaseBrowserClient()
+                        if (!supabase) return
+                        
                         const { data: { session } } = await supabase.auth.getSession()
                         await fetch(`/api/notifications/${notification.id}/read`, {
                           method: 'POST',

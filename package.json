@@ -53,8 +53,8 @@
     "@radix-ui/react-switch": "^1.2.5",
     "@react-leaflet/core": "^2.1.0",
     "@sentry/nextjs": "^8.3.0",
-    "@stripe/react-stripe-js": "^2.6.2",
-    "@stripe/stripe-js": "^7.3.1",
+    "@stripe/react-stripe-js": "^2.9.0",
+    "@stripe/stripe-js": "^4.10.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "2.50.2",
     "@types/google.maps": "^3.58.1",
@@ -71,10 +71,10 @@
     "lucide-react": "^0.358.0",
     "mapbox-gl": "^3.6.0",
     "next": "15.3.3",
-    "next-auth": "^4.24.7",
+    "next-auth": "4.24.13",
     "next-themes": "^0.4.6",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^6.10.1",
+    "nodemailer": "7.0.0",
     "posthog-js": "^1.255.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -137,6 +137,9 @@
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.1.10",
     "lightningcss-linux-x64-gnu": "^1.29.0"
+  },
+  "overrides": {
+    "nodemailer": "7.0.0"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,css,md}": "eslint --fix"

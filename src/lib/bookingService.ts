@@ -1,4 +1,6 @@
-import { supabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseClient'
+
+const supabase = getServerSupabase()
 import { bookingStateMachine } from '@/lib/services/bookingStateMachine'
 import type { BookingStatus } from '@/types/booking'
 import type { Database } from '@/types/supabase'

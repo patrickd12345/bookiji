@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 
 interface ServiceRequest {
   id: string
@@ -32,6 +32,9 @@ export default function RequestsPage() {
   }, [])
 
   const cancelRequest = async (id: string) => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     const { error } = await supabase
       .from('service_requests')
       .update({ status: 'canceled' })
@@ -45,6 +48,9 @@ export default function RequestsPage() {
   }
 
   const editRequest = async (id: string) => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     const details = prompt('Update details for this request:')
     if (!details) return
     const { error } = await supabase

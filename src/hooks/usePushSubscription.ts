@@ -65,9 +65,10 @@ export function usePushSubscription() {
       const registration = await navigator.serviceWorker.ready
 
       // Subscribe to push
+      const keyArray = urlBase64ToUint8Array(publicKey)
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey)
+        applicationServerKey: keyArray as BufferSource
       })
 
       const p256dhKey = subscription.getKey('p256dh')

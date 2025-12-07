@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseBrowserClient } from '@/lib/supabaseClient';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
 
@@ -13,6 +13,9 @@ export default function BetaProgram() {
   const [loading, setLoading] = useState(true);
 
   const checkBetaStatus = useCallback(async () => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       router.push('/login');
@@ -50,15 +53,21 @@ export default function BetaProgram() {
   const handleBetaToggle = async (enabled: boolean) => {
     setBetaEnabled(enabled);
     if (!enabled) {
+      const supabase = supabaseBrowserClient()
+      if (!supabase) return
+      
       try {
         // Opt out of beta
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.user?.id) return
+        
         const { error } = await supabase
           .from('profiles')
           .update({ 
             beta_status: null,
             updated_at: new Date().toISOString()
           })
-          .eq('id', (await supabase.auth.getSession()).data.session?.user.id);
+          .eq('id', session.user.id);
         
         if (error) {
           console.warn('Could not update beta_status (column may not exist):', error.message);
@@ -73,7 +82,13 @@ export default function BetaProgram() {
 
   const handleBetaTypeChange = async (type: 'early_access' | 'public_beta') => {
     setBetaType(type);
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user?.id) return
+      
       const { error } = await supabase
         .from('profiles')
         .update({ 
@@ -86,7 +101,7 @@ export default function BetaProgram() {
           },
           updated_at: new Date().toISOString()
         })
-        .eq('id', (await supabase.auth.getSession()).data.session?.user.id);
+        .eq('id', session.user.id);
       
       if (error) {
         console.warn('Could not update beta_status (column may not exist):', error.message);

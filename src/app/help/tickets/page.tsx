@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { registerTour } from '@/lib/guidedTourRegistry'
 import { useAutoTour } from '@/lib/useAutoTour'
 import { ADSENSE_APPROVAL_MODE } from '@/lib/adsense'
@@ -30,7 +30,7 @@ export default function MyTicketsPage() {
   const [messages, setMessages] = useState<SupportMessage[]>([])
   const [messageText, setMessageText] = useState('')
   const [sending, setSending] = useState(false)
-  const [channelRef, setChannelRef] = useState<ReturnType<typeof supabase.channel> | null>(null);
+  const [channelRef, setChannelRef] = useState<ReturnType<NonNullable<ReturnType<typeof supabaseBrowserClient>>['channel']> | null>(null);
 
   const loadTickets = async (uid: string) => {
     setLoading(true)
@@ -80,6 +80,9 @@ export default function MyTicketsPage() {
 
   useEffect(() => {
     const getSession = async () => {
+      const supabase = supabaseBrowserClient()
+      if (!supabase) return
+      
       const { data: { session } } = await supabase.auth.getSession()
       // Skip auth check during AdSense approval
       if (!session?.user?.id && !ADSENSE_APPROVAL_MODE) {
@@ -96,6 +99,9 @@ export default function MyTicketsPage() {
 
   // load messages when ticket selected
   useEffect(() => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     if (!selectedTicket) {
       setMessages([])
       if (channelRef) {
@@ -145,7 +151,8 @@ export default function MyTicketsPage() {
       if (reconnectTimeout) return
       reconnectTimeout = setTimeout(() => {
         reconnectTimeout = null
-        if (channel) {
+        const supabase = supabaseBrowserClient()
+        if (supabase && channel) {
           supabase.removeChannel(channel)
           channel = null
         }
@@ -156,7 +163,8 @@ export default function MyTicketsPage() {
     subscribe()
 
     return () => {
-      if (channel) supabase.removeChannel(channel)
+      const supabase = supabaseBrowserClient()
+      if (supabase && channel) supabase.removeChannel(channel)
       if (reconnectTimeout) clearTimeout(reconnectTimeout)
     }
   }, [selectedTicket, channelRef])

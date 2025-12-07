@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 
 interface Message {
   id: string
@@ -177,6 +177,13 @@ export default function RealAIChat() {
             onChange={async (e) => {
               const file = e.target.files?.[0]
               if (!file) return
+              
+              const supabase = supabaseBrowserClient()
+              if (!supabase) {
+                alert('Supabase client not available')
+                return
+              }
+              
               // upload
               const filePath = `${Date.now()}_${file.name}`
               const { error } = await supabase.storage.from('chat-images').upload(filePath, file)

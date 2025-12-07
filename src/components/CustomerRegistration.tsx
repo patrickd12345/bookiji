@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useUIStore } from '@/stores/uiStore';
 import { theme, combineClasses } from '@/config/theme';
 import type { RegistrationForm } from '@/types/global.d';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseBrowserClient } from '@/lib/supabaseClient';
 
 export default function CustomerRegistration() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,6 +39,13 @@ export default function CustomerRegistration() {
     setIsSubmitting(true);
     setError(null);
 
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setError('Supabase client not available')
+      setIsSubmitting(false)
+      return
+    }
+    
     try {
       // Validate passwords match
       if (form.password !== form.confirmPassword) {

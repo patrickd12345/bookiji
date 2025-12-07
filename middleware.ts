@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { buildCSPHeader } from '@/lib/security/csp'
-import { adminGuard } from './src/middleware/adminGuard'
+import { adminGuard } from '@/middleware/adminGuard'
 
 // In-memory rate limiter storage
 const rateLimitMap = new Map<string, number[]>()
@@ -63,14 +63,17 @@ function getClientIP(request: NextRequest): string {
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
   
-  // Block test routes in production
-  if (isProd && (
-    pathname.includes('/test-') || 
-    pathname.includes('/simple-test') ||
-    pathname.includes('/theme-demo') ||
-    pathname.startsWith('/api/test')
-  )) {
-    return new NextResponse('Not Found', { status: 404 })
+  // Block non-prod-only routes in production
+  if (isProd) {
+    const blockedApiPrefixes = ['/api/setup', '/api/test', '/api/check', '/api/dev']
+    const blockedPageFragments = ['/test-', '/simple-test', '/theme-demo']
+
+    const isBlockedApiRoute = blockedApiPrefixes.some(prefix => pathname.startsWith(prefix))
+    const isBlockedPageRoute = blockedPageFragments.some(fragment => pathname.includes(fragment))
+
+    if (isBlockedApiRoute || isBlockedPageRoute) {
+      return new NextResponse('Not Found', { status: 404 })
+    }
   }
   
   // Apply admin guard first for all admin routes
@@ -161,4 +164,3 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico).*)'
   ]
 }
-

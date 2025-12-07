@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseClient'
+
+const supabase = getServerSupabase()
 
 // Free availability search: no payment intent required
 export async function POST(req: NextRequest) {

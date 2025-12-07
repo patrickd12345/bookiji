@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabaseClient';
+import { getServerSupabase } from '@/lib/supabaseClient';
 import { withQueryLogging } from '@/lib/performance/queryLogger';
 
 interface HeatmapData {
@@ -24,7 +24,7 @@ interface HeatmapParams {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getServerSupabase();
     
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();

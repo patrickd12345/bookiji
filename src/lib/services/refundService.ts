@@ -1,4 +1,6 @@
-import { supabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseClient'
+
+const supabase = getServerSupabase()
 import { refundPayment } from '@/lib/stripe'
 import { type RefundOptions, type RefundStatus } from '@/types/booking'
 

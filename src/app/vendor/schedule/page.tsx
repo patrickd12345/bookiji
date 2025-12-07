@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { Clock, PlusCircle, Trash2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
-import { supabase } from '@/lib/supabaseClient' // Assuming this is the correct path for the client
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { GoogleCalendarConnection } from '@/components'
 
 //
@@ -192,6 +192,12 @@ export default function SchedulePage() {
   useEffect(() => {
     const fetchProviderProfile = async () => {
       setIsLoading(true);
+      const supabase = supabaseBrowserClient()
+      if (!supabase) {
+        setSaveStatus('error');
+        setIsLoading(false);
+        return;
+      }
       
       // Get the current user session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();

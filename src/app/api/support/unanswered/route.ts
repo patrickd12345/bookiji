@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseClient } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseClient'
 
 export async function POST(request: NextRequest) {
-  const supabase = createSupabaseClient()
+  const supabase = getServerSupabase()
   const { query_text, source = 'faq', context = {} } = await request.json()
 
   if (!query_text) {

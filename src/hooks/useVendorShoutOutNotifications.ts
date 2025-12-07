@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 
 export interface ShoutOutNotification {
   id: string
@@ -23,6 +23,13 @@ export const useVendorShoutOutNotifications = () => {
   }, [])
 
   const fetchNotifications = async () => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setError('Supabase client not available')
+      setLoading(false)
+      return
+    }
+    
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -51,6 +58,12 @@ export const useVendorShoutOutNotifications = () => {
   }
 
   const acceptShoutOut = async (id: string) => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setError('Supabase client not available')
+      return { success: false, error: 'Supabase client not available' }
+    }
+    
     try {
       const { error } = await supabase
         .from('shout_out_requests')
@@ -69,6 +82,12 @@ export const useVendorShoutOutNotifications = () => {
   }
 
   const declineShoutOut = async (id: string) => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setError('Supabase client not available')
+      return { success: false, error: 'Supabase client not available' }
+    }
+    
     try {
       const { error } = await supabase
         .from('shout_out_requests')

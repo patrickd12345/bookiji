@@ -1,4 +1,6 @@
-import { supabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseClient'
+
+const supabase = getServerSupabase()
 
 export interface SLOConfig {
   metric_name: string

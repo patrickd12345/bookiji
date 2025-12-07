@@ -1,4 +1,6 @@
-import { supabase } from './supabaseClient'
+import { getServerSupabase } from './supabaseClient'
+
+const supabase = getServerSupabase()
 import { addCredits } from './database'
 
 const REFERRAL_REWARD_CUSTOMER_CENTS = 500

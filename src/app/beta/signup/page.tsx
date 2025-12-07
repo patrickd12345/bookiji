@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 
 interface BetaSignupForm {
@@ -75,6 +75,9 @@ export default function BetaSignup() {
 
   useEffect(() => {
     const checkAccess = async () => {
+      const supabase = supabaseBrowserClient()
+      if (!supabase) return
+      
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session) {
@@ -118,6 +121,13 @@ export default function BetaSignup() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setError('Supabase client not available')
+      setLoading(false)
+      return
+    }
 
     try {
       // Submit to Supabase

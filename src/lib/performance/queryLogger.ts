@@ -1,4 +1,6 @@
-import { getSupabaseClient } from '@/lib/supabaseClient';
+import { getServerSupabase } from '@/lib/supabaseClient';
+
+const getSupabaseClient = () => getServerSupabase()
 
 export interface QueryMetrics {
   query: string;

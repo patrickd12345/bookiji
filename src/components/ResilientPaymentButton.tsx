@@ -178,12 +178,12 @@ export function ResilientPaymentButton({
 
 // Specialized payment button for Bookiji's $1 commitment fee
 export function BookijiCommitmentButton({
-  onSuccess,
-  onError,
+  onSuccessAction,
+  onErrorAction,
   className = ''
 }: {
-  onSuccess: (paymentId: string) => void
-  onError: (error: Error) => void
+  onSuccessAction: (paymentId: string) => void
+  onErrorAction: (error: Error) => void
   className?: string
 }) {
   return (
@@ -193,8 +193,8 @@ export function BookijiCommitmentButton({
         currency: 'USD',
         description: 'Bookiji Commitment Fee'
       }}
-      onPaymentSuccessAction={onSuccess}
-      onPaymentErrorAction={onError}
+      onPaymentSuccessAction={onSuccessAction}
+      onPaymentErrorAction={onErrorAction}
       className={className}
     />
   )

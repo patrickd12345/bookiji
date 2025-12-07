@@ -1,6 +1,8 @@
 import Stripe from 'stripe'
 import { loadStripe } from '@stripe/stripe-js'
-import { supabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseClient'
+
+const supabase = getServerSupabase()
 
 // Create a function to get Stripe instance instead of creating it at module load
 let _stripe: Stripe | null = null

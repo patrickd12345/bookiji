@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseBrowserClient } from "@/lib/supabaseClient";
 import { theme, combineClasses } from "@/config/theme";
 
 export default function AuthEntry({ mode = "signup" }: { mode?: "signup" | "login" }) {
@@ -19,6 +19,14 @@ export default function AuthEntry({ mode = "signup" }: { mode?: "signup" | "logi
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+    
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setError('Supabase client not available');
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       if (isSignUp) {
         if (password !== confirmPassword) {

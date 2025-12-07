@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { Notification } from '@/types/notification'
 import { NotificationService } from '@/lib/services/notificationService'
 
@@ -20,6 +20,12 @@ export function useNotifications() {
 
   const fetchNotifications = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
+
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setState(prev => ({ ...prev, isLoading: false, error: 'Supabase client not available' }))
+      return
+    }
 
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
@@ -48,6 +54,9 @@ export function useNotifications() {
   }, [notificationService])
 
   const markAsRead = useCallback(async (notificationId: string) => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
     try {
@@ -68,6 +77,9 @@ export function useNotifications() {
   }, [notificationService])
 
   const markAllAsRead = useCallback(async () => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
     try {
@@ -85,6 +97,9 @@ export function useNotifications() {
   }, [notificationService])
 
   const deleteNotification = useCallback(async (notificationId: string) => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
     try {
@@ -100,10 +115,15 @@ export function useNotifications() {
 
   // Set up real-time notifications with reconnection logic
   useEffect(() => {
-    let channel: ReturnType<typeof supabase.channel> | null = null
+    let channel: ReturnType<NonNullable<ReturnType<typeof supabaseBrowserClient>>['channel']> | null = null
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
+    let currentSupabase: ReturnType<typeof supabaseBrowserClient> | null = null
 
     const subscribe = async () => {
+      const supabase = supabaseBrowserClient()
+      if (!supabase) return
+      currentSupabase = supabase
+      
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.user?.id) return
 
@@ -175,6 +195,9 @@ export function useNotifications() {
       if (reconnectTimeout) return
       reconnectTimeout = setTimeout(() => {
         reconnectTimeout = null
+        const supabase = supabaseBrowserClient()
+        if (!supabase) return
+        
         if (channel) {
           supabase.removeChannel(channel)
           channel = null
@@ -186,7 +209,9 @@ export function useNotifications() {
     subscribe()
 
     return () => {
-      if (channel) supabase.removeChannel(channel)
+      if (channel && currentSupabase) {
+        currentSupabase.removeChannel(channel)
+      }
       if (reconnectTimeout) clearTimeout(reconnectTimeout)
     }
   }, [])

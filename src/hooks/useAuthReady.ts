@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseBrowserClient } from "@/lib/supabaseClient";
 
 export function useAuthReady() {
   const [ready, setReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+
     let mounted = true;
 
     (async () => {

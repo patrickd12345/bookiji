@@ -3,19 +3,12 @@ import { limitRequest } from '@/middleware/requestLimiter'
 import { createClient } from '@supabase/supabase-js'
 import { getSupabaseConfig } from '@/config/supabase'
 
-type SupabaseClient = ReturnType<typeof createClient>
+// Use server Supabase client
+import { getServerSupabase } from '@/lib/supabaseClient'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
-// Lazy Supabase client creation to avoid build-time errors
 function createSupabaseClient(): SupabaseClient {
-  const config = getSupabaseConfig()
-  
-  return createClient(config.url, config.publishableKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true
-    }
-  })
+  return getServerSupabase()
 }
 
 interface EventProperties {

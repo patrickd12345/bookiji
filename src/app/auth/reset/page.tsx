@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseBrowserClient } from '@/lib/supabaseClient';
 
 function ResetPasswordContent() {
   const [password, setPassword] = useState('');
@@ -47,6 +47,13 @@ function ResetPasswordContent() {
     }
 
     setIsLoading(true);
+
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setError('Supabase client not available');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       // Try to use the recovery token to reset the password

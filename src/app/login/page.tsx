@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseBrowserClient } from '@/lib/supabaseClient';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,6 +16,13 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setError('Supabase client not available');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -41,6 +48,13 @@ export default function LoginPage() {
   const handleSocialLogin = async (provider: 'google' | 'github') => {
     setError(null);
     setIsLoading(true);
+    
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setError('Supabase client not available');
+      setIsLoading(false);
+      return;
+    }
     
     try {
       const { error } = await supabase.auth.signInWithOAuth({

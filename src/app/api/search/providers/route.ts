@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseClient'
+
+const supabase = getServerSupabase()
 
 // Constants for dynamic radius logic (in kilometers)
 const MIN_PROVIDERS_THRESHOLD = 3

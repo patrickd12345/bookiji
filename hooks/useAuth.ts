@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { getSupabaseConfig } from '@/config/supabase'
 import { ADSENSE_APPROVAL_MODE } from '../src/lib/adsense'
 
@@ -70,9 +70,11 @@ export function useAuth() {
   const isAdSenseApprovalMode = ADSENSE_APPROVAL_MODE
 
   // Test database connection and table existence with CSP-safe approach
-  const testDatabaseConnection = async () => {
+  const testDatabaseConnection = async (supabase: ReturnType<typeof supabaseBrowserClient>) => {
     try {
       if (process.env.NODE_ENV !== 'development') return true;
+      
+      if (!supabase) return false
       
       console.log('Testing database connection...');
       
@@ -127,6 +129,10 @@ export function useAuth() {
       return profileRef.current
     }
     lastFetchedUserIdRef.current = userId
+    
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return null
+    
     try {
       console.log('Fetching user profile for:', userId)
       
@@ -246,13 +252,19 @@ export function useAuth() {
   }
 
   useEffect(() => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    
     if (isAdSenseApprovalMode) {
       setLoading(false);
       return;
     }
 
     if (process.env.NODE_ENV === 'development') {
-      testDatabaseConnection().then(isConnected => {
+      testDatabaseConnection(supabase).then(isConnected => {
         if (!isConnected) {
           console.error('Database connection failed, authentication may not work properly');
         }

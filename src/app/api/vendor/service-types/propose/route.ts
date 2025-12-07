@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseClient } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseClient'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -11,7 +11,7 @@ const schema = z.object({
 })
 
 export async function POST(req: NextRequest) {
-  const supabase = createSupabaseClient()
+  const supabase = getServerSupabase()
 
   try {
     const body = await req.json()

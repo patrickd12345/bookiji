@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { NotificationResponse, NotificationError } from '@/types/notification'
 import { 
   User, 
@@ -120,6 +120,9 @@ export default function UserDashboard() {
   })
 
   const loadNotifications = useCallback(async (): Promise<void> => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch('/api/notifications', {
@@ -141,6 +144,9 @@ export default function UserDashboard() {
   // Load user data (profile, bookings, credits, favorites) in parallel
   useEffect(() => {
     const loadUserData = async () => {
+      const supabase = supabaseBrowserClient()
+      if (!supabase) return
+      
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (!session?.user) {

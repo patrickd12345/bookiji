@@ -1,5 +1,7 @@
 import { cookies } from 'next/headers'
-import { createSupabaseClient } from './supabaseClient'
+import { getServerSupabase } from './supabaseClient'
+
+const createSupabaseClient = () => getServerSupabase()
 import { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 
 interface AuthTokens {

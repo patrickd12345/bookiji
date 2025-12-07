@@ -1,7 +1,9 @@
-import NotifyForm from '@/components/NotifyForm'
-import HomePageClient from './HomePageClient'
-
+import dynamic from 'next/dynamic'
 import { ADSENSE_APPROVAL_MODE } from "@/lib/adsense"
+
+// Dynamically import client components to prevent server-side Supabase initialization
+const NotifyForm = dynamic(() => import('@/components/NotifyForm'), { ssr: false })
+const HomePageClient = dynamic(() => import('./HomePageClient'), { ssr: false })
 
 /**
  * LAUNCH_MODE controls which page is shown:

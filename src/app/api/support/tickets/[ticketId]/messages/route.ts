@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseClient } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseClient'
 import { z } from 'zod'
 
 // GET /api/support/tickets/:ticketId/messages
 export async function GET(req: NextRequest) {
-  const supabase = createSupabaseClient()
+  const supabase = getServerSupabase()
   const ticketId = new URL(req.url).pathname.split('/')[4]
 
   try {
@@ -36,7 +36,7 @@ const postSchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
-  const supabase = createSupabaseClient()
+  const supabase = getServerSupabase()
   const ticketId = new URL(req.url).pathname.split('/')[4]
 
   try {

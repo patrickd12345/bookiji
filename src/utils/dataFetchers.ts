@@ -1,7 +1,13 @@
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseBrowserClient } from '@/lib/supabaseClient';
 import type { Provider, Zone, RadiusZone } from '../types/global.d';
 
 export const fetchNearbyProviders = async (lat: number, lng: number, radius: number): Promise<Provider[]> => {
+  const supabase = supabaseBrowserClient()
+  if (!supabase) {
+    console.error('Supabase client not available')
+    return []
+  }
+  
   // Using Postgres earth distance functions (requires cube and earthdistance extensions)
   const { data: providers, error } = await supabase
     .rpc('get_providers_within_radius', {

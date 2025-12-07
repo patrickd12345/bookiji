@@ -1,4 +1,6 @@
-import { supabase } from './supabaseClient'
+import { getServerSupabase } from './supabaseClient'
+
+const supabase = getServerSupabase()
 import { createCommitmentFeePaymentIntent } from './stripe'
 
 export interface BookingRequest {

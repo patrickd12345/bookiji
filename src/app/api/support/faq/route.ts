@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseClient } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseClient'
 
 /**
  * GET /api/support/faq?search=booking&category=<uuid>&limit=10
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const categoryId = searchParams.get('category')
   const limit = Number(searchParams.get('limit') || 10)
 
-  const supabase = createSupabaseClient()
+  const supabase = getServerSupabase()
 
   try {
     let data

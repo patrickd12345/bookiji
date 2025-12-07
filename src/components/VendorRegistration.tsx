@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { SpecialtyTreeSelect } from './SpecialtyTreeSelect'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
@@ -78,6 +78,14 @@ export default function VendorRegistration({ onSuccess }: { onSuccess?: () => vo
     }
     
     setBusy(true)
+    
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setBusy(false)
+      setError('Supabase client not available')
+      return
+    }
+    
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setBusy(false); setError('Must be signed in'); return }
 

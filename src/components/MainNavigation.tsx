@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseBrowserClient } from '@/lib/supabaseClient';
 import { useI18n } from '@/lib/i18n/useI18n';
 import NotificationBell from '@/components/NotificationBell';
 import { useRouter } from 'next/navigation';
@@ -26,6 +26,8 @@ export default function MainNavigation() {
   }, []);
 
   const checkAuth = async () => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
     const { data: { session } } = await supabase.auth.getSession();
     setIsLoggedIn(!!session);
 

@@ -15,9 +15,10 @@ export async function runAxeAndAttach(page: Page, label: string) {
 
   const bad = results.violations.filter(v => /serious|critical/i.test(v.impact ?? ''));
   if (bad.length) {
-    const tree = await page.accessibility.snapshot({ interestingOnly: true });
+    // Note: page.accessibility.snapshot() was removed in newer Playwright versions
+    // Using Axe results instead for accessibility tree information
     await test.info().attach(`ax-tree-${label}.json`, {
-      body: Buffer.from(JSON.stringify(tree, null, 2)),
+      body: Buffer.from(JSON.stringify(results, null, 2)),
       contentType: 'application/json',
     });
   }

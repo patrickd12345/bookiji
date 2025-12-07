@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabaseClient'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { VendorCalendar, VendorAnalytics, GuidedTourManager } from '@/components'
 import { registerTour } from '@/lib/guidedTourRegistry'
 import { useAutoTour } from '@/lib/useAutoTour'
@@ -62,6 +62,9 @@ export default function VendorDashboard() {
   useAutoTour()
 
   const fetchDashboardData = async () => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     try {
       setLoading(true)
       
@@ -124,6 +127,9 @@ export default function VendorDashboard() {
   }
 
   const loadPendingProposals = async () => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     try {
       const { data, error } = await supabase
         .from('service_type_proposals')

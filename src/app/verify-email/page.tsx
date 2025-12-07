@@ -2,7 +2,7 @@
 
 import React, { useEffect, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseBrowserClient } from '@/lib/supabaseClient';
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -10,6 +10,9 @@ function VerifyEmailContent() {
   // Remove unused verificationStatus variable
 
   const verifyEmail = useCallback(async () => {
+    const supabase = supabaseBrowserClient()
+    if (!supabase) return
+    
     try {
       const token = searchParams?.get('token') || '';
       if (!token) {

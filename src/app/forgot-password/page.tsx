@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseBrowserClient } from '@/lib/supabaseClient';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -14,6 +14,13 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+
+    const supabase = supabaseBrowserClient()
+    if (!supabase) {
+      setError('Supabase client not available');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       // First, check if the user exists

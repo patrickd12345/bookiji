@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { bookingService, Booking } from './database'
 import { refundPayment } from './stripe'
-import { supabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseClient'
+
+const supabase = getServerSupabase()
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export interface BookingCancelRequest {

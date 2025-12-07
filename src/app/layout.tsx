@@ -1,9 +1,6 @@
-﻿import type { Metadata, Viewport } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider'
-import MainNavigation from '@/components/MainNavigation'
-import { ThemeProvider } from '@/components/providers/ThemeProvider'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
+import RootLayoutWrapper from '@/components/RootLayoutWrapper'
 
 export const metadata: Metadata = {
   title: 'Bookiji — Universal Booking Platform',
@@ -26,14 +23,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-background text-foreground">
         <a href="#main" className="skip-link">Skip to main</a>
-        <ErrorBoundary>
-          <ThemeProvider>
-            <GuidedTourProvider>
-              <MainNavigation />
-              <main id="main" tabIndex={-1}>{children}</main>
-            </GuidedTourProvider>
-          </ThemeProvider>
-        </ErrorBoundary>
+        <RootLayoutWrapper>
+          <main id="main" tabIndex={-1}>{children}</main>
+        </RootLayoutWrapper>
       </body>
     </html>
   )
