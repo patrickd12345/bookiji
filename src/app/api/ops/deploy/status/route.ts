@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     // Get deployment status with timeout
     const status = await Promise.race([
       deployai.getDeploymentStatus(),
-      new Promise<typeof status>((_, reject) =>
+      new Promise<Awaited<ReturnType<typeof deployai.getDeploymentStatus>>>((_, reject) =>
         setTimeout(() => reject(new Error('Deployment status query timeout')), 30000)
       )
     ]).catch((error) => {

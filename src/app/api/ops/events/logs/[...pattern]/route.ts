@@ -87,7 +87,7 @@ export async function GET(
     // Filter by pattern if provided
     if (pattern) {
       const patternRegex = new RegExp(pattern, 'i')
-      logs = logs.filter((log) => 
+      logs = logs.filter((log: any) => 
         patternRegex.test(log.message) ||
         patternRegex.test(log.source) ||
         (log.service && patternRegex.test(log.service))
@@ -96,17 +96,17 @@ export async function GET(
     
     // Filter by source
     if (source) {
-      logs = logs.filter((log) => log.source === source)
+      logs = logs.filter((log: any) => log.source === source)
     }
     
     // Filter by service
     if (service) {
-      logs = logs.filter((log) => log.service === service)
+      logs = logs.filter((log: any) => log.service === service)
     }
     
     // Filter by severity
     if (severity) {
-      logs = logs.filter((log) => log.severity === severity)
+      logs = logs.filter((log: any) => log.severity === severity)
     }
     
     // Load existing patterns
@@ -126,9 +126,9 @@ export async function GET(
     const insights = generateInsights(logs, detectedPatterns, correlations)
     
     // Calculate statistics
-    const errorCount = logs.filter((l) => l.severity === 'error').length
-    const criticalCount = logs.filter((l) => l.severity === 'critical').length
-    const warningCount = logs.filter((l) => l.severity === 'warning').length
+    const errorCount = logs.filter((l: any) => l.severity === 'error').length
+    const criticalCount = logs.filter((l: any) => l.severity === 'critical').length
+    const warningCount = logs.filter((l: any) => l.severity === 'warning').length
     
     const analysis: LogAnalysis = {
       timestamp: new Date().toISOString(),

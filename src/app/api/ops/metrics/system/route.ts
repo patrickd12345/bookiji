@@ -135,9 +135,10 @@ export async function GET(request: NextRequest) {
         timestamp: item.five_minute_bucket,
         cpu_percent: estimatedCpu,
         memory_percent: estimatedMemory,
-        cache_hit_rate: item.cache_hit_rate_percent || null,
+        cache_hit_rate: item.cache_hit_rate_percent != null ? item.cache_hit_rate_percent : null,
+        // Database stats are current snapshots only, not time-series - cannot be applied to historical data points
         active_connections: null,
-        database_size_mb: dbMetrics?.database_size_mb || null
+        database_size_mb: null
       }
     })
 
@@ -164,7 +165,8 @@ export async function GET(request: NextRequest) {
           timestamp: item.five_minute_bucket,
           cpu_percent: estimatedCpu,
           memory_percent: estimatedMemory,
-          cache_hit_rate: item.cache_hit_rate_percent || undefined,
+          cache_hit_rate: item.cache_hit_rate_percent != null ? item.cache_hit_rate_percent : undefined,
+          // Historical database stats are not available - these are current-period only metrics
           active_connections: undefined,
           database_size_mb: undefined
         }

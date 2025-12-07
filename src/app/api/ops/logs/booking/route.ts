@@ -77,7 +77,7 @@ export async function GET(request: Request) {
     
     // Get booking logs
     const allLogs = aggregateLogs(start.toISOString(), end.toISOString())
-    const bookingLogs = allLogs.filter((log) => log.category === 'booking')
+    const bookingLogs = allLogs.filter((log: any) => log.category === 'booking')
     
     // Load existing patterns
     const existingPatterns = loadPatterns()
@@ -96,9 +96,9 @@ export async function GET(request: Request) {
     const insights = generateInsights(bookingLogs, patterns, correlations)
     
     // Calculate statistics
-    const errorCount = bookingLogs.filter((l) => l.severity === 'error').length
-    const criticalCount = bookingLogs.filter((l) => l.severity === 'critical').length
-    const warningCount = bookingLogs.filter((l) => l.severity === 'warning').length
+    const errorCount = bookingLogs.filter((l: any) => l.severity === 'error').length
+    const criticalCount = bookingLogs.filter((l: any) => l.severity === 'critical').length
+    const warningCount = bookingLogs.filter((l: any) => l.severity === 'warning').length
     
     const analysis: LogAnalysis = {
       timestamp: new Date().toISOString(),
