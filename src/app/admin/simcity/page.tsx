@@ -1,69 +1,38 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Play, Square, RotateCcw, Settings, Activity, Users, Clock, DollarSign, TrendingUp } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import {
+  Activity,
+  Clock,
+  DollarSign,
+  Play,
+  RotateCcw,
+  Settings,
+  Square,
+  TrendingUp,
+  Users,
+} from 'lucide-react';
+import { SimEventPayload, SimPolicies, SimRunInfo, SimState } from '@/lib/simcity/types';
 
-interface SimState {
-  running: boolean;
-  tick: number;
-  nowISO: string;
-  liveAgents: number;
-  metrics: SimMetrics;
-  policies: SimPolicies;
-}
-
-interface SimMetrics {
-  bookingsCreated: number;
-  reschedules: number;
-  cancels: number;
-  rescheduleRate: number;
-  cancelRate: number;
-  completionRate: number;
-  vendorAcceptRate: number;
-  vendorDeclineRate: number;
-  avgVendorResponseTime: number;
-  patienceBreaches: number;
-  chatVolume: number;
-  activeAgents: number;
-  throughput: number;
-  avgBookingLatency: number;
-  errorCount: number;
-  skinFeesCollected: number;
-  totalAgentsSpawned: number;
-}
-
-interface SimPolicies {
-  skinFee: number;
-  refundsEnabled: boolean;
-  vendorOpenHours: { start: number; end: number };
-  customerPatienceThreshold: number;
-  rescheduleChance: number;
-  cancelChance: number;
-  maxConcurrentAgents: number;
-  tickSpeedMs: number;
-  minutesPerTick: number;
-  customerSpawnRate: number;
-  vendorSpawnRate: number;
-}
-
-interface SimEvent {
-  type: string;
-  timestamp: string;
-  data: any;
-}
+const STATUS_POLL_INTERVAL_MS = 3000;
 
 export default function SimCityDashboard() {
   const [state, setState] = useState<SimState | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [events, setEvents] = useState<SimEvent[]>([]);
+  const [events, setEvents] = useState<SimEventPayload[]>([]);
   const [uptime, setUptime] = useState(0);
+  const [runInfo, setRunInfo] = useState<SimRunInfo | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+
+  const activeRunInfo = runInfo ?? state?.runInfo ?? null;
 
   useEffect(() => {
     fetchStatus();
@@ -73,7 +42,7 @@ export default function SimCityDashboard() {
       if (isRunning) {
         fetchStatus();
       }
-    }, 5000);
+    }, STATUS_POLL_INTERVAL_MS);
 
     return () => {
       clearInterval(interval);
@@ -86,15 +55,24 @@ export default function SimCityDashboard() {
   const fetchStatus = async () => {
     try {
       const response = await fetch('/api/simcity/status');
+      if (!response.ok) {
+        throw new Error(`Status request failed with ${response.status}`);
+      }
       const data = await response.json();
       
       if (data.success) {
-        setState(data.data.state);
-        setIsRunning(data.data.isRunning);
-        setUptime(data.data.uptime);
+        const nextState = data.data.state as SimState;
+        setState(nextState);
+        setIsRunning(Boolean(data.data.isRunning ?? nextState?.running));
+        setUptime(data.data.uptime ?? 0);
+        setRunInfo(data.data.runInfo ?? nextState?.runInfo ?? null);
+        setFetchError(null);
+      } else {
+        setFetchError(data.error || 'Failed to fetch status');
       }
     } catch (error) {
       console.error('Failed to fetch status:', error);
+      setFetchError('SimCity backend unreachable — check server logs.');
     }
   };
 
@@ -107,9 +85,9 @@ export default function SimCityDashboard() {
     
     eventSourceRef.current.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
-        if (data.type !== 'keepalive') {
-          setEvents(prev => [...prev.slice(-99), data]); // Keep last 100 events
+        const payload = JSON.parse(event.data) as SimEventPayload;
+        if (payload.type !== 'keepalive') {
+          setEvents(prev => [...prev.slice(-99), payload]); // Keep last 100 events
         }
       } catch (error) {
         console.error('Failed to parse event:', error);
@@ -118,6 +96,7 @@ export default function SimCityDashboard() {
 
     eventSourceRef.current.onerror = (error) => {
       console.error('EventSource error:', error);
+      setFetchError('Live events connection lost — attempting to reconnect.');
     };
   };
 
@@ -128,10 +107,18 @@ export default function SimCityDashboard() {
       
       if (data.success) {
         setIsRunning(true);
+        setRunInfo({
+          runId: data.data.runId ?? null,
+          seed: data.data.seed ?? null,
+          scenario: data.data.scenario ?? null,
+          startedAt: data.data.startTime,
+        });
+        setFetchError(null);
         fetchStatus();
       }
     } catch (error) {
       console.error('Failed to start simulation:', error);
+      setFetchError('SimCity backend unreachable — check server logs.');
     }
   };
 
@@ -142,10 +129,19 @@ export default function SimCityDashboard() {
       
       if (data.success) {
         setIsRunning(false);
+        setRunInfo(prev => ({
+          runId: prev?.runId ?? null,
+          seed: prev?.seed ?? null,
+          scenario: prev?.scenario ?? null,
+          startedAt: prev?.startedAt,
+          finishedAt: data.data.stopTime,
+        }));
+        setFetchError(null);
         fetchStatus();
       }
     } catch (error) {
       console.error('Failed to stop simulation:', error);
+      setFetchError('SimCity backend unreachable — check server logs.');
     }
   };
 
@@ -158,11 +154,14 @@ export default function SimCityDashboard() {
       });
       
       if (response.ok) {
-        // setPolicies(newPolicies); // This line was removed as per the edit hint
         fetchStatus();
+        setFetchError(null);
+      } else {
+        setFetchError('Failed to update policies');
       }
     } catch (error) {
       console.error('Failed to update policies:', error);
+      setFetchError('SimCity backend unreachable — check server logs.');
     }
   };
 
@@ -174,13 +173,21 @@ export default function SimCityDashboard() {
   };
 
   const formatTime = (isoString: string) => {
-    return new Date(isoString).toLocaleTimeString();
+    return isoString ? new Date(isoString).toLocaleTimeString() : '—';
   };
 
   if (!state) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="container mx-auto p-6 space-y-4">
+        {fetchError && (
+          <Alert variant="destructive">
+            <AlertTitle>Connection issue</AlertTitle>
+            <AlertDescription>{fetchError}</AlertDescription>
+          </Alert>
+        )}
+        <div className="flex items-center justify-center min-h-[200px]">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+        </div>
       </div>
     );
   }
@@ -190,11 +197,14 @@ export default function SimCityDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            🏙️ SimCity Testing Engine
+            SimCity Testing Engine
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Persistent simulation sandbox for stress-testing Bookiji
           </p>
+          <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+            Scenario: {activeRunInfo?.scenario ?? '—'} • Run: {activeRunInfo?.runId ?? '—'} • Seed: {activeRunInfo?.seed ?? '—'}
+          </div>
         </div>
         
         <div className="flex items-center space-x-4">
@@ -218,6 +228,13 @@ export default function SimCityDashboard() {
           </div>
         </div>
       </div>
+
+      {fetchError && (
+        <Alert variant="destructive">
+          <AlertTitle>SimCity backend unreachable</AlertTitle>
+          <AlertDescription>{fetchError}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Controls */}
       <Card>
@@ -280,7 +297,7 @@ export default function SimCityDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{state.metrics.bookingsCreated}</div>
             <p className="text-xs text-muted-foreground">
-              +{state.metrics.throughput.toFixed(1)} per minute
+              +{state.metrics.throughput?.toFixed(1) ?? '0.0'} per minute
             </p>
           </CardContent>
         </Card>
@@ -436,10 +453,10 @@ export default function SimCityDashboard() {
                   {event.type}
                 </Badge>
                 <span className="text-gray-600 dark:text-gray-400">
-                  {new Date(event.timestamp).toLocaleTimeString()}
+                  {event.timestamp ? new Date(event.timestamp).toLocaleTimeString() : '—'}
                 </span>
-                <span className="text-gray-800 dark:text-gray-200">
-                  {JSON.stringify(event.data)}
+                <span className="text-gray-800 dark:text-gray-200 break-all">
+                  {event.data ? JSON.stringify(event.data) : '—'}
                 </span>
               </div>
             ))}

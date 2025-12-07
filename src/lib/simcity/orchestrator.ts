@@ -1,22 +1,37 @@
 import { EventEmitter } from 'events';
 import { SimTelemetry } from './telemetry';
-import { SimState, SimPolicies, SimEvent, SimMetrics, DEFAULT_POLICIES, DEFAULT_METRICS } from './types';
-import { InvariantChecker, InvariantViolation } from './invariants';
+import {
+  DEFAULT_METRICS,
+  DEFAULT_POLICIES,
+  SimEventPayload,
+  SimEventType,
+  SimMetrics,
+  SimPolicies,
+  SimRunInfo,
+  SimState,
+} from './types';
+import { InvariantViolation } from './types';
+import { InvariantChecker } from './invariants';
 import { ScenarioExecutor, SimEvent as ScenarioEvent } from './scenarios';
 
 export class SimOrchestrator extends EventEmitter {
   private state: SimState;
-  private running: boolean = false;
+  private running = false;
   private tickInterval: NodeJS.Timeout | null = null;
   private telemetry: SimTelemetry;
-  private agentCounter: number = 0;
+  private agentCounter = 0;
   private invariantChecker: InvariantChecker | null = null;
   private scenarioExecutor: ScenarioExecutor | null = null;
-  private runId: string | null = null;
-  private seed: number | null = null;
+  private currentRunId: string | null = null;
+  private currentSeed: number | null = null;
+  private currentScenario: string | null = null;
+  private startedAt: Date | null = null;
+  private finishedAt: Date | null = null;
+  private lastTickAt: Date | null = null;
   private violations: InvariantViolation[] = [];
+  private rng: () => number = Math.random;
 
-  constructor(baseURL: string = 'http://localhost:3000') {
+  constructor(_baseURL: string = 'http://localhost:3000') {
     super();
     this.telemetry = new SimTelemetry();
     this.state = {
@@ -25,7 +40,9 @@ export class SimOrchestrator extends EventEmitter {
       nowISO: new Date().toISOString(),
       liveAgents: 0,
       metrics: { ...DEFAULT_METRICS },
-      policies: { ...DEFAULT_POLICIES }
+      policies: { ...DEFAULT_POLICIES },
+      scenario: null,
+      runInfo: null,
     };
   }
 
@@ -35,34 +52,25 @@ export class SimOrchestrator extends EventEmitter {
     }
 
     // Generate run ID and seed
-    this.runId = `simcity_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    this.seed = options?.seed || Math.floor(Math.random() * 1000000);
-    
-    // Set random seed for reproducible runs
-    const seedRandom = (seed: number) => {
-      // Simple but effective seeding
-      const m = 0x80000000;
-      const a = 1103515245;
-      const c = 12345;
-      let state = seed ? seed : Math.floor(Math.random() * (m - 1));
-      
-      return () => {
-        state = (a * state + c) % m;
-        return state / (m - 1);
-      };
-    };
-    
-    const random = seedRandom(this.seed);
+    this.currentSeed = options?.seed || Math.floor(Math.random() * 1000000);
+    this.rng = this.createRng(this.currentSeed);
+    this.currentRunId = `simcity_${Date.now()}_${this.rng().toString(36).substr(2, 9)}`;
+    this.currentScenario = options?.scenario || null;
+    this.startedAt = new Date();
+    this.finishedAt = null;
+    this.lastTickAt = null;
+    this.violations = [];
     
     // Initialize invariant checker
-    this.invariantChecker = new InvariantChecker(this.runId, this.seed);
+    this.invariantChecker = new InvariantChecker(this.currentRunId, this.currentSeed);
     
     // Initialize scenario executor if scenario specified
     if (options?.scenario) {
       this.scenarioExecutor = new ScenarioExecutor((event: ScenarioEvent) => {
         this.handleScenarioEvent(event);
       });
-      await this.scenarioExecutor.startScenario(options.scenario);
+      const scenario = await this.scenarioExecutor.startScenario(options.scenario);
+      this.currentScenario = scenario.id;
     }
     
     // Apply custom policies if provided
@@ -72,16 +80,18 @@ export class SimOrchestrator extends EventEmitter {
 
     this.running = true;
     this.state.running = true;
-    this.state.startTime = new Date();
+    this.state.startTime = this.startedAt?.toISOString();
     this.state.tick = 0;
     this.state.nowISO = new Date().toISOString();
+    this.state.scenario = this.currentScenario;
+    this.state.runInfo = this.getRunInfo();
     
     this.telemetry.start();
     this.emitEvent('start', { 
       startTime: this.state.startTime,
-      runId: this.runId,
-      seed: this.seed,
-      scenario: options?.scenario || 'manual'
+      runId: this.currentRunId,
+      seed: this.currentSeed,
+      scenario: this.currentScenario || 'manual'
     });
     
     this.tickInterval = setInterval(() => {
@@ -96,19 +106,23 @@ export class SimOrchestrator extends EventEmitter {
 
     this.running = false;
     this.state.running = false;
+    this.finishedAt = new Date();
+    this.state.runInfo = this.getRunInfo();
     
     if (this.tickInterval) {
       clearInterval(this.tickInterval);
       this.tickInterval = null;
     }
     
-    this.emitEvent('stop', { stopTime: new Date() });
+    this.emitEvent('stop', { stopTime: this.finishedAt?.toISOString() });
   }
 
   private async tick(): Promise<void> {
     this.state.tick++;
+    this.lastTickAt = new Date();
     this.state.nowISO = this.advanceSimulatedTime();
-    this.state.lastTickTime = new Date();
+    this.state.lastTickTime = this.lastTickAt?.toISOString();
+    this.state.runInfo = this.getRunInfo();
     
     this.emitEvent('tick', { 
       tick: this.state.tick, 
@@ -120,8 +134,9 @@ export class SimOrchestrator extends EventEmitter {
     await this.spawnAgents();
     
     // Update metrics
-    this.state.metrics = this.telemetry.snapshot();
-    this.state.liveAgents = this.state.metrics.activeAgents;
+    const metrics = this.getMetrics();
+    this.state.metrics = metrics;
+    this.state.liveAgents = metrics.activeAgents;
   }
 
   private advanceSimulatedTime(): string {
@@ -137,12 +152,12 @@ export class SimOrchestrator extends EventEmitter {
                           currentHour <= this.state.policies.vendorOpenHours.end;
 
     // Spawn customers
-    if (Math.random() < this.state.policies.customerSpawnRate) {
+    if (this.rng() < this.state.policies.customerSpawnRate) {
       await this.spawnAgent('customer');
     }
 
     // Spawn vendors only during business hours
-    if (isVendorHours && Math.random() < this.state.policies.vendorSpawnRate) {
+    if (isVendorHours && this.rng() < this.state.policies.vendorSpawnRate) {
       await this.spawnAgent('vendor');
     }
   }
@@ -179,7 +194,7 @@ export class SimOrchestrator extends EventEmitter {
           actions: []
         },
         timestamp: new Date().toISOString(),
-        duration: Date.now() - (this.state.lastTickTime?.getTime() || Date.now()),
+        duration: Date.now() - (this.lastTickAt?.getTime() || Date.now()),
       });
       
       // Update telemetry
@@ -226,11 +241,24 @@ export class SimOrchestrator extends EventEmitter {
   }
 
   getState(): SimState {
-    return { ...this.state };
+    return { 
+      ...this.state,
+      metrics: { ...this.state.metrics },
+      policies: { ...this.state.policies },
+      runInfo: this.getRunInfo(),
+    };
   }
 
-  getMetrics() {
-    return this.telemetry.snapshot();
+  getMetrics(): SimMetrics {
+    const metrics = this.telemetry.snapshot();
+    metrics.totalBookings = metrics.bookingsCreated;
+    metrics.cancelledBookings = metrics.cancels;
+    metrics.errors = metrics.errorCount;
+    metrics.chats = metrics.chatVolume;
+    metrics.revenue = metrics.skinFeesCollected || metrics.bookingsCreated * this.state.policies.skinFee;
+    metrics.skinFeesCollected = metrics.revenue;
+    this.state.metrics = metrics;
+    return this.state.metrics;
   }
 
   getEvents(limit?: number) {
@@ -243,13 +271,31 @@ export class SimOrchestrator extends EventEmitter {
     this.state.tick = 0;
     this.state.liveAgents = 0;
     this.agentCounter = 0;
+    this.currentRunId = null;
+    this.currentSeed = null;
+    this.currentScenario = null;
+    this.startedAt = null;
+    this.finishedAt = null;
+    this.rng = Math.random;
+    this.state.startTime = undefined;
+    this.state.lastTickTime = undefined;
+    this.state.runInfo = this.getRunInfo();
+    this.state.scenario = null;
+    this.violations = [];
     this.emitEvent('reset', { timestamp: new Date().toISOString() });
   }
 
-  private emitEvent(type: SimEvent['type'], data: any): void {
-    const event: SimEvent = {
+  emitSimEvent(type: SimEventType, data: any): void {
+    this.emitEvent(type, data);
+  }
+
+  private emitEvent(type: SimEventType, data: any): void {
+    const runInfo = this.getRunInfo();
+    const event: SimEventPayload = {
       type,
       timestamp: new Date().toISOString(),
+      runId: runInfo.runId,
+      scenario: runInfo.scenario,
       data,
     };
     
@@ -263,6 +309,18 @@ export class SimOrchestrator extends EventEmitter {
 
   getUptime(): number {
     return this.telemetry.getUptime();
+  }
+
+  private createRng(seed: number): () => number {
+    const m = 0x80000000;
+    const a = 1103515245;
+    const c = 12345;
+    let state = seed ? seed : Math.floor(Math.random() * (m - 1));
+
+    return () => {
+      state = (a * state + c) % m;
+      return state / (m - 1);
+    };
   }
 
   // Handle scenario events
@@ -336,11 +394,8 @@ export class SimOrchestrator extends EventEmitter {
     
     // Emit violations
     if (this.violations.length > 0) {
-      this.emitEvent('invariant_violation', {
-        violations: this.violations,
-        runId: this.runId,
-        seed: this.seed,
-        timestamp: new Date().toISOString()
+      this.violations.forEach(violation => {
+        this.emitEvent('invariant_violation', violation);
       });
     }
     
@@ -353,11 +408,13 @@ export class SimOrchestrator extends EventEmitter {
   }
 
   // Get run information
-  getRunInfo(): { runId: string | null; seed: number | null; scenario: string | null } {
+  getRunInfo(): SimRunInfo {
     return {
-      runId: this.runId,
-      seed: this.seed,
-      scenario: this.scenarioExecutor?.getCurrentScenario()?.id || null
+      runId: this.currentRunId,
+      seed: this.currentSeed,
+      scenario: this.currentScenario || this.scenarioExecutor?.getCurrentScenario()?.id || null,
+      startedAt: this.startedAt?.toISOString(),
+      finishedAt: this.finishedAt?.toISOString(),
     };
   }
 }
@@ -371,4 +428,3 @@ export function getOrchestrator(baseURL?: string): SimOrchestrator {
   }
   return orchestratorInstance;
 }
-

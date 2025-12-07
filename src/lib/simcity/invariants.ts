@@ -1,325 +1,284 @@
+import { InvariantSeverity, InvariantViolation, SimMetrics, SimState } from './types';
+
 export interface SimInvariant {
-  id: string;
+  code: string;
   name: string;
   description: string;
   category: 'api' | 'business' | 'system' | 'data' | 'security';
-  severity: 'critical' | 'warning';
-  check: (metrics: any, state: any) => Promise<InvariantResult>;
+  severity: InvariantSeverity;
+  check: (metrics: SimMetrics, state: SimState) => Promise<InvariantViolation | null>;
 }
 
-export interface InvariantResult {
-  passed: boolean;
-  actual: any;
-  threshold: any;
-  message: string;
-  timestamp: string;
-}
+const violation = (
+  code: string,
+  severity: InvariantSeverity,
+  message: string,
+  details?: Record<string, any>
+): InvariantViolation => ({
+  code,
+  severity,
+  message,
+  timestamp: new Date().toISOString(),
+  details,
+});
 
-export interface InvariantViolation {
-  invariant: SimInvariant;
-  result: InvariantResult;
-  runId: string;
-  seed: number;
-  context: any;
-}
-
-// API SLOs
 export const API_INVARIANTS: SimInvariant[] = [
   {
-    id: 'api_p95_response_time',
+    code: 'API_P95_RESPONSE_TIME',
     name: 'P95 Response Time',
-    description: '95th percentile response time must be < 500ms',
+    description: '95th percentile response time must be under 500ms',
     category: 'api',
     severity: 'critical',
-    check: async (metrics, state) => {
+    check: async (metrics) => {
       const actual = metrics.p95ResponseTime || 0;
       const threshold = 500;
-      const passed = actual < threshold;
-      
-      return {
-        passed,
-        actual,
-        threshold,
-        message: `P95 response time: ${actual}ms (threshold: ${threshold}ms)`,
-        timestamp: new Date().toISOString()
-      };
-    }
+      return actual < threshold
+        ? null
+        : violation('API_P95_RESPONSE_TIME', 'critical', `P95 response time ${actual}ms exceeds ${threshold}ms`, {
+            actual,
+            threshold,
+          });
+    },
   },
   {
-    id: 'api_p99_response_time',
+    code: 'API_P99_RESPONSE_TIME',
     name: 'P99 Response Time',
-    description: '99th percentile response time must be < 1000ms',
+    description: '99th percentile response time must be under 1000ms',
     category: 'api',
     severity: 'critical',
-    check: async (metrics, state) => {
+    check: async (metrics) => {
       const actual = metrics.p99ResponseTime || 0;
       const threshold = 1000;
-      const passed = actual < threshold;
-      
-      return {
-        passed,
-        actual,
-        threshold,
-        message: `P99 response time: ${actual}ms (threshold: ${threshold}ms)`,
-        timestamp: new Date().toISOString()
-      };
-    }
+      return actual < threshold
+        ? null
+        : violation('API_P99_RESPONSE_TIME', 'critical', `P99 response time ${actual}ms exceeds ${threshold}ms`, {
+            actual,
+            threshold,
+          });
+    },
   },
   {
-    id: 'api_error_rate',
+    code: 'API_ERROR_RATE',
     name: 'Error Rate',
-    description: 'Error rate must be < 1%',
+    description: 'Error rate must be under 1%',
     category: 'api',
     severity: 'critical',
-    check: async (metrics, state) => {
+    check: async (metrics) => {
       const actual = (metrics.errorRate || 0) * 100;
       const threshold = 1;
-      const passed = actual < threshold;
-      
-      return {
-        passed,
-        actual: actual.toFixed(2) + '%',
-        threshold: threshold + '%',
-        message: `Error rate: ${actual.toFixed(2)}% (threshold: ${threshold}%)`,
-        timestamp: new Date().toISOString()
-      };
-    }
-  }
+      return actual < threshold
+        ? null
+        : violation('API_ERROR_RATE', 'critical', `Error rate ${actual.toFixed(2)}% exceeds ${threshold}%`, {
+            actual: `${actual.toFixed(2)}%`,
+            threshold: `${threshold}%`,
+          });
+    },
+  },
 ];
 
-// Business Metrics
 export const BUSINESS_INVARIANTS: SimInvariant[] = [
   {
-    id: 'booking_funnel_success',
+    code: 'BOOKING_FUNNEL_SUCCESS',
     name: 'Booking Funnel Success',
-    description: 'Success rate for book → confirm must be ≥ 85%',
+    description: 'Success rate for booking confirm must be >= 85%',
     category: 'business',
     severity: 'critical',
-    check: async (metrics, state) => {
+    check: async (metrics) => {
       const totalBookings = metrics.bookingsCreated || 0;
       const confirmedBookings = metrics.bookingsConfirmed || 0;
       const actual = totalBookings > 0 ? (confirmedBookings / totalBookings) * 100 : 100;
       const threshold = 85;
-      const passed = actual >= threshold;
-      
-      return {
-        passed,
-        actual: actual.toFixed(1) + '%',
-        threshold: threshold + '%',
-        message: `Booking success rate: ${actual.toFixed(1)}% (threshold: ${threshold}%)`,
-        timestamp: new Date().toISOString()
-      };
-    }
+      return actual >= threshold
+        ? null
+        : violation(
+            'BOOKING_FUNNEL_SUCCESS',
+            'critical',
+            `Booking success rate ${actual.toFixed(1)}% below ${threshold}% threshold`,
+            { actual: `${actual.toFixed(1)}%`, threshold: `${threshold}%`, totalBookings }
+          );
+    },
   },
   {
-    id: 'vendor_sla_response',
+    code: 'VENDOR_SLA_RESPONSE',
     name: 'Vendor SLA Response',
-    description: '90% of vendor requests must respond within ≤ 2 simulated hours',
+    description: '90% of vendor requests must respond within 2 simulated hours',
     category: 'business',
     severity: 'critical',
-    check: async (metrics, state) => {
+    check: async (metrics) => {
       const totalRequests = metrics.vendorRequests || 0;
       const timelyResponses = metrics.vendorResponsesWithin2h || 0;
       const actual = totalRequests > 0 ? (timelyResponses / totalRequests) * 100 : 100;
       const threshold = 90;
-      const passed = actual >= threshold;
-      
-      return {
-        passed,
-        actual: actual.toFixed(1) + '%',
-        threshold: threshold + '%',
-        message: `Vendor SLA compliance: ${actual.toFixed(1)}% (threshold: ${threshold}%)`,
-        timestamp: new Date().toISOString()
-      };
-    }
-  }
+      return actual >= threshold
+        ? null
+        : violation(
+            'VENDOR_SLA_RESPONSE',
+            'critical',
+            `Vendor SLA compliance ${actual.toFixed(1)}% below ${threshold}%`,
+            { actual: `${actual.toFixed(1)}%`, threshold: `${threshold}%`, totalRequests }
+          );
+    },
+  },
 ];
 
-// Cache Performance
 export const CACHE_INVARIANTS: SimInvariant[] = [
   {
-    id: 'cache_hit_rate',
+    code: 'CACHE_HIT_RATE',
     name: 'Cache Hit Rate',
-    description: 'Cache hit rate must be ≥ 50% for search operations',
+    description: 'Cache hit rate must be >= 50% for search operations',
     category: 'system',
-    severity: 'warning',
-    check: async (metrics, state) => {
+    severity: 'medium',
+    check: async (metrics) => {
       const actual = (metrics.cacheHitRate || 0) * 100;
       const threshold = 50;
-      const passed = actual >= threshold;
-      
-      return {
-        passed,
-        actual: actual.toFixed(1) + '%',
-        threshold: threshold + '%',
-        message: `Cache hit rate: ${actual.toFixed(1)}% (threshold: ${threshold}%)`,
-        timestamp: new Date().toISOString()
-      };
-    }
+      return actual >= threshold
+        ? null
+        : violation('CACHE_HIT_RATE', 'medium', `Cache hit rate ${actual.toFixed(1)}% below ${threshold}%`, {
+            actual: `${actual.toFixed(1)}%`,
+            threshold: `${threshold}%`,
+          });
+    },
   },
   {
-    id: 'cache_invalidation_spike',
+    code: 'CACHE_INVALIDATION_SPIKE',
     name: 'Cache Invalidation Spike',
-    description: 'Cache invalidation spike must be < 35% sustained',
+    description: 'Cache invalidation spike must be below 35% sustained',
     category: 'system',
-    severity: 'warning',
-    check: async (metrics, state) => {
+    severity: 'medium',
+    check: async (metrics) => {
       const actual = metrics.cacheInvalidationSpike || 0;
       const threshold = 35;
-      const passed = actual < threshold;
-      
-      return {
-        passed,
-        actual: actual.toFixed(1) + '%',
-        threshold: threshold + '%',
-        message: `Cache invalidation spike: ${actual.toFixed(1)}% (threshold: ${threshold}%)`,
-        timestamp: new Date().toISOString()
-      };
-    }
-  }
+      return actual < threshold
+        ? null
+        : violation(
+            'CACHE_INVALIDATION_SPIKE',
+            'medium',
+            `Cache invalidation spike ${actual.toFixed(1)}% exceeds ${threshold}%`,
+            { actual: `${actual.toFixed(1)}%`, threshold: `${threshold}%` }
+          );
+    },
+  },
 ];
 
-// Data Integrity
 export const DATA_INVARIANTS: SimInvariant[] = [
   {
-    id: 'zero_double_bookings',
+    code: 'ZERO_DOUBLE_BOOKINGS',
     name: 'Zero Double Bookings',
     description: 'No double bookings should occur',
     category: 'data',
     severity: 'critical',
-    check: async (metrics, state) => {
+    check: async (metrics) => {
       const actual = metrics.doubleBookings || 0;
       const threshold = 0;
-      const passed = actual === threshold;
-      
-      return {
-        passed,
-        actual,
-        threshold,
-        message: `Double bookings detected: ${actual} (threshold: ${threshold})`,
-        timestamp: new Date().toISOString()
-      };
-    }
+      return actual === threshold
+        ? null
+        : violation('ZERO_DOUBLE_BOOKINGS', 'critical', `Double bookings detected: ${actual}`, {
+            actual,
+            threshold,
+          });
+    },
   },
   {
-    id: 'no_orphaned_references',
+    code: 'NO_ORPHANED_REFERENCES',
     name: 'No Orphaned References',
     description: 'No orphaned vendor/customer references should exist',
     category: 'data',
     severity: 'critical',
-    check: async (metrics, state) => {
+    check: async (metrics) => {
       const actual = metrics.orphanedReferences || 0;
       const threshold = 0;
-      const passed = actual === threshold;
-      
-      return {
-        passed,
-        actual,
-        threshold,
-        message: `Orphaned references: ${actual} (threshold: ${threshold})`,
-        timestamp: new Date().toISOString()
-      };
-    }
-  }
+      return actual === threshold
+        ? null
+        : violation('NO_ORPHANED_REFERENCES', 'critical', `Orphaned references detected: ${actual}`, {
+            actual,
+            threshold,
+          });
+    },
+  },
 ];
 
-// System Health
 export const SYSTEM_INVARIANTS: SimInvariant[] = [
   {
-    id: 'orchestrator_tick_drift',
+    code: 'ORCHESTRATOR_TICK_DRIFT',
     name: 'Orchestrator Tick Drift',
-    description: 'Tick drift must be < 100ms per real second',
+    description: 'Tick drift must be under 100ms per real second',
     category: 'system',
     severity: 'critical',
-    check: async (metrics, state) => {
+    check: async (metrics) => {
       const actual = metrics.tickDriftMs || 0;
       const threshold = 100;
-      const passed = actual < threshold;
-      
-      return {
-        passed,
-        actual: actual.toFixed(2) + 'ms',
-        threshold: threshold + 'ms',
-        message: `Tick drift: ${actual.toFixed(2)}ms (threshold: ${threshold}ms)`,
-        timestamp: new Date().toISOString()
-      };
-    }
+      return actual < threshold
+        ? null
+        : violation('ORCHESTRATOR_TICK_DRIFT', 'critical', `Tick drift ${actual.toFixed(2)}ms exceeds ${threshold}ms`, {
+            actual: `${actual.toFixed(2)}ms`,
+            threshold: `${threshold}ms`,
+          });
+    },
   },
   {
-    id: 'memory_usage',
+    code: 'MEMORY_USAGE',
     name: 'Memory Usage',
-    description: 'Memory usage must be < 80% of available',
+    description: 'Memory usage must be under 80% of available',
     category: 'system',
-    severity: 'warning',
-    check: async (metrics, state) => {
+    severity: 'medium',
+    check: async (metrics) => {
       const actual = metrics.memoryUsagePercent || 0;
       const threshold = 80;
-      const passed = actual < threshold;
-      
-      return {
-        passed,
-        actual: actual.toFixed(1) + '%',
-        threshold: threshold + '%',
-        message: `Memory usage: ${actual.toFixed(1)}% (threshold: ${threshold}%)`,
-        timestamp: new Date().toISOString()
-      };
-    }
-  }
+      return actual < threshold
+        ? null
+        : violation('MEMORY_USAGE', 'medium', `Memory usage ${actual.toFixed(1)}% exceeds ${threshold}%`, {
+            actual: `${actual.toFixed(1)}%`,
+            threshold: `${threshold}%`,
+          });
+    },
+  },
 ];
 
-// All invariants
 export const ALL_INVARIANTS = [
   ...API_INVARIANTS,
   ...BUSINESS_INVARIANTS,
   ...CACHE_INVARIANTS,
   ...DATA_INVARIANTS,
-  ...SYSTEM_INVARIANTS
+  ...SYSTEM_INVARIANTS,
 ];
 
-// Invariant checker
 export class InvariantChecker {
   private violations: InvariantViolation[] = [];
-  private runId: string;
-  private seed: number;
+  private runId: string | null;
+  private seed: number | null;
 
-  constructor(runId: string, seed: number) {
+  constructor(runId: string | null, seed: number | null) {
     this.runId = runId;
     this.seed = seed;
   }
 
-  async checkAll(metrics: any, state: any): Promise<InvariantViolation[]> {
+  async checkAll(metrics: SimMetrics, state: SimState): Promise<InvariantViolation[]> {
     this.violations = [];
     
     for (const invariant of ALL_INVARIANTS) {
       try {
         const result = await invariant.check(metrics, state);
         
-        if (!result.passed) {
+        if (result) {
           this.violations.push({
-            invariant,
-            result,
-            runId: this.runId,
-            seed: this.seed,
-            context: { metrics, state }
-          });
-        }
-              } catch (error) {
-          console.error(`Invariant check failed for ${invariant.id}:`, error);
-          // Mark as violation if check itself fails
-          this.violations.push({
-            invariant,
-            result: {
-              passed: false,
-              actual: 'ERROR',
-              threshold: 'N/A',
-              message: `Invariant check failed: ${error instanceof Error ? error.message : String(error)}`,
-              timestamp: new Date().toISOString()
+            ...result,
+            details: {
+              ...(result.details || {}),
+              runId: this.runId,
+              seed: this.seed,
             },
-            runId: this.runId,
-            seed: this.seed,
-            context: { metrics, state, error: error instanceof Error ? error.message : String(error) }
           });
         }
+      } catch (error) {
+        this.violations.push(
+          violation(
+            `${invariant.code}_CHECK_FAILED`,
+            'high',
+            `Invariant check failed: ${error instanceof Error ? error.message : String(error)}`,
+            { runId: this.runId, seed: this.seed }
+          )
+        );
+      }
     }
     
     return this.violations;
@@ -330,7 +289,7 @@ export class InvariantChecker {
   }
 
   hasCriticalViolations(): boolean {
-    return this.violations.some(v => v.invariant.severity === 'critical');
+    return this.violations.some(v => v.severity === 'critical');
   }
 
   getSummary(): {
@@ -343,8 +302,8 @@ export class InvariantChecker {
     const total = ALL_INVARIANTS.length;
     const failed = this.violations.length;
     const passed = total - failed;
-    const critical = this.violations.filter(v => v.invariant.severity === 'critical').length;
-    const warnings = this.violations.filter(v => v.invariant.severity === 'warning').length;
+    const critical = this.violations.filter(v => v.severity === 'critical').length;
+    const warnings = this.violations.filter(v => v.severity === 'medium' || v.severity === 'high').length;
     
     return { total, passed, failed, critical, warnings };
   }

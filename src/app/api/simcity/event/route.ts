@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     // Trigger the event by calling the orchestrator directly
     // We'll use the existing event emission system
-    orchestrator.emit('manual_event', {
+    orchestrator.emitSimEvent('manual_event', {
       type,
       durationMin,
       parameters,

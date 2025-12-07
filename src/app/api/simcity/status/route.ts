@@ -7,14 +7,19 @@ export async function GET() {
     const state = orchestrator.getState();
     const metrics = orchestrator.getMetrics();
     const uptime = orchestrator.getUptime();
+    const runInfo = orchestrator.getRunInfo();
 
     return NextResponse.json({
       success: true,
       data: {
-        state,
+        state: { ...state, metrics },
         metrics,
+        policies: state.policies,
+        runInfo,
+        scenario: runInfo.scenario,
         uptime,
-        isRunning: orchestrator.isRunning(),
+        isRunning: state.running,
+        timestamp: new Date().toISOString(),
       }
     });
   } catch (error) {
@@ -25,4 +30,3 @@ export async function GET() {
     }, { status: 500 });
   }
 }
-

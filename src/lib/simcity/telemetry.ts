@@ -1,30 +1,12 @@
-import { SimMetrics, SimEvent } from './types';
+import { DEFAULT_METRICS, SimEventPayload, SimMetrics } from './types';
 
 export class SimTelemetry {
   private metrics: SimMetrics;
-  private events: SimEvent[] = [];
+  private events: SimEventPayload[] = [];
   private startTime: Date | null = null;
 
   constructor() {
-    this.metrics = {
-      bookingsCreated: 0,
-      reschedules: 0,
-      cancels: 0,
-      rescheduleRate: 0,
-      cancelRate: 0,
-      completionRate: 0,
-      vendorAcceptRate: 0,
-      vendorDeclineRate: 0,
-      avgVendorResponseTime: 0,
-      patienceBreaches: 0,
-      chatVolume: 0,
-      activeAgents: 0,
-      throughput: 0,
-      avgBookingLatency: 0,
-      errorCount: 0,
-      skinFeesCollected: 0,
-      totalAgentsSpawned: 0,
-    };
+    this.metrics = { ...DEFAULT_METRICS };
   }
 
   start(): void {
@@ -34,57 +16,59 @@ export class SimTelemetry {
   }
 
   private resetMetrics(): void {
-    this.metrics = {
-      bookingsCreated: 0,
-      reschedules: 0,
-      cancels: 0,
-      rescheduleRate: 0,
-      cancelRate: 0,
-      completionRate: 0,
-      vendorAcceptRate: 0,
-      vendorDeclineRate: 0,
-      avgVendorResponseTime: 0,
-      patienceBreaches: 0,
-      chatVolume: 0,
-      activeAgents: 0,
-      throughput: 0,
-      avgBookingLatency: 0,
-      errorCount: 0,
-      skinFeesCollected: 0,
-      totalAgentsSpawned: 0,
-    };
+    this.metrics = { ...DEFAULT_METRICS };
   }
 
-  log(event: SimEvent): void {
+  log(event: SimEventPayload): void {
     this.events.push(event);
     this.updateMetrics(event);
   }
 
-  private updateMetrics(event: SimEvent): void {
+  private updateMetrics(event: SimEventPayload): void {
     switch (event.type) {
-      case 'agent_spawn':
-        this.metrics.totalAgentsSpawned++;
-        this.metrics.activeAgents++;
-        break;
-      case 'agent_done':
-        this.metrics.activeAgents = Math.max(0, this.metrics.activeAgents - 1);
-        if (event.data?.result) {
-          this.processAgentResult(event.data.result);
-        }
-        break;
+    case 'agent_spawn':
+    case 'agent_spawned':
+      this.metrics.totalAgentsSpawned++;
+      this.metrics.activeAgents++;
+      if (event.data?.kind === 'customer') {
+        this.metrics.activeCustomers = Math.max(0, (this.metrics.activeCustomers || 0) + 1);
+      }
+      if (event.data?.kind === 'vendor') {
+        this.metrics.activeVendors = Math.max(0, (this.metrics.activeVendors || 0) + 1);
+      }
+      break;
+    case 'agent_done':
+      this.metrics.activeAgents = Math.max(0, this.metrics.activeAgents - 1);
+      if (event.data?.kind === 'customer') {
+        this.metrics.activeCustomers = Math.max(0, (this.metrics.activeCustomers || 0) - 1);
+      }
+      if (event.data?.kind === 'vendor') {
+        this.metrics.activeVendors = Math.max(0, (this.metrics.activeVendors || 0) - 1);
+      }
+      if (event.data?.result) {
+        this.processAgentResult(event.data.result);
+      }
+      break;
     }
     this.calculateDerivedMetrics();
   }
 
   private processAgentResult(result: any): void {
+    if (!result.success) {
+      this.metrics.errorCount++;
+      this.metrics.errors = this.metrics.errorCount;
+    }
+
     if (result.kind === 'customer') {
       if (result.success) {
         this.metrics.bookingsCreated++;
+        this.metrics.totalBookings = this.metrics.bookingsCreated;
+        this.metrics.completedBookings += result.cancelled ? 0 : 1;
         if (result.rescheduled) this.metrics.reschedules++;
         if (result.cancelled) this.metrics.cancels++;
         if (result.chatMessages > 0) this.metrics.chatVolume += result.chatMessages;
-      } else {
-        this.metrics.errorCount++;
+        this.metrics.chats = this.metrics.chatVolume;
+        this.metrics.cancelledBookings = this.metrics.cancels;
       }
     } else if (result.kind === 'vendor') {
       if (result.accepted) {
@@ -113,6 +97,15 @@ export class SimTelemetry {
       this.metrics.cancelRate = this.metrics.cancels / total;
       this.metrics.completionRate = (this.metrics.bookingsCreated - this.metrics.cancels) / total;
       this.metrics.throughput = total / (this.getElapsedMinutes() || 1);
+      this.metrics.totalBookings = this.metrics.bookingsCreated;
+      this.metrics.cancelledBookings = this.metrics.cancels;
+      this.metrics.errors = this.metrics.errorCount;
+      this.metrics.revenue = this.metrics.skinFeesCollected;
+      this.metrics.chats = this.metrics.chatVolume;
+      this.metrics.completedBookings = Math.max(
+        0,
+        this.metrics.bookingsCreated - this.metrics.cancels
+      );
     }
 
     const totalVendorActions = this.metrics.vendorAcceptRate + this.metrics.vendorDeclineRate;
@@ -131,34 +124,16 @@ export class SimTelemetry {
     return { ...this.metrics };
   }
 
-  getEvents(): SimEvent[] {
+  getEvents(): SimEventPayload[] {
     return [...this.events];
   }
 
-  getRecentEvents(limit: number = 100): SimEvent[] {
+  getRecentEvents(limit: number = 100): SimEventPayload[] {
     return this.events.slice(-limit);
   }
 
   reset(): void {
-    this.metrics = {
-      bookingsCreated: 0,
-      reschedules: 0,
-      cancels: 0,
-      rescheduleRate: 0,
-      cancelRate: 0,
-      completionRate: 0,
-      vendorAcceptRate: 0,
-      vendorDeclineRate: 0,
-      avgVendorResponseTime: 0,
-      patienceBreaches: 0,
-      chatVolume: 0,
-      activeAgents: 0,
-      throughput: 0,
-      avgBookingLatency: 0,
-      errorCount: 0,
-      skinFeesCollected: 0,
-      totalAgentsSpawned: 0,
-    };
+    this.metrics = { ...DEFAULT_METRICS };
     this.events = [];
     this.startTime = null;
   }

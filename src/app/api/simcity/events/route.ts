@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrchestrator } from '@/lib/simcity/orchestrator';
+import { SimEventPayload } from '@/lib/simcity/types';
 
 export async function GET(request: NextRequest) {
   const orchestrator = getOrchestrator();
+  const runInfo = orchestrator.getRunInfo();
 
   // Set up SSE headers
   const response = new NextResponse(
@@ -11,10 +13,17 @@ export async function GET(request: NextRequest) {
         const encoder = new TextEncoder();
         
         // Send initial connection message
-        controller.enqueue(encoder.encode('data: {"type":"connected","timestamp":"' + new Date().toISOString() + '"}\n\n'));
+        const connectedPayload: SimEventPayload = {
+          type: 'connected',
+          timestamp: new Date().toISOString(),
+          runId: runInfo.runId,
+          scenario: runInfo.scenario,
+          data: { message: 'SimCity event stream connected' },
+        };
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(connectedPayload)}\n\n`));
 
         // Set up event listener
-        const eventHandler = (event: any) => {
+        const eventHandler = (event: SimEventPayload) => {
           const data = JSON.stringify(event);
           controller.enqueue(encoder.encode(`data: ${data}\n\n`));
         };
@@ -23,7 +32,14 @@ export async function GET(request: NextRequest) {
 
         // Keep connection alive
         const keepAlive = setInterval(() => {
-          controller.enqueue(encoder.encode('data: {"type":"keepalive","timestamp":"' + new Date().toISOString() + '"}\n\n'));
+          const keepAlivePayload: SimEventPayload = {
+            type: 'keepalive',
+            timestamp: new Date().toISOString(),
+            runId: orchestrator.getRunInfo().runId,
+            scenario: orchestrator.getRunInfo().scenario,
+            data: { message: 'SimCity keepalive' },
+          };
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(keepAlivePayload)}\n\n`));
         }, 30000); // Every 30 seconds
 
         // Clean up on disconnect
@@ -47,4 +63,3 @@ export async function GET(request: NextRequest) {
 
   return response;
 }
-

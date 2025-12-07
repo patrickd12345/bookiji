@@ -1,15 +1,20 @@
-export interface SimState {
-  running: boolean;
-  tick: number;
-  nowISO: string;
-  liveAgents: number;
-  metrics: SimMetrics;
-  policies: SimPolicies;
-  startTime?: Date;
-  lastTickTime?: Date;
+export interface SimRunInfo {
+  runId: string | null;
+  seed: number | null;
+  scenario: string | null;
+  startedAt?: string;
+  finishedAt?: string;
 }
 
 export interface SimMetrics {
+  totalBookings: number;
+  completedBookings: number;
+  cancelledBookings: number;
+  revenue: number;
+  activeCustomers: number;
+  activeVendors: number;
+  errors: number;
+  chats: number;
   bookingsCreated: number;
   reschedules: number;
   cancels: number;
@@ -27,6 +32,38 @@ export interface SimMetrics {
   errorCount: number;
   skinFeesCollected: number;
   totalAgentsSpawned: number;
+  bookingsConfirmed?: number;
+  vendorRequests?: number;
+  vendorResponsesWithin2h?: number;
+  cacheHitRate?: number;
+  cacheInvalidationSpike?: number;
+  doubleBookings?: number;
+  orphanedReferences?: number;
+  tickDriftMs?: number;
+  memoryUsagePercent?: number;
+  p95ResponseTime?: number;
+  p99ResponseTime?: number;
+  errorRate?: number;
+  duplicateCharges?: number;
+  strandedInvoices?: number;
+  orphanInvoices?: number;
+  jwtRefreshLoops?: number;
+  clockSkewFailures?: number;
+  unauthorizedAdminAccess?: number;
+  crossTenantReads?: number;
+  cacheIsolationScore?: number;
+  dstBookingErrors?: number;
+  tzDisplayErrors?: number;
+  dstDoubleBookings?: number;
+  adminApiOverwhelm?: number;
+  inputSanitizationFailures?: number;
+  duplicateWebhookTransitions?: number;
+  orphanBlobs?: number;
+  expiredUrlAccess?: number;
+  rolloutP99?: number;
+  rollbackRecoveryTime?: number;
+  reindexP95?: number;
+  staleVisibilityDelay?: number;
 }
 
 export interface SimPolicies {
@@ -41,20 +78,84 @@ export interface SimPolicies {
   minutesPerTick: number;
   customerSpawnRate: number;
   vendorSpawnRate: number;
+  tenants?: string[];
+  [key: string]: unknown;
 }
 
-export interface SimEvent {
-  type: 'start' | 'stop' | 'tick' | 'agent_spawn' | 'agent_done' | 'policy_change' | 'reset' | 
-         'scenario_event' | 'cache_invalidation_storm' | 'mv_refresh_paused' | 'rls_misconfig' | 
-         'rate_limit_burst' | 'invariant_violation' |
-         // Extended chaos events
-         'PAYMENT_GATEWAY_OUTAGE' | 'PAYMENT_TIMEOUTS' | 'WEBHOOK_DELAY_JITTER' |
-         'FORCE_JWT_EXPIRY' | 'CLOCK_SKEW' | 'RLS_POLICY_TOGGLE' | 'TENANT_MIXER' |
-         'SIMULATE_DST_TRANSITION' | 'USER_TZ_FLAP' | 'PATHOLOGICAL_INPUTS' | 'IP_BURST' |
-         'WEBHOOK_STORM' | 'SMTP_BACKPRESSURE' | 'BLUE_GREEN_SWITCH' | 'SCHEMA_MIGRATION_IN_FLIGHT' |
-         'FTS_REINDEX' | 'MATVIEW_REFRESH_THROTTLE' | 'S3_LATENCY_SPIKES' | 'SIGNED_URL_EARLY_EXPIRY';
+export interface SimState {
+  running: boolean;
+  tick: number;
+  nowISO: string;
+  liveAgents: number;
+  metrics: SimMetrics;
+  policies: SimPolicies;
+  startTime?: string;
+  lastTickTime?: string;
+  scenario?: string | null;
+  runInfo?: SimRunInfo | null;
+}
+
+export type SimEventType =
+  | 'connected'
+  | 'keepalive'
+  | 'start'
+  | 'stop'
+  | 'tick'
+  | 'agent_spawn'
+  | 'agent_spawned'
+  | 'agent_done'
+  | 'policy_change'
+  | 'policy_changed'
+  | 'reset'
+  | 'scenario_event'
+  | 'scenario_started'
+  | 'scenario_completed'
+  | 'cache_invalidation_storm'
+  | 'mv_refresh_paused'
+  | 'rls_misconfig'
+  | 'rate_limit_burst'
+  | 'invariant_violation'
+  | 'metric_spike'
+  | 'manual_event'
+  | 'chaos_event'
+  | 'chaos_event_ended'
+  | 'error'
+  | 'PAYMENT_GATEWAY_OUTAGE'
+  | 'PAYMENT_TIMEOUTS'
+  | 'WEBHOOK_DELAY_JITTER'
+  | 'FORCE_JWT_EXPIRY'
+  | 'CLOCK_SKEW'
+  | 'RLS_POLICY_TOGGLE'
+  | 'TENANT_MIXER'
+  | 'SIMULATE_DST_TRANSITION'
+  | 'USER_TZ_FLAP'
+  | 'PATHOLOGICAL_INPUTS'
+  | 'IP_BURST'
+  | 'WEBHOOK_STORM'
+  | 'SMTP_BACKPRESSURE'
+  | 'BLUE_GREEN_SWITCH'
+  | 'SCHEMA_MIGRATION_IN_FLIGHT'
+  | 'FTS_REINDEX'
+  | 'MATVIEW_REFRESH_THROTTLE'
+  | 'S3_LATENCY_SPIKES'
+  | 'SIGNED_URL_EARLY_EXPIRY';
+
+export interface SimEventPayload {
+  type: SimEventType;
   timestamp: string;
-  data: any;
+  runId?: string | null;
+  scenario?: string | null;
+  data?: any;
+}
+
+export type InvariantSeverity = 'low' | 'medium' | 'high' | 'critical';
+
+export interface InvariantViolation {
+  code: string;
+  message: string;
+  severity: InvariantSeverity;
+  timestamp: string;
+  details?: Record<string, any>;
 }
 
 export interface AgentResult {
@@ -104,7 +205,7 @@ export interface VendorFlow {
 }
 
 export const DEFAULT_POLICIES: SimPolicies = {
-  skinFee: 1.00,
+  skinFee: 1.0,
   refundsEnabled: true,
   vendorOpenHours: { start: 8, end: 18 },
   customerPatienceThreshold: 10,
@@ -118,6 +219,14 @@ export const DEFAULT_POLICIES: SimPolicies = {
 };
 
 export const DEFAULT_METRICS: SimMetrics = {
+  totalBookings: 0,
+  completedBookings: 0,
+  cancelledBookings: 0,
+  revenue: 0,
+  activeCustomers: 0,
+  activeVendors: 0,
+  errors: 0,
+  chats: 0,
   bookingsCreated: 0,
   reschedules: 0,
   cancels: 0,
@@ -135,4 +244,36 @@ export const DEFAULT_METRICS: SimMetrics = {
   errorCount: 0,
   skinFeesCollected: 0,
   totalAgentsSpawned: 0,
+  bookingsConfirmed: 0,
+  vendorRequests: 0,
+  vendorResponsesWithin2h: 0,
+  cacheHitRate: 0,
+  cacheInvalidationSpike: 0,
+  doubleBookings: 0,
+  orphanedReferences: 0,
+  tickDriftMs: 0,
+  memoryUsagePercent: 0,
+  p95ResponseTime: 0,
+  p99ResponseTime: 0,
+  errorRate: 0,
+  duplicateCharges: 0,
+  strandedInvoices: 0,
+  orphanInvoices: 0,
+  jwtRefreshLoops: 0,
+  clockSkewFailures: 0,
+  unauthorizedAdminAccess: 0,
+  crossTenantReads: 0,
+  cacheIsolationScore: 0,
+  dstBookingErrors: 0,
+  tzDisplayErrors: 0,
+  dstDoubleBookings: 0,
+  adminApiOverwhelm: 0,
+  inputSanitizationFailures: 0,
+  duplicateWebhookTransitions: 0,
+  orphanBlobs: 0,
+  expiredUrlAccess: 0,
+  rolloutP99: 0,
+  rollbackRecoveryTime: 0,
+  reindexP95: 0,
+  staleVisibilityDelay: 0,
 };

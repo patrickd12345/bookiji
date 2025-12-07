@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
 
     const summary = {
       runInfo,
+      scenario: runInfo.scenario,
       metrics,
       violations,
       uptime,
@@ -35,7 +36,9 @@ export async function GET(request: NextRequest) {
         tick: state.tick,
         simulatedTime: state.nowISO,
         liveAgents: state.liveAgents,
-        policies: state.policies
+        policies: state.policies,
+        runInfo,
+        scenario: runInfo.scenario,
       },
       timestamp: new Date().toISOString()
     };
