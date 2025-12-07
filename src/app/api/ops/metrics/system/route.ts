@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
     // Get database connection metrics (if available)
     // For now, we'll estimate system load from request patterns
     // Note: get_database_stats function may not exist - handle gracefully
-    let dbMetrics: any = null
+    let dbMetrics: any = null 
     try {
       const { data } = await supabase.rpc('get_database_stats', {}).single()
       dbMetrics = data
