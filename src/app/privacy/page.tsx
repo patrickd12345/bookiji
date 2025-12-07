@@ -1,248 +1,154 @@
-import Link from 'next/link'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy – Bookiji',
+  description: 'Learn how Bookiji collects, uses and protects your data.',
+}
 
 export default function PrivacyPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-4">Privacy Policy</h1>
-        <p className="text-lg text-gray-600 mb-8">
-          Your privacy is important to us. This policy explains how we collect, use, and protect your personal information.
+        <p className="text-lg text-gray-600">
+          Last updated: {new Date().toLocaleDateString()}
         </p>
       </div>
 
       <div className="prose prose-lg max-w-none">
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
+          <h2 className="text-2xl font-semibold mb-4">1. Who we are</h2>
           <p className="text-gray-700 leading-relaxed">
-            Bookiji (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy 
-            explains how we collect, use, disclose, and safeguard your information when you use our 
-            universal booking platform and services.
+            Bookiji (&quot;we&quot;, &quot;us&quot;) is an online booking platform that helps vendors manage services, schedules and bookings.
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">2. Information We Collect</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Personal Information</h3>
-              <p className="text-gray-700 leading-relaxed">
-                We collect information you provide directly to us, including:
-              </p>
-              <ul className="list-disc pl-6 mt-2 text-gray-700">
-                <li>Name, email address, and phone number</li>
-                <li>Account credentials and profile information</li>
-                <li>Payment information (processed securely through third-party providers)</li>
-                <li>Service preferences and booking history</li>
-                <li>Communications with us and other users</li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Location Information</h3>
-              <p className="text-gray-700 leading-relaxed">
-                We use advanced map abstraction technology to protect your exact location while still 
-                enabling you to find nearby services. We collect approximate location data to match 
-                you with relevant service providers, but your precise location is never shared without 
-                your explicit consent.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Usage Information</h3>
-              <p className="text-gray-700 leading-relaxed">
-                We automatically collect information about how you use our platform, including:
-              </p>
-              <ul className="list-disc pl-6 mt-2 text-gray-700">
-                <li>Device information and IP address</li>
-                <li>Browser type and operating system</li>
-                <li>Pages visited and time spent on our platform</li>
-                <li>Search queries and booking interactions</li>
-                <li>Cookies and similar tracking technologies</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">3. How We Use Your Information</h2>
+          <h2 className="text-2xl font-semibold mb-4">2. What data we collect</h2>
           <p className="text-gray-700 leading-relaxed mb-4">
-            We use the information we collect to:
+            We collect:
           </p>
           <ul className="list-disc pl-6 text-gray-700 space-y-2">
-            <li>Provide, maintain, and improve our booking services</li>
-            <li>Process bookings and commitment fee payments securely</li>
-            <li>Match customers with appropriate service providers</li>
-            <li>Send booking confirmations and important updates</li>
-            <li>Provide customer support and resolve disputes</li>
-            <li>Prevent fraud and ensure platform security</li>
-            <li>Analyze usage patterns to improve our services</li>
-            <li>Comply with legal obligations and enforce our terms</li>
+            <li><strong>Account information</strong> – name, email address, password (hashed), workspace or business details.</li>
+            <li><strong>Booking data</strong> – appointments, services, times, prices and related notes.</li>
+            <li><strong>Usage data</strong> – pages visited, features used, performance and error logs.</li>
+            <li><strong>Device and technical data</strong> – browser type, IP address (for security &amp; abuse prevention), approximate region.</li>
+            <li><strong>Payment-related info</strong> – some payment metadata from our payment processor (e.g. Stripe), but not your full card number.</li>
           </ul>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">4. Information Sharing and Disclosure</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Service Providers</h3>
-              <p className="text-gray-700 leading-relaxed">
-                When you book a service, we share necessary information with the service provider to 
-                facilitate your booking. This includes your name, contact information, and booking details.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Third-Party Service Providers</h3>
-              <p className="text-gray-700 leading-relaxed">
-                We may share information with trusted third-party service providers who help us operate 
-                our platform, including payment processors, email services, and analytics providers. 
-                These providers are bound by confidentiality agreements.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Legal Requirements</h3>
-              <p className="text-gray-700 leading-relaxed">
-                We may disclose your information if required by law, court order, or government request, 
-                or to protect our rights, property, or safety, or that of our users.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">5. Data Security</h2>
-          <p className="text-gray-700 leading-relaxed">
-            We implement appropriate technical and organizational measures to protect your personal 
-            information against unauthorized access, alteration, disclosure, or destruction. This includes:
+          <h2 className="text-2xl font-semibold mb-4">3. How we use your data</h2>
+          <p className="text-gray-700 leading-relaxed mb-4">
+            We use your data to:
           </p>
-          <ul className="list-disc pl-6 mt-2 text-gray-700 space-y-1">
-            <li>Encryption of sensitive data in transit and at rest</li>
-            <li>Regular security audits and vulnerability assessments</li>
-            <li>Access controls and authentication mechanisms</li>
-            <li>Secure commitment fee processing through PCI-compliant providers</li>
-            <li>Employee training on data protection practices</li>
+          <ul className="list-disc pl-6 text-gray-700 space-y-2">
+            <li>Provide and operate the Bookiji platform.</li>
+            <li>Process bookings and payments.</li>
+            <li>Keep the platform secure and reliable.</li>
+            <li>Improve performance and user experience.</li>
+            <li>Communicate with you about your account, security, important changes or new features.</li>
           </ul>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">6. Your Rights and Choices</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Access and Correction</h3>
-              <p className="text-gray-700 leading-relaxed">
-                You can access and update your personal information through your account settings. 
-                You may also contact us to request corrections or updates to your information.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Data Portability</h3>
-              <p className="text-gray-700 leading-relaxed">
-                You have the right to request a copy of your personal information in a structured, 
-                machine-readable format.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Deletion</h3>
-              <p className="text-gray-700 leading-relaxed">
-                You may request deletion of your personal information, subject to certain legal and 
-                business requirements. Some information may be retained for legitimate business purposes 
-                or legal compliance.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Communication Preferences</h3>
-              <p className="text-gray-700 leading-relaxed">
-                You can opt out of promotional communications at any time by following the unsubscribe 
-                instructions in emails or updating your account preferences.
-              </p>
-            </div>
-          </div>
+          <h2 className="text-2xl font-semibold mb-4">4. Legal bases (if you are in the EU/EEA/UK)</h2>
+          <p className="text-gray-700 leading-relaxed mb-4">
+            Where GDPR applies, we process your data based on:
+          </p>
+          <ul className="list-disc pl-6 text-gray-700 space-y-2">
+            <li>Performance of a contract (providing the service you signed up for).</li>
+            <li>Legitimate interests (improving and securing the platform).</li>
+            <li>Your consent (for optional features like marketing emails, where applicable).</li>
+          </ul>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">7. Cookies and Tracking Technologies</h2>
+          <h2 className="text-2xl font-semibold mb-4">5. Cookies and similar technologies</h2>
+          <p className="text-gray-700 leading-relaxed mb-4">
+            We may use cookies or similar technologies to:
+          </p>
+          <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+            <li>Keep you logged in.</li>
+            <li>Remember your preferences.</li>
+            <li>Measure usage and performance.</li>
+          </ul>
           <p className="text-gray-700 leading-relaxed">
-            We use cookies and similar technologies to enhance your experience, remember your preferences, 
-            and analyze how our platform is used. You can control cookie settings through your browser, 
-            but some features may not function properly if cookies are disabled.
+            You can usually control cookies in your browser settings, but some features may stop working if you disable them.
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">8. Children&apos;s Privacy</h2>
+          <h2 className="text-2xl font-semibold mb-4">6. Third‑party services</h2>
+          <p className="text-gray-700 leading-relaxed mb-4">
+            We rely on trusted third‑party providers, for example:
+          </p>
+          <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+            <li>Hosting / infrastructure (e.g. Vercel, cloud providers).</li>
+            <li>Database and storage.</li>
+            <li>Analytics and error monitoring.</li>
+            <li>Payment processing (e.g. Stripe).</li>
+          </ul>
           <p className="text-gray-700 leading-relaxed">
-            Our services are not intended for children under 13 years of age. We do not knowingly collect 
-            personal information from children under 13. If we become aware that a child under 13 has 
-            provided us with personal information, we will delete such information.
+            These providers only process your data to help us deliver the Bookiji service.
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">9. International Data Transfers</h2>
+          <h2 className="text-2xl font-semibold mb-4">7. Data retention</h2>
           <p className="text-gray-700 leading-relaxed">
-            Your information may be transferred to and processed in countries other than your own. 
-            We ensure appropriate safeguards are in place to protect your information in accordance 
-            with applicable data protection laws.
+            We keep your data for as long as you have an account or as needed to operate the service. We may retain some data for a longer period where required by law, to resolve disputes or enforce our agreements.
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">10. Data Retention</h2>
+          <h2 className="text-2xl font-semibold mb-4">8. Your rights</h2>
+          <p className="text-gray-700 leading-relaxed mb-4">
+            Depending on your location, you may have the right to:
+          </p>
+          <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+            <li>Access the personal data we hold about you.</li>
+            <li>Correct inaccurate information.</li>
+            <li>Request deletion of your data (where we are allowed to do so).</li>
+            <li>Object to or restrict certain types of processing.</li>
+            <li>Request a copy of your data in a portable format.</li>
+          </ul>
           <p className="text-gray-700 leading-relaxed">
-            We retain your personal information for as long as necessary to provide our services, 
-            comply with legal obligations, resolve disputes, and enforce our agreements. When information 
-            is no longer needed, we securely delete or anonymize it.
+            You can exercise these rights by contacting us using the details below.
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">11. Changes to This Privacy Policy</h2>
+          <h2 className="text-2xl font-semibold mb-4">9. Security</h2>
           <p className="text-gray-700 leading-relaxed">
-            We may update this Privacy Policy from time to time. We will notify you of any material 
-            changes by posting the new Privacy Policy on this page and updating the &quot;Last updated&quot; date. 
-            Your continued use of our services after any changes constitutes acceptance of the updated policy.
+            We use reasonable technical and organizational measures to protect your data. However, no online service is 100% secure. You are responsible for keeping your account credentials safe.
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">12. Contact Us</h2>
+          <h2 className="text-2xl font-semibold mb-4">10. International transfers</h2>
           <p className="text-gray-700 leading-relaxed">
-            If you have any questions about this Privacy Policy or our data practices, please contact 
-            us through our support system or help center. We are committed to addressing your concerns 
-            and protecting your privacy.
+            Your data may be processed in countries outside your own, where data protection laws may differ. Where required, we implement safeguards to protect your data in line with applicable law.
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">13. AdSense Compliance</h2>
+          <h2 className="text-2xl font-semibold mb-4">11. Changes to this policy</h2>
           <p className="text-gray-700 leading-relaxed">
-            We maintain full compliance with Google AdSense policies. For detailed information about
-            our compliance measures, please see our
-            <Link href="/compliance" className="text-blue-600 hover:text-blue-800 underline">AdSense Compliance Audit</Link>.
+            We may update this Privacy Policy from time to time. If we make material changes, we will notify you (for example, via email or in‑app notice).
           </p>
         </section>
-      </div>
 
-      <div className="bg-green-50 p-6 rounded-lg mt-8">
-        <h3 className="text-xl font-semibold mb-3">🔒 Your Privacy Matters</h3>
-        <p className="text-gray-600 mb-4">
-          We&apos;re committed to ensuring your privacy and security at every step. 
-          If you have any questions or concerns, we&apos;re here to help.
-        </p>
-        <Link
-          href="/help"
-          className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-        >
-          Contact Privacy Team
-        </Link>
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">12. Contact us</h2>
+          <p className="text-gray-700 leading-relaxed mb-4">
+            If you have questions about this Privacy Policy or how we handle your data, you can contact us at:
+          </p>
+          <p className="text-gray-700 leading-relaxed">
+            Email: 
+          </p>
+        </section>
       </div>
     </div>
   )
-} 
+}
