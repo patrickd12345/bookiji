@@ -2,11 +2,14 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getSupabaseConfig } from '@/config/supabase'
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  request: Request,
+  context: { params: Promise<Record<string, string>> }
+) {
+  const { id: bookingId } = await context.params
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Disabled in production' }, { status: 403 })
   }
-  const { id: bookingId } = await params
   try {
     const body = await request.json().catch(() => ({}))
     const status = body?.status ?? 'confirmed'

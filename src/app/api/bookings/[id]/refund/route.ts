@@ -5,10 +5,10 @@ import { processRefund } from '@/lib/services/refundService'
 
 export async function POST(
   request: NextRequest,
-  props: { params: Promise<{ id: string }> }
+  context: { params: Promise<Record<string, string>> }
 ) {
+  const { id } = await context.params
   try {
-    const { id } = await props.params;
     const supabase = createSupabaseServerClient()
     
     // Get user session

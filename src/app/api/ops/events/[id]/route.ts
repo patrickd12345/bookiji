@@ -3,10 +3,11 @@ import { getEvent } from '@/scripts/ops-events-store'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<Record<string, string>> }
 ) {
+  const { id } = await context.params
   try {
-    const event = getEvent(params.id)
+    const event = getEvent(id)
     
     if (!event) {
       return NextResponse.json(

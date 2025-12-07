@@ -16,8 +16,9 @@ interface ResolveDisputeRequest {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<Record<string, string>> }
 ) {
+  const { id: disputeId } = await context.params
   try {
     const cookieStore = await cookies()
     const config = getSupabaseConfig()
@@ -39,7 +40,6 @@ export async function POST(
     }
 
     const adminUser = await requireAdmin({ user })
-    const { id: disputeId } = await params
 
     const body: ResolveDisputeRequest = await request.json()
     const { status, resolution, resolution_amount, resolution_type, admin_notes } = body

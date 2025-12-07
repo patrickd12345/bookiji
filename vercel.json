@@ -1,12 +1,2 @@
 {
-  "crons": [
-    {
-      "path": "/api/notifications/batch/process",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/detect-no-shows",
-      "schedule": "*/15 * * * *"
-    }
-  ]
 }

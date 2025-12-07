@@ -29,12 +29,12 @@ import type { LogAnalysis } from '@/types/logs'
  */
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ pattern?: string[] }> | { pattern?: string[] } }
+  context: { params: Promise<Record<string, string>> }
 ) {
   try {
     const { searchParams } = new URL(request.url)
-    const resolvedParams = 'then' in params ? await params : params
-    const patternFromPath = resolvedParams.pattern?.join('/')
+    const patternParam = (await context.params).pattern
+    const patternFromPath = Array.isArray(patternParam) ? patternParam.join('/') : patternParam
     const patternFromQuery = searchParams.get('pattern')
     const pattern = patternFromPath || patternFromQuery || ''
     

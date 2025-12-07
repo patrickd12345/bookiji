@@ -7,8 +7,11 @@ import { qaFromTranscript } from '@/lib/support/summarize';
 import { embed } from '@/lib/support/embeddings';
 import { searchKb } from '@/lib/support/rag';
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(
+  req: Request,
+  context: { params: Promise<Record<string, string>> }
+) {
+  const { id } = await context.params;
   const agent = await getAgentFromAuth(req);
   if (!agent?.roles?.includes('support_agent')) return NextResponse.json({ error:'forbidden' }, { status:403 });
 
@@ -106,8 +109,11 @@ async function maybeCreateKbSuggestion(
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function PATCH(
+  req: Request,
+  context: { params: Promise<Record<string, string>> }
+) {
+  const { id } = await context.params;
   const agent = await getAgentFromAuth(req);
   if (!agent?.roles?.includes('support_agent')) return NextResponse.json({ error:'forbidden' }, { status:403 });
 

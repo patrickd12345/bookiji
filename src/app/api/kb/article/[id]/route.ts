@@ -9,7 +9,11 @@ export async function OPTIONS(req: NextRequest) {
   return preflightResponse(origin, 'GET, OPTIONS');
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<Record<string, string>> }
+) {
+  const { id } = await context.params
   const origin = req.headers.get('origin');
   const cors = buildCorsHeaders(origin, 'GET, OPTIONS');
 
@@ -25,7 +29,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   try {
-    const { id } = await params;
     const article = await Kb.getArticle(id, 'en'); // Default to English for now
     if (!article) {
       return withCommonHeaders(new Response(JSON.stringify({ error: 'Not found', code: 'NOT_FOUND' }), { status: 404, headers: cors }));

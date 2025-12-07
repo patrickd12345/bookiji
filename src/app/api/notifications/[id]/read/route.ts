@@ -4,9 +4,12 @@ import { cookies } from 'next/headers'
 import { getAuthenticatedUserId } from '../../../_utils/auth'
 import { getSupabaseConfig } from '@/config/supabase'
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<Record<string, string>> }
+) {
+  const { id } = await context.params
   try {
-    const { id } = await params
     const cookieStore = await cookies()
     const config = getSupabaseConfig()
     const supabase = createServerClient(

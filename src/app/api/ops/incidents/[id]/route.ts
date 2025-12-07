@@ -7,13 +7,14 @@ import {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<Record<string, string>> }
 ) {
+  const { id } = await context.params
   if (getOpsMode() === 'simcity') {
     try {
       const { violations } = await fetchSimcitySnapshot(request.nextUrl.origin)
       const incidents = simcityToIncidents(violations)
-      const incident = incidents.find((i) => i.id === params.id)
+      const incident = incidents.find((i) => i.id === id)
 
       if (!incident) {
         return NextResponse.json({ error: 'Incident not found' }, { status: 404 })
@@ -45,7 +46,7 @@ export async function GET(
     )
   }
 
-  const target = `${OPS_API_BASE.replace(/\/$/, '')}/ops/incidents/${params.id}`
+  const target = `${OPS_API_BASE.replace(/\/$/, '')}/ops/incidents/${id}`
   try {
     const res = await fetch(target, { cache: 'no-store' })
     const raw = await res.text()

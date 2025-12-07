@@ -7,12 +7,13 @@ import {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { name: string } }
+  context: { params: Promise<Record<string, string>> }
 ) {
+  const { name } = await context.params
   if (getOpsMode() === 'simcity') {
     try {
       const { metrics, violations } = await fetchSimcitySnapshot(request.nextUrl.origin)
-      const sloName = decodeURIComponent(params.name)
+      const sloName = decodeURIComponent(name)
       const slo = simcityToSLOs(metrics, violations).find(
         (s) => s.name.toLowerCase() === sloName.toLowerCase()
       )
@@ -47,7 +48,7 @@ export async function GET(
     )
   }
 
-  const target = `${OPS_API_BASE.replace(/\/$/, '')}/ops/slo/${params.name}`
+  const target = `${OPS_API_BASE.replace(/\/$/, '')}/ops/slo/${name}`
   try {
     const res = await fetch(target, { cache: 'no-store' })
     const raw = await res.text()

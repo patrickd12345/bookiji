@@ -3,9 +3,10 @@ import { updateActionStatus } from '@/scripts/ops-actions-store'
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<Record<string, string>> }
 ) {
-  const updated = updateActionStatus(params.id, 'rejected', {
+  const { id } = await context.params
+  const updated = updateActionStatus(id, 'rejected', {
     decidedBy: 'patrick'
   })
 

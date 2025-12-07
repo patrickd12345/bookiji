@@ -5,13 +5,16 @@ function icsEscape(s: string) {
   return s.replace(/([,;])/g, '\\$1').replace(/\n/g, '\\n')
 }
 
-export async function GET(_: Request, { params }: { params: Promise<{ bookingId: string }> }) {
-  const resolvedParams = await params
+export async function GET(
+  _: Request,
+  context: { params: Promise<Record<string, string>> }
+) {
+  const { bookingId } = await context.params
   const supabase = getSupabaseServerClient()
   const { data: booking, error } = await supabase
     .from('bookings')
     .select('id, service_name, location_text, start_time, end_time')
-    .eq('id', resolvedParams.bookingId)
+    .eq('id', bookingId)
     .single()
 
   if (error || !booking) {

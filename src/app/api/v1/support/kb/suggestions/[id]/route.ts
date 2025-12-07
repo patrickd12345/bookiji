@@ -30,8 +30,11 @@ function generateSlug(question: string): string {
   return `${slug}-${hash}`;
 }
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function PATCH(
+  req: Request,
+  context: { params: Promise<Record<string, string>> }
+) {
+  const { id } = await context.params;
   const agent = await getAgentFromAuth(req);
   if (!agent?.roles?.includes('support_agent')) return NextResponse.json({ error:'forbidden' }, { status:403 });
 

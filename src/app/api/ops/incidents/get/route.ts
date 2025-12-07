@@ -3,10 +3,11 @@ import { getIncident } from '@/scripts/incidents-store'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<Record<string, string>> }
 ) {
+  const { id } = await context.params
   try {
-    const incident = getIncident(params.id)
+    const incident = getIncident(id)
     
     if (!incident) {
       return NextResponse.json(
