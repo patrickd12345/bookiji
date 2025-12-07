@@ -164,9 +164,9 @@ export async function GET(request: NextRequest) {
           timestamp: item.five_minute_bucket,
           cpu_percent: estimatedCpu,
           memory_percent: estimatedMemory,
-          cache_hit_rate: item.cache_hit_rate_percent || null,
-          active_connections: null,
-          database_size_mb: null
+          cache_hit_rate: item.cache_hit_rate_percent || undefined,
+          active_connections: undefined,
+          database_size_mb: undefined
         }
       })
     }

@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     // Get overall status assessment with timeout
     const assessment = await Promise.race([
       sloai.assessOverallStatus(),
-      new Promise<typeof assessment>((_, reject) =>
+      new Promise<Awaited<ReturnType<typeof sloai.assessOverallStatus>>>((_, reject) =>
         setTimeout(() => reject(new Error('SLO assessment timeout')), 30000)
       )
     ]).catch((error) => {
@@ -78,8 +78,8 @@ export async function GET(request: NextRequest) {
       violations = null
     }
 
-    const criticalCount = (violations || []).filter(v => v.severity === 'critical').length
-    const warningCount = (violations || []).filter(v => v.severity === 'warning').length
+    const criticalCount = (violations || []).filter((v: any) => v.severity === 'critical').length
+    const warningCount = (violations || []).filter((v: any) => v.severity === 'warning').length
 
     // Calculate compliance rate
     const totalConfigs = sloConfigs?.length || 0
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
       customerImpact: assessment.customerImpact,
       humanAttentionNeeded: assessment.humanAttentionNeeded,
       recommendations: assessment.recommendations,
-      sloConfigs: sloConfigs?.map(c => ({
+      sloConfigs: sloConfigs?.map((c: any) => ({
         metricName: c.metric_name,
         targetP95: c.target_p95_ms,
         targetP99: c.target_p99_ms,

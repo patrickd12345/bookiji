@@ -78,7 +78,7 @@ export async function GET(request: Request) {
     // Get error logs
     const allLogs = aggregateLogs(start.toISOString(), end.toISOString())
     const errorLogs = allLogs.filter(
-      (log) => log.category === 'error' || 
+      (log: any) => log.category === 'error' || 
                (log.severity === 'error' || log.severity === 'critical')
     )
     
@@ -99,9 +99,9 @@ export async function GET(request: Request) {
     const insights = generateInsights(errorLogs, patterns, correlations)
     
     // Calculate statistics
-    const errorCount = errorLogs.filter((l) => l.severity === 'error').length
-    const criticalCount = errorLogs.filter((l) => l.severity === 'critical').length
-    const warningCount = errorLogs.filter((l) => l.severity === 'warning').length
+    const errorCount = errorLogs.filter((l: any) => l.severity === 'error').length
+    const criticalCount = errorLogs.filter((l: any) => l.severity === 'critical').length
+    const warningCount = errorLogs.filter((l: any) => l.severity === 'warning').length
     
     const analysis: LogAnalysis = {
       timestamp: new Date().toISOString(),

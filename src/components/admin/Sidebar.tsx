@@ -4,19 +4,20 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  LayoutDashboard, 
-  BarChart3, 
-  Users, 
-  Calendar, 
-  Radio, 
+import {
+  LayoutDashboard,
+  BarChart3,
+  Users,
+  Calendar,
+  Radio,
   Settings,
   Menu,
   X,
   Plus,
   MessageSquare,
   Database,
-  Activity
+  Activity,
+  Brain
 } from 'lucide-react'
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
   { href: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
   { href: '/admin/slo', icon: Activity, label: 'SLO Monitoring' },
   { href: '/admin/cache', icon: Database, label: 'Cache Management' },
+  { href: '/admin/ops-ai', icon: Brain, label: 'OpsAI Console' },
   { href: '/admin/vendors', icon: Users, label: 'Vendors' },
   { href: '/admin/customers', icon: Users, label: 'Customers' },
   { href: '/admin/specialties', icon: Settings, label: 'Specialties' },
