@@ -8,9 +8,10 @@ const supabase = createClient(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
     const { status, admin_notes, parent_id } = await req.json();
 
     if (!status || !['approved', 'rejected'].includes(status)) {
@@ -21,7 +22,7 @@ export async function PUT(
     const { data: suggestion, error: fetchError } = await supabase
       .from("specialty_suggestions")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", resolvedParams.id)
       .single();
 
     if (fetchError || !suggestion) {
@@ -43,7 +44,7 @@ export async function PUT(
     const { error: updateError } = await supabase
       .from("specialty_suggestions")
       .update(updateData)
-      .eq("id", params.id);
+      .eq("id", resolvedParams.id);
 
     if (updateError) {
       console.error("Suggestion update error:", updateError);
@@ -89,9 +90,10 @@ export async function PUT(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
     const { data, error } = await supabase
       .from("specialty_suggestions")
       .select(`
@@ -99,7 +101,7 @@ export async function GET(
         specialties!specialty_suggestions_parent_id_fkey(name),
         app_users!specialty_suggestions_app_user_id_fkey(display_name)
       `)
-      .eq("id", params.id)
+      .eq("id", resolvedParams.id)
       .single();
 
     if (error) {
@@ -117,4 +119,3 @@ export async function GET(
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

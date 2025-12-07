@@ -8,13 +8,14 @@ const supabase = createClient(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
     const { data, error } = await supabase
       .from("specialties")
       .select("id,name,slug,parent_id,path,is_active,created_at,updated_at")
-      .eq("id", params.id)
+      .eq("id", resolvedParams.id)
       .single();
 
     if (error) {
@@ -35,9 +36,10 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
     const { name, parent_id, is_active } = await req.json();
 
     if (!name) {
@@ -52,7 +54,7 @@ export async function PUT(
         is_active: is_active !== undefined ? is_active : true,
         updated_at: new Date().toISOString()
       })
-      .eq("id", params.id)
+      .eq("id", resolvedParams.id)
       .select()
       .single();
 
@@ -70,14 +72,15 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
     // Check if specialty has children
     const { data: children, error: childrenError } = await supabase
       .from("specialties")
       .select("id")
-      .eq("parent_id", params.id);
+      .eq("parent_id", resolvedParams.id);
 
     if (childrenError) {
       console.error("Children check error:", childrenError);
@@ -94,7 +97,7 @@ export async function DELETE(
     const { data: vendorUsage, error: vendorError } = await supabase
       .from("vendor_specialties")
       .select("id")
-      .eq("specialty_id", params.id)
+      .eq("specialty_id", resolvedParams.id)
       .limit(1);
 
     if (vendorError) {
@@ -112,7 +115,7 @@ export async function DELETE(
     const { error } = await supabase
       .from("specialties")
       .delete()
-      .eq("id", params.id);
+      .eq("id", resolvedParams.id);
 
     if (error) {
       console.error("Specialty deletion error:", error);
@@ -125,4 +128,3 @@ export async function DELETE(
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-
