@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     
     if (!baseUrl) {
       // Prefer request.nextUrl.origin when available (works in most environments)
-      baseUrl = request.nextUrl.origin || process.env.NEXT_PUBLIC_SITE_URL
+      baseUrl = request.nextUrl.origin || process.env.NEXT_PUBLIC_SITE_URL || null
     }
 
     // Validate baseUrl - must be a valid URL
@@ -187,13 +187,14 @@ export async function GET(request: NextRequest) {
           missingEndpoints.push(missing)
           // Add a signal indicating missing data
           allSignals.push({
-            source: missing.source,
+            source: missing.source as AnomalySignal['source'],
+            endpoint: missing.endpoint,
             type: 'endpoint_unavailable',
-            severity: 'warning',
-            message: `Endpoint ${missing.endpoint} unavailable: ${missing.reason}`,
+            severity: 'low' as const,
+            description: `Endpoint ${missing.endpoint} unavailable: ${missing.reason}`,
             timestamp: new Date().toISOString(),
             metadata: { endpoint: missing.endpoint, reason: missing.reason }
-          } as AnomalySignal)
+          })
         }
       } else {
         // Promise rejected (shouldn't happen with Promise.allSettled, but handle it)
