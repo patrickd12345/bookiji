@@ -1,17 +1,25 @@
-import type { NextConfig } from 'next';
-
+/** @type {import('next').NextConfig} */
 const isProd = process.env.VERCEL_ENV === 'production';
 
-// Inline security headers to avoid import issues
-const securityHeaders: Record<string, string> = {
-  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss: https://lzgynywojluwdccqkeop.supabase.co https://api.stripe.com; img-src 'self' data: blob: https:; font-src 'self' data:; frame-src 'self' https://js.stripe.com;",
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  'X-Frame-Options': 'DENY',
-  'X-Content-Type-Options': 'nosniff',
-  'Referrer-Policy': 'strict-origin-when-cross-origin'
-};
+const securityHeaders = [
+  {
+    key: 'Content-Security-Policy',
+    value:
+      "default-src 'self'; " +
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "connect-src 'self' ws: wss: https://lzgynywojluwdccqkeop.supabase.co https://api.stripe.com; " +
+      "img-src 'self' data: blob: https:; " +
+      "font-src 'self' data:; " +
+      "frame-src https://js.stripe.com;",
+  },
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+];
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   eslint: {
     ignoreDuringBuilds: false,
   },
@@ -21,22 +29,24 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizeCss: true,
   },
+
   async headers() {
-    const headers = [];
-    
-    // Add security headers
-    Object.entries(securityHeaders).forEach(([key, value]) => {
-      headers.push({ key, value });
-    });
-    
-    // Add non-prod noindex header
+    const finalHeaders = [...securityHeaders];
+
     if (!isProd) {
-      headers.push({ key: 'X-Robots-Tag', value: 'noindex, nofollow' });
+      finalHeaders.push({
+        key: 'X-Robots-Tag',
+        value: 'noindex, nofollow',
+      });
     }
-    
-    return [{ source: '/:path*', headers }];
+
+    return [
+      {
+        source: "/(.*)",
+        headers: finalHeaders,
+      },
+    ];
   },
 };
 
 export default nextConfig;
-

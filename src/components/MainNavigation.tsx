@@ -99,7 +99,7 @@ export default function MainNavigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center" data-test="nav-logo">
               <span className="text-xl font-bold text-primary">Bookiji</span>
             </Link>
           </div>
@@ -116,6 +116,7 @@ export default function MainNavigation() {
                           ? 'bg-primary/10 text-primary'
                           : 'text-foreground hover:bg-muted'
                       }`}
+                      data-test="nav-dashboard"
                     >
                       {t('nav.dashboard')}
                     </Link>
@@ -128,6 +129,7 @@ export default function MainNavigation() {
                             ? 'bg-primary/10 text-primary'
                             : 'text-foreground hover:bg-muted'
                         }`}
+                        data-test="nav-vendor-portal"
                       >
                         {t('nav.vendor_portal')}
                       </Link>
@@ -176,6 +178,7 @@ export default function MainNavigation() {
                       }}
                       className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
                       title="Replay the guided tour for your current role"
+                      data-test="nav-replay-tour"
                     >
                       🎯 Replay Tour
                     </button>
@@ -196,6 +199,7 @@ export default function MainNavigation() {
                     <Link
                       href="/get-started"
                       className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                      data-test="nav-start-booking"
                     >
                       {t('nav.start_booking')}
                     </Link>
@@ -209,6 +213,7 @@ export default function MainNavigation() {
                       }}
                       className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted flex flex-col items-start"
                       aria-label="Book an appointment as a customer"
+                      data-test="nav-book-appointment"
                     >
                       <span>Book an Appointment</span>
                       <span className="text-xs text-gray-500">(Customer)</span>
@@ -223,6 +228,7 @@ export default function MainNavigation() {
                       }}
                       className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted flex flex-col items-start"
                       aria-label="Offer your services as a provider"
+                      data-test="nav-offer-services"
                     >
                       <span>Offer Your Services</span>
                       <span className="text-xs text-gray-500">(Provider)</span>
@@ -236,6 +242,7 @@ export default function MainNavigation() {
                     <Link
                       href="/login"
                       className="px-3 py-2 rounded-md text-sm font-medium text-primary hover:opacity-80"
+                      data-test="nav-login"
                     >
                       {t('nav.log_in')}
                     </Link>

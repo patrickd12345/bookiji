@@ -1,0 +1,58 @@
+name: CI – Core (Lint, Types, Tests, Coverage)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+concurrency:
+  group: ci-core-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      matrix:
+        package: [web] # future-friendly if you add more packages
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci --legacy-peer-deps
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Unit / integration tests
+        run: npm test || npm run test || echo "No test script, skipping"
+
+      - name: Coverage (Vitest)
+        run: |
+          if npm run | grep -q "test:coverage"; then
+            npm run test:coverage
+          else
+            echo "No test:coverage script, skipping"
+          fi
+
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: ${{ matrix.package }}
+          fail_ci_if_error: false

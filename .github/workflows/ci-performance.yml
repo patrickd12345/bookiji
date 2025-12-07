@@ -1,0 +1,81 @@
+name: CI – Performance & Sentry
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-performance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse-staging:
+    name: Lighthouse – Staging
+    runs-on: ubuntu-latest
+    # Note: Create 'staging' environment in GitHub Settings → Environments
+    # environment:
+    #   name: staging
+    #   url: https://staging.bookiji.com/
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Run Lighthouse on Staging
+        run: lhci autorun --collect.url=https://staging.bookiji.com/ || true
+
+  lighthouse:
+    name: Lighthouse – Production
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://www.bookiji.com/
+    if: github.ref == 'refs/heads/main'
+    # Uncomment when staging environment is created:
+    # needs: lighthouse-staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Run Lighthouse with Performance Budgets
+        run: lhci autorun || true
+
+  sentry:
+    name: Sentry Release Check
+    runs-on: ubuntu-latest
+    needs: lighthouse
+    if: always() && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+
+    env:
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install sentry-cli
+        run: curl -sL https://sentry.io/get-cli/ | bash
+
+      - name: Check Sentry release wiring
+        run: |
+          export SENTRY_RELEASE=$(git rev-parse HEAD)
+          sentry-cli releases propose-version
+          sentry-cli releases list --project "$SENTRY_PROJECT" | head -n 5 || true

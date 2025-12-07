@@ -1,0 +1,144 @@
+name: Bookiji Full CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: bookiji-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  full-pipeline:
+    name: Full CI — Tests + Snapshots + Reporting
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+
+    env:
+      NODE_ENV: test
+      NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+      SUPABASE_SERVICE_ROLE_KEY: supabase-service-role-key
+      SUPABASE_ANON_KEY: supabase-anon-key
+      STRIPE_SECRET_KEY: sk_test_mock
+      STRIPE_WEBHOOK_SECRET: whsec_mock
+      PLAYWRIGHT_BROWSERS_PATH: 0
+
+    steps:
+      # ------------------------------
+      # Checkout & Setup
+      # ------------------------------
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      # ------------------------------
+      # Supabase local test env
+      # ------------------------------
+      - name: Install Supabase CLI
+        run: npm install -g supabase
+
+      - name: Start Supabase services
+        run: |
+          npx supabase stop || true
+          npx supabase start --debug
+        env:
+          SUPABASE_HOST: 127.0.0.1
+
+      - name: Run DB migrations
+        run: npm run db:push
+
+      # ------------------------------
+      # Detect Vercel Preview or Local
+      # ------------------------------
+      - name: Detect Target URL
+        id: target
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "url=https://${{ github.event.pull_request.head.ref }}.bookiji.com" >> $GITHUB_OUTPUT
+          else
+            echo "url=http://localhost:3000" >> $GITHUB_OUTPUT
+          fi
+
+      # ------------------------------
+      # Start Next.js server (only on non-preview)
+      # ------------------------------
+      - name: Start local Next.js server
+        if: ${{ steps.target.outputs.url == 'http://localhost:3000' }}
+        run: |
+          npm run build
+          nohup npm run start &
+      - name: Wait for server
+        if: ${{ steps.target.outputs.url == 'http://localhost:3000' }}
+        run: npx wait-on http://localhost:3000
+
+      # ------------------------------
+      # Run Playwright Tests
+      # ------------------------------
+      - name: Run E2E Tests — ${{ matrix.browser }}
+        env:
+          BASE_URL: ${{ steps.target.outputs.url }}
+        run: npx playwright test --project=${{ matrix.browser }} --reporter=list
+
+      # ------------------------------
+      # Upload Playwright Report
+      # ------------------------------
+      - name: Upload Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: playwright-report/
+          retention-days: 5
+
+      - name: Upload Snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshots-${{ matrix.browser }}
+          path: test-results/**/*.png
+          retention-days: 7
+
+      # ------------------------------
+      # Auto snapshot update on PRs
+      # ------------------------------
+      - name: Auto-Update Snapshots
+        if: ${{ failure() && github.event_name == 'pull_request' }}
+        run: npx playwright test --update-snapshots || true
+
+      - name: Upload Updated Snapshots (PR only)
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: updated-snapshots
+          path: test-results/**/*.png
+
+      # ------------------------------
+      # PR Comments on Failure
+      # ------------------------------
+      - name: Comment on PR if tests failed
+        if: ${{ failure() && github.event_name == 'pull_request' }}
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: |
+            ❌ **Bookiji CI Failed**
+
+            - Browser: **${{ matrix.browser }}**
+
+            - See attached artifacts for test reports, screenshots, and snapshots.
