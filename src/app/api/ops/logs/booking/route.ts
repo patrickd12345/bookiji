@@ -1,4 +1,9 @@
 import { NextResponse } from 'next/server'
+import { getOpsMode } from '../../_config'
+import {
+  fetchSimcitySnapshot,
+  simcityToLogs
+} from '../../_simcity/ops-from-simcity'
 import { aggregateLogs } from '@/scripts/logs-store'
 import {
   detectPatterns,
@@ -17,6 +22,22 @@ import type { LogAnalysis } from '@/types/logs'
  * Output style: Analytical, pattern-focused, correlational (not causal unless clear).
  */
 export async function GET(request: Request) {
+  if (getOpsMode() === 'simcity') {
+    try {
+      const origin = new URL(request.url).origin
+      const { violations } = await fetchSimcitySnapshot(origin)
+      return NextResponse.json(simcityToLogs(violations))
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error: 'Failed to load SimCity logs',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        },
+        { status: 503 }
+      )
+    }
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const startTime = searchParams.get('startTime')

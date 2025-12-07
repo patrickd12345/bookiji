@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getOpsMode } from '../../_config'
+import {
+  fetchSimcitySnapshot,
+  simcityToSystemMetrics
+} from '../../_simcity/ops-from-simcity'
 import { MetricsAI, SystemMetrics } from '@/lib/metrics/metricsAI'
 
 /**
@@ -9,6 +14,21 @@ import { MetricsAI, SystemMetrics } from '@/lib/metrics/metricsAI'
  * MetricsAI analyzes trends and detects anomalies
  */
 export async function GET(request: NextRequest) {
+  if (getOpsMode() === 'simcity') {
+    try {
+      const { metrics } = await fetchSimcitySnapshot(request.nextUrl.origin)
+      return NextResponse.json(simcityToSystemMetrics(metrics))
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error: 'Failed to load SimCity system metrics',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        },
+        { status: 503 }
+      )
+    }
+  }
+
   try {
     // Create Supabase client inside handler with safety checks
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

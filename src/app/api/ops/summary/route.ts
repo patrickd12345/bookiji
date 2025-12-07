@@ -1,6 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getOpsMode } from '../_config'
+import { fetchSimcitySnapshot, simcityToOpsSummary } from '../_simcity/ops-from-simcity'
 
 export async function GET(request: NextRequest) {
+  if (getOpsMode() === 'simcity') {
+    try {
+      const { state, runInfo, violations } = await fetchSimcitySnapshot(
+        request.nextUrl.origin
+      )
+      return NextResponse.json(simcityToOpsSummary(state, runInfo, violations))
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error: 'Failed to load SimCity summary',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        },
+        { status: 503 }
+      )
+    }
+  }
+
   // Resolve base URL: prefer env vars, fall back to request origin for local dev
   const OPS_API_BASE =
     process.env.OPS_API_BASE ||

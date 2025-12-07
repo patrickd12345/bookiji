@@ -23,6 +23,9 @@ export type FusedOpsState = {
   summary: string
   correlations: string[]
   recommendedChecks: string[]
+  scenario?: string | null
+  runId?: string | null
+  seed?: number | null
 }
 
 function computeRisk(input: {
@@ -114,6 +117,11 @@ export async function getFusedOpsState(): Promise<FusedOpsState> {
     opsGet<DeployReadiness>('/ops/deployments/readiness')
   ])
 
+  const runInfo = (summary as any)?.runInfo || null
+  const scenario = (summary as any)?.scenario ?? runInfo?.scenario ?? null
+  const runId = runInfo?.runId ?? null
+  const seed = runInfo?.seed ?? null
+
   const risk = computeRisk({
     incidents: summary.incidents,
     anomaly,
@@ -130,6 +138,9 @@ export async function getFusedOpsState(): Promise<FusedOpsState> {
     anomaly,
     deployReadiness: readiness,
     risk,
+    scenario,
+    runId,
+    seed,
     summary: buildSummary(summary.health.overall, summary.incidents.length, anomaly.status, readiness.status),
     correlations: buildCorrelations({
       incidents: summary.incidents,

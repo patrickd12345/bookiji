@@ -127,6 +127,12 @@ export default function OpsAIOverviewPage() {
         </span>
       </div>
 
+      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-300">
+        <span>Scenario: {fused.scenario ?? 'n/a'}</span>
+        <span>runId: {fused.runId ?? 'n/a'}</span>
+        <span>seed: {fused.seed ?? 'n/a'}</span>
+      </div>
+
       <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div>

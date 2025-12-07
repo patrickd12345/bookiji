@@ -41,9 +41,16 @@ function Subnav() {
 }
 
 export default function OpsAILayout({ children }: { children: React.ReactNode }) {
+  const simMode = process.env.NEXT_PUBLIC_OPS_MODE === 'simcity'
+
   return (
     <div className="space-y-6">
       <header className="space-y-3">
+        {simMode && (
+          <div className="rounded-lg border border-amber-600/50 bg-amber-900/30 px-3 py-2 text-sm text-amber-100">
+            Simulation Mode (SimCity)
+          </div>
+        )}
         <div>
           <h1 className="text-3xl font-semibold text-slate-50">OpsAI Console</h1>
           <p className="text-slate-400">

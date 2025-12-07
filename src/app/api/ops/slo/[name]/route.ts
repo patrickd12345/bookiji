@@ -2,18 +2,30 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getOpsMode } from '../../_config'
 import {
   fetchSimcitySnapshot,
-  simcityToDeployReadiness
+  simcityToSLOs
 } from '../../_simcity/ops-from-simcity'
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { name: string } }
+) {
   if (getOpsMode() === 'simcity') {
     try {
-      const { violations } = await fetchSimcitySnapshot(request.nextUrl.origin)
-      return NextResponse.json(simcityToDeployReadiness(violations))
+      const { metrics, violations } = await fetchSimcitySnapshot(request.nextUrl.origin)
+      const sloName = decodeURIComponent(params.name)
+      const slo = simcityToSLOs(metrics, violations).find(
+        (s) => s.name.toLowerCase() === sloName.toLowerCase()
+      )
+
+      if (!slo) {
+        return NextResponse.json({ error: 'SLO not found' }, { status: 404 })
+      }
+
+      return NextResponse.json(slo)
     } catch (error) {
       return NextResponse.json(
         {
-          error: 'Failed to load SimCity deploy readiness',
+          error: 'Failed to load SimCity SLO',
           message: error instanceof Error ? error.message : 'Unknown error'
         },
         { status: 503 }
@@ -21,7 +33,6 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Resolve base URL: prefer env vars, fall back to request origin for local dev
   const OPS_API_BASE =
     process.env.OPS_API_BASE ||
     process.env.NEXT_PUBLIC_OPS_BASE ||
@@ -36,7 +47,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const target = `${OPS_API_BASE.replace(/\/$/, '')}/ops/deployments/readiness`
+  const target = `${OPS_API_BASE.replace(/\/$/, '')}/ops/slo/${params.name}`
   try {
     const res = await fetch(target, { cache: 'no-store' })
     const raw = await res.text()
@@ -49,7 +60,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data, { status: res.status })
   } catch (error) {
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch from Ops Fabric',
         message: error instanceof Error ? error.message : 'Unknown error',
         target

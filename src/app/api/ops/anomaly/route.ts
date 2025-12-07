@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getOpsMode } from '../_config'
+import {
+  fetchSimcitySnapshot,
+  simcityToAnomaly
+} from '../_simcity/ops-from-simcity'
 import { AnomalyAI, AnomalySignal } from '@/lib/observability/anomalyai'
 
 /**
@@ -15,6 +20,21 @@ import { AnomalyAI, AnomalySignal } from '@/lib/observability/anomalyai'
  * - lookbackMinutes (optional): Time window for analysis (default: 15)
  */
 export async function GET(request: NextRequest) {
+  if (getOpsMode() === 'simcity') {
+    try {
+      const { violations } = await fetchSimcitySnapshot(request.nextUrl.origin)
+      return NextResponse.json(simcityToAnomaly(violations))
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error: 'Failed to load SimCity anomaly report',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        },
+        { status: 503 }
+      )
+    }
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const lookbackMinutes = parseInt(searchParams.get('lookbackMinutes') || '15', 10)
