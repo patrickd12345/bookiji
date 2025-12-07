@@ -1,0 +1,48 @@
+{
+  "scenarios": [
+    {
+      "name": "supabase_latency",
+      "description": "Add 2s latency to all Supabase requests",
+      "type": "latency",
+      "target": "supabase",
+      "duration": "30s",
+      "latency": 2000
+    },
+    {
+      "name": "stripe_webhook_failure",
+      "description": "Fail 10% of Stripe webhook deliveries",
+      "type": "failure_rate",
+      "target": "stripe_webhook",
+      "duration": "60s",
+      "failure_rate": 0.1
+    },
+    {
+      "name": "request_burst",
+      "description": "Flood with 200 RPS for 1 second",
+      "type": "burst",
+      "target": "all",
+      "duration": "1s",
+      "rps": 200
+    },
+    {
+      "name": "database_pause",
+      "description": "Simulate database pause for 5 seconds",
+      "type": "pause",
+      "target": "database",
+      "duration": "5s"
+    },
+    {
+      "name": "random_failures",
+      "description": "Randomly fail 5% of requests",
+      "type": "random_failure",
+      "target": "all",
+      "duration": "30s",
+      "failure_rate": 0.05
+    }
+  ],
+  "safety_limits": {
+    "max_duration": "5m",
+    "max_failure_rate": 0.2,
+    "auto_recover": true
+  }
+}

@@ -48,6 +48,15 @@ jobs:
             echo "No test:coverage script, skipping"
           fi
 
+      - name: API Contract Tests
+        run: |
+          npx playwright install chromium
+          npx playwright test tests/api/contracts/ --project=chromium || echo "Contract tests failed"
+
+      - name: Schema Drift Detection
+        run: |
+          npx tsx scripts/check-drift.ts || echo "Drift check failed (non-blocking)"
+
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v5

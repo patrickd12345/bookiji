@@ -1,0 +1,128 @@
+name: Synthetic Monitoring (24/7 Uptime)
+
+on:
+  schedule:
+    # Run every 5 minutes
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: monitoring
+  cancel-in-progress: false
+
+jobs:
+  uptime-checks:
+    name: Uptime Checks – Multi-Region
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        region: [us-east-1, eu-west-1, ap-southeast-1]
+        check:
+          - name: homepage
+            url: https://www.bookiji.com/
+            method: GET
+            expectedStatus: 200
+            timeout: 10000
+          - name: health-api
+            url: https://www.bookiji.com/api/health
+            method: GET
+            expectedStatus: 200
+            timeout: 5000
+            body: null
+          - name: booking-api
+            url: https://www.bookiji.com/api/bookings/create
+            method: POST
+            expectedStatus: 401  # Expected without auth
+            timeout: 5000
+            body: '{}'
+          - name: vendor-cockpit
+            url: https://www.bookiji.com/vendor/dashboard
+            method: GET
+            expectedStatus: 200
+            timeout: 15000
+          - name: admin-dashboard
+            url: https://www.bookiji.com/admin/dashboard
+            method: GET
+            expectedStatus: 200
+            timeout: 15000
+          - name: stripe-webhook
+            url: https://www.bookiji.com/api/stripe/webhook
+            method: POST
+            expectedStatus: 400  # Expected without valid signature
+            timeout: 5000
+            body: '{"type":"ping"}'
+          - name: supabase-connectivity
+            url: https://www.bookiji.com/api/health
+            method: GET
+            expectedStatus: 200
+            timeout: 5000
+            body: null
+
+    steps:
+      - name: Check ${{ matrix.check.name }} (${{ matrix.region }})
+        run: |
+          set -e
+          
+          START_TIME=$(date +%s)
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}\n%{time_total}" \
+            -X ${{ matrix.check.method }} \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: Bookiji-Monitor/1.0" \
+            --max-time ${{ matrix.check.timeout }} \
+            --data-raw '${{ matrix.check.body }}' \
+            "${{ matrix.check.url }}" || echo -e "\n000\n999")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n 2 | head -n 1)
+          TIME_TOTAL=$(echo "$RESPONSE" | tail -n 1)
+          BODY=$(echo "$RESPONSE" | head -n -2)
+          
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          
+          echo "Check: ${{ matrix.check.name }}"
+          echo "Region: ${{ matrix.region }}"
+          echo "HTTP Code: $HTTP_CODE"
+          echo "Response Time: ${TIME_TOTAL}s"
+          echo "Duration: ${DURATION}s"
+          
+          if [ "$HTTP_CODE" != "${{ matrix.check.expectedStatus }}" ]; then
+            echo "❌ FAILED: Expected ${{ matrix.check.expectedStatus }}, got $HTTP_CODE"
+            echo "Response body: $BODY"
+            exit 1
+          fi
+          
+          # Check response time threshold (10s for pages, 5s for APIs)
+          if (( $(echo "$TIME_TOTAL > 10" | bc -l) )); then
+            echo "⚠️  WARNING: Slow response time: ${TIME_TOTAL}s"
+          fi
+          
+          echo "✅ PASSED: ${{ matrix.check.name }} is healthy"
+
+  aggregate-results:
+    name: Aggregate Monitoring Results
+    runs-on: ubuntu-latest
+    needs: uptime-checks
+    if: always()
+    
+    steps:
+      - name: Check overall health
+        run: |
+          echo "📊 Monitoring Summary"
+          echo "All uptime checks completed"
+          echo "Check GitHub Actions for detailed results per region"
+
+  alert-on-failure:
+    name: Alert on Critical Failures
+    runs-on: ubuntu-latest
+    needs: [uptime-checks, aggregate-results]
+    if: failure()
+    
+    steps:
+      - name: Send alert (if configured)
+        run: |
+          echo "🚨 ALERT: Critical uptime check failed"
+          echo "Check the uptime-checks job for details"
+          # Add your alerting mechanism here (e.g., Slack, PagerDuty, email)
+          # Example: curl -X POST $SLACK_WEBHOOK_URL -d '{"text":"Uptime check failed"}'

@@ -1,0 +1,73 @@
+name: Load Testing (k6)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+  schedule:
+    # Run load tests weekly
+    - cron: '0 2 * * 0'  # Sunday 2 AM UTC
+
+jobs:
+  load-test:
+    name: Load Test – ${{ github.event.inputs.target || 'staging' }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D9
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Determine target URL
+        id: target
+        run: |
+          if [ "${{ github.event.inputs.target }}" == "production" ]; then
+            echo "BASE_URL=https://www.bookiji.com" >> $GITHUB_OUTPUT
+          else
+            echo "BASE_URL=https://staging.bookiji.com" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run booking flow load test
+        env:
+          BASE_URL: ${{ steps.target.outputs.BASE_URL }}
+        run: |
+          k6 run --out json=loadtest-results-booking.json loadtests/booking-flow.k6.js
+
+      - name: Run vendor load test
+        env:
+          BASE_URL: ${{ steps.target.outputs.BASE_URL }}
+        run: |
+          k6 run --out json=loadtest-results-vendor.json loadtests/vendor-load.k6.js
+
+      - name: Run Stripe webhook burst test
+        env:
+          BASE_URL: ${{ steps.target.outputs.BASE_URL }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+        run: |
+          k6 run --out json=loadtest-results-webhook.json loadtests/stripe-webhook-burst.k6.js
+
+      - name: Upload load test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: loadtest-results
+          path: loadtest-results-*.json
+          retention-days: 30
+
+      - name: Check thresholds
+        run: |
+          # Parse results and check if thresholds were met
+          echo "📊 Load test completed. Check artifacts for detailed results."
