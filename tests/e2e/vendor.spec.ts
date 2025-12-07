@@ -5,3 +5,5 @@ test('vendor can register and reach dashboard', async ({ vendor, page }) => {
   await expect(page.locator('[data-test="vendor-dashboard"]')).toBeVisible()
 })
 
+
+

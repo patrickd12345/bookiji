@@ -136,3 +136,5 @@ export class EmailInbox {
 export const emailInbox = (baseUrl?: string, request?: APIRequestContext) => 
   new EmailInbox(baseUrl, request)
 
+
+

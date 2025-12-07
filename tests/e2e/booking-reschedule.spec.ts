@@ -14,3 +14,5 @@ test('customer can reschedule and cancel a booking', async ({ page, booking, boo
   await expect(page.locator('[data-test="toast-success"]')).toBeVisible()
 })
 
+
+

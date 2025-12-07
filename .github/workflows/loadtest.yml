@@ -72,3 +72,5 @@ jobs:
           # Parse results and check if thresholds were met
           echo "📊 Load test completed. Check artifacts for detailed results."
 
+
+

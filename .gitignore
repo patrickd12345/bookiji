@@ -34,6 +34,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -41,6 +42,7 @@ yarn-error.log*
 
 # vercel
 .vercel
+vercel-audit-output/
 
 # typescript
 *.tsbuildinfo
@@ -64,6 +66,8 @@ next-env.d.ts
 /.next/
 /out/
 /build/
+*.bundle.tar.gz
+*.bundle.zip
 
 # Supabase Edge Functions (Deno runtime, not compatible with Node.js build)
 /supabase/functions/
@@ -72,3 +76,9 @@ next-env.d.ts
 nul
 *.tmp
 *.temp
+status.txt
+branch.txt
+*_log.txt
+
+# Screenshots
+debug-*.png

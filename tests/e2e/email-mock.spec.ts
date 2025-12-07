@@ -9,3 +9,5 @@ test('forgot password triggers mock email', async ({ page, email }) => {
   await expect(page.locator('[data-test="forgot-success"]')).toBeVisible()
 })
 
+
+
