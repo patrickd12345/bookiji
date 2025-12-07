@@ -1,3 +1,4 @@
+// SimCity Types
 export interface SimRunInfo {
   runId: string | null;
   seed: number | null;

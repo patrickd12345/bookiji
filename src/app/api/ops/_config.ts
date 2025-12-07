@@ -1,3 +1,3 @@
 export function getOpsMode(): 'real' | 'simcity' {
-  return process.env.OPS_MODE === 'simcity' ? 'simcity' : 'real'
+  return process.env.NEXT_PUBLIC_OPS_MODE === 'simcity' ? 'simcity' : 'real'
 }
