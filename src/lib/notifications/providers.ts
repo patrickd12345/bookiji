@@ -141,8 +141,7 @@ export async function sendPushNotification(recipient: string, template: string, 
 
     return {
       success: true,
-      id: `push_${Date.now()}`,
-      message: 'Push notification sent'
+      id: `push_${Date.now()}`
     }
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
