@@ -2,12 +2,16 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"],
+      "@bookiji/opsai": [
+        "../../packages/opsai-sdk/dist/index.d.ts",
+        "../../packages/opsai-sdk/src/index.ts"
+      ]
     },
-    "types": ["vitest/importMeta"]
+    "types": ["vitest/importMeta", "vite/client"]
   },
-  "include": ["src", "vite.config.ts", "tsconfig.json"],
+  "include": ["src", "vite.config.ts", "tsconfig.json", "src/vite-env.d.ts", "src/types/opsai.d.ts"],
   "exclude": ["dist", "build"]
 }

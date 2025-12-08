@@ -20,7 +20,7 @@ function defaultDataSource(baseUrl?: string): OpsDataSource {
   }
 }
 
-function filterByTimestamp<T extends { startedAt?: string; completedAt?: string }>(
+function filterByTimestamp<T extends { startedAt?: string; completedAt?: string | null }>(
   items: T[],
   at: string
 ): T[] {
