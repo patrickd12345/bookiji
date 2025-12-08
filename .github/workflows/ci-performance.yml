@@ -1,4 +1,5 @@
 name: CI – Performance & Sentry
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
 on:
   push:
@@ -102,19 +103,27 @@ jobs:
 
       # Note: SENTRY_ORG and SENTRY_PROJECT must be set as repository variables
       # in Settings → Secrets and variables → Actions → Variables
-      # Linter warnings about vars.* are false positives - the syntax is correct
+      # GitHub Actions linter warnings here are false positives - these contexts are valid
       - name: Validate Sentry configuration
         id: sentry-config
+        env:
+          # @ts-ignore - Repository variable, defined in Settings → Variables
+          SENTRY_ORG_VAR: ${{ vars.SENTRY_ORG }}
+          # @ts-ignore - Repository variable, defined in Settings → Variables
+          SENTRY_PROJECT_VAR: ${{ vars.SENTRY_PROJECT }}
+          # actionlint-disable-next-line
+          # @ts-ignore - Repository secret, defined in Settings → Secrets
+          SENTRY_AUTH_TOKEN_SECRET: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
-          if [ -z "${{ vars.SENTRY_ORG }}" ]; then
+          if [ -z "$SENTRY_ORG_VAR" ]; then
             echo "❌ SENTRY_ORG variable is not set in repository variables"
             exit 1
           fi
-          if [ -z "${{ vars.SENTRY_PROJECT }}" ]; then
+          if [ -z "$SENTRY_PROJECT_VAR" ]; then
             echo "❌ SENTRY_PROJECT variable is not set in repository variables"
             exit 1
           fi
-          if [ -z "${{ secrets.SENTRY_AUTH_TOKEN }}" ]; then
+          if [ -z "$SENTRY_AUTH_TOKEN_SECRET" ]; then
             echo "❌ SENTRY_AUTH_TOKEN secret is not set in repository secrets"
             exit 1
           fi
@@ -125,8 +134,12 @@ jobs:
 
       - name: Check Sentry release wiring
         env:
+          # actionlint-disable-next-line
+          # @ts-ignore - Repository secret, defined in Settings → Secrets
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          # @ts-ignore - Repository variable, defined in Settings → Variables
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          # @ts-ignore - Repository variable, defined in Settings → Variables
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         run: |
           export SENTRY_RELEASE=$(git rev-parse HEAD)

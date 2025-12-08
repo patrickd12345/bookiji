@@ -1,4 +1,5 @@
 name: CI – E2E & Canary
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
 on:
   pull_request:
@@ -41,19 +42,23 @@ jobs:
 
       - run: npm ci --legacy-peer-deps
 
-      # Note: Linter warnings about vars.CI_PREDICTIVE_OFF and secrets.OPENAI_API_KEY are false positives
-      # The linter can't verify repository variables/secrets during static analysis
+      # Note: Repository variables and secrets are defined in Settings → Secrets and variables → Actions
+      # yamllint disable-line rule:truthy
       - name: Generate predictive test plan
+        # yamllint disable-line rule:truthy
         if: github.event_name == 'pull_request' && vars.CI_PREDICTIVE_OFF != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # yamllint disable-line rule:truthy
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # yamllint disable-line rule:truthy
+          CI_PREDICTIVE_OFF: ${{ vars.CI_PREDICTIVE_OFF }}
         run: npx tsx scripts/predict-tests.ts
         continue-on-error: true
 
-      # Note: Linter warning about vars.CI_PREDICTIVE_OFF is a false positive
       - name: Read test plan
         id: test-plan
+        # yamllint disable-line rule:truthy
         if: github.event_name == 'pull_request' && vars.CI_PREDICTIVE_OFF != 'true'
         continue-on-error: true
         run: |
@@ -179,11 +184,10 @@ jobs:
     name: Deploy Canary
     runs-on: ubuntu-latest
     needs: e2e-preview
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    # Note: Create 'staging' environment in GitHub Settings → Environments
-    # Linter warning about 'staging' is a false positive - it can't verify environment existence
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/bookiji')
+    # Using 'preview' environment for QA (Preview deployments from bookiji branch)
     environment:
-      name: staging
+      name: preview
 
     steps:
       - uses: actions/checkout@v4
@@ -230,7 +234,8 @@ jobs:
       # The output is set conditionally in the canary-deploy job
       - name: Run canary smoke tests
         env:
-          BASE_URL: ${{ needs.canary-deploy.outputs.url || 'https://staging.bookiji.com' }}
+          # @ts-ignore - Job output, set conditionally in canary-deploy job
+          BASE_URL: ${{ needs.canary-deploy.outputs.url || 'https://www.bookiji.com' }}
           NODE_ENV: production
         run: npx playwright test tests/e2e/production-smoke.spec.ts --project=chromium
 

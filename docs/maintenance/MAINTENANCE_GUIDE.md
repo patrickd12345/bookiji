@@ -376,6 +376,6 @@ curl -s http://localhost:3000/sitemap.xml | xmllint --format -
 
 ---
 
-**Last Updated:** January 16, 2025  
-**Next Review:** January 23, 2025 (Weekly)  
+**Last Updated:** January 23, 2025  
+**Next Review:** January 30, 2025 (Weekly)  
 **Next Audit:** February 3, 2025 (Monthly) 

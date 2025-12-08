@@ -8,6 +8,11 @@ export type EventType =
   | 'system-event'
   | 'webhook'
   | 'api-call'
+  | 'health_change'
+  | 'incident_created'
+  | 'deployment_created'
+  | 'prediction_update'
+  | 'control_command'
 
 export type EventSeverity = 'info' | 'warning' | 'error' | 'critical'
 
@@ -36,6 +41,7 @@ export interface OpsEvent {
   metadata?: Record<string, unknown>
   tags?: string[]
 }
+
 
 
 

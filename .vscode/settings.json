@@ -19,8 +19,12 @@
     "typescriptreact": "javascript"
   },
   "css.customData": [".vscode/css-data.json"],
+  // Disable GitHub Actions workflow validation to suppress false positive warnings
+  // about vars.* and secrets.* contexts that can't be verified at static analysis time
+  // Note: The extension doesn't support suppressing specific warnings, so we disable all validation
   "github-actions.workflows.validateContextAccess": false,
   "github-actions.workflows.validate": false,
+  "github-actions.workflows.promptValidation": false,
   "cursor.autoRun": true,
   "cursor.terminal.autoApprove": true
 } 

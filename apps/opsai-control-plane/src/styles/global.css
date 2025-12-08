@@ -1,0 +1,106 @@
+:root {
+  --bg: #0b1220;
+  --panel: #111a2c;
+  --card: #131e32;
+  --border: #1e2b43;
+  --accent: #5dd8ff;
+  --accent-2: #9c6bff;
+  --text: #e6edf7;
+  --muted: #9cb2d9;
+  --danger: #ff6b6b;
+  --success: #5fffab;
+  --warning: #ffb347;
+  font-family: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at 10% 20%, rgba(93, 216, 255, 0.08), transparent 25%),
+    radial-gradient(circle at 90% 10%, rgba(156, 107, 255, 0.08), transparent 20%),
+    radial-gradient(circle at 80% 80%, rgba(93, 255, 171, 0.06), transparent 20%),
+    var(--bg);
+  color: var(--text);
+}
+
+a {
+  color: var(--accent);
+}
+
+.grid {
+  display: grid;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-healthy {
+  background: var(--success);
+}
+.status-degraded {
+  background: var(--warning);
+}
+.status-offline {
+  background: var(--danger);
+}
+.status-unknown {
+  background: var(--muted);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+button.primary {
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0b0f1a;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(93, 216, 255, 0.35);
+}
+
+button.secondary {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+}

@@ -1,0 +1,16 @@
+# Actionlint configuration to suppress false positive warnings
+# about repository variables and secrets that can't be verified at static analysis time
+
+# Suppress warnings for vars.* and secrets.* contexts
+# These are valid GitHub Actions contexts but can't be verified until runtime
+self-hosted-runner:
+  labels: []
+
+# Ignore warnings about undefined context access for vars and secrets
+# These are defined in repository settings and can't be statically verified
+ignore:
+  - 'Context access might be invalid: vars\..*'
+  - 'Context access might be invalid: secrets\..*'
+  - 'Context access might be invalid: needs\..*\.outputs\..*'
+  - 'Context access might be invalid: SENTRY_AUTH_TOKEN'
+

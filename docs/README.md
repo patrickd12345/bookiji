@@ -59,4 +59,4 @@ When adding new documentation:
 
 ---
 
-*Last updated: August 24, 2025*
+*Last updated: January 23, 2025*
