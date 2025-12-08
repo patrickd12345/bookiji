@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import RootLayoutWrapper from '@/components/RootLayoutWrapper'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 export const metadata: Metadata = {
   title: 'Bookiji — Universal Booking Platform',
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <RootLayoutWrapper>
           <main id="main" tabIndex={-1}>{children}</main>
         </RootLayoutWrapper>
+        <SpeedInsights />
       </body>
     </html>
   )
