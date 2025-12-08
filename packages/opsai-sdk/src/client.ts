@@ -1,11 +1,11 @@
-import { OpsAICache } from './cache.js'
+import { OpsAICache } from './cache'
 import {
   OpsAIWebhookEventType,
   OpsAIWebhookPayload,
   OpsAIWebhookRegistration,
   buildWebhookPayload,
   formatDeploymentFallback
-} from './webhook.js'
+} from './webhook'
 
 export type DeploymentRecord = {
   id?: string

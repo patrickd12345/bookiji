@@ -1,4 +1,4 @@
-import { detectMetricShift, predictHealthTrend } from './predict.js'
+import { detectMetricShift, predictHealthTrend } from './predict'
 
 export type Incident = {
   id: string

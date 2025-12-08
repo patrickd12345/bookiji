@@ -1,4 +1,4 @@
-import { opsai, OpsAI, MetricsKind } from '../client.js'
+import { opsai, OpsAI, MetricsKind } from '../client'
 
 type CliResult = { code: number; output?: any; error?: string }
 

@@ -1,6 +1,6 @@
-import { predictBookingThroughput, predictHealthTrend } from './predict.js'
-import { autoGenerateIncidents } from './incidents.js'
-import { flushCache, resetDeploymentPointers, restartComponent } from './actions.js'
+import { predictBookingThroughput, predictHealthTrend } from './predict'
+import { autoGenerateIncidents } from './incidents'
+import { flushCache, resetDeploymentPointers, restartComponent } from './actions'
 
 export type SyntheticReport = {
   summary: {
