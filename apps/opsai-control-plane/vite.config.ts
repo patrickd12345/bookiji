@@ -8,12 +8,14 @@ export default defineConfig({
     port: 4173,
     fs: {
       // allow imports from repo root (server types/helpers)
-      allow: ['..', '../..']
+      allow: ['..', '../..', '../../..', '../../../..']
     }
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(__dirname, './src'),
+      // Allow local workspace package resolution when dist isn't built yet
+      '@bookiji/opsai': path.resolve(__dirname, '../../packages/opsai-sdk/src')
     }
   }
 })
