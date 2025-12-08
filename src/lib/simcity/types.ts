@@ -278,3 +278,99 @@ export const DEFAULT_METRICS: SimMetrics = {
   reindexP95: 0,
   staleVisibilityDelay: 0,
 };
+
+// Live simulation engine (SimCity Live) types
+export type SimulationStatus = 'idle' | 'running' | 'paused';
+
+export interface SimulationClock {
+  status: SimulationStatus;
+  speed: number;
+  time: number;
+  tick: number;
+  timezone: string;
+  startedAt?: string;
+  lastTickAt?: string;
+  scenario?: string | null;
+  baseTickMs: number;
+  minutesPerTick: number;
+}
+
+export interface SyntheticBooking {
+  id: string;
+  customerId: string;
+  vendorId: string;
+  createdAt: number;
+  startsAt: number;
+  durationMinutes: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  price: number;
+  rescheduled?: boolean;
+  tags?: string[];
+}
+
+export interface EngineMetrics {
+  ticks: number;
+  appointmentsGenerated: number;
+  appointmentsConfirmed: number;
+  appointmentsCancelled: number;
+  revenue: number;
+  syntheticClockDriftMs: number;
+  lastTickDurationMs: number;
+  opsSummaryPushes: number;
+  metricsAiPushes: number;
+  dashboardHookInvocations: number;
+  scenario?: string | null;
+}
+
+export interface SimulationState extends SimulationClock {
+  bookings: SyntheticBooking[];
+  metrics: EngineMetrics;
+  hooks: string[];
+}
+
+export interface SimulationStartOptions {
+  speed?: number;
+  scenario?: string | null;
+  timezone?: string;
+  startTime?: number;
+  minutesPerTick?: number;
+  baseTickMs?: number;
+}
+
+export interface ScenarioOverride {
+  id: string;
+  label: string;
+  description?: string;
+  spawnRate?: number;
+  cancelRate?: number;
+  confirmRate?: number;
+  priceMultiplier?: number;
+  tags?: string[];
+  clockMultiplier?: number;
+  metricsBoost?: Partial<EngineMetrics>;
+}
+
+export interface SimCityEvent<T = any> {
+  type:
+    | 'connected'
+    | 'start'
+    | 'pause'
+    | 'reset'
+    | 'tick'
+    | 'keepalive'
+    | 'booking'
+    | 'metrics'
+    | 'scenario'
+    | 'speed'
+    | 'ops_summary'
+    | 'error';
+  timestamp: string;
+  data?: T;
+}
+
+export interface DashboardHook {
+  id: string;
+  description?: string;
+  onTick?: (state: SimulationState) => void;
+  onMetrics?: (metrics: EngineMetrics) => void;
+}

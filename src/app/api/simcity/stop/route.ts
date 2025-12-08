@@ -1,24 +1,33 @@
 import { NextResponse } from 'next/server';
 import { getOrchestrator } from '@/lib/simcity/orchestrator';
+import { getSimEngine } from '@/lib/simcity/engine';
 
 export async function POST() {
   try {
     const orchestrator = getOrchestrator();
-    
-    if (!orchestrator.isRunning()) {
-      return NextResponse.json({ 
+    const engine = getSimEngine();
+
+    if (!orchestrator.isRunning() && !engine.isRunning()) {
+      return NextResponse.json({
         success: false,
-        error: 'Simulation is not running' 
+        error: 'Simulation is not running'
       }, { status: 400 });
     }
 
-    await orchestrator.stop();
+    if (engine.isRunning()) {
+      engine.pause();
+      engine.reset();
+    }
+
+    if (orchestrator.isRunning()) {
+      await orchestrator.stop();
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Simulation stopped successfully',
       data: {
-        isRunning: orchestrator.isRunning(),
+        isRunning: orchestrator.isRunning() || engine.isRunning(),
         stopTime: new Date().toISOString(),
         uptime: orchestrator.getUptime(),
       }

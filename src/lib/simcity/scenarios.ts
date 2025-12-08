@@ -1,3 +1,5 @@
+import { ScenarioOverride } from './types';
+
 export interface SimScenario {
   id: string;
   name: string;
@@ -251,4 +253,51 @@ export const QUICK_CONTROLS = {
   mvPause: () => ({ type: 'PAUSE_MV_REFRESH', durationMin: 60 }),
   rlsMisconfig: () => ({ type: 'RLS_MISCONFIG', durationMin: 30, misconfigType: 'admin_access' }),
   rateLimitBurst: () => ({ type: 'RATE_LIMIT_BURST', durationMin: 15, multiplier: 3.0 })
+};
+
+// Scenario overrides for the live tick engine
+export const SCENARIO_OVERRIDES: Record<string, ScenarioOverride> = {
+  baseline: {
+    id: 'baseline',
+    label: 'Baseline / steady',
+    spawnRate: 1,
+    confirmRate: 0.7,
+    cancelRate: 0.1,
+    description: 'Even traffic with nominal confirmation and cancellation rates.',
+  },
+  spike: {
+    id: 'spike',
+    label: 'Traffic Spike',
+    spawnRate: 2.2,
+    confirmRate: 0.8,
+    cancelRate: 0.08,
+    priceMultiplier: 1.1,
+    tags: ['hot-hour'],
+    description: 'High load period for warming up the OpsAI dashboards.',
+  },
+  outage: {
+    id: 'outage',
+    label: 'Vendor Outage',
+    spawnRate: 0.4,
+    confirmRate: 0.3,
+    cancelRate: 0.5,
+    priceMultiplier: 0.5,
+    tags: ['degraded'],
+    description: 'Simulate upstream instability and customer drop-off.',
+  },
+  hyperloop: {
+    id: 'hyperloop',
+    label: '10x Hyper-speed',
+    spawnRate: 1.4,
+    confirmRate: 0.6,
+    cancelRate: 0.18,
+    clockMultiplier: 10,
+    tags: ['warp'],
+    description: 'Accelerate synthetic time to validate speed controls.',
+  },
+};
+
+export const resolveScenarioOverride = (scenario?: string | null): ScenarioOverride => {
+  if (!scenario) return SCENARIO_OVERRIDES.baseline;
+  return SCENARIO_OVERRIDES[scenario] ?? SCENARIO_OVERRIDES.baseline;
 };
