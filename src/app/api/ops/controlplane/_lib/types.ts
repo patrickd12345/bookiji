@@ -1,4 +1,4 @@
-import type { Incident } from '@/types/incidents'
+import type { Incident } from '../../../../../types/incidents'
 
 export type PersonaMode = 'engineer' | 'manager' | 'detective' | 'narrator'
 
