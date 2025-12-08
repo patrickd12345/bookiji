@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrchestrator } from '@/lib/simcity/orchestrator';
+import { getSimEngine } from '@/lib/simcity/engine';
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,6 +8,7 @@ export async function GET(request: NextRequest) {
     const runId = searchParams.get('runId');
     
     const orchestrator = getOrchestrator();
+    const engine = getSimEngine();
     
     if (!orchestrator.isRunning()) {
       return NextResponse.json({ 
@@ -20,6 +22,7 @@ export async function GET(request: NextRequest) {
     const violations = orchestrator.getViolations();
     const uptime = orchestrator.getUptime();
     const state = orchestrator.getState();
+    const engineSnapshot = engine.getSnapshot();
 
     // Check invariants if not already done
     if (violations.length === 0) {
@@ -39,6 +42,7 @@ export async function GET(request: NextRequest) {
         policies: state.policies,
         runInfo,
         scenario: runInfo.scenario,
+        liveEngine: engineSnapshot,
       },
       timestamp: new Date().toISOString()
     };
