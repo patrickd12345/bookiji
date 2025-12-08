@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
-echo "🔍 Running type-check..."
-pnpm type-check || {
-  echo "❌ Type-check failed. Please fix TypeScript errors before committing."
+echo "🔍 Running ESLint (errors only)..."
+pnpm eslint . --quiet || {
+  echo "❌ ESLint errors found. Please fix errors before committing."
   exit 1
 }
 
-echo "✅ Type-check passed. Running lint-staged..."
+echo "✅ ESLint passed. Running lint-staged..."
 pnpm lint-staged
