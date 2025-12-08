@@ -1,0 +1,11 @@
+{
+  "name": "@bookiji/opsai-voice",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json && node ./scripts/copy-public.mjs",
+    "dev": "tsc --watch -p ./tsconfig.json",
+    "clean": "node -e \"import('fs').then(fs=>fs.rmSync('../../dist/voice-console',{recursive:true,force:true}))\""
+  }
+}

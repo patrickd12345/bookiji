@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpsAI Voice Console</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="scene">
+      <header>
+        <div class="title">
+          <span class="eyebrow">Voice Ops</span>
+          <h1>OpsAI Voice Console</h1>
+          <p>Ask for summaries, follow live reliability signals, and let OpsAI narrate deployments.</p>
+        </div>
+        <div class="status">
+          <div class="dot"></div>
+          <span id="stream-status">Listening for SSE signals…</span>
+        </div>
+      </header>
+
+      <main>
+        <section class="controls">
+          <button data-action="summary">Read me the latest OpsAI summary</button>
+          <button data-action="health">Notify me when health drops</button>
+          <button data-action="deployments">Read deployments aloud</button>
+          <button data-action="last-change">Describe the last change</button>
+          <button data-action="subscribe">Enable live voice alerts</button>
+        </section>
+
+        <section class="feed">
+          <div class="feed-header">
+            <h2>Live Ops Stream</h2>
+            <small>Real-time synthetic signals via SSE mock when offline.</small>
+          </div>
+          <div id="feed-log" class="feed-log"></div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./assets/ui.js"></script>
+  </body>
+</html>

@@ -2,7 +2,7 @@ name: CI – Performance & Sentry
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, bookiji ]
   workflow_dispatch:
 
 concurrency:
@@ -50,12 +50,12 @@ jobs:
           retention-days: 90
 
   lighthouse:
-    name: Lighthouse – Production
+    name: Lighthouse – Preview (QA)
     runs-on: ubuntu-latest
     environment:
-      name: production
-      url: https://www.bookiji.com/
-    if: github.ref == 'refs/heads/main'
+      name: preview
+      url: https://www.bookiji.com/  # Preview URL (QA environment)
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/bookiji'
     # Uncomment when staging environment is created:
     # needs: lighthouse-staging
 
@@ -93,9 +93,9 @@ jobs:
     name: Sentry Release Check
     runs-on: ubuntu-latest
     needs: lighthouse
-    if: always() && github.ref == 'refs/heads/main'
+    if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/bookiji')
     environment:
-      name: production
+      name: preview
 
     steps:
       - uses: actions/checkout@v4

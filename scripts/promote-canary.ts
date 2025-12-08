@@ -61,20 +61,23 @@ async function promoteCanary(): Promise<PromoteResult> {
 
 async function promoteVercel(canaryInfo: any): Promise<PromoteResult> {
   try {
-    // Promote Vercel deployment to production
+    // Promote Vercel deployment to QA (not production)
+    // Note: QA is configured as the production branch in Vercel settings
+    // This will deploy to the QA environment
     const output = execSync(
-      `vercel --prod --yes --token=${process.env.VERCEL_TOKEN}`,
+      `vercel deploy --prod --yes --token=${process.env.VERCEL_TOKEN}`,
       { encoding: 'utf-8' }
     )
 
     const urlMatch = output.match(/https:\/\/[^\s]+/)
-    const productionUrl = urlMatch ? urlMatch[0] : 'https://www.bookiji.com'
+    const qaUrl = urlMatch ? urlMatch[0] : 'https://www.bookiji.com'
 
     // Update canary info
     const promotedInfo = {
       ...canaryInfo,
       promotedAt: new Date().toISOString(),
-      productionUrl
+      qaUrl,
+      productionUrl: qaUrl // QA is currently the production environment
     }
 
     fs.writeFileSync(
@@ -82,8 +85,10 @@ async function promoteVercel(canaryInfo: any): Promise<PromoteResult> {
       JSON.stringify(promotedInfo, null, 2)
     )
 
-    console.log(`✅ Canary promoted to production: ${productionUrl}`)
-    return { success: true, productionUrl }
+    console.log(`✅ Canary promoted to QA: ${qaUrl}`)
+    console.log(`ℹ️  Note: QA is currently configured as production in Vercel.`)
+    console.log(`   To promote to actual production, change Vercel production branch from 'qa' to 'bookiji'`)
+    return { success: true, productionUrl: qaUrl }
   } catch (error) {
     return {
       success: false,

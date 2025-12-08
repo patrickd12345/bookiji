@@ -43,7 +43,12 @@
     "anomalyai": "tsx scripts/anomalyai-monitor.ts",
     "ops:smoke": "tsx scripts/ops-smoke-test.ts",
     "prebuild": "npm run i18n:check",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "build:opsai-sdk": "pnpm exec tsc -p packages/opsai-sdk/tsconfig.json",
+    "build:voice-console": "pnpm --dir packages/opsai-voice run build",
+    "build:opsai-helpdesk": "pnpm exec tsc -p packages/opsai-helpdesk/tsconfig.json",
+    "build:opsai-l7": "pnpm exec tsc -p packages/opsai-l7/tsconfig.json",
+    "bootstrap": "pnpm run build:opsai-sdk && pnpm run build:opsai-helpdesk && pnpm run build:opsai-l7 && pnpm run build:voice-console"
   },
   "dependencies": {
     "@faker-js/faker": "^10.0.0",

@@ -15,11 +15,16 @@ function printProjectInfo() {
 }
 
 function startAsyncDeployment() {
-  console.log('dYs? Triggering Vercel Production Deployment (async)\n');
-  console.log('ƒo. Starting deployment in background via Vercel CLI...');
+  console.log('dYs? Triggering Vercel Deployment (Preview)\n');
+  console.log('ƒo. Starting deployment to bookiji branch (creates Preview deployment) in background...');
   console.log('   This script will exit immediately; build continues on Vercel.\n');
+  console.log('   Note: Deploys to bookiji branch → Preview deployment (QA environment).');
+  console.log('         Preview stays named "Preview" in Vercel. Promote manually in Dashboard.\n');
 
-  const child = spawn('vercel', ['deploy', '--prod', '--yes'], {
+  // Deploy to bookiji branch - creates Preview deployment (stays named "Preview" in Vercel)
+  // This preview deployment serves as our QA environment
+  // User manually promotes Preview → Production in Vercel Dashboard
+  const child = spawn('vercel', ['deploy', '--yes'], {
     shell: true,
     detached: true,
     stdio: 'ignore',
@@ -30,11 +35,16 @@ function startAsyncDeployment() {
 }
 
 function runAndWaitForDeployment() {
-  console.log('dYs? Triggering Vercel Production Deployment (wait mode)\n');
+  console.log('dYs? Triggering Vercel Deployment (Preview)\n');
   console.log('ƒo. Streaming Vercel CLI output until deployment finishes...\n');
+  console.log('   Note: Deploys to bookiji branch → Preview deployment (QA environment).');
+  console.log('         Preview stays named "Preview" in Vercel. Promote manually in Dashboard.\n');
 
   return new Promise((resolve, reject) => {
-    const child = spawn('vercel', ['deploy', '--prod', '--yes'], {
+    // Deploy to bookiji branch - creates Preview deployment (stays named "Preview" in Vercel)
+    // This preview deployment serves as our QA environment
+    // User manually promotes Preview → Production in Vercel Dashboard
+    const child = spawn('vercel', ['deploy', '--yes'], {
       shell: true,
       stdio: ['ignore', 'pipe', 'pipe'],
     });

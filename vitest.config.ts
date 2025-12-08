@@ -26,7 +26,8 @@ export default defineConfig({
     include: [
       "tests/components/**/*.test.{ts,tsx}",
       "tests/unit/**/*.test.{ts,tsx}",
-      "tests/api/**/*.spec.ts"
+      "tests/api/**/*.spec.ts",
+      "packages/**/tests/**/*.{test,spec}.{ts,tsx}"
     ],
     exclude: [
       "node_modules/**/*"
