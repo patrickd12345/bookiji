@@ -113,7 +113,7 @@ export class DeployAI {
       .in('status', ['active', 'deploying'])
       .order('deployed_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (error || !data) {
       return null
@@ -133,7 +133,7 @@ export class DeployAI {
       .eq('status', 'active')
       .order('deployed_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (error || !data) {
       return null

@@ -41,6 +41,7 @@
     "healthai": "tsx scripts/healthai-monitor.ts",
     "deployai": "tsx scripts/deployai-monitor.ts",
     "anomalyai": "tsx scripts/anomalyai-monitor.ts",
+    "ops:smoke": "tsx scripts/ops-smoke-test.ts",
     "prebuild": "npm run i18n:check",
     "prepare": "husky install"
   },

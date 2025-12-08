@@ -112,4 +112,13 @@ export interface OpsSummary {
   sloSummary: SLOStatus[]
   incidents: Incident[]
   pendingActions: OpsAction[]
+  /**
+   * Optional list of recent deployments, when provided by Ops Fabric.
+   * For null-deployment simulations this should be an empty array.
+   */
+  deployments?: Deployment[]
+  /**
+   * Optional human-readable summary or fallback message.
+   */
+  message?: string
 }

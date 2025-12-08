@@ -51,8 +51,23 @@ export async function fetchSimcitySnapshot(origin?: string) {
     fetch(`${baseUrl}/api/simcity/summary`, { cache: 'no-store' })
   ])
 
+  // Check if SimCity is not running
+  if (!statusRes.ok || !summaryRes.ok) {
+    const statusText = await statusRes.text().catch(() => '')
+    const summaryText = await summaryRes.text().catch(() => '')
+    if (statusText.includes('not running') || summaryText.includes('not running')) {
+      throw new Error('SimCity simulation is not running')
+    }
+    throw new Error(`SimCity endpoints returned errors: ${statusRes.status}, ${summaryRes.status}`)
+  }
+
   const statusJson = await statusRes.json()
   const summaryJson = await summaryRes.json()
+
+  // Check if simulation is not running from response
+  if (!statusJson.success || !statusJson.data?.state?.running) {
+    throw new Error('SimCity simulation is not running')
+  }
 
   const status = statusJson.data ?? statusJson
   const summary = summaryJson.data ?? summaryJson
