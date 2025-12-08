@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fetchControlPlaneOverview } from '../../_lib/overview'
 
-export async function GET(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: any) {
   try {
     const overview = await fetchControlPlaneOverview(request)
-    const agent = overview.agents.find((a) => a.id === context.params.id)
+    const agent = overview.agents.find((a) => a.id === params.id)
     if (!agent) {
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 })
     }

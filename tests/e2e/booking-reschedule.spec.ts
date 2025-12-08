@@ -18,3 +18,4 @@ test('customer can reschedule and cancel a booking', async ({ page, booking, boo
 
 
 
+
