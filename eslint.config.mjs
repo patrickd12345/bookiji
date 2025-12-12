@@ -22,6 +22,7 @@ const eslintConfig = [
       "scripts/**",
       "**/*.min.js",
       "**/generated/**",
+      "next-env.d.ts", // Next.js generated file
     ],
   },
   ...compat.extends("next/core-web-vitals", "next/typescript"),

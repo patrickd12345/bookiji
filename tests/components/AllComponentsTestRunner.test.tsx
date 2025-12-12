@@ -33,8 +33,8 @@ vi.mock('@/lib/i18n/useI18n', () => ({
   SUPPORTED_LOCALES: ['en-US', 'de-DE', 'fr-FR']
 }))
 
-vi.mock('@/lib/supabaseClient', () => ({
-  supabase: {
+const { mockSupabaseClient } = vi.hoisted(() => {
+  const mockClient = {
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => Promise.resolve({ data: [], error: null }))
@@ -51,6 +51,16 @@ vi.mock('@/lib/supabaseClient', () => ({
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }))
     }
   }
+  return { mockSupabaseClient: mockClient }
+})
+
+vi.mock('@/lib/supabaseClient', () => ({
+  supabase: mockSupabaseClient,
+  supabaseBrowserClient: vi.fn(() => mockSupabaseClient),  // Primary export used by components
+  getBrowserSupabase: vi.fn(() => mockSupabaseClient),      // Internal helper
+  getServerSupabase: vi.fn(() => mockSupabaseClient),       // Server-side client
+  createSupabaseClient: vi.fn(() => mockSupabaseClient),   // Legacy/backward compatibility
+  getSupabaseClient: vi.fn(() => mockSupabaseClient)        // Legacy/backward compatibility
 }))
 
 vi.mock('@/lib/ollama', () => ({

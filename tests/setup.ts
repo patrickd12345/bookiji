@@ -2,6 +2,7 @@
 import { vi } from 'vitest'
 import { cleanup, waitFor } from '@testing-library/react'
 import { act } from 'react-dom/test-utils'
+import { createSupabaseClientMocks } from './utils/supabase-mocks'
 
 // Global test utilities to reduce act() warnings
 ;(global as any).waitFor = waitFor
@@ -41,75 +42,8 @@ process.env.LOCAL_LLM_MODEL = 'llama2:7b' // Smaller model for faster tests
 // Test base URL
 process.env.TEST_BASE_URL = 'http://localhost:3000'
 
-// Mock fetch for tests
-global.fetch = vi.fn()
-
-// Mock Supabase client
-const mockSupabase = {
-  auth: {
-    getSession: vi.fn(() => Promise.resolve({ data: { session: null }, error: null })),
-    getUser: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
-    signUp: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
-    signIn: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
-    signOut: vi.fn(() => Promise.resolve({ error: null })),
-    onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
-  },
-  from: vi.fn(() => ({
-    select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        single: vi.fn(() => Promise.resolve({ data: null, error: null })),
-        then: vi.fn((callback) => callback({ data: [], error: null }))
-      })),
-      or: vi.fn(() => ({
-        order: vi.fn(() => ({
-          then: vi.fn((callback) => callback({ data: [], error: null }))
-        }))
-      })),
-      then: vi.fn((callback) => callback({ data: [], error: null }))
-    })),
-    insert: vi.fn(() => Promise.resolve({ data: null, error: null })),
-    update: vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ data: null, error: null })) })),
-    delete: vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ data: null, error: null })) })),
-  }))
-}
-
-// Mock the entire module
-vi.mock('@/lib/supabaseClient', () => ({
-  supabase: mockSupabase,
-  createSupabaseClient: vi.fn(() => mockSupabase),
-  getSupabaseClient: vi.fn(() => mockSupabase)
-}))
-
-// Mock additional Supabase-related modules
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    auth: {
-      getSession: vi.fn(() => Promise.resolve({ data: { session: null }, error: null })),
-      getUser: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
-      signUp: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
-      signIn: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
-      signOut: vi.fn(() => Promise.resolve({ error: null })),
-      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
-    },
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: null, error: null })),
-          then: vi.fn((callback) => callback({ data: [], error: null }))
-        })),
-        or: vi.fn(() => ({
-          order: vi.fn(() => ({
-            then: vi.fn((callback) => callback({ data: [], error: null }))
-          }))
-        })),
-        then: vi.fn((callback) => callback({ data: [], error: null }))
-      })),
-      insert: vi.fn(() => Promise.resolve({ data: null, error: null })),
-      update: vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ data: null, error: null })) })),
-      delete: vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ data: null, error: null })) })),
-    }))
-  }
-}))
+// Centralized Supabase mocks
+createSupabaseClientMocks()
 
 // Mock fetch with default responses
 global.fetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {

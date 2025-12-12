@@ -175,7 +175,7 @@ export function loadGenome(genomePath = path.join(process.cwd(), "genome", "mast
     if (!module || typeof module !== "object") {
       throw new Error("Module entries must be objects");
     }
-    const record = module as Record<string, unknown>;
+    const record = module as unknown as Record<string, unknown>;
     return {
       id: assertString(record.id, "domains.core.modules[].id"),
       name: typeof record.name === "string" ? record.name : undefined,
