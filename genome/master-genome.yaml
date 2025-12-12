@@ -1,0 +1,126 @@
+version: "11.0"
+codename: "North Star"
+releaseDate: "2025-02-15"
+description: "Bookiji OS 11.0 Genome blueprint capturing operational, experience, and governance rails."
+domains:
+  core:
+    modules:
+      - id: "control-plane"
+        name: "OpsAI Control Plane"
+        path: "apps/opsai-control-plane"
+        requiredFiles:
+          - "package.json"
+      - id: "opsai-sdk"
+        name: "OpsAI SDK"
+        path: "packages/opsai-sdk"
+        requiredFiles:
+          - "package.json"
+      - id: "opsai-helpdesk"
+        name: "OpsAI Helpdesk"
+        path: "packages/opsai-helpdesk"
+        requiredFiles:
+          - "package.json"
+      - id: "opsai-l7"
+        name: "OpsAI Layer 7"
+        path: "packages/opsai-l7"
+        requiredFiles:
+          - "package.json"
+      - id: "opsai-voice"
+        name: "OpsAI Voice Console"
+        path: "packages/opsai-voice"
+        requiredFiles:
+          - "package.json"
+    runtimeProfiles:
+      - name: "supabase-edge"
+        config: "supabase/config.toml"
+      - name: "ops-ledger"
+        config: "ops-state/logs.json"
+  events:
+    contracts:
+      - id: "bookiji-http"
+        name: "Bookiji HTTP Contract"
+        file: "openapi/bookiji.yaml"
+        requiredSections:
+          - "info"
+          - "paths"
+    catalog:
+      folder: "ops/drills"
+      expectedExtensions:
+        - ".md"
+    telemetry:
+      auditFeeds:
+        - name: "operations-events"
+          files:
+            - "ops-state/events.json"
+            - "ops-state/incidents.json"
+  temporal:
+    audit:
+      ledgers:
+        - name: "runtime-log"
+          file: "ops-state/logs.json"
+        - name: "incident-log"
+          file: "ops-state/incidents.json"
+    timelines:
+      - name: "control-plane-activity"
+        hint: "Tracks drift and promotion windows"
+        requiredFiles:
+          - "ops-state/actions.json"
+  opsai:
+    services:
+      - id: "opsai-control-plane"
+        folder: "apps/opsai-control-plane"
+      - id: "opsai-sdk"
+        folder: "packages/opsai-sdk"
+      - id: "opsai-l7"
+        folder: "packages/opsai-l7"
+    diagnostics:
+      smokeTests:
+        - "scripts/ops-smoke-test.ts"
+        - "scripts/deployai-monitor.ts"
+  simcity:
+    scenarios:
+      folder: "ops/drills"
+      chaosProfile: "chaos/config.json"
+    traffic:
+      samples: "traffic-samples"
+      loadPatterns: "loadtests"
+  helpCenter:
+    knowledgeBase:
+      root: "docs/bookiji-kb"
+      requiredFiles:
+        - "README.md"
+    userGuides:
+      folder: "docs/user-guides"
+  notifications:
+    channels:
+      - id: "push"
+        folder: "src/lib/notifications"
+      - id: "email"
+        folder: "public"
+    requiredFiles:
+      - "src/lib/notifications/pushNotifications.ts"
+  trustSafety:
+    ledgers:
+      - "ops-state/incidents.json"
+      - "ops-state/log-patterns.json"
+    drills:
+      folder: "ops/drills"
+  businessIntelligence:
+    telemetry:
+      funnels:
+        - "traffic-samples"
+    qualityGates:
+      - "test-results"
+  governance:
+    policies:
+      - "PRODUCTION_ALIGNMENT_CHECK.md"
+      - "PROJECT_STATUS.md"
+    approvals:
+      changeControl: "docs/IMMUTABLE_DEPLOYS.md"
+  evolution:
+    flags:
+      - "docs/LEVEL3_ENHANCEMENTS.md"
+      - "docs/LEVEL4_ENHANCEMENTS.md"
+      - "docs/LEVEL5_ENHANCEMENTS.md"
+    roadmap:
+      file: "CHANGES.md"
