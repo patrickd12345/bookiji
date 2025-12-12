@@ -42,6 +42,7 @@
     "deployai": "tsx scripts/deployai-monitor.ts",
     "anomalyai": "tsx scripts/anomalyai-monitor.ts",
     "ops:smoke": "tsx scripts/ops-smoke-test.ts",
+    "genome:validate": "tsx scripts/validateGenome.ts",
     "prebuild": "npm run i18n:check",
     "prepare": "husky install",
     "build:opsai-sdk": "pnpm exec tsc -p packages/opsai-sdk/tsconfig.json",
