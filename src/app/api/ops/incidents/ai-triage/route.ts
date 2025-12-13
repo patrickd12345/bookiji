@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getOpenIncidents, loadIncidents } from '@/scripts/incidents-store'
-import { getEventsByIncident, getEventsByTimeRange } from '@/scripts/ops-events-store'
+import { getEventsByIncident } from '@/scripts/ops-events-store'
 import type { Incident } from '@/types/incidents'
 
 interface TriageSummary {

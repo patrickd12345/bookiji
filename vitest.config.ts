@@ -27,6 +27,8 @@ export default defineConfig({
       "tests/components/**/*.test.{ts,tsx}",
       "tests/unit/**/*.test.{ts,tsx}",
       "tests/api/**/*.spec.ts",
+      "tests/contracts/**/*.{spec,test}.{ts,tsx}",
+      "tests/governance/**/*.{spec,test}.{ts,tsx}",
       "packages/**/tests/**/*.{test,spec}.{ts,tsx}"
     ],
     exclude: [

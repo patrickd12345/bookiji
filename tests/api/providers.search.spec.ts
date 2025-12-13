@@ -2,35 +2,30 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GET } from '@/app/api/search/providers/route'
 import { NextRequest } from 'next/server'
 
-const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
+const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
 
 let mockProviders: any[] = []
 
-// Mock the supabase client from the correct path
-vi.mock('@/lib/supabaseClient', () => {
-  const mockFrom = vi.fn(() => {
-    const chain: any = {
-      select: vi.fn(() => chain),
-      eq: vi.fn(() => chain),
-      or: vi.fn(() => chain),
-      gte: vi.fn(() => chain),
-      range: vi.fn(async () => ({ data: mockProviders, error: null })),
-      single: vi.fn(async () => ({ data: [], error: null }))
-    }
-    return chain
+describe('GET /api/search/providers dynamic radius', () => {
+  beforeEach(() => {
+    const mock = getSupabaseMock()
+    mockProviders = []
+    // Override from() to return custom chain with mockProviders
+    mock.from.mockImplementation(() => {
+      const chain: any = {
+        select: vi.fn(() => chain),
+        eq: vi.fn(() => chain),
+        or: vi.fn(() => chain),
+        gte: vi.fn(() => chain),
+        range: vi.fn(async () => ({ data: mockProviders, error: null })),
+        single: vi.fn(async () => ({ data: [], error: null }))
+      }
+      return chain
+    })
   })
 
-  return {
-    supabase: { from: mockFrom }
-  }
-})
-
-beforeEach(() => {
-  mockProviders = []
-})
-
-describe('GET /api/search/providers dynamic radius', () => {
   it('returns no match message in low density area', async () => {
     mockProviders = []
     const req = new NextRequest(new Request(`${BASE_URL}/api/search/providers?userLat=0&userLon=0&category=test`))

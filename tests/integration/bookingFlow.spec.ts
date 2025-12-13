@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeAll, vi } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
 // Set up test environment variables
 beforeAll(() => {
@@ -10,77 +11,53 @@ beforeAll(() => {
   process.env.OLLAMA_HOST = 'http://localhost:11434'
 })
 
-// Mock Supabase client directly
-vi.mock('@/lib/supabaseClient', () => ({
-  supabase: {
-    auth: {
-      signUp: vi.fn(() => Promise.resolve({ 
-        data: { 
-          user: { 
-            id: 'test-user-123', 
-            email: 'test@example.com',
-            email_confirmed_at: new Date().toISOString()
-          } 
-        }, 
-        error: null 
-      }))
-    },
-    from: vi.fn(() => ({
-      insert: vi.fn(() => Promise.resolve({ 
-        data: [{ 
-          id: 'test-booking-123',
-          customer_id: 'test-user-123',
-          service: 'haircut',
-          status: 'pending'
-        }], 
-        error: null 
-      })),
-      select: vi.fn(() => ({
-        eq: vi.fn(() => Promise.resolve({ data: [], error: null })),
-        single: vi.fn(() => Promise.resolve({ 
-          data: { id: 'test-user-123', role: 'customer' }, 
-          error: null 
-        }))
-      }))
-    }))
-  }
-}))
+// Mock is already applied globally via setup.ts, override behavior if needed in beforeEach
 
 // Also mock for routes that use createClient
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: () => ({
-    auth: {
-      signUp: vi.fn(() => Promise.resolve({ 
-        data: { 
-          user: { 
-            id: 'test-user-123', 
-            email: 'test@example.com',
-            email_confirmed_at: new Date().toISOString()
-          } 
-        }, 
-        error: null 
-      }))
-    },
-    from: () => ({
-      insert: vi.fn(() => Promise.resolve({ 
-        data: [{ 
-          id: 'test-booking-123',
-          customer_id: 'test-user-123',
-          service: 'haircut',
-          status: 'pending'
-        }], 
-        error: null 
-      })),
-      select: vi.fn(() => ({
-        eq: vi.fn(() => Promise.resolve({ data: [], error: null })),
-        single: vi.fn(() => Promise.resolve({ 
-          data: { id: 'test-user-123', role: 'customer' }, 
-          error: null 
-        }))
-      }))
-    })
-  })
+  createClient: vi.fn(() => getSupabaseMock())
 }))
+
+beforeEach(() => {
+  const supabase = getSupabaseMock()
+  supabase.auth.signUp.mockResolvedValue({
+    data: {
+      user: {
+        id: 'test-user-123',
+        email: 'test@example.com',
+        email_confirmed_at: new Date().toISOString()
+      }
+    },
+    error: null
+  } as any)
+  supabase.from.mockImplementation((table: string) => {
+    if (table === 'bookings') {
+      return {
+        insert: vi.fn(async () => ({
+          data: [{
+            id: 'test-booking-123',
+            customer_id: 'test-user-123',
+            service: 'haircut',
+            status: 'pending'
+          }],
+          error: null
+        }))
+      } as any
+    }
+    if (table === 'profiles') {
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(async () => ({ data: [], error: null })),
+          single: vi.fn(async () => ({
+            data: { id: 'test-user-123', role: 'customer' },
+            error: null
+          }))
+        }))
+      } as any
+    }
+    return {} as any
+  })
+})
 
 // Mock fetch for Ollama API
 global.fetch = vi.fn((url) => {
@@ -147,21 +124,7 @@ vi.mock('@/lib/ollama', () => ({
   }
 }))
 
-// Mock Supabase client with comprehensive mocks
-vi.mock('@/lib/supabaseClient', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      insert: vi.fn(() => Promise.resolve({ data: { id: 'test-booking-id' }, error: null })),
-      select: vi.fn(() => ({
-        eq: vi.fn(() => Promise.resolve({ data: [], error: null }))
-      })),
-      upsert: vi.fn(() => Promise.resolve({ data: { id: 'test-user-id' }, error: null })),
-      auth: {
-        signUp: vi.fn(() => Promise.resolve({ data: { user: { id: 'test-user-id' } }, error: null }))
-      }
-    }))
-  }
-}))
+// Mock is already applied globally via setup.ts, override behavior if needed in beforeEach
 
 // Mock Stripe
 vi.mock('stripe', () => {

@@ -180,7 +180,7 @@ export async function GET(request: NextRequest) {
 
         const topErrorEndpoints = Array.from(data.endpoint_errors.entries())
           .map(([endpointKey, info]) => {
-            const [method, ...endpointParts] = endpointKey.split(' ')
+            const [, ...endpointParts] = endpointKey.split(' ')
             const endpoint = endpointParts.join(' ')
             const endpointErrorRate = totalRequests && totalRequests > 0
               ? (info.count / totalRequests) * 100
@@ -281,7 +281,7 @@ export async function GET(request: NextRequest) {
 
           const topErrorEndpoints = Array.from(data.endpoint_errors.entries())
             .map(([endpointKey, info]) => {
-              const [method, ...endpointParts] = endpointKey.split(' ')
+              const [, ...endpointParts] = endpointKey.split(' ')
               const endpoint = endpointParts.join(' ')
               const endpointErrorRate = prevTotalRequests && prevTotalRequests > 0
                 ? (info.count / prevTotalRequests) * 100

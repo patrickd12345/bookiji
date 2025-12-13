@@ -33,35 +33,7 @@ vi.mock('@/lib/i18n/useI18n', () => ({
   SUPPORTED_LOCALES: ['en-US', 'de-DE', 'fr-FR']
 }))
 
-const { mockSupabaseClient } = vi.hoisted(() => {
-  const mockClient = {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => Promise.resolve({ data: [], error: null }))
-      })),
-      insert: vi.fn(() => Promise.resolve({ data: [], error: null })),
-      update: vi.fn(() => Promise.resolve({ data: [], error: null })),
-      delete: vi.fn(() => Promise.resolve({ data: [], error: null }))
-    })),
-    auth: {
-      signUp: vi.fn(() => Promise.resolve({ data: { user: { id: 'test-user' } }, error: null })),
-      signIn: vi.fn(() => Promise.resolve({ data: { user: { id: 'test-user' } }, error: null })),
-      signOut: vi.fn(() => Promise.resolve({ error: null })),
-      getSession: vi.fn(() => Promise.resolve({ data: { session: null }, error: null })),
-      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }))
-    }
-  }
-  return { mockSupabaseClient: mockClient }
-})
-
-vi.mock('@/lib/supabaseClient', () => ({
-  supabase: mockSupabaseClient,
-  supabaseBrowserClient: vi.fn(() => mockSupabaseClient),  // Primary export used by components
-  getBrowserSupabase: vi.fn(() => mockSupabaseClient),      // Internal helper
-  getServerSupabase: vi.fn(() => mockSupabaseClient),       // Server-side client
-  createSupabaseClient: vi.fn(() => mockSupabaseClient),   // Legacy/backward compatibility
-  getSupabaseClient: vi.fn(() => mockSupabaseClient)        // Legacy/backward compatibility
-}))
+// Mock is already applied globally via setup.ts, use getSupabaseMock() in beforeEach if custom behavior needed
 
 vi.mock('@/lib/ollama', () => ({
   ollamaService: {

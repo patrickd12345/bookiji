@@ -3,7 +3,6 @@ import { limitRequest } from '@/middleware/requestLimiter'
 import { getServerSupabase } from '@/lib/supabaseClient'
 
 const supabase = getServerSupabase()
-import { userService } from '@/lib/database'
 import { referralService } from '@/lib/referrals'
 
 export async function POST(request: Request) {
@@ -46,7 +45,7 @@ export async function POST(request: Request) {
 
     // Create profile in database
     // Don't use userService.upsertProfile since we don't have auth context yet
-    const { data: profileData, error: profileError } = await supabase
+    const { error: profileError } = await supabase
       .from('profiles')
       .upsert({
         id: authData.user.id,

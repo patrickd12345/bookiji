@@ -2,13 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import { GET } from '@/app/api/analytics/system/route'
 import { GET as healthGET } from '@/app/api/health/route'
-
-// Set up environment variables for testing
-beforeEach(() => {
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-publishable-key'
-  process.env.SUPABASE_SECRET_KEY = 'test-secret-key'
-})
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
 // Mock the Supabase config
 vi.mock('@/config/supabase', () => ({
@@ -20,59 +14,72 @@ vi.mock('@/config/supabase', () => ({
 }))
 
 // Mock the createClient function from @supabase/supabase-js
-vi.mock('@supabase/supabase-js', () => {
-  const mockFrom = vi.fn(() => ({
-    select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        gte: vi.fn(() => ({
-          order: vi.fn(() => Promise.resolve({
-            data: [
-              { event: 'page_view', created_at: '2024-01-16T10:00:00Z' },
-              { event: 'booking_start', created_at: '2024-01-16T09:30:00Z' },
-              { event: 'page_view', created_at: '2024-01-16T09:00:00Z' }
-            ],
-            error: null
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: vi.fn(() => getSupabaseMock())
+}))
+
+beforeEach(() => {
+  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-publishable-key'
+  process.env.SUPABASE_SECRET_KEY = 'test-secret-key'
+
+  const supabase = getSupabaseMock()
+  const analyticsEventsData = [{ properties: { country: 'US', device_type: 'desktop', user_id: 'user1' }, event_name: 'booking_error', created_at: '2024-01-16T10:00:00Z' }]
+
+  supabase.from.mockImplementation((table: string) => {
+    if (table === 'conversion_funnels') {
+      return {
+        select: vi.fn(() => ({
+          gte: vi.fn(() => ({
+            order: vi.fn(async () => ({
+              data: [
+                { event: 'page_view', created_at: '2024-01-16T10:00:00Z' },
+                { event: 'booking_start', created_at: '2024-01-16T09:30:00Z' },
+                { event: 'page_view', created_at: '2024-01-16T09:00:00Z' }
+              ],
+              error: null
+            }))
           }))
         }))
-      })),
-      gte: vi.fn(() => ({
-        order: vi.fn(() => Promise.resolve({
-          data: [
-            { event: 'page_view', created_at: '2024-01-16T10:00:00Z' },
-            { event: 'booking_start', created_at: '2024-01-16T09:30:00Z' },
-            { event: 'page_view', created_at: '2024-01-16T09:00:00Z' }
-          ],
-          error: null
-        }))
-      })),
-      not: vi.fn(() => ({
-        gte: vi.fn(() => Promise.resolve({
-          data: [
-            { properties: { country: 'US' } },
-            { properties: { device_type: 'desktop' } },
-            { properties: { user_id: 'user1' } }
-          ],
-          error: null
-        }))
-      })),
-      or: vi.fn(() => ({
-        gte: vi.fn(() => Promise.resolve({
-          data: [
-            { event_name: 'booking_error', created_at: '2024-01-16T10:00:00Z' }
-          ],
-          error: null
-        }))
-      }))
-    }))
-  }))
+      } as any
+    }
 
-  const mockClient = {
-    from: mockFrom
-  }
+    if (table === 'bookings') {
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            gte: vi.fn(async () => ({
+              data: [{ total_amount: 100, status: 'completed' }],
+              error: null
+            }))
+          }))
+        }))
+      } as any
+    }
 
-  return {
-    createClient: vi.fn(() => mockClient)
-  }
+    if (table === 'analytics_events') {
+      return {
+        select: vi.fn((_cols?: any, opts?: any) => {
+          if (opts?.count) {
+            return {
+              gte: vi.fn(async () => ({ data: [], count: 10, error: null }))
+            }
+          }
+          return {
+            not: vi.fn(() => ({
+              gte: vi.fn(async () => ({ data: analyticsEventsData, error: null }))
+            })),
+            gte: vi.fn(async () => ({ data: analyticsEventsData, error: null })),
+            or: vi.fn(() => ({
+              gte: vi.fn(async () => ({ data: analyticsEventsData, error: null }))
+            }))
+          }
+        })
+      } as any
+    }
+
+    return {} as any
+  })
 })
 
 describe('GET /api/analytics/system', () => {

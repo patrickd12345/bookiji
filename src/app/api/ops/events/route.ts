@@ -2,9 +2,7 @@ import { NextResponse } from 'next/server'
 import {
   loadEvents,
   getEventsByIncident,
-  getEventsByTimeRange,
-  getEventsByType,
-  getEventsBySeverity
+  getEventsByTimeRange
 } from '@/scripts/ops-events-store'
 
 export async function GET(request: Request) {

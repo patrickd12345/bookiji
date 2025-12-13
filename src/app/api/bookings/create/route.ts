@@ -38,7 +38,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  let body: any
+  interface BookingRequestBody {
+    service_id?: string
+    customer_id?: string
+    [key: string]: unknown
+  }
+  let body: BookingRequestBody
   try {
     body = await req.json()
   } catch {
@@ -63,8 +68,8 @@ export async function POST(req: NextRequest) {
     amount: amountCents,
     currency: 'usd',
     metadata: {
-      providerId,
-      serviceId,
+      providerId: String(providerId),
+      serviceId: String(serviceId),
       userId: user.id
     }
   })

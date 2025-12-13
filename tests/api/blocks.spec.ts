@@ -3,17 +3,11 @@ import { POST } from '@/app/api/blocks/create/route'
 import { GET } from '@/app/api/blocks/list/route'
 import { DELETE } from '@/app/api/blocks/delete/route'
 import { NextRequest } from 'next/server'
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
 
-// Mock Supabase
-vi.mock('../../src/lib/supabaseClient', () => {
-  const from = vi.fn()
-  ;(globalThis as Record<string, unknown>).__SB_FROM_INT__ = from
-  return {
-    supabase: { from }
-  }
-})
+// Mock is already applied globally via setup.ts (this test also mocks @supabase/ssr separately, which is fine)
 
 // Mock next/headers
 vi.mock('next/headers', () => ({
@@ -24,43 +18,28 @@ vi.mock('next/headers', () => ({
 
 // Mock @supabase/ssr
 vi.mock('@supabase/ssr', () => ({
-  createServerClient: () => ({
-    auth: {
-      getUser: () => Promise.resolve({ 
-        data: { user: { id: 'user-123' } }, 
-        error: null 
-      })
-    },
-    from: () => {
-      const mockChain = {
-        select: () => ({
-          eq: () => ({
-            eq: () => ({
-              single: () => Promise.resolve({ data: null, error: null }) // No existing block for create
-            })
-          })
-        }),
-        insert: () => ({
-          select: () => ({
-            single: () => Promise.resolve({ data: { id: 'block-1' }, error: null })
-          })
-        }),
-        delete: () => ({
-          eq: () => ({
-            eq: () => Promise.resolve({ error: null })
-          })
-        })
-      }
-      return mockChain
-    }
-  })
+  createServerClient: vi.fn(() => getSupabaseMock())
 }))
-
-// Helper function for getting mock (unused but kept for potential future use)
 
 describe('Blocks API endpoints', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    const supabase = getSupabaseMock()
+    const baseFrom = supabase.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
+
+    supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-123' } }, error: null } as any)
+    supabase.from.mockImplementation((table: string) => {
+      if (table === 'user_blocks') {
+        const chain: any = baseFrom(table)
+        chain.insert = vi.fn(() => ({
+          select: vi.fn(() => ({
+            single: vi.fn(async () => ({ data: { id: 'block-1' }, error: null }))
+          }))
+        }))
+        return chain
+      }
+      return baseFrom(table)
+    })
   })
 
   it('POST /api/blocks/create should create a user block', async () => {

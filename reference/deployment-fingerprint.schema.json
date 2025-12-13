@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DeploymentFingerprint v1",
+  "type": "object",
+  "required": [
+    "fingerprint_version",
+    "fingerprint_id",
+    "environment",
+    "git_commit",
+    "artifact_schema_versions",
+    "genome_hash",
+    "governance_snapshot_hash",
+    "reasoning_relevant_config_hashes"
+  ],
+  "properties": {
+    "fingerprint_version": { "enum": ["deployment-fingerprint/v1"] },
+    "fingerprint_id": { "type": "string" },
+    "environment": {
+      "type": "object",
+      "required": ["classification"],
+      "properties": {
+        "classification": { "enum": ["dev", "staging", "prod", "explicit"] },
+        "label": { "type": "string" }
+      }
+    },
+    "git_commit": { "type": "string" },
+    "build_id": { "type": "string" },
+    "artifact_schema_versions": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "genome_hash": { "type": "string" },
+    "governance_snapshot_hash": { "type": "string" },
+    "reasoning_relevant_config_hashes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "hash"],
+        "properties": {
+          "name": { "type": "string" },
+          "hash": { "type": "string" },
+          "secret": { "type": "boolean" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { BookingEngine } from '../../src/lib/bookingEngine'
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
 // Mock the Stripe helper
 vi.mock('../../src/lib/stripe', () => ({
@@ -14,20 +15,6 @@ vi.mock('../../src/lib/stripe', () => ({
   }),
   getLiveBookingFee: async () => 100 // Mock the live booking fee function
 }))
-
-vi.mock('../../src/lib/supabaseClient', () => {
-  const from = vi.fn()
-  // Expose for tests via globalThis
-  ;(globalThis as any).__SB_FROM__ = from
-  return {
-    supabase: {
-      from
-    }
-  }
-})
-
-// Helper to fetch the mock after modules are evaluated
-const getMockFrom = () => (globalThis as any).__SB_FROM__ as ReturnType<typeof vi.fn>
 
 /**
  * Helper to build the minimal query-chain object Vitest needs for this test.
@@ -52,21 +39,34 @@ function chainable(returnValue: any): any {
 
 describe('BookingEngine', () => {
   beforeEach(() => {
-    getMockFrom().mockReset()
+    const mock = getSupabaseMock()
+    mock.from.mockReset()
   })
 
   it('returns error when no slot is available', async () => {
+    const mock = getSupabaseMock()
+    const baseFrom = mock.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
     // 1) Service lookup returns a service id
-    getMockFrom()
-      .mockImplementationOnce(() => ({
-        select: () => ({
-          eq: () => ({
-            single: () => Promise.resolve({ data: { id: 'service_1' }, error: null })
+    mock.from
+      .mockImplementationOnce((table: string) => {
+        const baseChain = baseFrom(table)
+        return {
+          ...baseChain,
+          select: () => ({
+            eq: () => ({
+              single: () => Promise.resolve({ data: { id: 'service_1' }, error: null })
+            })
           })
-        })
-      }))
+        } as any
+      })
       // 2) Slot lookup returns empty array
-      .mockImplementationOnce(() => chainable(Promise.resolve({ data: [], error: null })))
+      .mockImplementationOnce((table: string) => {
+        const baseChain = baseFrom(table)
+        return {
+          ...baseChain,
+          ...chainable(Promise.resolve({ data: [], error: null }))
+        } as any
+      })
 
     const result = await BookingEngine.createBooking({
       customerId: 'cust_1',

@@ -5,6 +5,7 @@ import {
   RepoContext,
   loadGenome,
 } from "./loadGenome";
+import { validateAnalytics } from "./validateAnalytics";
 import { validateCore } from "./validateCore";
 import { validateEvents } from "./validateEvents";
 import { validateTemporal } from "./validateTemporal";
@@ -29,9 +30,16 @@ export interface GenomeRunResult {
   totalWarnings: number;
 }
 
+export interface RunGenomeOptions {
+  repoRoot?: string;
+  quiet?: boolean;
+  explain?: boolean;
+}
+
 const registry: GenomeValidator[] = [
   { domain: "core", run: validateCore },
   { domain: "events", run: validateEvents },
+  { domain: "analytics", run: validateAnalytics },
   { domain: "temporal", run: validateTemporal },
   { domain: "opsai", run: validateOpsAI },
   { domain: "simcity", run: validateSimCity },
@@ -47,23 +55,52 @@ function formatResult(result: DomainValidationResult): void {
   const header = `[${result.domain.toUpperCase()}]`;
   console.log(`\n${header}`);
   if (result.errors.length === 0 && result.warnings.length === 0) {
-    console.log("  ✓ No findings");
+    console.log("  OK: No findings");
     return;
   }
 
   result.errors.forEach((error) => {
-    console.error(`  ✖ ${error}`);
+    console.error(`  ERROR: ${error}`);
   });
 
   result.warnings.forEach((warning) => {
-    console.warn(`  ⚠ ${warning}`);
+    console.warn(`  WARN: ${warning}`);
   });
 }
 
-export async function runGenomeLinter(options?: {
-  repoRoot?: string;
-  quiet?: boolean;
-}): Promise<GenomeRunResult> {
+function printExplanationIntro(genome?: GenomeSpec): void {
+  console.log("==== Genome Linter Explanation ====");
+  console.log(
+    genome?.version
+      ? `The Genome defines Bookiji OS ${genome.version} architecture boundaries.`
+      : "The Genome defines Bookiji OS architecture boundaries."
+  );
+  console.log("Errors = required structure violations.");
+  console.log("Warnings = optional or incomplete configuration.");
+  console.log(
+    "Checks cover: core modules, events, temporal ledgers, OpsAI services, SimCity scenarios, help center docs, notification channels and contracts, trust & safety drills and contracts, business intelligence assets, governance controls, and evolution artifacts."
+  );
+  console.log("");
+}
+
+function printDomainBreakdown(results: DomainValidationResult[]): void {
+  results.forEach((result) => {
+    const header = `[${result.domain.toUpperCase()}]`;
+    const errorSummary =
+      result.errors.length === 0
+        ? "0 errors"
+        : `${result.errors.length} error${result.errors.length === 1 ? "" : "s"} (${result.errors[0]})`;
+    const warningSummary =
+      result.warnings.length === 0
+        ? "0 warnings"
+        : `${result.warnings.length} warning${result.warnings.length === 1 ? "" : "s"} (${result.warnings[0]})`;
+    console.log(`${header}`);
+    console.log(`  ${errorSummary}`);
+    console.log(`  ${warningSummary}`);
+  });
+}
+
+export async function runGenomeLinter(options?: RunGenomeOptions): Promise<GenomeRunResult> {
   const repoRoot = options?.repoRoot ?? process.cwd();
   const genomePath = path.join(repoRoot, "genome", "master-genome.yaml");
   const results: DomainValidationResult[] = [];
@@ -90,9 +127,10 @@ export async function runGenomeLinter(options?: {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      results.push({ domain: validator.domain, errors: [message], warnings: [] });
+      const fallback: DomainValidationResult = { domain: validator.domain, errors: [message], warnings: [] };
+      results.push(fallback);
       if (!options?.quiet) {
-        formatResult({ domain: validator.domain, errors: [message], warnings: [] });
+        formatResult(fallback);
       }
     }
   }
@@ -106,7 +144,13 @@ export async function runGenomeLinter(options?: {
     console.log(`Warnings: ${totalWarnings}`);
   }
 
-  if (totalErrors > 0) {
+  if (options?.explain) {
+    console.log("");
+    printExplanationIntro(genome);
+    printDomainBreakdown(results);
+  }
+
+  if (!options?.explain && totalErrors > 0) {
     process.exitCode = 1;
   }
 

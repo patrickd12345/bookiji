@@ -1,18 +1,6 @@
 import { vi } from 'vitest';
 
-// Mock Supabase client
-vi.mock('@/lib/supabaseClient', () => ({
-  getSupabaseClient: vi.fn(() => ({
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ data: null, error: null })),
-        })),
-      })),
-    })),
-    rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),
-  })),
-}));
+// Mock is already applied globally via setup.ts, override behavior if needed in beforeEach
 
 import { CreditsService } from '../../../src/lib/credits';
 import { CREDITS_CONSTANTS } from '@/types/credits';

@@ -41,7 +41,7 @@ export async function GET() {
     let vectorSearchLatency = null
     try {
       const vectorStart = Date.now()
-      const { data: vectorData, error: vectorError } = await supabase.rpc('kb_search', {
+      const { error: vectorError } = await supabase.rpc('kb_search', {
         q_embedding: Array(1536).fill(0), // Dummy embedding for test
         k: 1,
         in_locale: null,

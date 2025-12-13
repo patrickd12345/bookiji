@@ -28,8 +28,6 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const insightType = searchParams.get('type') || 'overview';
-    const locale = searchParams.get('locale') || 'en';
-    const days = parseInt(searchParams.get('days') || '7');
 
     // For now, return mock insights data
     // In production, you'd query your database views

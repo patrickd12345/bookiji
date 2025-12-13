@@ -1,31 +1,34 @@
 import path from "node:path";
 import { DomainValidationResult, GenomeSpec, RepoContext } from "./loadGenome";
-import { exists, resolveRepoPath } from "./utils";
+import { resolveRepoPath, safeExists } from "./utils";
 
 export async function validateCore(genome: GenomeSpec, context: RepoContext): Promise<DomainValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
+  const DOMAIN = "CORE";
   const modules = genome.domains.core.modules ?? [];
 
   modules.forEach((module) => {
     const modulePath = resolveRepoPath(context.repoRoot, module.path);
-    if (!exists(modulePath)) {
-      errors.push(`Missing core module path: ${module.path}`);
+    if (!safeExists(modulePath)) {
+      errors.push(`${DOMAIN}: Missing required module "${module.id}" (expected at ${modulePath})`);
       return;
     }
 
     (module.requiredFiles ?? []).forEach((file) => {
       const filePath = path.join(modulePath, file);
-      if (!exists(filePath)) {
-        errors.push(`Module ${module.id} is missing required file ${file}`);
+      if (!safeExists(filePath)) {
+        errors.push(`${DOMAIN}: Missing required file "${file}" for module "${module.id}" (expected at ${filePath})`);
       }
     });
   });
 
   (genome.domains.core.runtimeProfiles ?? []).forEach((profile) => {
     const configPath = resolveRepoPath(context.repoRoot, profile.config);
-    if (!exists(configPath)) {
-      errors.push(`Runtime profile ${profile.name} config not found at ${profile.config}`);
+    if (!safeExists(configPath)) {
+      errors.push(
+        `${DOMAIN}: Runtime profile "${profile.name}" missing required config "${profile.config}" (expected at ${configPath})`
+      );
     }
   });
 

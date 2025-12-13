@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST } from '@/app/api/analytics/track/route'
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
 type AnalyticsRequestBody = {
   event?: string
@@ -14,10 +15,16 @@ const mkReq = (body: AnalyticsRequestBody) => new Request('https://example.com/a
 
 import { NextRequest } from 'next/server'
 
-vi.mock('@supabase/supabase-js', () => {
-  const from = vi.fn(() => ({ insert: vi.fn(async () => ({ error: { message: 'fail' } })) }))
-  const client = { from }
-  return { createClient: vi.fn(() => client) }
+// Use shared Supabase mock
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: vi.fn(() => getSupabaseMock())
+}))
+
+beforeEach(() => {
+  const supabase = getSupabaseMock()
+  supabase.from.mockImplementation(() => ({
+    insert: vi.fn(async () => ({ error: { message: 'fail' } }))
+  }) as any)
 })
 
 describe('POST /api/analytics/track (error paths)', () => {
@@ -34,5 +41,4 @@ describe('POST /api/analytics/track (error paths)', () => {
     expect(json.error).toBeTruthy()
   })
 })
-
 

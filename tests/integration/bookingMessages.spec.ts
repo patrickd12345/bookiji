@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from '@/app/api/bookings/[id]/messages/route';
 import { NextRequest } from 'next/server';
+import { getSupabaseMock } from '../utils/supabase-mocks';
 
 // Mock the Supabase SSR package
 vi.mock('@supabase/ssr', () => ({
-  createServerClient: vi.fn()
+  createServerClient: vi.fn(() => getSupabaseMock())
 }));
 
 // Mock the cookies
@@ -16,60 +17,51 @@ vi.mock('next/headers', () => ({
 const bookings = [{ id: 'b1', customer_id: 'c1', provider_id: 'p1' }];
 const messages: any[] = [];
 
-// Mock the Supabase client
-const mockSupabaseClient = {
-  auth: {
-    getUser: vi.fn()
-  },
-  from: vi.fn((table: string) => {
-    if (table === 'bookings') {
-      return {
-        select: () => ({
-          eq: (field: string, value: string) => ({
-            single: async () => ({ data: bookings.find(b => b.id === value), error: null }),
-          }),
-        }),
-      };
-    }
-    if (table === 'booking_messages') {
-      return {
-        select: () => ({
-          eq: (_: string, bookingId: string) => ({
-            order: () => ({
-              limit: async () => ({ data: messages.filter(m => m.booking_id === bookingId), error: null }),
-            }),
-          }),
-        }),
-        insert: (payload: any) => ({
-          select: () => ({
-            single: async () => {
-              const msg = { id: `m${messages.length + 1}`, created_at: new Date().toISOString(), ...payload };
-              messages.push(msg);
-              return { data: msg, error: null };
-            },
-          }),
-        }),
-      };
-    }
-    return {};
-  }),
-};
-
-// Set up the mock to return our client
-const { createServerClient } = await import('@supabase/ssr');
-vi.mocked(createServerClient).mockReturnValue(mockSupabaseClient as any);
-
 const BASE = 'http://localhost:3000';
 
 describe('booking messages API', () => {
   beforeEach(() => {
     messages.length = 0;
     vi.clearAllMocks();
+    const supabase = getSupabaseMock();
+    supabase.from.mockImplementation((table: string) => {
+      if (table === 'bookings') {
+        return {
+          select: () => ({
+            eq: (_field: string, value: string) => ({
+              single: async () => ({ data: bookings.find(b => b.id === value), error: null }),
+            }),
+          }),
+        } as any;
+      }
+      if (table === 'booking_messages') {
+        return {
+          select: () => ({
+            eq: (_: string, bookingId: string) => ({
+              order: () => ({
+                limit: async () => ({ data: messages.filter(m => m.booking_id === bookingId), error: null }),
+              }),
+            }),
+          }),
+          insert: (payload: any) => ({
+            select: () => ({
+              single: async () => {
+                const msg = { id: `m${messages.length + 1}`, created_at: new Date().toISOString(), ...payload };
+                messages.push(msg);
+                return { data: msg, error: null };
+              },
+            }),
+          }),
+        } as any;
+      }
+      return {} as any;
+    });
   });
 
   it('allows participants to post and read messages', async () => {
     // Mock authenticated user
-    mockSupabaseClient.auth.getUser.mockResolvedValue({
+    const supabase = getSupabaseMock();
+    supabase.auth.getUser.mockResolvedValue({
       data: { user: { id: 'c1' } },
       error: null
     });
@@ -94,7 +86,8 @@ describe('booking messages API', () => {
 
   it('denies outsiders', async () => {
     // Mock authenticated user who is not a participant
-    mockSupabaseClient.auth.getUser.mockResolvedValue({
+    const supabase = getSupabaseMock();
+    supabase.auth.getUser.mockResolvedValue({
       data: { user: { id: 'x2' } },
       error: null
     });

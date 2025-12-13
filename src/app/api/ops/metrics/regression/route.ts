@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { RegressionAI } from '@/lib/regression/regressionAI'
-import { loadBaselines, getLatestBaseline } from '../../../../../../scripts/ops-baseline-store'
+import { loadBaselines } from '../../../../../../scripts/ops-baseline-store'
 import type { P95Metrics, BookingMetrics, ErrorMetrics, SystemMetrics } from '@/lib/metrics/metricsAI'
 
 /**

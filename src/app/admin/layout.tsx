@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { AccessDenied } from '@/components/ui/AccessDenied'
 import Sidebar from '@/components/admin/Sidebar'
 import Navbar from '@/components/admin/Navbar'
@@ -10,7 +10,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const pathname = usePathname()
 
   // Test mode bypass for E2E tests - check this first
   const isTestMode = typeof window !== 'undefined' && window.localStorage.getItem('testMode') === 'true'

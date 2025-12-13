@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { deployai } from '@/lib/observability/deployai'
 
 /**
@@ -8,7 +8,7 @@ import { deployai } from '@/lib/observability/deployai'
  * 
  * Returns the current status of all deployments (canary, production, staging)
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get deployment status with timeout
     const status = await Promise.race([

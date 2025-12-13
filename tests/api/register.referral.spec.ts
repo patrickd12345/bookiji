@@ -1,28 +1,10 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST } from '@/app/api/auth/register/route'
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
 const completeReferralMock = vi.hoisted(() => vi.fn(async () => ({ success: true })))
 
-vi.mock('@/lib/supabaseClient', () => ({
-  supabase: {
-    auth: {
-      signUp: vi.fn(async () => ({
-        data: { user: { id: 'new-user', email: 'new@example.com' } },
-        error: null
-      }))
-    },
-    from: vi.fn(() => ({
-      upsert: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: vi.fn(async () => ({
-            data: { id: 'new-user', email: 'new@example.com', role: 'customer' },
-            error: null
-          }))
-        }))
-      }))
-    }))
-  }
-}))
+// Mock is already applied globally via setup.ts, override behavior if needed in beforeEach
 
 vi.mock('@/lib/database', () => ({
   userService: {
@@ -39,6 +21,37 @@ vi.mock('@/lib/referrals', () => ({
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
 
 describe('POST /api/auth/register with referral', () => {
+  beforeEach(() => {
+    const supabase = getSupabaseMock()
+    const baseFrom = supabase.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
+    supabase.auth.signUp.mockResolvedValue({
+      data: {
+        user: { id: 'new-user', email: 'new@example.com' },
+        session: { access_token: 'token' }
+      },
+      error: null
+    } as any)
+    supabase.from.mockImplementation((table: string) => {
+      if (table === 'profiles') {
+        return {
+          upsert: vi.fn(() => ({
+            select: () => ({
+              single: async () => ({ data: { id: 'p1' }, error: null })
+            })
+          }))
+        }
+      }
+
+      if (table === 'referrals') {
+        return {
+          insert: vi.fn(async () => ({ error: null }))
+        }
+      }
+
+      return baseFrom(table)
+    })
+  })
+
   it('credits referrer when referral email matches', async () => {
     const body = {
       email: 'new@example.com',

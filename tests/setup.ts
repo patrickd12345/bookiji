@@ -1,8 +1,8 @@
 ﻿import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import { vi, beforeEach } from 'vitest'
 import { cleanup, waitFor } from '@testing-library/react'
 import { act } from 'react-dom/test-utils'
-import { createSupabaseClientMocks } from './utils/supabase-mocks'
+import { createSupabaseClientMocks, resetSupabaseMock } from './utils/supabase-mocks'
 
 // Global test utilities to reduce act() warnings
 ;(global as any).waitFor = waitFor
@@ -43,7 +43,12 @@ process.env.LOCAL_LLM_MODEL = 'llama2:7b' // Smaller model for faster tests
 process.env.TEST_BASE_URL = 'http://localhost:3000'
 
 // Centralized Supabase mocks
+// The mock instance is stored globally in supabase-mocks.ts and can be accessed via getSupabaseMock()
 createSupabaseClientMocks()
+
+beforeEach(() => {
+  resetSupabaseMock()
+})
 
 // Mock fetch with default responses
 global.fetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
@@ -234,10 +239,6 @@ vi.mock('@/components/MapAbstraction', () => ({
 }))
 
 vi.mock('@/components/StripePayment', () => ({
-  default: vi.fn(() => null)
-}))
-
-vi.mock('@/components/BookingForm', () => ({
   default: vi.fn(() => null)
 }))
 

@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ExternalAdapterPolicy v1",
+  "type": "object",
+  "required": ["policy_version", "adapters"],
+  "properties": {
+    "policy_version": { "enum": ["external-adapter-policy/v1"] },
+    "adapters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "authoritative",
+          "emits_reasoning_artifacts",
+          "bypasses_governance",
+          "bypasses_determinism",
+          "bypasses_consent"
+        ],
+        "properties": {
+          "name": { "type": "string" },
+          "authoritative": { "enum": [false] },
+          "emits_reasoning_artifacts": { "enum": [false] },
+          "bypasses_governance": { "enum": [false] },
+          "bypasses_determinism": { "enum": [false] },
+          "bypasses_consent": { "enum": [false] }
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

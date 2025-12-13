@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { limitRequest } from '@/middleware/requestLimiter'
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
 // Force the limiter to use in-memory fallback by mocking Supabase config
 vi.mock('@/config/supabase', () => ({
@@ -7,7 +8,7 @@ vi.mock('@/config/supabase', () => ({
 }))
 
 // Avoid attempting to import supabase client in this test
-vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn(() => ({})) }))
+vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn(() => getSupabaseMock()) }))
 
 function makeRequest(ip: string, path = '/api/rl-rolloff') {
   return new Request(`http://localhost${path}`, {
@@ -49,5 +50,4 @@ describe('requestLimiter memory fallback window roll-off', () => {
     expect(r4).toBeUndefined()
   })
 })
-
 

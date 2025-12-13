@@ -1,4 +1,5 @@
 import dynamic from 'next/dynamic'
+import type { Metadata } from 'next'
 import { SimpleThemeToggle } from '@/components/SimpleThemeToggle'
 import Link from 'next/link'
 
@@ -131,7 +132,7 @@ export default function DashboardPage() {
   )
 }
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Customer Dashboard - Bookiji',
   description: 'Manage your bookings, credits, and profile on Bookiji',
 } 

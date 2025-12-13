@@ -2,14 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, ChevronRight, ChevronDown, Search, Filter, MoreHorizontal } from 'lucide-react'
+import { Plus, Edit, Trash2, ChevronRight, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 
 
 interface Specialty {
@@ -45,10 +44,29 @@ export default function SpecialtiesPage() {
     is_active: true
   })
 
+  const loadSpecialties = useCallback(async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/specialties')
+      if (response.ok) {
+        const data = await response.json()
+        const hierarchicalData = buildHierarchy(data.items || [])
+        setSpecialties(hierarchicalData)
+      } else {
+        alert('Failed to load specialties')
+      }
+    } catch (error) {
+      console.error('Error loading specialties:', error)
+              alert('Failed to load specialties')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   // Load specialties on mount
   useEffect(() => {
     loadSpecialties()
-  }, [])
+  }, [loadSpecialties])
 
   // Filter specialties based on search and status
   useEffect(() => {
@@ -71,25 +89,6 @@ export default function SpecialtiesPage() {
 
     setFilteredSpecialties(filtered)
   }, [specialties, searchQuery, statusFilter])
-
-  const loadSpecialties = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/specialties')
-      if (response.ok) {
-        const data = await response.json()
-        const hierarchicalData = buildHierarchy(data.items || [])
-        setSpecialties(hierarchicalData)
-      } else {
-        alert('Failed to load specialties')
-      }
-    } catch (error) {
-      console.error('Error loading specialties:', error)
-              alert('Failed to load specialties')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const buildHierarchy = (flatSpecialties: Specialty[]): Specialty[] => {
     const specialtyMap = new Map<string, Specialty>()
@@ -299,7 +298,14 @@ export default function SpecialtiesPage() {
                 className="w-full"
               />
             </div>
-            <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+            <Select 
+              value={statusFilter} 
+              onValueChange={(value: string) => {
+                if (value === 'all' || value === 'active' || value === 'inactive') {
+                  setStatusFilter(value)
+                }
+              }}
+            >
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue />
               </SelectTrigger>

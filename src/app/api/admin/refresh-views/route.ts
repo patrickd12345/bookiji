@@ -14,13 +14,15 @@ export async function POST(request: NextRequest) {
     // Get request body for custom refresh options
     const body = await request.json().catch(() => ({}))
     const { 
-      useStaggered = true, 
-      refreshAnalytics = true, 
-      refreshMonitoring = true,
-      maxDuration = 300000 // 5 minutes default
+      useStaggered = true
     } = body
 
-    let refreshResults: any
+    interface RefreshResult {
+      success: boolean
+      message?: string
+      [key: string]: unknown
+    }
+    let refreshResults: RefreshResult | undefined
 
     if (useStaggered) {
       // Use staggered refresh for better performance
@@ -106,7 +108,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = createSupabaseServerClient()
     

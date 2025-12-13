@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { resilienceAlertManager } from '@/lib/alerting/resilienceAlerts'
+import { resilienceAlertManager, type Alert } from '@/lib/alerting/resilienceAlerts'
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -8,7 +8,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Check if user is admin (you can implement your own admin check here)
     // For now, we'll use the service role key which has admin access
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     const additionalMetrics = calculateAdditionalMetrics(hourlyMetrics || [])
 
     // Evaluate metrics for alerts
-    let alerts: any[] = []
+    let alerts: Alert[] = []
     if (metrics && metrics.length > 0) {
       try {
         alerts = await resilienceAlertManager.evaluateMetrics(metrics)
@@ -70,29 +70,50 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function calculateAdditionalMetrics(hourlyMetrics: any[]) {
+interface HourlyMetric {
+  signal?: string
+  component?: string
+  count?: number
+  hour?: string
+  [key: string]: unknown
+}
+
+function calculateAdditionalMetrics(hourlyMetrics: HourlyMetric[]) {
   if (hourlyMetrics.length === 0) {
     return {}
   }
 
   // Calculate total signals by type
-  const signalCounts = hourlyMetrics.reduce((acc: any, metric: any) => {
-    const signal = metric.signal
-    acc[signal] = (acc[signal] || 0) + metric.count
+  interface SignalCounts {
+    [signal: string]: number
+  }
+  const signalCounts = hourlyMetrics.reduce((acc: SignalCounts, metric: HourlyMetric) => {
+    const signal = metric.signal || 'unknown'
+    const count = typeof metric.count === 'number' ? metric.count : 0
+    acc[signal] = (acc[signal] || 0) + count
     return acc
   }, {})
 
   // Calculate component health
-  const componentHealth = hourlyMetrics.reduce((acc: any, metric: any) => {
-    const component = metric.component
+  interface ComponentHealth {
+    [component: string]: {
+      total: number
+      errors: number
+      health_percentage?: number
+    }
+  }
+  const componentHealth = hourlyMetrics.reduce((acc: ComponentHealth, metric: HourlyMetric) => {
+    const component = metric.component || 'unknown'
     if (!acc[component]) {
       acc[component] = { total: 0, errors: 0 }
     }
-    acc[component].total += metric.count
+    const count = typeof metric.count === 'number' ? metric.count : 0
+    acc[component].total += count
     
     // Count error signals
-    if (metric.signal.includes('error') || metric.signal.includes('rollback') || metric.signal.includes('failure')) {
-      acc[component].errors += metric.count
+    const signal = metric.signal || ''
+    if (signal.includes('error') || signal.includes('rollback') || signal.includes('failure')) {
+      acc[component].errors += count
     }
     
     return acc
@@ -107,8 +128,8 @@ function calculateAdditionalMetrics(hourlyMetrics: any[]) {
   return {
     signal_counts: signalCounts,
     component_health: componentHealth,
-    total_signals: hourlyMetrics.reduce((sum: number, m: any) => sum + m.count, 0),
-    unique_components: new Set(hourlyMetrics.map((m: any) => m.component)).size,
+    total_signals: hourlyMetrics.reduce((sum: number, m: HourlyMetric) => sum + (typeof m.count === 'number' ? m.count : 0), 0),
+    unique_components: new Set(hourlyMetrics.map((m: HourlyMetric) => m.component).filter(Boolean)).size,
     time_range: {
       start: hourlyMetrics[hourlyMetrics.length - 1]?.hour,
       end: hourlyMetrics[0]?.hour

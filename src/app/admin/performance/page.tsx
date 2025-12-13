@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -48,7 +48,7 @@ export default function PerformanceDashboard() {
   const [selectedTable, setSelectedTable] = useState<string>('');
   const [selectedOperation, setSelectedOperation] = useState<string>('');
 
-  const fetchPerformanceData = async () => {
+  const fetchPerformanceData = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -72,9 +72,9 @@ export default function PerformanceDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeRange, selectedTable, selectedOperation]);
 
-  const performAction = async (action: string, params: any = {}) => {
+  const performAction = async (action: string, params: Record<string, unknown> = {}) => {
     try {
       const response = await fetch('/api/admin/performance', {
         method: 'POST',
@@ -110,7 +110,7 @@ export default function PerformanceDashboard() {
 
   useEffect(() => {
     fetchPerformanceData();
-  }, [timeRange, selectedTable, selectedOperation]);
+  }, [fetchPerformanceData]);
 
   const getAlertIcon = (alertType: string) => {
     switch (alertType) {

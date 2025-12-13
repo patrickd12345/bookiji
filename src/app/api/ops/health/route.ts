@@ -192,7 +192,7 @@ async function checkSearch() {
 
     // Check if vector search is available (pgvector)
     try {
-      const { data: vectorCheck } = await supabase.rpc('kb_search', {
+      await supabase.rpc('kb_search', {
         q_embedding: Array(1536).fill(0), // Dummy embedding
         k: 1,
         in_locale: null,

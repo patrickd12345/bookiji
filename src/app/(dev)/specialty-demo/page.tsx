@@ -150,7 +150,7 @@ export default function SpecialtyDemo() {
                   <div>
                     <h3 className="font-medium text-gray-900">Suggestion System</h3>
                     <p className="text-sm text-gray-600">
-                      Can't find your specialty? Suggest a new one for admin review
+                      Can&apos;t find your specialty? Suggest a new one for admin review
                     </p>
                   </div>
                 </div>
@@ -185,7 +185,7 @@ export default function SpecialtyDemo() {
                     <strong>3.</strong> Select your specialty by clicking on the service name
                   </p>
                   <p>
-                    <strong>4.</strong> If you can't find what you need, use the "Suggest this specialty" feature
+                    <strong>4.</strong> If you can&apos;t find what you need, use the &quot;Suggest this specialty&quot; feature
                   </p>
                   <p>
                     <strong>5.</strong> Complete your registration with the selected specialty
@@ -212,9 +212,9 @@ export default function SpecialtyDemo() {
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">Try These Scenarios:</h3>
                   <ul className="space-y-2 text-sm text-gray-600">
-                    <li>• Browse through "Home Improvement" → "Plumbing" → "Drain Cleaning"</li>
-                    <li>• Search for "computer" to find computer-related services</li>
-                    <li>• Try searching for "unclog" to see alias matching</li>
+                    <li>• Browse through &quot;Home Improvement&quot; → &quot;Plumbing&quot; → &quot;Drain Cleaning&quot;</li>
+                    <li>• Search for &quot;computer&quot; to find computer-related services</li>
+                    <li>• Try searching for &quot;unclog&quot; to see alias matching</li>
                     <li>• Navigate to a category with no results and try the suggestion feature</li>
                   </ul>
                 </div>

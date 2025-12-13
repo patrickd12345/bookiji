@@ -30,7 +30,13 @@ const defaultHours = (): VendorFormData['hours'] => ({
   sun:{open:false,start_time:'09:00',end_time:'17:00'},
 })
 
-export default function VendorRegistration({ onSuccess }: { onSuccess?: () => void }) {
+type VendorRegistrationProps = {
+  // Client component callback - safe to use in 'use client' components
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onSuccess?: (() => void) | any
+}
+
+export default function VendorRegistration({ onSuccess }: VendorRegistrationProps) {
   const [data, setData] = useState<VendorFormData>({
     business_name:'', 
     contact_name:'', 

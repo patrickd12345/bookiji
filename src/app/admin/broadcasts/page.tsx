@@ -4,6 +4,23 @@ import { motion } from 'framer-motion'
 import DataTable from '@/components/admin/DataTable'
 import { broadcasts } from '@/lib/mockData'
 
+interface VendorResponse {
+  vendorName: string
+  response: 'accepted' | 'declined' | 'pending'
+  responseTime?: string
+  message?: string
+}
+
+interface BroadcastRow {
+  id: string
+  service: string
+  customerLocation: string
+  vendorsCount: number
+  status: string
+  timestamp: string
+  vendorResponses?: VendorResponse[]
+}
+
 export default function BroadcastsPage() {
   const columns = [
     { key: 'id', label: 'Request ID', sortable: true },
@@ -14,12 +31,12 @@ export default function BroadcastsPage() {
     { key: 'timestamp', label: 'Timestamp', sortable: true }
   ]
 
-  const expandedContent = (row: any) => (
+  const expandedContent = (row: BroadcastRow) => (
     <div className="p-4 bg-gray-50 rounded-xl">
       <h4 className="font-medium text-gray-900 mb-3">Vendor Responses</h4>
       {row.vendorResponses && row.vendorResponses.length > 0 ? (
         <div className="space-y-3">
-          {row.vendorResponses.map((response: any, index: number) => (
+          {row.vendorResponses.map((response: VendorResponse, index: number) => (
             <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
               <div className="flex items-center gap-3">
                 <div className={`w-3 h-3 rounded-full ${

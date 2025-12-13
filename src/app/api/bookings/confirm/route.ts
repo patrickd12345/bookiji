@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { withSLOProbe } from '@/middleware/sloProbe'
 import { featureFlags } from '@/config/featureFlags'
-import { createHash } from 'crypto'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -78,8 +77,12 @@ async function confirmHandler(req: NextRequest): Promise<NextResponse> {
     }
 
     // Verify provider is in the quote candidates
-    const candidates = quote.candidates || []
-    const selectedProvider = candidates.find((c: any) => c.id === body.provider_id)
+    interface QuoteCandidate {
+      id: string
+      [key: string]: unknown
+    }
+    const candidates = (quote.candidates || []) as QuoteCandidate[]
+    const selectedProvider = candidates.find((c: QuoteCandidate) => c.id === body.provider_id)
     
     if (!selectedProvider) {
       return NextResponse.json(

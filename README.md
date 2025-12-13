@@ -172,9 +172,20 @@ pnpm playwright test
 pnpm playwright test a11y/
 ```
 
-**Current Status:** ✅ **278/278 tests passing (100%)**
+## ?? Bookiji Genome (OS 11.0)
+
+The Genome defines the architecture contract for Bookiji.
+Use the Genome Linter to ensure repo consistency.
+
+- Validate: `pnpm genome:validate`
+- Explain rules: `pnpm genome:explain`
+
+See `docs/development/GENOME_LINTER_GUIDE.md` for details.
+
+**Current Status:** ? **278/278 tests passing (100%)**
 
 ---
+
 
 ## 📊 **Performance Metrics**
 

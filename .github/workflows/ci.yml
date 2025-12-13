@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -30,6 +32,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      
+      - name: Epistemic gates (genome, determinism, fingerprint)
+        run: pnpm -s ci:epistemic
 
       - name: Validate environment
         run: node scripts/ci-validate-env.mjs || true

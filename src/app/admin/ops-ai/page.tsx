@@ -13,7 +13,6 @@ import type {
   Incident,
   MetricSnapshot,
   OpsAction,
-  OpsSummary,
   SLOStatus
 } from './lib/ops-types'
 

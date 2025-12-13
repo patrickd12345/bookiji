@@ -71,6 +71,16 @@ export interface ChannelSpec {
   folder: string;
 }
 
+export interface AnalyticsSpec {
+  schema?: string;
+  required?: string[];
+}
+
+export interface ContractFolderSpec {
+  schema?: string;
+  required?: string[];
+}
+
 export interface GenomeDomains {
   core: {
     modules: ModuleSpec[];
@@ -81,6 +91,7 @@ export interface GenomeDomains {
     catalog?: CatalogSpec;
     telemetry?: { auditFeeds?: AuditFeedSpec[] };
   };
+  analytics?: AnalyticsSpec;
   temporal: {
     audit?: { ledgers?: TemporalLedgerSpec[] };
     timelines?: TimelineSpec[];
@@ -112,11 +123,15 @@ export interface GenomeDomains {
   governance: {
     policies?: string[];
     approvals?: { changeControl?: string };
+    contracts?: string[];
+    required?: boolean;
   };
   evolution: {
     flags?: string[];
     roadmap?: { file?: string };
   };
+  notifications_2?: ContractFolderSpec;
+  trust_safety?: ContractFolderSpec;
 }
 
 export interface GenomeSpec {
@@ -203,6 +218,10 @@ export function loadGenome(genomePath = path.join(process.cwd(), "genome", "mast
         catalog: (domains.events && (domains.events as any).catalog) as CatalogSpec | undefined,
         telemetry: (domains.events && (domains.events as any).telemetry) as GenomeDomains["events"]["telemetry"],
       },
+      analytics: {
+        schema: typeof (domains.analytics as any)?.schema === "string" ? (domains.analytics as any).schema : undefined,
+        required: coerceArray<string>(domains.analytics && (domains.analytics as any).required),
+      },
       temporal: {
         audit: (domains.temporal && (domains.temporal as any).audit) as GenomeDomains["temporal"]["audit"],
         timelines: coerceArray<TimelineSpec>(domains.temporal && (domains.temporal as any).timelines),
@@ -234,10 +253,29 @@ export function loadGenome(genomePath = path.join(process.cwd(), "genome", "mast
       governance: {
         policies: coerceArray<string>(domains.governance && (domains.governance as any).policies),
         approvals: (domains.governance && (domains.governance as any).approvals) as GenomeDomains["governance"]["approvals"],
+        contracts: coerceArray<string>(domains.governance && (domains.governance as any).contracts),
+        required:
+          typeof (domains.governance as any)?.required === "boolean"
+            ? ((domains.governance as any).required as boolean)
+            : false,
       },
       evolution: {
         flags: coerceArray<string>(domains.evolution && (domains.evolution as any).flags),
         roadmap: (domains.evolution && (domains.evolution as any).roadmap) as GenomeDomains["evolution"]["roadmap"],
+      },
+      notifications_2: {
+        schema:
+          typeof (domains as any)?.notifications_2?.schema === "string"
+            ? (domains as any).notifications_2.schema
+            : undefined,
+        required: coerceArray<string>((domains as any)?.notifications_2?.required),
+      },
+      trust_safety: {
+        schema:
+          typeof (domains as any)?.trust_safety?.schema === "string"
+            ? (domains as any).trust_safety.schema
+            : undefined,
+        required: coerceArray<string>((domains as any)?.trust_safety?.required),
       },
     },
   };

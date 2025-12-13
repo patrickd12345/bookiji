@@ -18,7 +18,7 @@ export async function POST(
     }
 
     // Check if user is admin
-    const adminUser = await requireAdmin(session)
+    await requireAdmin(session)
 
     const body = await request.json().catch(() => ({}))
     const result = await processRefund(id, body)

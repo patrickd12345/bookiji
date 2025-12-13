@@ -256,17 +256,21 @@ export function useNotifications() {
 }
 
 // Convenience components for quick notifications
+type QuickNotificationProps = {
+  type: 'success' | 'error' | 'info' | 'warning'
+  message: string
+  duration?: number
+  // Client component callback - safe to use in 'use client' components
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onDismiss?: (() => void) | any
+}
+
 export function QuickNotification({ 
   type, 
   message, 
   duration = 4000,
   onDismiss
-}: {
-  type: 'success' | 'error' | 'info' | 'warning'
-  message: string
-  duration?: number
-  onDismiss?: () => void
-}) {
+}: QuickNotificationProps) {
   const { addNotification } = useNotifications()
   
   useEffect(() => {

@@ -34,6 +34,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -191,6 +193,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -198,6 +202,9 @@ jobs:
           cache: 'npm'
 
       - run: npm ci --legacy-peer-deps
+
+      - name: Epistemic gates (deploy-blockers)
+        run: npm run ci:epistemic
 
       - name: Deploy canary
         env:

@@ -48,7 +48,7 @@ export async function GET() {
 
     // Test 2: User profile access (RLS check)
     const profileStart = Date.now()
-    const { data: profileData, error: profileError } = await supabase
+    const { error: profileError } = await supabase
       .from('profiles')
       .select('id, role')
       .limit(1)

@@ -1,10 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/supabaseClient';
-import { CreditsResponse, UserCreditsSummary } from '@/types/credits';
+import { CreditsResponse } from '@/types/credits';
 
-export async function GET(
-  request: NextRequest
-): Promise<NextResponse<CreditsResponse>> {
+export async function GET(): Promise<NextResponse<CreditsResponse>> {
   try {
     const supabase = getServerSupabase();
     

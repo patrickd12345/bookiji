@@ -37,7 +37,6 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url)
-    const lookbackMinutes = parseInt(searchParams.get('lookbackMinutes') || '15', 10)
 
     // Base URL resolution: prefer request.nextUrl.origin -> env -> explicit param
     // In serverless, NEXT_PUBLIC_SITE_URL is required
@@ -256,7 +255,7 @@ export async function GET(request: NextRequest) {
 /**
  * Handle health endpoint data
  */
-function handleHealth(data: any, endpoint: string): AnomalySignal[] {
+function handleHealth(data: any): AnomalySignal[] {
   return AnomalyAI.detectHealthAnomalies(data)
 }
 
@@ -284,14 +283,14 @@ function handleMetricsP95(data: any, endpoint: string): AnomalySignal[] {
 /**
  * Handle SLO endpoint data
  */
-function handleSLO(data: any, endpoint: string): AnomalySignal[] {
+function handleSLO(data: any): AnomalySignal[] {
   return AnomalyAI.detectSLOAnomalies(data)
 }
 
 /**
  * Handle incidents endpoint data
  */
-function handleIncidents(data: any, endpoint: string): AnomalySignal[] {
+function handleIncidents(data: any): AnomalySignal[] {
   return AnomalyAI.detectIncidentAnomalies(data)
 }
 

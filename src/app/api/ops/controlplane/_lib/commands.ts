@@ -1,7 +1,6 @@
 import { runSyntheticCheck } from '../../../../../../packages/opsai-l7/src/synthetic'
 import {
   flushCache,
-  resetDeploymentPointers,
   restartComponent
 } from '../../../../../../packages/opsai-l7/src/actions'
 import { recommendActions } from '../../../../../../packages/opsai-helpdesk/src/engine'

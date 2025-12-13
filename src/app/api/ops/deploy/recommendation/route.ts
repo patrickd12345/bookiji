@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { deployai } from '@/lib/observability/deployai'
 
 /**
@@ -11,7 +11,7 @@ import { deployai } from '@/lib/observability/deployai'
  * 
  * NEVER performs the action - only recommends.
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const recommendation = await deployai.generateRecommendation()
 

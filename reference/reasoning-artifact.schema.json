@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReasoningArtifact v1",
+  "type": "object",
+  "required": ["identity", "provenance", "inputs", "personas", "synthesis", "guarantees", "verification"],
+  "properties": {
+    "identity": {
+      "type": "object",
+      "required": ["artifact_version", "artifact_id", "logical_time"],
+      "properties": {
+        "artifact_version": { "enum": ["reasoning-artifact/v1"] },
+        "artifact_id": { "type": "string" },
+        "logical_time": { "type": "number" },
+        "wall_time": { "type": "number" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["system", "system_version", "phase", "genome_hash", "governance", "deployment", "external_adapters"],
+      "properties": {
+        "system": { "type": "string" },
+        "system_version": { "type": "string" },
+        "phase": { "enum": ["12"] },
+        "genome_hash": { "type": "string" },
+        "governance": {
+          "type": "object",
+          "required": ["registry_hash", "evolution_hash"],
+          "properties": {
+            "registry_hash": { "type": "string" },
+            "evolution_hash": { "type": "string" }
+          }
+        },
+        "deployment": { "$ref": "./deployment-fingerprint.schema.json" },
+        "external_adapters": {
+          "$ref": "./external-adapter-policy.schema.json"
+        },
+        "external_adapter_usage": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 0
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "required": ["analytics"],
+      "properties": {
+        "analytics": { "type": "string" },
+        "simcity": { "type": "string" },
+        "audit": { "type": "string" },
+        "trust": { "type": "string" }
+      }
+    },
+    "personas": { "type": "array" },
+    "synthesis": { "type": "object" },
+    "guarantees": {
+      "type": "object",
+      "required": ["deterministic", "replayable", "non_agency", "disclaimers"]
+    },
+    "verification": { "type": "object" },
+    "human": { "type": "object" }
+  },
+  "additionalProperties": false
+}

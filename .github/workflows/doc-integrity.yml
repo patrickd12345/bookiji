@@ -1,0 +1,112 @@
+name: Documentation Integrity Gate
+
+on:
+  push:
+    branches: [ main, bookiji ]
+  pull_request:
+    branches: [ main, bookiji ]
+
+jobs:
+  doc-integrity:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Documentation Integrity Gate
+        id: doc_gate
+        shell: bash
+        run: |
+          set +e
+          mkdir -p artifacts
+
+          MODE_ARGS=()
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            MODE_ARGS+=(--changed-only)
+            if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+              MODE_ARGS+=(--base-ref "${{ github.event.pull_request.base.sha }}")
+            fi
+          fi
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            MODE_ARGS+=(--strict)
+          fi
+
+          pnpm docs:integrity "${MODE_ARGS[@]}" --output artifacts/doc-integrity-report.json 2>&1 | tee artifacts/doc-integrity.log
+          status=${PIPESTATUS[0]}
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Summarize findings
+        if: always()
+        shell: bash
+        run: |
+          if [ -f artifacts/doc-integrity-report.json ]; then
+            node <<'NODE'
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('artifacts/doc-integrity-report.json', 'utf8'));
+            const totals = {
+              undocumented: report.undocumented_code?.length || 0,
+              missing: report.unimplemented_docs?.length || 0,
+              untested: report.untested_guarantees?.length || 0,
+              obsolete: report.obsolete_references?.length || 0,
+              ambiguous: report.ambiguous_claims?.length || 0,
+            };
+            const totalCount = Object.values(totals).reduce((a, b) => a + b, 0);
+            const status = totalCount === 0 ? 'clean' : 'violations';
+            console.log(`Documentation Integrity status: ${status}`);
+            console.log(
+              `Counts -> undocumented:${totals.undocumented}, missing:${totals.missing}, untested:${totals.untested}, obsolete:${totals.obsolete}, ambiguous:${totals.ambiguous}`
+            );
+            const preview = [
+              ...((report.unimplemented_docs || []).slice(0, 3).map((v) => `unimplemented: ${v}`)),
+              ...((report.undocumented_code || []).slice(0, 3).map((v) => `undocumented: ${v}`)),
+              ...((report.untested_guarantees || []).slice(0, 3).map((v) => `untested: ${v}`)),
+              ...((report.obsolete_references || []).slice(0, 2).map((v) => `obsolete: ${v}`)),
+              ...((report.ambiguous_claims || []).slice(0, 2).map((v) => `ambiguous: ${v}`)),
+            ].slice(0, 8);
+            if (preview.length) {
+              console.log('Top findings:');
+              for (const item of preview) {
+                console.log(`- ${item}`);
+              }
+            }
+            NODE
+          else
+            echo "No integrity report generated (tool likely failed before reporting)."
+          fi
+
+      - name: Upload documentation integrity artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doc-integrity-report
+          path: |
+            artifacts/doc-integrity-report.json
+            artifacts/doc-integrity.log
+          retention-days: 14
+
+      - name: Enforce documentation integrity gate
+        if: steps.doc_gate.outputs.status != '0'
+        run: |
+          echo "Documentation Integrity Gate failed. See summary above and the uploaded artifact for details."
+          exit 1

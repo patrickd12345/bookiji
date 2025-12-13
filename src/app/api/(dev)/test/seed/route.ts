@@ -67,8 +67,18 @@ export async function POST() {
 
     // Create a simple service for the vendor
     // Try new schema first, fallback to old schema if it fails
-    let service: any = null
-    let serviceErr: any = null
+    interface Service {
+      id: string
+      vendor_id: string
+      name: string
+      description: string
+      duration_minutes: number
+      price_cents: number
+      category: string
+      is_active: boolean
+    }
+    let service: Service | null = null
+    let serviceErr: Error | null = null
 
     // First attempt: new schema
     try {
@@ -92,7 +102,7 @@ export async function POST() {
       } else {
         throw new Error('New schema failed')
       }
-    } catch (error) {
+    } catch {
       console.log('🔄 New schema failed, trying old schema...')
       
       // Second attempt: old schema
@@ -111,12 +121,12 @@ export async function POST() {
         .single()
 
       if (oldServiceErr) {
-        serviceErr = oldServiceErr
+        serviceErr = new Error(oldServiceErr.message)
         console.error('❌ Old schema also failed:', oldServiceErr)
       } else if (oldService?.id) {
         service = oldService
         console.log('✅ Service created with old schema')
-      } else {
+      } else if (!oldService?.id) {
         serviceErr = new Error('Service created but no ID returned')
       }
     }

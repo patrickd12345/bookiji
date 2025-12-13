@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { deployai } from '@/lib/observability/deployai'
 
 /**
@@ -9,7 +9,7 @@ import { deployai } from '@/lib/observability/deployai'
  * Returns detailed information about the current production/baseline deployment,
  * including metrics
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const baseline = await deployai.getBaselineDeployment()
     

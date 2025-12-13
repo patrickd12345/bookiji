@@ -48,7 +48,11 @@ export async function GET(request: NextRequest) {
     const dailyStats: Record<string, { visits: number; searches: number; bookings: number; confirmations: number }> = {}
 
     events?.forEach(event => {
-      const sessionId = (event.properties as any)?.session_id || 'unknown'
+      interface EventProperties {
+        session_id?: string
+        [key: string]: unknown
+      }
+      const sessionId = (event.properties as EventProperties)?.session_id || 'unknown'
       const day = new Date(event.created_at).toISOString().split('T')[0]
       
       // Initialize daily stats

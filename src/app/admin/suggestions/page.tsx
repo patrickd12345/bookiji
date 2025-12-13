@@ -186,7 +186,14 @@ export default function SuggestionsPage() {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+          <Select 
+            value={statusFilter} 
+            onValueChange={(value: string) => {
+              if (value === 'all' || value === 'pending' || value === 'approved' || value === 'rejected') {
+                setStatusFilter(value)
+              }
+            }}
+          >
             <SelectTrigger className="w-48">
               <SelectValue />
             </SelectTrigger>

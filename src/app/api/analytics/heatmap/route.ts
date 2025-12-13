@@ -115,8 +115,35 @@ export async function GET(request: NextRequest) {
           if (error) throw error;
 
           // Group by postal code and aggregate
-          const grouped = (data || []).reduce((acc: Record<string, any>, booking: any) => {
+          interface Booking {
+            postal_code?: string
+            latitude?: number
+            longitude?: number
+            total_amount?: number
+            created_at: string
+            provider_id?: string
+            provider?: {
+              rating?: number
+            } | Array<{
+              rating?: number
+            }>
+            [key: string]: unknown
+          }
+          interface GroupedBooking {
+            postal_code?: string
+            latitude?: number
+            longitude?: number
+            booking_count: number
+            revenue: number
+            ratings: number[]
+            provider_ids: Set<string>
+            last_booking: string
+          }
+          const bookings = (data || []) as Booking[];
+          const grouped = bookings.reduce((acc: Record<string, GroupedBooking>, booking: Booking) => {
             const key = booking.postal_code;
+            if (!key) return acc; // Skip if postal_code is undefined
+            
             if (!acc[key]) {
               acc[key] = {
                 postal_code: booking.postal_code,
@@ -132,10 +159,15 @@ export async function GET(request: NextRequest) {
 
             acc[key].booking_count++;
             acc[key].revenue += booking.total_amount || 0;
-            if (booking.provider?.rating) {
-              acc[key].ratings.push(booking.provider.rating);
+            const providerRating = Array.isArray(booking.provider) 
+              ? booking.provider[0]?.rating 
+              : (booking.provider as { rating?: number } | undefined)?.rating;
+            if (providerRating) {
+              acc[key].ratings.push(providerRating);
             }
-            acc[key].provider_ids.add(booking.provider_id);
+            if (booking.provider_id) {
+              acc[key].provider_ids.add(booking.provider_id);
+            }
             
             if (booking.created_at > acc[key].last_booking) {
               acc[key].last_booking = booking.created_at;
@@ -146,8 +178,8 @@ export async function GET(request: NextRequest) {
 
           // Convert to array and calculate averages
           return Object.values(grouped)
-            .filter((item: any) => item.booking_count >= (params.minBookings || 1))
-            .map((item: any) => ({
+            .filter((item: GroupedBooking) => item.booking_count >= (params.minBookings || 1))
+            .map((item: GroupedBooking) => ({
               postal_code: item.postal_code,
               latitude: item.latitude,
               longitude: item.longitude,

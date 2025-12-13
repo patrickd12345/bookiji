@@ -257,19 +257,35 @@ export async function POST(request: NextRequest) {
   }
 }
 
+interface WarmingMetrics {
+  success?: boolean
+  errors?: number
+  [key: string]: unknown
+}
+
+interface CacheHealth {
+  overallHitRate?: number
+  avgResponseTime?: number
+  invalidationEfficiency?: number
+  totalCacheEntries?: number
+  recommendations?: string[]
+  status?: string
+  [key: string]: unknown
+}
+
 /**
  * Determine overall system status based on metrics
  */
-function determineSystemStatus(warmingMetrics: any, cacheHealth: any): 'healthy' | 'warning' | 'critical' {
+function determineSystemStatus(warmingMetrics: WarmingMetrics, cacheHealth: CacheHealth): 'healthy' | 'warning' | 'critical' {
   // Check warming service health
   if (warmingMetrics.circuitBreakerStatus === 'open') return 'critical';
   if (warmingMetrics.backpressureStatus === 'critical') return 'critical';
   if (warmingMetrics.backpressureStatus === 'warning') return 'warning';
   
   // Check cache health
-  if (cacheHealth.overallHitRate < 20) return 'warning';
-  if (cacheHealth.avgResponseTime > 1000) return 'warning';
-  if (cacheHealth.invalidationEfficiency > 30) return 'warning';
+  if (cacheHealth.overallHitRate !== undefined && cacheHealth.overallHitRate < 20) return 'warning';
+  if (cacheHealth.avgResponseTime !== undefined && cacheHealth.avgResponseTime > 1000) return 'warning';
+  if (cacheHealth.invalidationEfficiency !== undefined && cacheHealth.invalidationEfficiency > 30) return 'warning';
   
   return 'healthy';
 }

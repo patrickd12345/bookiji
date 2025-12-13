@@ -1,36 +1,28 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-// Mock Supabase client with realistic behavior
-const mockResetPasswordForEmail = vi.fn();
-const mockSupabase = {
-  auth: {
-    resetPasswordForEmail: mockResetPasswordForEmail,
-  },
-};
-
-vi.mock('@/lib/supabaseClient', () => ({
-  supabase: mockSupabase,
-}));
+import { getSupabaseMock } from '../utils/supabase-mocks';
 
 describe('Forgot Password Flow - Integration Test', () => {
   beforeEach(() => {
+    const mock = getSupabaseMock();
+    mock.auth.resetPasswordForEmail.mockResolvedValue({ error: null });
     vi.clearAllMocks();
-    mockResetPasswordForEmail.mockResolvedValue({ error: null });
   });
 
   it('should mock Supabase client correctly', () => {
-    expect(mockResetPasswordForEmail).toBeDefined();
-    expect(typeof mockResetPasswordForEmail).toBe('function');
+    const mock = getSupabaseMock();
+    expect(mock.auth.resetPasswordForEmail).toBeDefined();
+    expect(typeof mock.auth.resetPasswordForEmail).toBe('function');
   });
 
   it('should handle successful password reset request', async () => {
+    const mock = getSupabaseMock();
     // Simulate a successful password reset request
-    const result = await mockResetPasswordForEmail('test@example.com', {
+    const result = await mock.auth.resetPasswordForEmail('test@example.com', {
       redirectTo: 'http://localhost:3000/auth/reset'
     });
     
     expect(result.error).toBeNull();
-    expect(mockResetPasswordForEmail).toHaveBeenCalledWith(
+    expect(mock.auth.resetPasswordForEmail).toHaveBeenCalledWith(
       'test@example.com',
       expect.objectContaining({
         redirectTo: expect.stringContaining('/auth/reset')
@@ -39,29 +31,33 @@ describe('Forgot Password Flow - Integration Test', () => {
   });
 
   it('should handle Supabase errors properly', async () => {
+    const mock = getSupabaseMock();
     // Mock a Supabase error
-    mockResetPasswordForEmail.mockResolvedValue({ 
-      error: { message: 'User not found' } 
-    });
+    mock.auth.resetPasswordForEmail.mockResolvedValue({ 
+      error: { message: 'User not found' } as any
+    } as any);
     
-    const result = await mockResetPasswordForEmail('nonexistent@example.com', {
+    const result = await mock.auth.resetPasswordForEmail('nonexistent@example.com', {
       redirectTo: 'http://localhost:3000/auth/reset'
     });
     
     expect(result.error).toBeDefined();
-    expect(result.error.message).toBe('User not found');
+    if (result.error) {
+      expect((result.error as any).message).toBe('User not found');
+    }
   });
 
   it('should call Supabase with correct parameters', () => {
+    const mock = getSupabaseMock();
     const email = 'test@example.com';
     const options = {
       redirectTo: 'http://localhost:3000/auth/reset'
     };
     
-    mockResetPasswordForEmail(email, options);
+    mock.auth.resetPasswordForEmail(email, options);
     
-    expect(mockResetPasswordForEmail).toHaveBeenCalledWith(email, options);
-    expect(mockResetPasswordForEmail).toHaveBeenCalledTimes(1);
+    expect(mock.auth.resetPasswordForEmail).toHaveBeenCalledWith(email, options);
+    expect(mock.auth.resetPasswordForEmail).toHaveBeenCalledTimes(1);
   });
 });
 

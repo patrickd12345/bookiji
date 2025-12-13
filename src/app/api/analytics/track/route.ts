@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { limitRequest } from '@/middleware/requestLimiter'
-import { createClient } from '@supabase/supabase-js'
-import { getSupabaseConfig } from '@/config/supabase'
 
 // Use server Supabase client
 import { getServerSupabase } from '@/lib/supabaseClient'

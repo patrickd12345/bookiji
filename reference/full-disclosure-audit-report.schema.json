@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FullDisclosureAuditReport v1",
+  "type": "object",
+  "required": [
+    "report_version",
+    "report_id",
+    "issued_at",
+    "machine_generated",
+    "system_posture",
+    "reasoning_evidence",
+    "input_closure",
+    "deployment_disclosure",
+    "limits",
+    "verification"
+  ],
+  "properties": {
+    "report_version": { "enum": ["full-disclosure-audit/v1"] },
+    "report_id": { "type": "string" },
+    "issued_at": { "type": "number" },
+    "machine_generated": { "enum": [true] },
+    "system_posture": {
+      "type": "object",
+      "required": ["bookiji_version", "active_phases", "non_capabilities", "invariants"]
+    },
+    "reasoning_evidence": {
+      "type": "object",
+      "required": ["artifacts", "preserved_disagreements", "preserved_uncertainties"]
+    },
+    "input_closure": {
+      "type": "object",
+      "required": ["inputs", "closed_world", "hash_closure"]
+    },
+    "deployment_disclosure": {
+      "type": "object",
+      "required": ["fingerprint", "environment", "config_hashes", "determinism"],
+      "properties": {
+        "fingerprint": { "$ref": "./deployment-fingerprint.schema.json" }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "required": ["non_claims", "blind_spots", "irreducible_uncertainty"]
+    },
+    "verification": {
+      "type": "object",
+      "required": ["instructions", "invalid_conditions"]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,27 +1,42 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
 // Mock Supabase client BEFORE importing route handler
-vi.mock('@supabase/supabase-js', () => {
-  const from = vi.fn((table: string) => {
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: vi.fn(() => getSupabaseMock())
+}))
+
+beforeEach(() => {
+  const supabase = getSupabaseMock()
+  supabase.rpc.mockResolvedValue({ error: null } as any)
+  supabase.from.mockImplementation((table: string) => {
     if (table === 'analytics_events') {
-      return { insert: vi.fn(async () => ({ error: null })) }
+      return { insert: vi.fn(async () => ({ error: null })) } as any
     }
     if (table === 'user_analytics') {
       return {
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
-            single: vi.fn(async () => ({ data: { completed_bookings: 3, session_duration: 700, help_clicks: 4, payment_abandoned: false, pricing_page_visits: 5, session_count: 3 }, error: null }))
+            single: vi.fn(async () => ({
+              data: {
+                completed_bookings: 3,
+                session_duration: 700,
+                help_clicks: 4,
+                payment_abandoned: false,
+                pricing_page_visits: 5,
+                session_count: 3
+              },
+              error: null
+            }))
           }))
         }))
-      }
+      } as any
     }
     if (table === 'user_segments') {
-      return { upsert: vi.fn(async () => ({ error: null })) }
+      return { upsert: vi.fn(async () => ({ error: null })) } as any
     }
-    return {}
+    return {} as any
   })
-  const rpc = vi.fn(async () => ({ error: null }))
-  return { createClient: vi.fn(() => ({ from, rpc })) }
 })
 
 import { POST } from '@/app/api/analytics/track/route'
@@ -47,5 +62,4 @@ describe('analytics segmentation/geographic branches', () => {
     expect(res?.status).toBe(200)
   })
 })
-
 

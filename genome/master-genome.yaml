@@ -53,6 +53,12 @@ domains:
           files:
             - "ops-state/events.json"
             - "ops-state/incidents.json"
+  analytics:
+    schema: "src/contracts/analytics"
+    required:
+      - "AnalyticsEnvelope.ts"
+      - "StandardizedEvent.ts"
+      - "Timebase.ts"
   temporal:
     audit:
       ledgers:
@@ -99,12 +105,29 @@ domains:
         folder: "public"
     requiredFiles:
       - "src/lib/notifications/pushNotifications.ts"
+  notifications_2:
+    schema: "src/notifications/contracts"
+    required:
+      - "NotificationChannel.ts"
+      - "NotificationEnvelope.ts"
+      - "RetryStrategy.ts"
+      - "QuietHoursPolicy.ts"
+      - "DLQContract.ts"
   trustSafety:
     ledgers:
       - "ops-state/incidents.json"
       - "ops-state/log-patterns.json"
     drills:
       folder: "ops/drills"
+  trust_safety:
+    schema: "src/trust/contracts"
+    required:
+      - "FraudSignal.ts"
+      - "RiskScore.ts"
+      - "CancellationPattern.ts"
+      - "NoShowProfile.ts"
+      - "ReliabilityModel.ts"
+      - "InterventionRule.ts"
   businessIntelligence:
     telemetry:
       funnels:
@@ -117,6 +140,13 @@ domains:
       - "PROJECT_STATUS.md"
     approvals:
       changeControl: "docs/IMMUTABLE_DEPLOYS.md"
+    contracts:
+      - "src/governance/GovernanceContract.ts"
+      - "src/governance/EvolutionFlags.ts"
+      - "src/governance/DeprecationPolicy.ts"
+      - "src/governance/DomainRegistry.ts"
+      - "src/governance/MigrationRules.ts"
+    required: true
   evolution:
     flags:
       - "docs/LEVEL3_ENHANCEMENTS.md"

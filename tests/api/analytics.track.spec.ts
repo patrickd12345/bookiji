@@ -1,12 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST } from '@/app/api/analytics/track/route'
 import { NextRequest } from 'next/server'
-
-// Set up environment variables
-beforeEach(() => {
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
-})
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
 const sbMocks = vi.hoisted(() => ({
   insert: vi.fn(async () => ({ data: [{ id: 'test-id' }], error: null })),
@@ -14,22 +9,47 @@ const sbMocks = vi.hoisted(() => ({
   rpc: vi.fn(async () => ({ data: null, error: null })),
   select: vi.fn(() => ({
     eq: vi.fn(() => ({
-      single: async () => ({ data: { completed_bookings: 0, session_duration: 0, help_clicks: 0, signup_abandoned: false, payment_abandoned: false, pricing_page_visits: 0, session_count: 0 }, error: null })
+      single: async () => ({
+        data: {
+          completed_bookings: 0,
+          session_duration: 0,
+          help_clicks: 0,
+          signup_abandoned: false,
+          payment_abandoned: false,
+          pricing_page_visits: 0,
+          session_count: 0
+        },
+        error: null
+      })
     }))
   }))
 }))
 
-// Mock Supabase createClient
+// Use shared Supabase mock
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: () => ({
-    from: () => ({
-      insert: sbMocks.insert,
-      upsert: sbMocks.upsert,
-      select: sbMocks.select
-    }),
-    rpc: sbMocks.rpc
-  })
+  createClient: vi.fn(() => getSupabaseMock())
 }))
+
+// Set up environment variables and Supabase overrides
+beforeEach(() => {
+  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
+
+  const supabase = getSupabaseMock()
+  supabase.rpc.mockImplementation(sbMocks.rpc)
+  supabase.from.mockImplementation((table: string) => {
+    if (table === 'analytics_events') {
+      return { insert: sbMocks.insert } as any
+    }
+    if (table === 'user_analytics') {
+      return { select: sbMocks.select } as any
+    }
+    if (table === 'user_segments') {
+      return { upsert: sbMocks.upsert } as any
+    }
+    return {} as any
+  })
+})
 
 // Mock the request limiter
 vi.mock('@/middleware/requestLimiter', () => ({

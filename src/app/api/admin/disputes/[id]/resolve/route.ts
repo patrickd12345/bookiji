@@ -85,7 +85,7 @@ export async function POST(
     }
 
     // Use database function to resolve dispute
-    const { data: resolved, error: resolveError } = await supabase.rpc('resolve_dispute', {
+    const { error: resolveError } = await supabase.rpc('resolve_dispute', {
       p_dispute_id: disputeId,
       p_admin_id: adminUser.id,
       p_resolution: resolution,

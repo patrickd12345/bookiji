@@ -19,6 +19,7 @@ Developer guides, setup instructions, and technical architecture.
 - [Test Plan](../TEST_PLAN.md) - Testing strategy and procedures
 - [Test Results Dashboard](../TEST_RESULTS_DASHBOARD.md) - Test execution results
 - [Comprehensive UI Testing Strategy](../COMPREHENSIVE_UI_TESTING_STRATEGY.md) - UI testing approach
+- [Testing Guide](./TESTING_GUIDE.md) - Supabase mocks, patterns, and debugging tips
 - [Testing Phase 2 TODOs](../TESTING_PHASE_2_TODOS.md) - Testing roadmap
 
 ### 🚀 Features & Implementation

@@ -24,6 +24,23 @@ vi.mock('@/tours/customerBooking', () => ({
   customerBookingTourId: 'test-tour'
 }));
 
+vi.mock("@/components/ui/button", () => ({
+  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+}));
+
+vi.mock("@/components/ui/input", () => ({
+  Input: (props: any) => <input {...props} />,
+}));
+
+vi.mock("@/components/ui/form", () => ({
+  Form: ({ children }: any) => <form>{children}</form>,
+}));
+
+vi.mock("@/components/ui/select", () => ({
+  Select: ({ children }: any) => <select>{children}</select>,
+  SelectItem: ({ children }: any) => <option>{children}</option>,
+}));
+
 // Mock fetch globally
 const mockFetch = vi.fn();
 global.fetch = mockFetch;

@@ -1,0 +1,186 @@
+{
+  "identity": {
+    "artifact_version": "reasoning-artifact/v1",
+    "artifact_id": "9d43a6a5b86727c901a0e78ed1d87add0e719b7ce927ea6f19ea87cae2a74963",
+    "logical_time": 100,
+    "wall_time": 1700000000000
+  },
+  "provenance": {
+    "system": "bookiji",
+    "system_version": "1.0.0",
+    "phase": "12",
+    "genome_hash": "ref-genome-hash",
+    "governance": {
+      "registry_hash": "ref-registry-hash",
+      "evolution_hash": "ref-evolution-hash"
+    },
+    "deployment": {
+      "fingerprint_version": "deployment-fingerprint/v1",
+      "fingerprint_id": "9df72dec4ab470b4d4bd97e5168e749b9e02cd1d9823745b97211674dfc4dd06",
+      "environment": {
+        "classification": "explicit",
+        "label": "reference-static"
+      },
+      "git_commit": "reference-commit",
+      "build_id": "reference-build",
+      "artifact_schema_versions": {
+        "reasoning-artifact": "v1"
+      },
+      "genome_hash": "ref-genome-hash",
+      "governance_snapshot_hash": "e6ffe7ef60c91c8780c210a05b2ef259c0ea278654f7da6e78a0009ba7c42ff0",
+      "reasoning_relevant_config_hashes": [
+        {
+          "name": "reasoning.parallelism",
+          "hash": "1",
+          "secret": false
+        },
+        {
+          "name": "reasoning.timeout.ms",
+          "hash": "120",
+          "secret": false
+        }
+      ]
+    },
+    "external_adapters": {
+      "policy_version": "external-adapter-policy/v1",
+      "adapters": [
+        {
+          "name": "langchain",
+          "authoritative": false,
+          "emits_reasoning_artifacts": false,
+          "bypasses_governance": false,
+          "bypasses_determinism": false,
+          "bypasses_consent": false
+        },
+        {
+          "name": "n8n",
+          "authoritative": false,
+          "emits_reasoning_artifacts": false,
+          "bypasses_governance": false,
+          "bypasses_determinism": false,
+          "bypasses_consent": false
+        }
+      ],
+      "notes": [
+        "External orchestration adapters are strictly non-authoritative.",
+        "Adapters cannot emit, mutate, or verify ReasoningArtifacts.",
+        "Adapters cannot bypass governance, determinism, or consent gates."
+      ]
+    },
+    "external_adapter_usage": []
+  },
+  "inputs": {
+    "analytics": "ref-analytics-digest",
+    "simcity": "ref-simcity-digest",
+    "audit": "ref-audit-digest",
+    "trust": "ref-trust-digest"
+  },
+  "personas": [
+    {
+      "persona_id": "ops",
+      "persona_type": "ops",
+      "inputs_digest": "ref-analytics-digest",
+      "judgments": [
+        {
+          "topic": "reliability",
+          "position": "reliability:risk:reference latency risk detected",
+          "rationale_digests": [
+            "2b287edb3696c52006fbf69edcf16ca0aa41e7d3b8d6155658e994f9c6eb6b22"
+          ]
+        }
+      ],
+      "uncertainties": [
+        {
+          "id": "ops-uncertainty",
+          "topic": "coverage",
+          "confidence_level": "low",
+          "sources": [
+            "signal_gap"
+          ],
+          "irreducible": true
+        }
+      ],
+      "provenance": {
+        "origin": "phase-12",
+        "version": "12"
+      }
+    },
+    {
+      "persona_id": "governance",
+      "persona_type": "governance",
+      "inputs_digest": "ref-analytics-digest",
+      "judgments": [
+        {
+          "topic": "reliability",
+          "position": "reliability:observation:reference latency acceptable",
+          "rationale_digests": [
+            "2b287edb3696c52006fbf69edcf16ca0aa41e7d3b8d6155658e994f9c6eb6b22"
+          ]
+        }
+      ],
+      "uncertainties": [
+        {
+          "id": "unspecified-uncertainty",
+          "topic": "unspecified",
+          "confidence_level": "low",
+          "sources": [
+            "signal_gap"
+          ],
+          "irreducible": true
+        }
+      ],
+      "provenance": {
+        "origin": "phase-12",
+        "version": "12"
+      }
+    }
+  ],
+  "synthesis": {
+    "consensus": [],
+    "disagreements": [
+      {
+        "topic": "reliability",
+        "positions": [
+          {
+            "persona_id": "ops",
+            "position": "reliability:risk:reference latency risk detected"
+          },
+          {
+            "persona_id": "governance",
+            "position": "reliability:observation:reference latency acceptable"
+          }
+        ]
+      }
+    ],
+    "uncertainties": [
+      {
+        "id": "coverage-gap-reference",
+        "topic": "coverage",
+        "description": "reference example uncertainty",
+        "signals": [],
+        "severity": "low"
+      }
+    ]
+  },
+  "guarantees": {
+    "deterministic": true,
+    "replayable": true,
+    "non_agency": true,
+    "disclaimers": [
+      "Artifact encodes reasoning only; no actions or interventions are produced.",
+      "Artifact does not guarantee correctness or completeness.",
+      "Artifact does not imply real-world outcomes."
+    ]
+  },
+  "verification": {
+    "hash_algorithm": "sha256",
+    "replay_seed": "reference-seed",
+    "steps": [
+      "Recompute deterministic hash of artifact body (excluding artifact_id).",
+      "Compare recomputed hash to artifact_id for integrity.",
+      "Validate governance snapshot hashes against expected registry and evolution digests.",
+      "Validate deployment fingerprint hash, environment, and governance binding.",
+      "Confirm replay_seed matches observed replay inputs."
+    ]
+  }
+}

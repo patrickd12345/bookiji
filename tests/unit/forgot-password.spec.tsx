@@ -1,17 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import ForgotPasswordPage from '@/app/forgot-password/page';
-
-// Mock Supabase client
-vi.mock('@/lib/supabaseClient', () => ({
-  supabase: {
-    auth: {
-      resetPasswordForEmail: vi.fn(),
-    },
-  },
-}));
+import { getSupabaseMock } from '../utils/supabase-mocks';
 
 describe('ForgotPasswordPage', () => {
+  beforeEach(() => {
+    const mock = getSupabaseMock();
+    mock.auth.resetPasswordForEmail = vi.fn();
+  });
   it('renders without crashing', () => {
     render(<ForgotPasswordPage />);
     

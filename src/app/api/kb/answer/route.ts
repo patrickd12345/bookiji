@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   if (!body || !body.query) {
     return withCommonHeaders(new Response(JSON.stringify({ error: 'Missing query', code: 'BAD_REQUEST' }), { status: 400, headers: cors }));
   }
-  const { query, locale = 'en', actor, section, maxTokens = 400 } = body;
+  const { query, locale = 'en', section } = body;
 
   try {
     // Convert legacy params to new interface

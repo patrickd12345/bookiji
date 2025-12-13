@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     };
     const res = new Response(JSON.stringify(result), { status: 200, headers: { ...cors, 'Cache-Control': 'public, max-age=300' } });
     return withCommonHeaders(res);
-  } catch (e: any) {
+  } catch {
     return withCommonHeaders(new Response(JSON.stringify({ error: 'Server error', code: 'SERVER' }), { status: 500, headers: cors }));
   }
 }

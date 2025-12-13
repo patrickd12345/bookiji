@@ -115,14 +115,28 @@ export async function GET(request: NextRequest) {
       console.warn('Current metrics fetch warning:', currentError)
     }
 
+    interface PerformanceItem {
+      request_count?: number
+      avg_response_time_ms?: number
+      p95_response_time_ms?: number
+      p99_response_time_ms?: number
+      cache_hit_rate?: number
+      [key: string]: unknown
+    }
+
+    interface ApiMetricItem {
+      err_rate?: number
+      [key: string]: unknown
+    }
+
     // Calculate summary statistics
     const summary = {
-      totalRequests: performanceData?.reduce((sum: number, item: any) => sum + (item.request_count || 0), 0) || 0,
-      avgResponseTime: performanceData?.reduce((sum: number, item: any) => sum + (item.avg_response_time_ms || 0), 0) / (performanceData?.length || 1) || 0,
-      p95ResponseTime: performanceData?.reduce((sum: number, item: any) => sum + (item.p95_response_time_ms || 0), 0) / (performanceData?.length || 1) || 0,
-      p99ResponseTime: performanceData?.reduce((sum: number, item: any) => sum + (item.p99_response_time_ms || 0), 0) / (performanceData?.length || 1) || 0,
-      errorRate: apiMetrics?.reduce((sum: number, item: any) => sum + (item.err_rate || 0), 0) / (apiMetrics?.length || 1) || 0,
-      cacheHitRate: performanceData?.reduce((sum: number, item: any) => sum + (item.cache_hit_rate || 0), 0) / (performanceData?.length || 1) || 0
+      totalRequests: performanceData?.reduce((sum: number, item: PerformanceItem) => sum + (item.request_count || 0), 0) || 0,
+      avgResponseTime: performanceData?.reduce((sum: number, item: PerformanceItem) => sum + (item.avg_response_time_ms || 0), 0) / (performanceData?.length || 1) || 0,
+      p95ResponseTime: performanceData?.reduce((sum: number, item: PerformanceItem) => sum + (item.p95_response_time_ms || 0), 0) / (performanceData?.length || 1) || 0,
+      p99ResponseTime: performanceData?.reduce((sum: number, item: PerformanceItem) => sum + (item.p99_response_time_ms || 0), 0) / (performanceData?.length || 1) || 0,
+      errorRate: apiMetrics?.reduce((sum: number, item: ApiMetricItem) => sum + (item.err_rate || 0), 0) / (apiMetrics?.length || 1) || 0,
+      cacheHitRate: performanceData?.reduce((sum: number, item: PerformanceItem) => sum + (item.cache_hit_rate || 0), 0) / (performanceData?.length || 1) || 0
     }
 
     return NextResponse.json({

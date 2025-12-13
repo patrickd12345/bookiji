@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate summary statistics
-    const summary = calculatePerformanceSummary(performanceData || [], realtimeMetrics || [])
+    const summary = calculatePerformanceSummary(performanceData || [])
     
     // Get endpoint-specific performance if requested
     let endpointPerformance = null
@@ -92,7 +92,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function calculatePerformanceSummary(performanceData: any[], realtimeMetrics: any[]) {
+interface PerformanceDataItem {
+  request_count?: number
+  error_count?: number
+  avg_response_time_ms?: number
+  p95_response_time_ms?: number
+  endpoint?: string
+  [key: string]: unknown
+}
+
+function calculatePerformanceSummary(performanceData: PerformanceDataItem[]) {
   if (performanceData.length === 0) {
     return {
       totalRequests: 0,
@@ -103,12 +112,12 @@ function calculatePerformanceSummary(performanceData: any[], realtimeMetrics: an
     }
   }
 
-  const totalRequests = performanceData.reduce((sum, hour) => sum + hour.request_count, 0)
-  const totalErrors = performanceData.reduce((sum, hour) => sum + hour.error_count, 0)
-  const avgResponseTime = performanceData.reduce((sum, hour) => sum + hour.avg_response_time_ms, 0) / performanceData.length
+  const totalRequests = performanceData.reduce((sum, hour) => sum + (hour.request_count || 0), 0)
+  const totalErrors = performanceData.reduce((sum, hour) => sum + (hour.error_count || 0), 0)
+  const avgResponseTime = performanceData.reduce((sum, hour) => sum + (hour.avg_response_time_ms || 0), 0) / performanceData.length
   const p95ResponseTime = Math.max(...performanceData.map(hour => hour.p95_response_time_ms || 0))
   const errorRate = totalRequests > 0 ? (totalErrors / totalRequests) * 100 : 0
-  const activeEndpoints = new Set(performanceData.map(hour => hour.endpoint)).size
+  const activeEndpoints = new Set(performanceData.map(hour => hour.endpoint).filter(Boolean)).size
 
   return {
     totalRequests,
@@ -166,10 +175,23 @@ async function getEndpointPerformance(endpoint: string, method: string | null, s
       acc[hour].status_codes[statusKey] = (acc[hour].status_codes[statusKey] || 0) + 1
       
       return acc
-    }, {} as Record<string, any>)
+    }, {} as Record<string, {
+      hour: string
+      request_count: number
+      total_response_time: number
+      error_count: number
+      status_codes: Record<string, number>
+    }>)
 
     // Convert to array and calculate averages
-    const hourlyArray = Object.values(hourlyData).map((hour: any) => ({
+    interface HourlyDataItem {
+      hour: string
+      request_count: number
+      total_response_time: number
+      error_count: number
+      status_codes: Record<string, number>
+    }
+    const hourlyArray = (Object.values(hourlyData) as HourlyDataItem[]).map((hour: HourlyDataItem) => ({
       hour: hour.hour,
       request_count: hour.request_count,
       avg_response_time_ms: Math.round(hour.total_response_time / hour.request_count),
@@ -226,11 +248,24 @@ async function getTopSlowEndpoints(startDate: Date) {
       acc[key].max_time = Math.max(acc[key].max_time, metric.response_time_ms)
       
       return acc
-    }, {} as Record<string, any>)
+    }, {} as Record<string, {
+      endpoint: string
+      method: string
+      total_time: number
+      count: number
+      max_time: number
+    }>)
 
     // Convert to array and sort by average response time
+    interface EndpointStat {
+      endpoint: string
+      method: string
+      total_time: number
+      count: number
+      max_time: number
+    }
     return Object.values(endpointStats)
-      .map((stat: any) => ({
+      .map((stat: EndpointStat) => ({
         endpoint: stat.endpoint,
         method: stat.method,
         avg_response_time_ms: Math.round(stat.total_time / stat.count),
@@ -309,7 +344,14 @@ async function getErrorAnalysis(startDate: Date) {
   }
 }
 
-function getTopErrorEndpoints(errorData: any[]) {
+interface ErrorDataItem {
+  endpoint?: string
+  method?: string
+  error_count?: number
+  [key: string]: unknown
+}
+
+function getTopErrorEndpoints(errorData: ErrorDataItem[]) {
   const endpointErrors = errorData.reduce((acc, metric) => {
     const key = `${metric.method} ${metric.endpoint}`
     acc[key] = (acc[key] || 0) + 1

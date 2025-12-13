@@ -34,23 +34,7 @@ vi.mock('@/lib/i18n/useI18n', () => ({
   SUPPORTED_LOCALES: ['en-US', 'de-DE', 'fr-FR']
 }))
 
-vi.mock('@/lib/supabaseClient', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => Promise.resolve({ data: [], error: null }))
-      })),
-      insert: vi.fn(() => Promise.resolve({ data: [], error: null })),
-      update: vi.fn(() => Promise.resolve({ data: [], error: null })),
-      delete: vi.fn(() => Promise.resolve({ data: [], error: null }))
-    })),
-    auth: {
-      signUp: vi.fn(() => Promise.resolve({ data: { user: { id: 'test-user' } }, error: null })),
-      signIn: vi.fn(() => Promise.resolve({ data: { user: { id: 'test-user' } }, error: null })),
-      signOut: vi.fn(() => Promise.resolve({ error: null }))
-    }
-  }
-}))
+// Mock is already applied globally via setup.ts
 
 vi.mock('@/lib/ollama', () => ({
   ollamaService: {

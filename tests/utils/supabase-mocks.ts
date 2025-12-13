@@ -7,11 +7,58 @@ const defaultSingleResponse: SupabaseResponse<any> = { data: null, error: null }
 
 function createQueryChain(defaultThenResult: SupabaseResponse<any> = defaultListResponse) {
   const chain: any = {}
-  chain.select = vi.fn(() => chain)
-  chain.insert = vi.fn(() => chain)
-  chain.upsert = vi.fn(() => chain)
+  const selectFallback = vi.fn(() => {
+    const eqChain: any = {
+      data: [],
+      error: null,
+      single: vi.fn(async () => ({ data: null, error: null })),
+      gte: vi.fn(() => ({
+        data: [],
+        error: null,
+        order: vi.fn(() => ({
+          limit: vi.fn(async () => ({ data: [], error: null }))
+        }))
+      })),
+      eq: vi.fn(() => eqChain),
+      order: vi.fn(async () => ({ data: [], error: null }))
+    }
+    return {
+      eq: vi.fn(() => eqChain),
+      gte: vi.fn(async () => ({ data: [], error: null })),
+      not: vi.fn(() => ({
+        gte: vi.fn(async () => ({ data: [], error: null }))
+      })),
+      or: vi.fn(() => ({
+        order: vi.fn(async () => ({ data: [], error: null })),
+        gte: vi.fn(async () => ({ data: [], error: null }))
+      })),
+      order: vi.fn(async () => ({ data: [], error: null }))
+    }
+  })
+
+  const deleteChain = vi.fn(() => ({
+    eq: vi.fn(() => ({
+      eq: vi.fn(async () => ({ error: null }))
+    }))
+  }))
+
+  const insertChain = vi.fn(() => ({
+    select: vi.fn(() => ({
+      single: vi.fn(async () => ({ data: { id: 'insert-id' }, error: null }))
+    }))
+  }))
+
+  const upsertChain = vi.fn(() => ({
+    select: vi.fn(() => ({
+      single: vi.fn(async () => ({ data: { id: 'upsert-id' }, error: null }))
+    }))
+  }))
+
+  chain.select = selectFallback
+  chain.insert = insertChain
+  chain.upsert = upsertChain
   chain.update = vi.fn(() => chain)
-  chain.delete = vi.fn(() => chain)
+  chain.delete = deleteChain
   chain.eq = vi.fn(() => chain)
   chain.neq = vi.fn(() => chain)
   chain.or = vi.fn(() => chain)
@@ -32,8 +79,6 @@ export function createMockSupabaseClient() {
     const readChain = createQueryChain(defaultListResponse)
     const mutationChain = createQueryChain(defaultSingleResponse)
 
-    mutationChain.select = vi.fn(() => mutationChain)
-
     return {
       select: readChain.select,
       eq: readChain.eq,
@@ -48,26 +93,29 @@ export function createMockSupabaseClient() {
       single: readChain.single,
       maybeSingle: readChain.maybeSingle,
       then: readChain.then,
-      insert: vi.fn(() => mutationChain),
+      insert: mutationChain.insert,
       update: vi.fn(() => mutationChain),
-      upsert: vi.fn(() => mutationChain),
-      delete: vi.fn(() => mutationChain),
+      upsert: mutationChain.upsert,
+      delete: mutationChain.delete,
     }
   }
 
   const mockSupabaseClient = {
     auth: {
       getSession: vi.fn(() => Promise.resolve({ data: { session: null }, error: null })),
-      getUser: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
-      signUp: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
+      getUser: vi.fn(async (): Promise<{ data: { user: { id: string } | null }, error: null }> => 
+        ({ data: { user: null }, error: null })
+      ) as any,
+      signUp: vi.fn(async () => ({ data: { user: { id: 'mock-user' } }, error: null })),
       signIn: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
       signOut: vi.fn(() => Promise.resolve({ error: null })),
+      resetPasswordForEmail: vi.fn((email: string, options?: any) => Promise.resolve({ error: null })),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
       admin: {
         deleteUser: vi.fn(() => Promise.resolve({ error: null })),
       },
     },
-    from: vi.fn(() => buildFromChain()),
+    from: vi.fn((table: string) => buildFromChain()),
     rpc: vi.fn(async () => ({ data: null, error: null })),
     storage: {
       from: vi.fn(() => ({
@@ -84,8 +132,12 @@ export function createMockSupabaseClient() {
 
 const defaultSupabaseModules = ['@/lib/supabaseClient', '@/lib/supabase']
 
+// Store the shared mock instance globally
+let sharedMockInstance: ReturnType<typeof createMockSupabaseClient> | null = null
+
 export function createSupabaseClientMocks(options?: { moduleIds?: string[] }) {
   const mockSupabaseClient = createMockSupabaseClient()
+  sharedMockInstance = mockSupabaseClient
   const getClient = () => mockSupabaseClient
   const moduleExports = {
     supabase: mockSupabaseClient,
@@ -97,11 +149,34 @@ export function createSupabaseClientMocks(options?: { moduleIds?: string[] }) {
   }
 
   const moduleIds = options?.moduleIds ?? defaultSupabaseModules
-  const applyMock = (id: string) => vi.mock(id, () => moduleExports)
+  const applyMock = (id: string) => {
+    vi.doMock(id, () => moduleExports)
+  }
 
   for (const id of moduleIds) {
     applyMock(id)
   }
 
   return { mockSupabaseClient, moduleExports, applyMock }
+}
+
+/**
+ * Get the shared Supabase mock instance for overriding behavior in tests.
+ * This should be used instead of creating new mock instances.
+ */
+export function getSupabaseMock() {
+  if (!sharedMockInstance) {
+    throw new Error('Supabase mocks not initialized. Call createSupabaseClientMocks() first (usually in setup.ts)')
+  }
+  return sharedMockInstance
+}
+
+export function resetSupabaseMock() {
+  const mock = getSupabaseMock()
+  for (const key of Object.keys(mock)) {
+    const value: any = (mock as any)[key]
+    if (typeof value === 'function' && 'mockClear' in value) {
+      value.mockClear()
+    }
+  }
 }

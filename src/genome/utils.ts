@@ -9,6 +9,39 @@ export function exists(targetPath: string): boolean {
   return fs.existsSync(targetPath);
 }
 
+export function safeExists(targetPath: string): boolean {
+  if (!targetPath) return false;
+  try {
+    return fs.existsSync(targetPath);
+  } catch {
+    return false;
+  }
+}
+
+export function safeReadDir(targetPath: string): string[] {
+  if (!safeExists(targetPath)) return [];
+  try {
+    return fs.readdirSync(targetPath);
+  } catch {
+    return [];
+  }
+}
+
+export function checkDirectoryAccess(targetPath: string): { exists: boolean; accessible: boolean; error?: string } {
+  if (!targetPath) return { exists: false, accessible: false, error: "no path provided" };
+  try {
+    fs.accessSync(targetPath, fs.constants.R_OK);
+    const stats = fs.statSync(targetPath);
+    if (!stats.isDirectory()) {
+      return { exists: true, accessible: false, error: "path is not a directory" };
+    }
+    return { exists: true, accessible: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { exists: safeExists(targetPath), accessible: false, error: message };
+  }
+}
+
 export function isDirectory(targetPath: string): boolean {
   try {
     return fs.statSync(targetPath).isDirectory();
@@ -19,12 +52,8 @@ export function isDirectory(targetPath: string): boolean {
 
 export function isDirectoryPopulated(targetPath: string): boolean {
   if (!isDirectory(targetPath)) return false;
-  try {
-    const entries = fs.readdirSync(targetPath);
-    return entries.length > 0;
-  } catch {
-    return false;
-  }
+  const entries = safeReadDir(targetPath);
+  return entries.length > 0;
 }
 
 export function readFile(targetPath: string): string | null {
