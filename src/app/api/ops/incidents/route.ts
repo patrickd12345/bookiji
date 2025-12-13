@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 export async function GET(request: NextRequest) {
-export async function GET(request: NextRequest) {
   const OPS_API_BASE =
     process.env.OPS_API_BASE ||
     process.env.NEXT_PUBLIC_OPS_BASE ||

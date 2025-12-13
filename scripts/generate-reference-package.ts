@@ -6,6 +6,8 @@ import {
   buildFullDisclosureAuditReport,
   buildReasoningArtifact,
   deterministicHash,
+  type ReasoningArtifact,
+  type DeploymentFingerprint,
 } from "@/reasoning/artifacts";
 import { ReasoningSynthesis } from "@/reasoning/orchestration";
 
@@ -182,7 +184,7 @@ function buildReferenceArtifact() {
   return { artifact, fingerprint };
 }
 
-function buildReferenceReport(artifact, fingerprint) {
+function buildReferenceReport(artifact: ReasoningArtifact, fingerprint: DeploymentFingerprint) {
   return buildFullDisclosureAuditReport({
     bookiji_version: "1.0.0",
     active_phases: ["12"],
