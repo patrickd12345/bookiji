@@ -3,10 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { loadBaselines, saveBaseline, getLatestBaseline, deleteBaseline } from '../../../../../scripts/ops-baseline-store'
 import type { BaselineData } from '@/lib/regression/regressionAI'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
 /**
  * GET /ops/baseline

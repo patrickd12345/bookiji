@@ -1,16 +1,32 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { KBProvider, KBArticle, KBSearchResult, Locale, Section } from './types';
 import { ollamaService } from '@/lib/ollama';
 
 // This will be the production provider using pgvector
 export class PgVectorProvider implements KBProvider {
-  private supabase;
+  private _supabase: SupabaseClient | null = null;
 
   constructor() {
-    this.supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // Lazy initialization
+  }
+
+  private get supabase(): SupabaseClient {
+    if (!this._supabase) {
+      const url = process.env.SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      
+      if (!url || !key) {
+        // Fallback for build time if env vars are missing
+        if (typeof window === 'undefined' && (!url || !key)) {
+           console.warn('KB Provider: Supabase config missing');
+           // Return a dummy or throw? Throwing is better but only at runtime
+           throw new Error('Supabase config missing for KB Provider');
+        }
+      }
+      
+      this._supabase = createClient(url!, key!);
+    }
+    return this._supabase;
   }
 
   async getArticle(id: string, locale: Locale): Promise<KBArticle | null> {

@@ -1,6 +1,6 @@
-import { getServerSupabase } from './supabaseClient'
+import { getServerSupabase } from './supabaseServer'
 
-const supabase = getServerSupabase()
+const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 import type { 
   UserCredits, 
   CreditTransaction, 

@@ -1,11 +1,33 @@
 import Stripe from 'stripe';
 
-// Check if we have Stripe credentials, otherwise use mock mode
-const isMockMode = !process.env.STRIPE_SECRET_KEY || process.env.NODE_ENV === 'development';
+let _stripe: Stripe | null = null;
+let _isMockMode: boolean | null = null;
 
-const stripe = isMockMode ? null : new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
-});
+function getIsMockMode(): boolean {
+  if (_isMockMode === null) {
+    _isMockMode = !process.env.STRIPE_SECRET_KEY || process.env.NODE_ENV === 'development';
+  }
+  return _isMockMode;
+}
+
+function getStripe(): Stripe | null {
+  if (getIsMockMode()) {
+    return null;
+  }
+  if (!_stripe) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      // Should technically be covered by isMockMode check, but for type safety
+      console.warn('STRIPE_SECRET_KEY missing despite not being in mock mode. Defaulting to mock.');
+      _isMockMode = true;
+      return null;
+    }
+    _stripe = new Stripe(secretKey, {
+      apiVersion: '2024-06-20',
+    });
+  }
+  return _stripe;
+}
 
 export interface PaymentIntentData {
   amount: number; // in cents
@@ -28,7 +50,7 @@ export class StripeService {
    * Create a payment intent for the $1 commitment fee
    */
   static async createPaymentIntent(data: PaymentIntentData): Promise<Stripe.PaymentIntent> {
-    if (isMockMode) {
+    if (getIsMockMode()) {
       // Return mock payment intent for testing
       const mockIntent = {
         id: `pi_mock_${Date.now()}`,
@@ -79,6 +101,7 @@ export class StripeService {
         invoice: null,
         latest_charge: null,
         payment_method_configuration_details: null,
+        payment_method_configuration_details_options: null,
       };
       
       return mockIntent as unknown as Stripe.PaymentIntent;
@@ -90,7 +113,10 @@ export class StripeService {
         metadata.customer_email = data.customer_email;
       }
 
-      const paymentIntent = await stripe!.paymentIntents.create({
+      const stripe = getStripe();
+      if (!stripe) throw new Error('Stripe client not initialized');
+
+      const paymentIntent = await stripe.paymentIntents.create({
         amount: data.amount,
         currency: data.currency || 'usd',
         metadata,
@@ -112,7 +138,7 @@ export class StripeService {
    * Confirm a payment intent
    */
   static async confirmPayment(paymentIntentId: string): Promise<PaymentConfirmationResult> {
-    if (isMockMode) {
+    if (getIsMockMode()) {
       // Mock successful payment for testing
       if (paymentIntentId.startsWith('pi_mock_')) {
         return {
@@ -135,7 +161,10 @@ export class StripeService {
     }
 
     try {
-      const paymentIntent = await stripe!.paymentIntents.retrieve(paymentIntentId);
+      const stripe = getStripe();
+      if (!stripe) throw new Error('Stripe client not initialized');
+
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
       
       if (paymentIntent.status === 'succeeded') {
         return {
@@ -148,7 +177,7 @@ export class StripeService {
       }
 
       if (paymentIntent.status === 'requires_confirmation') {
-        const confirmedIntent = await stripe!.paymentIntents.confirm(paymentIntentId);
+        const confirmedIntent = await stripe.paymentIntents.confirm(paymentIntentId);
         
         if (confirmedIntent.status === 'succeeded') {
           return {
@@ -189,7 +218,7 @@ export class StripeService {
     amount?: number,
     reason?: string
   ): Promise<Stripe.Refund> {
-    if (isMockMode) {
+    if (getIsMockMode()) {
       // Return mock refund for testing
       return {
         id: `re_mock_${Date.now()}`,
@@ -230,7 +259,10 @@ export class StripeService {
         refundData.amount = amount;
       }
 
-      const refund = await stripe!.refunds.create(refundData);
+      const stripe = getStripe();
+      if (!stripe) throw new Error('Stripe client not initialized');
+
+      const refund = await stripe.refunds.create(refundData);
       return refund;
     } catch (error) {
       console.error('Error processing refund:', error);
@@ -246,7 +278,7 @@ export class StripeService {
     signature: string,
     secret: string
   ): Stripe.Event {
-    if (isMockMode) {
+    if (getIsMockMode()) {
       // Return mock event for testing
       return {
         id: 'evt_mock_webhook',
@@ -271,7 +303,9 @@ export class StripeService {
     }
 
     try {
-      return stripe!.webhooks.constructEvent(payload, signature, secret);
+      const stripe = getStripe();
+      if (!stripe) throw new Error('Stripe client not initialized');
+      return stripe.webhooks.constructEvent(payload, signature, secret);
     } catch (error) {
       console.error('Webhook signature verification failed:', error);
       throw new Error('Webhook signature verification failed');
@@ -309,7 +343,7 @@ export class StripeService {
    * Get customer details
    */
   static async getCustomer(customerId: string): Promise<Stripe.Customer | null> {
-    if (isMockMode) {
+    if (getIsMockMode()) {
       // Return mock customer for testing
       return {
         id: customerId,
@@ -324,7 +358,9 @@ export class StripeService {
     }
 
     try {
-      return await stripe!.customers.retrieve(customerId) as Stripe.Customer;
+      const stripe = getStripe();
+      if (!stripe) throw new Error('Stripe client not initialized');
+      return await stripe.customers.retrieve(customerId) as Stripe.Customer;
     } catch (error) {
       console.error('Error retrieving customer:', error);
       return null;
@@ -335,7 +371,7 @@ export class StripeService {
    * Create a customer
    */
   static async createCustomer(email: string, name?: string): Promise<Stripe.Customer> {
-    if (isMockMode) {
+    if (getIsMockMode()) {
       // Return mock customer for testing
       return {
         id: `cus_mock_${Date.now()}`,
@@ -351,7 +387,9 @@ export class StripeService {
     }
 
     try {
-      return await stripe!.customers.create({
+      const stripe = getStripe();
+      if (!stripe) throw new Error('Stripe client not initialized');
+      return await stripe.customers.create({
         email,
         name,
         metadata: {

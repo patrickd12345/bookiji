@@ -1,9 +1,20 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: SupabaseClient | null = null;
+
+function getSupabase() {
+  if (!_supabase) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!url || !key) {
+      throw new Error('Supabase admin configuration missing (monitoring)');
+    }
+    
+    _supabase = createClient(url, key);
+  }
+  return _supabase;
+}
 
 export interface CachePerformanceMetrics {
   queryType: string;
@@ -164,6 +175,7 @@ export class CachePerformanceMonitor {
   async getCachePerformanceByType(timeRange: string = '24h'): Promise<CachePerformanceMetrics[]> {
     try {
       const startTime = this.getTimeRangeStart(timeRange);
+      const supabase = getSupabase();
       
       const { data: performanceData, error: perfError } = await supabase
         .from('performance_metrics')
@@ -247,6 +259,7 @@ export class CachePerformanceMonitor {
   async getInvalidationPatterns(timeRange: string = '24h'): Promise<CacheInvalidationPattern[]> {
     try {
       const startTime = this.getTimeRangeStart(timeRange);
+      const supabase = getSupabase();
       
       const { data: invalidationData, error } = await supabase
         .from('cache_invalidation_queue')

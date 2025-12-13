@@ -2,10 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { aiModeration, ModerationResult, ReviewData } from './aiModeration'
 
 // Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
 export interface ModerationAuditLog {
   id: string

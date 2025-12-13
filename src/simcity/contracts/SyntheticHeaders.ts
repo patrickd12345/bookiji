@@ -21,7 +21,7 @@ function buildSignature(traceId: string): string | undefined {
   return hmac.digest("hex");
 }
 
-export function buildSyntheticHeaders(traceId = randomUUID()): SyntheticHeaderSet {
+export function buildSyntheticHeaders(traceId: string = randomUUID()): SyntheticHeaderSet {
   const signature = buildSignature(traceId);
   return {
     traceId,

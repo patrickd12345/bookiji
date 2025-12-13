@@ -4,18 +4,26 @@ import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { featureFlags } from '@/config/featureFlags'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20'
-})
-
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
+import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
 async function webhookHandler(req: NextRequest): Promise<NextResponse> {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
+
+  if (!stripeSecretKey) {
+    console.error('STRIPE_SECRET_KEY is not configured')
+    return new NextResponse('Server Configuration Error', { status: 500 })
+  }
+
+  if (!endpointSecret) {
+    console.error('STRIPE_WEBHOOK_SECRET is not configured')
+    return new NextResponse('Server Configuration Error', { status: 500 })
+  }
+
+  const stripe = new Stripe(stripeSecretKey, {
+    apiVersion: '2024-06-20'
+  })
+
   if (!featureFlags.beta.core_booking_flow) {
     return NextResponse.json(
       { error: 'Core booking flow not enabled' },

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sloai } from '@/lib/observability/sloai'
-import { getServerSupabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseServer'
 
-const supabase = getServerSupabase()
+const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 
 /**
  * GET /ops/slo/availability

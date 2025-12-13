@@ -1,12 +1,23 @@
 // Server-side Notification Batching Queue
 // Handles batching notifications for users who have batching enabled
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+let _supabase: SupabaseClient | null = null
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+function getSupabase() {
+  if (!_supabase) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Supabase notification configuration missing')
+    }
+    
+    _supabase = createClient(supabaseUrl, supabaseServiceKey)
+  }
+  return _supabase
+}
 
 export interface QueuedNotification {
   user_id: string
@@ -34,6 +45,7 @@ export async function queueNotification(
     batchDelayMinutes?: number
   }
 ): Promise<void> {
+  const supabase = getSupabase()
   const batchId = getBatchId(userId, options?.batchDelayMinutes || 5)
   const expiresAt = new Date(Date.now() + (options?.batchDelayMinutes || 5) * 60 * 1000)
 
@@ -52,6 +64,7 @@ export async function queueNotification(
  * This should be called by a background worker/cron job
  */
 export async function processBatch(userId: string, batchId: string): Promise<void> {
+  const supabase = getSupabase()
   const { data: notifications, error } = await supabase
     .from('notification_batch_queue')
     .select('*')
@@ -87,6 +100,7 @@ export async function processBatch(userId: string, batchId: string): Promise<voi
  * Process all expired batches (should be called by cron)
  */
 export async function processExpiredBatches(): Promise<void> {
+  const supabase = getSupabase()
   const { data: batches, error } = await supabase
     .from('notification_batch_queue')
     .select('user_id, batch_id')
@@ -121,6 +135,7 @@ async function sendPushNotification(
   userId: string,
   notification: QueuedNotification['notification_data']
 ): Promise<void> {
+  const supabase = getSupabase()
   // Get user's push subscriptions
   const { data: subscriptions } = await supabase
     .from('push_subscriptions')
@@ -260,4 +275,3 @@ function getBatchId(userId: string, delayMinutes: number): string {
   const windowStart = Math.floor(now / windowMs) * windowMs
   return `${userId}_${windowStart}`
 }
-

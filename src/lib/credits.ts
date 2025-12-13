@@ -1,7 +1,7 @@
 // Credits Service Library
 // Core business logic for the loyalty and credits system
 
-import { getServerSupabase } from '@/lib/supabaseClient';
+import { getServerSupabase } from '@/lib/supabaseServer';
 
 const getSupabaseClient = () => getServerSupabase()
 import {

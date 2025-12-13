@@ -5,17 +5,18 @@ import { cookies } from 'next/headers'
 import Stripe from 'stripe'
 import { getSupabaseConfig } from '@/config/supabase'
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY
-
-if (!stripeSecretKey) {
-  throw new Error('STRIPE_SECRET_KEY is not configured')
-}
-
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2024-06-20'
-})
-
 export async function POST(req: NextRequest) {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+
+  if (!stripeSecretKey) {
+    console.error('STRIPE_SECRET_KEY is not configured')
+    return NextResponse.json({ error: 'Payment configuration error' }, { status: 500 })
+  }
+
+  const stripe = new Stripe(stripeSecretKey, {
+    apiVersion: '2024-06-20'
+  })
+
   const config = getSupabaseConfig()
 
   // Require auth session from Supabase cookies

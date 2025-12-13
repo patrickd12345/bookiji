@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSupabase } from '@/lib/supabaseClient';
+import { getServerSupabase } from '@/lib/supabaseServer';
 import { withQueryLogging } from '@/lib/performance/queryLogger';
 import { withRateLimit, apiRateLimiter } from '@/middleware/rateLimiter';
 import { RichProviderProfile, ProviderProfileUpdate } from '@/types/provider';
 
 export const GET = withRateLimit(apiRateLimiter, async (request: NextRequest) => {
   try {
-    const supabase = getServerSupabase();
+    const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>;
     
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -95,7 +95,7 @@ export const GET = withRateLimit(apiRateLimiter, async (request: NextRequest) =>
 
 export const PUT = withRateLimit(apiRateLimiter, async (request: NextRequest) => {
   try {
-    const supabase = getServerSupabase();
+    const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>;
     
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -166,7 +166,7 @@ export const PUT = withRateLimit(apiRateLimiter, async (request: NextRequest) =>
 
 export const PATCH = withRateLimit(apiRateLimiter, async (request: NextRequest) => {
   try {
-    const supabase = getServerSupabase();
+    const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>;
     
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();

@@ -1,8 +1,8 @@
 import Stripe from 'stripe'
 import { loadStripe } from '@stripe/stripe-js'
-import { getServerSupabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseServer'
 
-const supabase = getServerSupabase()
+const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 
 // Create a function to get Stripe instance instead of creating it at module load
 let _stripe: Stripe | null = null
