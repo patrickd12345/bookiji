@@ -2,14 +2,12 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, User, Settings, LogOut, ChevronDown, Menu, X } from 'lucide-react'
+import { Bell, User, Settings, LogOut, ChevronDown } from 'lucide-react'
 
 export default function Navbar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
 
-  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen)
   const toggleNotifications = () => setIsNotificationsOpen(!isNotificationsOpen)
   const toggleProfile = () => setIsProfileOpen(!isProfileOpen)
 
@@ -19,13 +17,6 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo and Brand */}
           <div className="flex items-center">
-            <button
-              onClick={toggleMobileMenu}
-              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
-            >
-              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-            
             <div className="flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
                 <span className="text-white font-bold text-sm">B</span>

@@ -8,6 +8,7 @@ import { useI18n } from '@/lib/i18n/useI18n';
 import NotificationBell from '@/components/NotificationBell';
 import { useRouter } from 'next/navigation';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { Menu, X } from 'lucide-react'
 
 // Toggle full navigation with NEXT_PUBLIC_ENABLE_NAV (defaults to false)
 const SHOW_NAV_ITEMS = process.env.NEXT_PUBLIC_ENABLE_NAV === 'true';
@@ -18,12 +19,18 @@ export default function MainNavigation() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [isBetaUser, setIsBetaUser] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false)
   const { t } = useI18n();
   const router = useRouter();
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    // Close the mobile menu on route changes.
+    setMobileOpen(false)
+  }, [pathname])
 
   const checkAuth = async () => {
     const supabase = supabaseBrowserClient()
@@ -104,150 +111,165 @@ export default function MainNavigation() {
             </Link>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {SHOW_NAV_ITEMS && (
               <>
-                {isLoggedIn ? (
-                  <>
-                    <Link
-                      href="/customer/dashboard"
-                      className={`px-3 py-2 rounded-md text-sm font-medium ${
-                        pathname === '/customer/dashboard'
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-foreground hover:bg-muted'
-                      }`}
-                      data-test="nav-dashboard"
-                    >
-                      {t('nav.dashboard')}
-                    </Link>
+                {/* Mobile hamburger (prevents overflow on small screens) */}
+                <button
+                  type="button"
+                  className="sm:hidden p-2 rounded-md border border-border hover:bg-muted"
+                  aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                  aria-expanded={mobileOpen}
+                  onClick={() => setMobileOpen((v) => !v)}
+                  data-test="nav-mobile-menu"
+                >
+                  {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+                </button>
 
-                    {userRole === 'vendor' && (
+                {/* Desktop nav items */}
+                <div className="hidden sm:flex items-center gap-4">
+                  {isLoggedIn ? (
+                    <>
                       <Link
-                        href="/vendor/calendar"
+                        href="/customer/dashboard"
                         className={`px-3 py-2 rounded-md text-sm font-medium ${
-                          pathname.startsWith('/vendor')
+                          pathname === '/customer/dashboard'
                             ? 'bg-primary/10 text-primary'
                             : 'text-foreground hover:bg-muted'
                         }`}
-                        data-test="nav-vendor-portal"
+                        data-test="nav-dashboard"
                       >
-                        {t('nav.vendor_portal')}
+                        {t('nav.dashboard')}
                       </Link>
-                    )}
 
-                    {roles.length > 1 && (
-                      <select
-                        data-testid="role-switcher"
-                        value={userRole ?? ''}
-                        onChange={(e) => {
-                          const role = e.target.value;
-                          setUserRole(role);
-                          router.push(role === 'vendor' ? '/vendor/dashboard' : '/customer/dashboard');
-                        }}
-                        className="px-2 py-1 border rounded"
+                      {userRole === 'vendor' && (
+                        <Link
+                          href="/vendor/calendar"
+                          className={`px-3 py-2 rounded-md text-sm font-medium ${
+                            pathname.startsWith('/vendor')
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-foreground hover:bg-muted'
+                          }`}
+                          data-test="nav-vendor-portal"
+                        >
+                          {t('nav.vendor_portal')}
+                        </Link>
+                      )}
+
+                      {roles.length > 1 && (
+                        <select
+                          data-testid="role-switcher"
+                          value={userRole ?? ''}
+                          onChange={(e) => {
+                            const role = e.target.value;
+                            setUserRole(role);
+                            router.push(role === 'vendor' ? '/vendor/dashboard' : '/customer/dashboard');
+                          }}
+                          className="px-2 py-1 border rounded"
+                        >
+                          {roles.map((r) => (
+                            <option key={r} value={r}>
+                              {r.charAt(0).toUpperCase() + r.slice(1)}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+
+                      <NotificationBell />
+
+                      <Link
+                        href="/help"
+                        className={`px-3 py-2 rounded-md text-sm font-medium ${
+                          pathname.startsWith('/help')
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-foreground hover:bg-muted'
+                        }`}
                       >
-                        {roles.map((r) => (
-                          <option key={r} value={r}>
-                            {r.charAt(0).toUpperCase() + r.slice(1)}
-                          </option>
-                        ))}
-                      </select>
-                    )}
+                        Help
+                      </Link>
 
-                    <NotificationBell />
+                      <button
+                        onClick={() => {
+                          // Start the appropriate tour based on current role
+                          if (userRole === 'vendor') {
+                            window.location.href = '/vendor/dashboard?tour=onboarding';
+                          } else {
+                            window.location.href = '/customer/dashboard?tour=booking';
+                          }
+                        }}
+                        className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                        title="Replay the guided tour for your current role"
+                        data-test="nav-replay-tour"
+                      >
+                        🎯 Replay Tour
+                      </button>
 
-                    <Link
-                      href="/help"
-                      className={`px-3 py-2 rounded-md text-sm font-medium ${
-                        pathname.startsWith('/help')
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-foreground hover:bg-muted'
-                      }`}
-                    >
-                      Help
-                    </Link>
-
-                    <button
-                      onClick={() => {
-                        // Start the appropriate tour based on current role
-                        if (userRole === 'vendor') {
-                          window.location.href = '/vendor/dashboard?tour=onboarding';
-                        } else {
-                          window.location.href = '/customer/dashboard?tour=booking';
-                        }
-                      }}
-                      className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
-                      title="Replay the guided tour for your current role"
-                      data-test="nav-replay-tour"
-                    >
-                      🎯 Replay Tour
-                    </button>
-
-                    <Link
-                      href="/settings"
-                      className={`px-3 py-2 rounded-md text-sm font-medium ${
-                        pathname.startsWith('/settings')
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-foreground hover:bg-muted'
-                      }`}
-                    >
-                      {t('nav.settings')} {isBetaUser && <span className="ml-1">⚡</span>}
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/get-started"
-                      className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
-                      data-test="nav-start-booking"
-                    >
-                      {t('nav.start_booking')}
-                    </Link>
-                    <button
-                      onClick={() => {
-                        if (isLoggedIn && userRole !== 'vendor') {
-                          router.push('/customer/dashboard');
-                        } else {
-                          router.push('/register?redirect=/customer/dashboard');
-                        }
-                      }}
-                      className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted flex flex-col items-start"
-                      aria-label="Book an appointment as a customer"
-                      data-test="nav-book-appointment"
-                    >
-                      <span>Book an Appointment</span>
-                      <span className="text-xs text-gray-500">(Customer)</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (isLoggedIn && userRole === 'vendor') {
-                          router.push('/vendor/dashboard');
-                        } else {
-                          router.push('/register?redirect=/vendor/dashboard');
-                        }
-                      }}
-                      className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted flex flex-col items-start"
-                      aria-label="Offer your services as a provider"
-                      data-test="nav-offer-services"
-                    >
-                      <span>Offer Your Services</span>
-                      <span className="text-xs text-gray-500">(Provider)</span>
-                    </button>
-                    <Link
-                      href="/help"
-                      className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
-                    >
-                      Help
-                    </Link>
-                    <Link
-                      href="/login"
-                      className="px-3 py-2 rounded-md text-sm font-medium text-primary hover:opacity-80"
-                      data-test="nav-login"
-                    >
-                      {t('nav.log_in')}
-                    </Link>
-                  </>
-                )}
+                      <Link
+                        href="/settings"
+                        className={`px-3 py-2 rounded-md text-sm font-medium ${
+                          pathname.startsWith('/settings')
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-foreground hover:bg-muted'
+                        }`}
+                      >
+                        {t('nav.settings')} {isBetaUser && <span className="ml-1">⚡</span>}
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/get-started"
+                        className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                        data-test="nav-start-booking"
+                      >
+                        {t('nav.start_booking')}
+                      </Link>
+                      <button
+                        onClick={() => {
+                          if (isLoggedIn && userRole !== 'vendor') {
+                            router.push('/customer/dashboard');
+                          } else {
+                            router.push('/register?redirect=/customer/dashboard');
+                          }
+                        }}
+                        className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted flex flex-col items-start"
+                        aria-label="Book an appointment as a customer"
+                        data-test="nav-book-appointment"
+                      >
+                        <span>Book an Appointment</span>
+                        <span className="text-xs text-gray-500">(Customer)</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (isLoggedIn && userRole === 'vendor') {
+                            router.push('/vendor/dashboard');
+                          } else {
+                            router.push('/register?redirect=/vendor/dashboard');
+                          }
+                        }}
+                        className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted flex flex-col items-start"
+                        aria-label="Offer your services as a provider"
+                        data-test="nav-offer-services"
+                      >
+                        <span>Offer Your Services</span>
+                        <span className="text-xs text-gray-500">(Provider)</span>
+                      </button>
+                      <Link
+                        href="/help"
+                        className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                      >
+                        Help
+                      </Link>
+                      <Link
+                        href="/login"
+                        className="px-3 py-2 rounded-md text-sm font-medium text-primary hover:opacity-80"
+                        data-test="nav-login"
+                      >
+                        {t('nav.log_in')}
+                      </Link>
+                    </>
+                  )}
+                </div>
               </>
             )}
 
@@ -255,6 +277,129 @@ export default function MainNavigation() {
             <ThemeSwitcher />
           </div>
         </div>
+
+        {/* Mobile menu panel */}
+        {SHOW_NAV_ITEMS && mobileOpen && (
+          <div className="sm:hidden border-t border-border py-3">
+            <div className="flex flex-col gap-2">
+              {isLoggedIn ? (
+                <>
+                  <Link
+                    href="/customer/dashboard"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {t('nav.dashboard')}
+                  </Link>
+
+                  {userRole === 'vendor' && (
+                    <Link
+                      href="/vendor/calendar"
+                      className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {t('nav.vendor_portal')}
+                    </Link>
+                  )}
+
+                  {roles.length > 1 && (
+                    <select
+                      data-testid="role-switcher-mobile"
+                      value={userRole ?? ''}
+                      onChange={(e) => {
+                        const role = e.target.value
+                        setUserRole(role)
+                        setMobileOpen(false)
+                        router.push(role === 'vendor' ? '/vendor/dashboard' : '/customer/dashboard')
+                      }}
+                      className="px-3 py-2 border rounded-md bg-background"
+                    >
+                      {roles.map((r) => (
+                        <option key={r} value={r}>
+                          {r.charAt(0).toUpperCase() + r.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  <Link
+                    href="/help"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Help
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      setMobileOpen(false)
+                      if (userRole === 'vendor') {
+                        window.location.href = '/vendor/dashboard?tour=onboarding'
+                      } else {
+                        window.location.href = '/customer/dashboard?tour=booking'
+                      }
+                    }}
+                    className="px-3 py-2 rounded-md text-sm font-medium text-left text-foreground hover:bg-muted"
+                  >
+                    🎯 Replay Tour
+                  </button>
+
+                  <Link
+                    href="/settings"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {t('nav.settings')} {isBetaUser && <span className="ml-1">⚡</span>}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/get-started"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {t('nav.start_booking')}
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setMobileOpen(false)
+                      router.push('/register?redirect=/customer/dashboard')
+                    }}
+                    className="px-3 py-2 rounded-md text-sm font-medium text-left text-foreground hover:bg-muted"
+                  >
+                    <div>Book an Appointment</div>
+                    <div className="text-xs text-gray-500">(Customer)</div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileOpen(false)
+                      router.push('/register?redirect=/vendor/dashboard')
+                    }}
+                    className="px-3 py-2 rounded-md text-sm font-medium text-left text-foreground hover:bg-muted"
+                  >
+                    <div>Offer Your Services</div>
+                    <div className="text-xs text-gray-500">(Provider)</div>
+                  </button>
+                  <Link
+                    href="/help"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Help
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="px-3 py-2 rounded-md text-sm font-medium text-primary hover:opacity-80"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {t('nav.log_in')}
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
