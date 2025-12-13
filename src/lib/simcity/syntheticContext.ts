@@ -1,5 +1,3 @@
-import { headers as nextHeaders } from 'next/headers'
-
 const SYNTHETIC_HEADER = 'X-Bookiji-Synthetic'
 const SYNTHETIC_TRACE_HEADER = 'X-Bookiji-Synthetic-Trace'
 const SYNTHETIC_SOURCE = 'simcity'
@@ -21,14 +19,10 @@ export function detectSyntheticContext(source?: Headers | (() => Headers)): Synt
     } catch {
       headerBag = undefined
     }
-  } else {
-    try {
-      headerBag = nextHeaders()
-    } catch {
-      headerBag = undefined
-    }
   }
-
+  // Removed implicit dependency on next/headers to allow client-side usage of this file
+  // and to avoid build errors in Next.js 15 Client Components.
+  
   if (!headerBag) return undefined
 
   const syntheticHeader = headerBag.get(SYNTHETIC_HEADER)

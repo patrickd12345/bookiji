@@ -8,8 +8,8 @@ export async function GET() {
   const timestamp = new Date().toISOString()
   
   try {
-    const { getServerSupabase } = await import('@/lib/supabaseClient')
-    const supabase = getServerSupabase()
+    const { getServerSupabase } = await import('@/lib/supabaseServer')
+    const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
     
     // Check cache invalidation queue
     let queueStats = null

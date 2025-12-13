@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSupabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseServer'
 
 export async function GET(req: NextRequest) {
-  const supabase = getServerSupabase()
+  const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status') || 'open'
   const userId = searchParams.get('userId')

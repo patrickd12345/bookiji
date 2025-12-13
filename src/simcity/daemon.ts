@@ -27,7 +27,7 @@ function assertEnvironment(env: DaemonEnvironment): void {
   }
 }
 
-export async function startSimCityDaemon(env: DaemonEnvironment = process.env): Promise<void> {
+export async function startSimCityDaemon(env: DaemonEnvironment = process.env as unknown as DaemonEnvironment): Promise<void> {
   assertEnvironment(env);
   // Placeholder: Real daemon logic is intentionally not implemented in safety mode.
 }

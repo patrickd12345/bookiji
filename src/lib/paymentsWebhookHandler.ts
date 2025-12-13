@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripeOrThrow } from '@/lib/stripe'
-import { getServerSupabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseServer'
 
-const supabase = getServerSupabase()
+const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 import { trackPaymentSuccess, trackPaymentFailure, PaymentMetadata } from '@/lib/analytics'
 import Stripe from 'stripe'
 import type { SupabaseClient } from '@supabase/supabase-js'

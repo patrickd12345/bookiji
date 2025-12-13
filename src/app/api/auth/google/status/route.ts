@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSupabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseServer'
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Profile ID is required' }, { status: 400 })
     }
 
-    const supabase = getServerSupabase()
+    const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 
     // Check if Google Calendar is connected
     const { data: connection, error } = await supabase

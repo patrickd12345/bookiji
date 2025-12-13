@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSupabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseServer'
 
 export async function POST(request: NextRequest) {
-  const supabase = getServerSupabase()
+  const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
   const { query_text, source = 'faq', context = {} } = await request.json()
 
   if (!query_text) {

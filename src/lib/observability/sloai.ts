@@ -1,7 +1,7 @@
-import { getServerSupabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseServer'
 import type { SLOConfig, SLOViolation } from './sloMonitor'
 
-const supabase = getServerSupabase()
+const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 
 export interface ErrorBudget {
   total: number // Total error budget for the period

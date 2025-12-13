@@ -3,10 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { withSLOProbe } from '@/middleware/sloProbe'
 import { featureFlags } from '@/config/featureFlags'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
 interface ForceCancelRequest {
   booking_id: string

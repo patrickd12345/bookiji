@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSupabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseServer'
 import { GoogleCalendarAdapterFactory } from '@/lib/calendar-adapters/google'
 import type { CalendarSystemConfig, CalendarCredentials } from '@/lib/calendar-adapters/types'
 
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Profile ID is required' }, { status: 400 })
     }
 
-    const supabase = getServerSupabase()
+    const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 
     // Get the calendar connection details
     const { data: connection, error: fetchError } = await supabase

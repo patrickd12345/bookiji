@@ -71,8 +71,8 @@ export async function GET(request: NextRequest) {
 
 async function checkDatabase() {
   try {
-    const { getServerSupabase } = await import('@/lib/supabaseClient')
-    const supabase = getServerSupabase()
+    const { getServerSupabase } = await import('@/lib/supabaseServer')
+    const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
     
     const startTime = Date.now()
     const { error } = await supabase
@@ -132,8 +132,8 @@ async function checkWebhooks() {
 async function checkCache() {
   try {
     // Check cache invalidation queue health
-    const { getServerSupabase } = await import('@/lib/supabaseClient')
-    const supabase = getServerSupabase()
+    const { getServerSupabase } = await import('@/lib/supabaseServer')
+    const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
     
     const { data: queueStats, error } = await supabase
       .from('cache_invalidation_queue')
@@ -169,8 +169,8 @@ async function checkCache() {
 
 async function checkSearch() {
   try {
-    const { getServerSupabase } = await import('@/lib/supabaseClient')
-    const supabase = getServerSupabase()
+    const { getServerSupabase } = await import('@/lib/supabaseServer')
+    const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
     
     // Test basic search functionality
     const startTime = Date.now()
@@ -224,8 +224,8 @@ async function checkSearch() {
 
 async function checkAuth() {
   try {
-    const { getServerSupabase } = await import('@/lib/supabaseClient')
-    const supabase = getServerSupabase()
+    const { getServerSupabase } = await import('@/lib/supabaseServer')
+    const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
     
     // Check auth service availability
     const startTime = Date.now()

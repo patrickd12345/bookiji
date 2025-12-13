@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { getServerSupabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseServer'
 import { z } from 'zod'
 
 const schema = z.object({ action: z.enum(['approve', 'reject']), reviewerId: z.string().uuid().optional(), notes: z.string().optional() })
 
 export async function POST(req: Request) {
-  const supabase = getServerSupabase()
+  const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
   const urlParts = new URL(req.url).pathname.split('/')
   const id = urlParts[urlParts.length - 2] // path ends with /[id]/update/route
 

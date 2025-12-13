@@ -4,10 +4,7 @@ import { withSLOProbe } from '@/middleware/sloProbe'
 import { featureFlags } from '@/config/featureFlags'
 import { createHash } from 'crypto'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
 interface QuoteRequest {
   service_type: string

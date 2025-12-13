@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSupabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseServer'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -11,7 +11,7 @@ const schema = z.object({
 })
 
 export async function POST(req: NextRequest) {
-  const supabase = getServerSupabase()
+  const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 
   try {
     const body = await req.json()

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { limitRequest } from '@/middleware/requestLimiter'
 
 // Use server Supabase client
-import { getServerSupabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseServer'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 function createSupabaseClient(): SupabaseClient {

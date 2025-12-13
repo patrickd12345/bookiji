@@ -1,4 +1,4 @@
-import { getServerSupabase } from '@/lib/supabaseClient';
+import { getServerSupabase } from '@/lib/supabaseServer';
 
 const getSupabaseClient = () => getServerSupabase()
 

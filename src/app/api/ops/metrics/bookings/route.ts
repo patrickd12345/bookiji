@@ -7,10 +7,7 @@ import {
 } from '../../_simcity/ops-from-simcity'
 import { MetricsAI, BookingMetrics } from '@/lib/metrics/metricsAI'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
 /**
  * GET /ops/metrics/bookings

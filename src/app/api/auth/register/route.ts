@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { limitRequest } from '@/middleware/requestLimiter'
-import { getServerSupabase } from '@/lib/supabaseClient'
+import { getServerSupabase } from '@/lib/supabaseServer'
 
-const supabase = getServerSupabase()
+const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 import { referralService } from '@/lib/referrals'
 
 export async function POST(request: Request) {

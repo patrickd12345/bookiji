@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers'
-import { getServerSupabase } from './supabaseClient'
+import { getServerSupabase } from './supabaseServer'
 
 const createSupabaseClient = () => getServerSupabase()
 import { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
