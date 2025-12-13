@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { getOpsMode } from '../../_config'
-import {
-  fetchSimcitySnapshot,
-  simcityToBookingMetrics
-} from '../../_simcity/ops-from-simcity'
 import { MetricsAI, BookingMetrics } from '@/lib/metrics/metricsAI'
 
 const supabase = createClient(
@@ -19,21 +14,6 @@ const supabase = createClient(
  * MetricsAI analyzes trends and detects anomalies
  */
 export async function GET(request: NextRequest) {
-  if (getOpsMode() === 'simcity') {
-    try {
-      const { metrics } = await fetchSimcitySnapshot(request.nextUrl.origin)
-      return NextResponse.json(simcityToBookingMetrics(metrics))
-    } catch (error) {
-      return NextResponse.json(
-        {
-          error: 'Failed to load SimCity booking metrics',
-          message: error instanceof Error ? error.message : 'Unknown error'
-        },
-        { status: 503 }
-      )
-    }
-  }
-
   try {
     const { searchParams } = new URL(request.url)
     const timeRange = searchParams.get('timeRange') || '1h'

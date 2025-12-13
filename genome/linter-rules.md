@@ -27,7 +27,7 @@ This document describes how the Genome linter interprets the master specificatio
 - Linter behavior: service folders must exist (errors). Smoke test scripts must exist; missing scripts are warnings because they may be intentionally offline.
 
 ### SimCity
-- Expected data: `domains.simcity.scenarios.folder` and `chaosProfile`, plus `traffic.samples` and `traffic.loadPatterns` directories.
+- Expected data: `domains.simcity.files` and optional `cockpitRoutes` entries pointing at the SimCity daemon and cockpit routes.
 - Linter behavior: scenario folder and chaos profile must exist (errors). Traffic sample and load pattern folders must exist; missing directories are warnings so teams can backfill gradually.
 
 ### Help Center

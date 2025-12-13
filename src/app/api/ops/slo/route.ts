@@ -1,26 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOpsMode } from '../_config'
-import {
-  fetchSimcitySnapshot,
-  simcityToSLOs
-} from '../_simcity/ops-from-simcity'
-
 export async function GET(request: NextRequest) {
-  if (getOpsMode() === 'simcity') {
-    try {
-      const { metrics, violations } = await fetchSimcitySnapshot(request.nextUrl.origin)
-      return NextResponse.json(simcityToSLOs(metrics, violations))
-    } catch (error) {
-      return NextResponse.json(
-        {
-          error: 'Failed to load SimCity SLOs',
-          message: error instanceof Error ? error.message : 'Unknown error'
-        },
-        { status: 503 }
-      )
-    }
-  }
-
   const OPS_API_BASE =
     process.env.OPS_API_BASE ||
     process.env.NEXT_PUBLIC_OPS_BASE ||

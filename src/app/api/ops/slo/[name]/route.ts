@@ -1,39 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOpsMode } from '../../_config'
-import {
-  fetchSimcitySnapshot,
-  simcityToSLOs
-} from '../../_simcity/ops-from-simcity'
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<Record<string, string>> }
 ) {
   const { name } = await context.params
-  if (getOpsMode() === 'simcity') {
-    try {
-      const { metrics, violations } = await fetchSimcitySnapshot(request.nextUrl.origin)
-      const sloName = decodeURIComponent(name)
-      const slo = simcityToSLOs(metrics, violations).find(
-        (s) => s.name.toLowerCase() === sloName.toLowerCase()
-      )
-
-      if (!slo) {
-        return NextResponse.json({ error: 'SLO not found' }, { status: 404 })
-      }
-
-      return NextResponse.json(slo)
-    } catch (error) {
-      return NextResponse.json(
-        {
-          error: 'Failed to load SimCity SLO',
-          message: error instanceof Error ? error.message : 'Unknown error'
-        },
-        { status: 503 }
-      )
-    }
-  }
-
   const OPS_API_BASE =
     process.env.OPS_API_BASE ||
     process.env.NEXT_PUBLIC_OPS_BASE ||

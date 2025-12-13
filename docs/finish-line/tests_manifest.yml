@@ -7,30 +7,9 @@ seeds:
     use_stripe_test_mode: true
     currency: CAD
 simulator:
-  module: simcity
-  entrypoint: scripts/simcity/run.py
-  scenarios:
-  - id: SLOW_CONFIRM
-    desc: Provider responds in >8s
-    latency_ms: 9000
-    timeout_ms: 8000
-    expected: auto_cancel_refund
-  - id: TIMEOUT
-    desc: Provider never responds
-    latency_ms: 60000
-    timeout_ms: 8000
-    expected: auto_cancel_refund
-  - id: FLAKY_WEBHOOK
-    desc: Stripe webhook redelivered 3x
-    redeliveries: 3
-    expected: idempotent_no_double_charge
-  - id: GATEWAY_502
-    desc: "Payment gateway transient 502 \u2192 retry backoff"
-    retries:
-    - 1
-    - 2
-    - 4
-    expected: eventual_success_once
+  module: synthetic-traffic
+  entrypoint: simcity-daemon
+  notes: Synthetic traffic daemon runs continuously; no scripted scenarios.
 scenarios:
 - id: E2E_HAPPY
   name: Happy path booking
@@ -53,26 +32,6 @@ scenarios:
   asserts:
   - refund_processed
   - audit_full
-- id: E2E_ROLLBACK_TIMEOUT
-  name: Provider timeout rollback
-  uses_simulator: TIMEOUT
-  asserts:
-  - refund_processed
-  - rollback_cmd_effective
-  - audit_full
-- id: E2E_SLOW_CONFIRM_AUTOCANCEL
-  name: "Slow provider \u2192 auto-cancel"
-  uses_simulator: SLOW_CONFIRM
-  asserts:
-  - auto_cancel_after_t
-  - refund_processed
-  - audit_full
-- id: E2E_WEBHOOK_REDELIVERY
-  name: Webhook redelivery idempotency
-  uses_simulator: FLAKY_WEBHOOK
-  asserts:
-  - idempotent_no_double_charge
-  - single_receipt
 - id: E2E_PRIVACY_EXPORT_DELETE
   name: PII export and delete
   steps:

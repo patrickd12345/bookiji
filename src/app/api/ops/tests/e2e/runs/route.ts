@@ -1,29 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOpsMode } from '../../../_config'
-import { fetchSimcitySnapshot } from '../../../_simcity/ops-from-simcity'
-
 export async function GET(request: NextRequest) {
-  if (getOpsMode() === 'simcity') {
-    try {
-      const { runInfo, violations } = await fetchSimcitySnapshot(request.nextUrl.origin)
-      const hasHigh = violations.some((v) => v.severity === 'critical' || v.severity === 'high')
-      return NextResponse.json([
-        {
-          id: runInfo?.runId ?? 'simcity-e2e',
-          status: hasHigh ? 'failed' : 'passed'
-        }
-      ])
-    } catch (error) {
-      return NextResponse.json(
-        {
-          error: 'Failed to load SimCity E2E runs',
-          message: error instanceof Error ? error.message : 'Unknown error'
-        },
-        { status: 503 }
-      )
-    }
-  }
-
   // Resolve base URL: prefer env vars, fall back to request origin for local dev
   const OPS_API_BASE =
     process.env.OPS_API_BASE ||

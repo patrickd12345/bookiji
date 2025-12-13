@@ -51,14 +51,9 @@ export interface OpsDiagnosticsSpec {
   smokeTests?: string[];
 }
 
-export interface ScenarioSpec {
-  folder: string;
-  chaosProfile?: string;
-}
-
-export interface TrafficSpec {
-  samples?: string;
-  loadPatterns?: string;
+export interface SimCitySpec {
+  files?: string[];
+  cockpitRoutes?: string[];
 }
 
 export interface KnowledgeBaseSpec {
@@ -100,10 +95,7 @@ export interface GenomeDomains {
     services?: ServiceSpec[];
     diagnostics?: OpsDiagnosticsSpec;
   };
-  simcity: {
-    scenarios?: ScenarioSpec;
-    traffic?: TrafficSpec;
-  };
+  simcity: SimCitySpec;
   helpCenter: {
     knowledgeBase?: KnowledgeBaseSpec;
     userGuides?: { folder?: string };
@@ -231,8 +223,8 @@ export function loadGenome(genomePath = path.join(process.cwd(), "genome", "mast
         diagnostics: (domains.opsai && (domains.opsai as any).diagnostics) as OpsDiagnosticsSpec | undefined,
       },
       simcity: {
-        scenarios: (domains.simcity && (domains.simcity as any).scenarios) as ScenarioSpec | undefined,
-        traffic: (domains.simcity && (domains.simcity as any).traffic) as TrafficSpec | undefined,
+        files: coerceArray<string>((domains.simcity as any)?.files),
+        cockpitRoutes: coerceArray<string>((domains.simcity as any)?.cockpitRoutes),
       },
       helpCenter: {
         knowledgeBase: (domains.helpCenter && (domains.helpCenter as any).knowledgeBase) as KnowledgeBaseSpec | undefined,

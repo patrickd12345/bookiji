@@ -55,13 +55,12 @@
       },
       "simCity": {
         "roles": [
-          "Synthetic bookings",
-          "Chaos testing",
-          "Time-machine",
-          "Scenario playback",
-          "Regression harness"
+          "Synthetic traffic",
+          "Boring continuous load",
+          "Probabilistic chaos",
+          "Ops readiness through lived traffic"
         ],
-        "mustReceiveEvents": true
+        "mustReceiveEvents": false
       },
       "supportingSystems": {
         "helpCenter": {
@@ -236,4 +235,3 @@
       "text": "Load the Bookiji Continuity Kernel from docs/BOOKIJI_CONTINUITY_KERNEL.md and Canvas. Resume where we left off. We are currently at Phase __. Maintain all rules and boundaries. Continue."
     }
   }
-

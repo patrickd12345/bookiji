@@ -28,7 +28,7 @@
 - Export includes all user-related records across schemas; delete uses soft-delete with tombstone + background shredder.
 
 ## Simulator (“SimCity”) Integration
-- Entry: `scripts/simcity/run.py` with scenario id and parameters.
+- Entry: SimCity synthetic traffic daemon (power toggled via /api/simcity/power/on|off).
 - All failure-mode E2Es in `tests_manifest.yml` must use the simulator to generate timings and races.
 - Simulator reuses the same domain services used by production to avoid drift.
 

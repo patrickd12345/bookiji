@@ -1,30 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOpsMode } from '../_config'
-import {
-  fetchSimcitySnapshot,
-  simcityToHealth
-} from '../_simcity/ops-from-simcity'
 
 /**
  * Main health endpoint - aggregates all subsystem health checks
  * HealthAI monitors this endpoint to get overall system status
  */
 export async function GET(request: NextRequest) {
-  if (getOpsMode() === 'simcity') {
-    try {
-      const { metrics, violations } = await fetchSimcitySnapshot(request.nextUrl.origin)
-      return NextResponse.json(simcityToHealth(metrics, violations))
-    } catch (error) {
-      return NextResponse.json(
-        {
-          error: 'Failed to load SimCity health',
-          message: error instanceof Error ? error.message : 'Unknown error'
-        },
-        { status: 503 }
-      )
-    }
-  }
-
   const timestamp = new Date().toISOString()
   
   try {

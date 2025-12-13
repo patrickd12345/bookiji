@@ -84,12 +84,18 @@ domains:
         - "scripts/ops-smoke-test.ts"
         - "scripts/deployai-monitor.ts"
   simcity:
-    scenarios:
-      folder: "ops/drills"
-      chaosProfile: "chaos/config.json"
-    traffic:
-      samples: "traffic-samples"
-      loadPatterns: "loadtests"
+    files:
+      - "src/simcity/daemon.ts"
+      - "src/simcity/cityLoop.ts"
+      - "src/simcity/clock.ts"
+      - "src/simcity/population.ts"
+      - "src/simcity/rates.ts"
+      - "src/simcity/traffic.ts"
+    cockpitRoutes:
+      - "src/app/api/simcity/power/on/route.ts"
+      - "src/app/api/simcity/power/off/route.ts"
+      - "src/app/api/simcity/status/route.ts"
+      - "src/app/api/simcity/config/route.ts"
   helpCenter:
     knowledgeBase:
       root: "docs/bookiji-kb"

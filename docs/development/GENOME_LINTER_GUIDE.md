@@ -44,7 +44,7 @@ Errors:
 - [core] Required module "opsai-l7" missing package.json at packages/opsai-l7/package.json
 
 Warnings:
-- [simcity] Optional chaos profile missing at chaos/config.json
+- [simcity] Optional cockpit routes missing (still runs headless)
 
 CI status: FAILED (errors present)
 ```

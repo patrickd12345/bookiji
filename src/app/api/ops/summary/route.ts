@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOpsMode } from '../_config'
-import { fetchSimcitySnapshot, simcityToOpsSummary } from '../_simcity/ops-from-simcity'
 
 function emptyDeploymentsSummary() {
   const timestamp = new Date().toISOString()
@@ -26,38 +24,6 @@ export async function GET(request: NextRequest) {
   // schema-valid summary with an empty deployments array.
   if (forceEmptyDeployments) {
     return NextResponse.json(emptyDeploymentsSummary())
-  }
-
-  if (getOpsMode() === 'simcity') {
-    try {
-      const { state, runInfo, violations } = await fetchSimcitySnapshot(
-        request.nextUrl.origin
-      )
-      return NextResponse.json(simcityToOpsSummary(state, runInfo, violations))
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      // If SimCity is not running or deployment not found, return a graceful fallback
-      if (errorMessage.includes('not found') || errorMessage.includes('not running')) {
-        return NextResponse.json({
-          timestamp: new Date().toISOString(),
-          health: {
-            overall: 'unknown',
-            services: []
-          },
-          sloSummary: [],
-          incidents: [],
-          pendingActions: [],
-          message: 'SimCity is not running. Start a simulation to view ops summary.'
-        })
-      }
-      return NextResponse.json(
-        {
-          error: 'Failed to load SimCity summary',
-          message: errorMessage
-        },
-        { status: 503 }
-      )
-    }
   }
 
   // Resolve base URL: prefer env vars, fall back to request origin for local dev
