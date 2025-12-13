@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { buildCSPHeader } from '@/lib/security/csp'
 import { adminGuard } from '@/middleware/adminGuard'
+import { SYNTHETIC_HEADER, SYNTHETIC_TRACE_HEADER } from '@/lib/simcity/syntheticContext'
 
 // In-memory rate limiter storage
 const rateLimitMap = new Map<string, number[]>()
@@ -62,6 +63,21 @@ function getClientIP(request: NextRequest): string {
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
+
+  if (request.headers.get(SYNTHETIC_HEADER) === 'simcity') {
+    const syntheticTrace = request.headers.get(SYNTHETIC_TRACE_HEADER)
+    console.log(
+      JSON.stringify({
+        event: 'synthetic_request',
+        synthetic: true,
+        synthetic_source: 'simcity',
+        synthetic_trace: syntheticTrace,
+        env: process.env.BOOKIJI_ENV || process.env.NODE_ENV,
+        method: request.method,
+        path: pathname,
+      }),
+    )
+  }
   
   // Block non-prod-only routes in production
   if (isProd) {

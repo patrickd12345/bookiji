@@ -90,8 +90,14 @@ function regenerateDeploymentFingerprint() {
   console.log(`[epistemic] deployment fingerprint regenerated at ${outputPath}`);
 }
 
+function runDocIntegrityGate() {
+  run("pnpm", ["docs:integrity", "--", "--output", "docs/integrity-report.json"], "Documentation integrity gate");
+  console.log("[epistemic] documentation integrity gate passed");
+}
+
 function main() {
   genomeGate();
+  runDocIntegrityGate();
   runDeterminismTests();
   regenerateDeploymentFingerprint();
   console.log("[epistemic] all gates passed");
