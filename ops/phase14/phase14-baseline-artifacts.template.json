@@ -1,0 +1,43 @@
+{
+  "label": "Phase 14 Baseline",
+  "run_id": "phase14-baseline-<timestamp>",
+  "environment_fingerprint": "ops/phase14/fingerprints/<timestamp>-fingerprint.json",
+  "timestamps": {
+    "started_at": "<iso8601>",
+    "ended_at": "<iso8601>",
+    "purge_completed_at": "<iso8601>"
+  },
+  "traffic": {
+    "request_volume_distribution": [],
+    "endpoint_hit_frequency": []
+  },
+  "latency": {
+    "p50_ms": null,
+    "p95_ms": null,
+    "p99_ms": null,
+    "histogram": []
+  },
+  "errors": {
+    "background_error_rate": null,
+    "classes": [],
+    "retry_occurrences": []
+  },
+  "database": {
+    "read_write_ratio": null,
+    "write_intensity_notes": "",
+    "read_intensity_notes": ""
+  },
+  "payments": {
+    "intent_creation_patterns": [],
+    "notable_sequences": []
+  },
+  "endpoint_heat_map": [],
+  "noise_characterization": {
+    "benign_transients": [],
+    "rare_valid_sequences": [],
+    "timing_jitter_notes": "",
+    "load_variance_notes": ""
+  },
+  "notes": "",
+  "immutability": "Mark this file read-only after population."
+}
