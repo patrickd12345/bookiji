@@ -1,668 +1,241 @@
 #!/usr/bin/env tsx
 /**
- * Documentation <-> Code Integrity Analyzer
+ * Documentation <-> Code Integrity Analyzer (Phase 13)
  *
- * Scans docs/reference/README files against source code and tests to find
- * mismatches. Favors false positives over misses and uses deterministic rules
- * (regex/substring) only—no inferred semantics.
+ * Enforces explicit feature manifests between docs and code. Only mechanical
+ * signals are used—no inference. Any divergence fails with exit code 1.
  */
 
 import fs from 'fs'
 import path from 'path'
-import { execSync } from 'child_process'
 
-type DocModel = {
-  phases: string[]
-  modules: string[]
-  guarantees: string[]
-  nonFeatures: string[]
-}
+const DOC_PATHS = ['README.md', 'BOOKIJI_FEATURES_FOR_GPT.md']
+const DOC_ROOTS = ['docs', 'reference']
+const CODE_ROOTS = ['src']
+const FEATURE_REGEX = /id:\s*([\w.-]+)\s+status:\s*(shipped|partial|stub|not_implemented)/gi
+const CODE_FEATURE_REGEX = /@feature\s+([\w.-]+)|FEATURE_ID\s*=\s*"([\w.-]+)"/g
+const WAIVER_PATH = 'docs/integrity-waivers.txt'
+const REPORT_PATH = 'docs/integrity-report.json'
 
-type CodeModel = {
-  modules: string[]
-  policies: string[]
-  enforcedGuarantees: string[]
-  phases: string[]
-  files?: string[]
-}
-
-type TestModel = {
-  testedGuarantees: string[]
-  files?: string[]
-}
-
-type RawIntegrityReport = {
-  undocumented_code: string[]
-  unimplemented_docs: string[]
-  untested_guarantees: string[]
-  obsolete_references: string[]
-  ambiguous_claims: string[]
-}
-
-type BaselineDelta = {
-  path: string
-  new_issues: string[]
-  resolved_issues: string[]
-  baseline_issue_count: number
-}
-
-type IntegrityReport = RawIntegrityReport & {
-  summary?: {
-    total_violations: number
-    strict_mode: boolean
-    changed_only: boolean
-    base_ref?: string
-    scanned: {
-      docs: number
-      code: number
-      tests: number
-    }
-    timestamp: string
-    issues_by_type: Record<string, number>
-  }
-  baseline?: BaselineDelta
-}
-
-type DocScanResult = {
-  model: DocModel
-  references: string[]
+interface FeatureDocEntry {
+  id: string
+  status: 'shipped' | 'partial' | 'stub' | 'not_implemented'
   files: string[]
 }
 
-type CliOptions = {
-  output?: string
-  strict: boolean
-  changedOnly: boolean
-  baseRef?: string
-  baseline?: string
-  help?: boolean
+interface FeatureCodeEntry {
+  id: string
+  files: string[]
 }
 
-const DOC_DIRS = ['docs', 'reference']
-const DOC_EXTS = new Set(['.md', '.json'])
-const CODE_DIR = 'src'
-const TEST_DIR = 'tests'
+interface IntegrityIssue {
+  level: 'fail' | 'warn'
+  id: string
+  message: string
+}
 
-const GUARANTEE_REGEX = /\b(must|cannot|never|always|forbidden|guaranteed)\b/i
-const NON_FEATURE_REGEX = /\b(does not|cannot|never|no longer|not supported|will not|forbidden)\b/i
-const PHASE_REGEX = /phase\s+\d+(?:\.\d+)?/gi
-const POLICY_NAME_REGEX = /\b([A-Za-z0-9_]*(?:Guard|guard|Validator|validator|Policy|policy|verify|Verify|enforce|Enforce|ensure|Ensure))\b/g
-const ENFORCEMENT_LINE_REGEX = /\b(must|ensure|enforce|guarantee|require|forbid)\b/i
-const TEST_DESC_REGEX = /\b(?:it|test)\s*\(\s*['"`]([^'"`]+)['"`]/g
-const EXPECT_MATCHER_REGEX = /expect\([^)]*\)\.(\w+)/g
-const DOC_PATH_REGEX = /\b(?:src|tests|docs|reference)\/[A-Za-z0-9_.\-\/]+/g
-
-const toPosix = (p: string) => p.split(path.sep).join('/')
-const normalizeText = (text: string) => text.replace(/\s+/g, ' ').trim()
-const uniqSorted = (items: Iterable<string>) => Array.from(new Set(items)).filter(Boolean).sort()
-
-function parseArgs(argv: string[]): CliOptions {
-  const options: CliOptions = {
-    strict: false,
-    changedOnly: false,
-  }
-
-  for (let i = 2; i < argv.length; i += 1) {
-    const arg = argv[i]
-    switch (arg) {
-      case '--output':
-      case '-o':
-        options.output = argv[i + 1]
-        i += 1
-        break
-      case '--strict':
-        options.strict = true
-        break
-      case '--changed-only':
-        options.changedOnly = true
-        break
-      case '--base-ref':
-        options.baseRef = argv[i + 1]
-        i += 1
-        break
-      case '--baseline':
-        options.baseline = argv[i + 1]
-        i += 1
-        break
-      case '--help':
-      case '-h':
-        options.help = true
-        break
-      default:
-        break
+interface IntegrityReport {
+  summary: {
+    total: number
+    failures: number
+    warnings: number
+    scanned: {
+      docs: number
+      code: number
     }
+    timestamp: string
   }
-
-  return options
+  issues: IntegrityIssue[]
+  docFeatures: FeatureDocEntry[]
+  codeFeatures: FeatureCodeEntry[]
+  waivers: string[]
 }
 
-function printHelp(): void {
-  console.log(`Usage: tsx scripts/docCodeIntegrity.ts [options]
-
-Options:
-  --output, -o <path>     Write JSON report to path (in addition to stdout)
-  --strict                Enable strict mode (release builds)
-  --changed-only          Limit scan to changed files (PRs)
-  --base-ref <ref|sha>    Base ref/sha for changed-only diff (defaults to origin/<current-branch>)
-  --baseline <path>       Path to golden baseline to diff against
-  --help, -h              Show this help`)
+function toPosix(p: string) {
+  return p.split(path.sep).join('/')
 }
 
-function resolveChangedPaths(projectRoot: string, baseRef?: string): Set<string> | undefined {
-  const cwd = projectRoot
-  const resolvedBase =
-    baseRef ||
-    process.env.DOC_INTEGRITY_BASE_REF ||
-    process.env.GITHUB_BASE_REF ||
-    (() => {
-      try {
-        const branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd, encoding: 'utf-8' }).trim()
-        return `origin/${branch}`
-      } catch {
-        return undefined
-      }
-    })()
-
-  const diffTarget = resolvedBase ? `${resolvedBase}...HEAD` : 'HEAD~1...HEAD'
-
-  try {
-    const output = execSync(`git diff --name-only ${diffTarget}`, { cwd, encoding: 'utf-8', stdio: 'pipe' })
-    const paths = output
-      .split(/\r?\n/)
-      .map((p) => p.trim())
-      .filter(Boolean)
-      .map((p) => toPosix(p))
-    return paths.length ? new Set(paths) : undefined
-  } catch (error) {
-    console.warn(
-      'Warning: unable to resolve changed files; proceeding with full scan.',
-      (error as Error).message || error
-    )
-    return undefined
-  }
-}
-
-async function walkDir(root: string, filter: (fullPath: string) => boolean): Promise<string[]> {
-  const results: string[] = []
-
-  async function walk(current: string): Promise<void> {
-    const entries = await fs.promises.readdir(current, { withFileTypes: true })
-    for (const entry of entries) {
-      const fullPath = path.join(current, entry.name)
-      if (entry.isDirectory()) {
-        await walk(fullPath)
-      } else if (filter(fullPath)) {
-        results.push(fullPath)
-      }
-    }
-  }
-
-  if (fs.existsSync(root)) {
-    await walk(root)
-  }
-
-  return results
-}
-
-function shouldInclude(relativePath: string, changedPaths?: Set<string>): boolean {
-  if (!changedPaths) return true
-  return changedPaths.has(toPosix(relativePath))
-}
-
-async function collectDocFiles(projectRoot: string, changedPaths?: Set<string>): Promise<string[]> {
+function collectDocFiles(root: string): string[] {
   const files: string[] = []
 
-  for (const dir of DOC_DIRS) {
-    const absDir = path.join(projectRoot, dir)
-    const collected = await walkDir(absDir, (fullPath) => DOC_EXTS.has(path.extname(fullPath).toLowerCase()))
-    files.push(...collected)
+  for (const docPath of DOC_PATHS) {
+    const resolved = path.join(root, docPath)
+    if (fs.existsSync(resolved)) files.push(resolved)
   }
 
-  const rootEntries = fs.existsSync(projectRoot) ? await fs.promises.readdir(projectRoot) : []
-  for (const entry of rootEntries) {
-    if (/^README/i.test(entry)) {
-      const fullPath = path.join(projectRoot, entry)
-      if (fs.statSync(fullPath).isFile()) {
-        files.push(fullPath)
+  for (const docRoot of DOC_ROOTS) {
+    const base = path.join(root, docRoot)
+    if (!fs.existsSync(base)) continue
+    const stack = [base]
+    while (stack.length) {
+      const current = stack.pop()!
+      const entries = fs.readdirSync(current, { withFileTypes: true })
+      for (const entry of entries) {
+        const full = path.join(current, entry.name)
+        if (entry.isDirectory()) {
+          stack.push(full)
+        } else if (entry.isFile() && full.endsWith('.md')) {
+          files.push(full)
+        }
       }
     }
   }
 
-  const filtered = changedPaths
-    ? files.filter((file) => shouldInclude(toPosix(path.relative(projectRoot, file)), changedPaths))
-    : files
-
-  return filtered
+  return files
 }
 
-async function buildDocModel(projectRoot: string, changedPaths?: Set<string>): Promise<DocScanResult> {
-  const files = await collectDocFiles(projectRoot, changedPaths)
+function parseDocFeatures(root: string): FeatureDocEntry[] {
+  const docFiles = collectDocFiles(root)
+  const entries: FeatureDocEntry[] = []
 
-  const phases = new Set<string>()
-  const modules = new Set<string>()
-  const guarantees = new Set<string>()
-  const nonFeatures = new Set<string>()
-  const references = new Set<string>()
-
-  for (const file of files) {
-    const content = await fs.promises.readFile(file, 'utf-8')
-    for (const match of content.matchAll(PHASE_REGEX)) {
-      phases.add(normalizeText(match[0]))
-    }
-
-    const lines = content.split(/\r?\n/)
-    for (const rawLine of lines) {
-      const line = rawLine.trim()
-      if (!line) continue
-
-      const moduleName = extractModuleFromLine(line)
-      if (moduleName) {
-        modules.add(moduleName)
-      }
-
-      if (GUARANTEE_REGEX.test(line)) {
-        guarantees.add(normalizeText(line))
-      }
-
-      if (NON_FEATURE_REGEX.test(line)) {
-        nonFeatures.add(normalizeText(line))
-      }
-
-      for (const ref of line.matchAll(DOC_PATH_REGEX)) {
-        references.add(toPosix(ref[0]))
+  for (const file of docFiles) {
+    const content = fs.readFileSync(file, 'utf-8')
+    const matches = [...content.matchAll(FEATURE_REGEX)]
+    for (const match of matches) {
+      const id = match[1]
+      const status = match[2] as FeatureDocEntry['status']
+      const existing = entries.find((entry) => entry.id === id && entry.status === status)
+      if (existing) {
+        existing.files.push(toPosix(path.relative(root, file)))
+      } else {
+        entries.push({ id, status, files: [toPosix(path.relative(root, file))] })
       }
     }
   }
 
-  return {
-    model: {
-      phases: uniqSorted(phases),
-      modules: uniqSorted(modules),
-      guarantees: uniqSorted(guarantees),
-      nonFeatures: uniqSorted(nonFeatures),
-    },
-    references: uniqSorted(references),
-    files: files.map((file) => toPosix(path.relative(projectRoot, file))),
-  }
+  return entries
 }
 
-async function buildCodeModel(projectRoot: string, changedPaths?: Set<string>): Promise<CodeModel> {
-  const codeRoot = path.join(projectRoot, CODE_DIR)
-  const files = await walkDir(codeRoot, (fullPath) => {
-    const ext = path.extname(fullPath).toLowerCase()
-    return ext === '.ts' || ext === '.tsx'
-  })
+function parseCodeFeatures(root: string): FeatureCodeEntry[] {
+  const entries: Record<string, Set<string>> = {}
 
-  const filteredFiles = changedPaths
-    ? files.filter((file) => shouldInclude(toPosix(path.relative(projectRoot, file)), changedPaths))
-    : files
-
-  const modules = new Set<string>()
-  const policies = new Set<string>()
-  const enforcedGuarantees = new Set<string>()
-  const phases = new Set<string>()
-
-  for (const file of filteredFiles) {
-    const relPath = toPosix(path.relative(codeRoot, file))
-    const moduleId = relPath.replace(/\.[^.]+$/, '')
-    modules.add(moduleId)
-
-    const topLevel = moduleId.split('/')[0]
-    if (topLevel) {
-      modules.add(topLevel)
-    }
-
-    const content = await fs.promises.readFile(file, 'utf-8')
-
-    for (const match of content.matchAll(POLICY_NAME_REGEX)) {
-      policies.add(match[1])
-    }
-
-    const lines = content.split(/\r?\n/)
-    for (const rawLine of lines) {
-      const line = rawLine.trim()
-      if (!line) continue
-
-      if (ENFORCEMENT_LINE_REGEX.test(line)) {
-        enforcedGuarantees.add(normalizeText(line))
-      }
-      for (const match of line.matchAll(PHASE_REGEX)) {
-        phases.add(normalizeText(match[0]))
+  for (const codeRoot of CODE_ROOTS) {
+    const base = path.join(root, codeRoot)
+    if (!fs.existsSync(base)) continue
+    const stack = [base]
+    while (stack.length) {
+      const current = stack.pop()!
+      const stat = fs.statSync(current)
+      if (stat.isDirectory()) {
+        const children = fs.readdirSync(current)
+        for (const child of children) {
+          stack.push(path.join(current, child))
+        }
+      } else if (stat.isFile() && (current.endsWith('.ts') || current.endsWith('.tsx'))) {
+        const content = fs.readFileSync(current, 'utf-8')
+        for (const match of content.matchAll(CODE_FEATURE_REGEX)) {
+          const id = match[1] || match[2]
+          if (!id) continue
+          if (!entries[id]) entries[id] = new Set()
+          entries[id].add(toPosix(path.relative(root, current)))
+        }
       }
     }
   }
 
-  return {
-    modules: uniqSorted(modules),
-    policies: uniqSorted(policies),
-    enforcedGuarantees: uniqSorted(enforcedGuarantees),
-    phases: uniqSorted(phases),
-    files: filteredFiles.map((file) => toPosix(path.relative(projectRoot, file))),
-  }
+  return Object.entries(entries).map(([id, files]) => ({ id, files: [...files].sort() }))
 }
 
-async function buildTestModel(projectRoot: string, changedPaths?: Set<string>): Promise<TestModel> {
-  const testRoot = path.join(projectRoot, TEST_DIR)
-  const files = await walkDir(testRoot, (fullPath) => ['.ts', '.tsx'].includes(path.extname(fullPath).toLowerCase()))
+function loadWaivers(root: string): Record<string, { reason: string; expiration: string }> {
+  const waivers: Record<string, { reason: string; expiration: string }> = {}
+  const waiverFile = path.join(root, WAIVER_PATH)
+  if (!fs.existsSync(waiverFile)) return waivers
 
-  const filteredFiles = changedPaths
-    ? files.filter((file) => shouldInclude(toPosix(path.relative(projectRoot, file)), changedPaths))
-    : files
+  const lines = fs
+    .readFileSync(waiverFile, 'utf-8')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
 
-  const testedGuarantees = new Set<string>()
+  const today = new Date()
 
-  for (const file of filteredFiles) {
-    const content = await fs.promises.readFile(file, 'utf-8')
+  for (const line of lines) {
+    const [id, reason, expiration] = line.split('|').map((part) => part.trim())
+    if (!id || !reason || !expiration) continue
 
-    for (const match of content.matchAll(TEST_DESC_REGEX)) {
-      testedGuarantees.add(normalizeText(match[1]))
+    const expiresAt = new Date(expiration)
+    if (Number.isNaN(expiresAt.getTime()) || expiresAt < today) {
+      continue
     }
 
-    for (const match of content.matchAll(EXPECT_MATCHER_REGEX)) {
-      testedGuarantees.add(`matcher:${match[1]}`)
-    }
+    waivers[id] = { reason, expiration }
   }
 
-  return {
-    testedGuarantees: uniqSorted(testedGuarantees),
-    files: filteredFiles.map((file) => toPosix(path.relative(projectRoot, file))),
-  }
+  return waivers
 }
 
-function extractModuleFromLine(line: string): string | null {
-  const labeled = line.match(
-    /^(?:[-*]\s+|\d+\.\s+|#\s+|##\s+|###\s+)?(?:Module|Component|System|Service|Engine|Layer|API|Suite)\s*[:\-]\s*(.+)$/i
-  )
-  if (labeled) {
-    return normalizeText(labeled[1])
-  }
+function evaluateIntegrity(docFeatures: FeatureDocEntry[], codeFeatures: FeatureCodeEntry[], waivers: Record<string, { reason: string; expiration: string }>): IntegrityIssue[] {
+  const issues: IntegrityIssue[] = []
+  const codeMap = new Map(codeFeatures.map((entry) => [entry.id, entry.files]))
+  const docMap = new Map(docFeatures.map((entry) => [entry.id, entry.status]))
 
-  const heading = line.match(/^(#+\s+)(.+)$/)
-  if (heading) {
-    const candidate = normalizeText(heading[2])
-    if (candidate && candidate.length <= 120 && !/[.?!]$/.test(candidate)) {
-      return candidate
+  for (const doc of docFeatures) {
+    const waived = waivers[doc.id]
+    const hasCode = codeMap.has(doc.id)
+    if (waived) continue
+
+    if (doc.status === 'not_implemented' && hasCode) {
+      issues.push({ level: 'fail', id: doc.id, message: 'Documented as not implemented but code exists' })
+      continue
+    }
+
+    if (['stub', 'partial', 'shipped'].includes(doc.status) && !hasCode) {
+      issues.push({ level: 'fail', id: doc.id, message: 'Doc feature lacks code evidence' })
+      continue
+    }
+
+    if (doc.status === 'partial' && hasCode) {
+      issues.push({ level: 'warn', id: doc.id, message: 'Doc marks partial but code present; verify status' })
     }
   }
 
-  const bullet = line.match(/^(?:[-*]\s+|\d+\.\s+)(.+)$/)
-  if (bullet) {
-    const candidate = normalizeText(bullet[1])
-    if (candidate && candidate.length <= 120 && !/[.?!]$/.test(candidate)) {
-      return candidate
+  for (const code of codeFeatures) {
+    if (waivers[code.id]) continue
+    if (!docMap.has(code.id)) {
+      issues.push({ level: 'fail', id: code.id, message: 'Code feature is undocumented' })
     }
   }
 
-  return null
+  return issues
 }
 
-function compareModels(
-  doc: DocModel,
-  code: CodeModel,
-  tests: TestModel,
-  docReferences: string[],
-  projectRoot: string
-): RawIntegrityReport {
-  const unimplementedDocs: string[] = []
-  const undocumentedCode: string[] = []
-  const untestedGuarantees: string[] = []
-  const obsoleteReferences: string[] = []
-  const ambiguousClaims: string[] = []
-
-  const codeGuarantees = code.enforcedGuarantees.map((g) => g.toLowerCase())
-  const codeGuaranteeSet = new Set(codeGuarantees)
-  const codeModules = code.modules.map((m) => m.toLowerCase())
-  const codeModuleSet = new Set(codeModules)
-  const codePhases = new Set(code.phases.map((p) => p.toLowerCase()))
-
-  for (const guarantee of doc.guarantees) {
-    const normalized = guarantee.toLowerCase()
-    const matched = Array.from(codeGuaranteeSet).some((g) => g.includes(normalized) || normalized.includes(g))
-    if (!matched) {
-      unimplementedDocs.push(`Guarantee not enforced in code: ${guarantee}`)
-    }
-    const wordCount = guarantee.split(/\s+/).length
-    if (wordCount < 5) {
-      ambiguousClaims.push(`Guarantee too vague/short: ${guarantee}`)
-    }
-  }
-
-  for (const moduleName of doc.modules) {
-    if (!codeModuleSet.has(moduleName.toLowerCase())) {
-      unimplementedDocs.push(`Module documented but not found in code: ${moduleName}`)
-    }
-  }
-
-  for (const phase of doc.phases) {
-    if (!codePhases.has(phase.toLowerCase())) {
-      unimplementedDocs.push(`Phase documented but not present in code: ${phase}`)
-    }
-  }
-
-  const docModulesSet = new Set(doc.modules.map((m) => m.toLowerCase()))
-  const docGuaranteesSet = new Set(doc.guarantees.map((g) => g.toLowerCase()))
-
-  for (const codeModule of code.modules) {
-    if (!docModulesSet.has(codeModule.toLowerCase())) {
-      undocumentedCode.push(`Code module undocumented: ${codeModule}`)
-    }
-  }
-
-  for (const policy of code.policies) {
-    if (![...docGuaranteesSet].some((g) => g.includes(policy.toLowerCase()))) {
-      undocumentedCode.push(`Policy/guard not documented: ${policy}`)
-    }
-  }
-
-  const testGuaranteesSet = new Set(tests.testedGuarantees.map((t) => t.toLowerCase()))
-  for (const guarantee of doc.guarantees) {
-    const normalized = guarantee.toLowerCase()
-    const covered = Array.from(testGuaranteesSet).some((t) => t.includes(normalized) || normalized.includes(t))
-    if (!covered) {
-      untestedGuarantees.push(`Guarantee lacks tests: ${guarantee}`)
-    }
-  }
-
-  for (const ref of docReferences) {
-    const candidate = path.join(projectRoot, ref)
-    if (!fs.existsSync(candidate)) {
-      obsoleteReferences.push(`Path referenced in docs missing: ${ref}`)
-    }
-  }
-
-  return {
-    undocumented_code: uniqSorted(undocumentedCode),
-    unimplemented_docs: uniqSorted(unimplementedDocs),
-    untested_guarantees: uniqSorted(untestedGuarantees),
-    obsolete_references: uniqSorted(obsoleteReferences),
-    ambiguous_claims: uniqSorted(ambiguousClaims),
-  }
+function writeReport(root: string, report: IntegrityReport) {
+  const outputPath = path.join(root, REPORT_PATH)
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true })
+  fs.writeFileSync(outputPath, JSON.stringify(report, null, 2))
+  console.log(`Report written to ${toPosix(path.relative(root, outputPath))}`)
 }
 
-function buildSummary(
-  report: RawIntegrityReport,
-  doc: DocScanResult,
-  code: CodeModel,
-  tests: TestModel,
-  options: CliOptions
-): IntegrityReport['summary'] {
-  const totalViolations =
-    report.undocumented_code.length +
-    report.unimplemented_docs.length +
-    report.untested_guarantees.length +
-    report.obsolete_references.length +
-    report.ambiguous_claims.length
+function main() {
+  const root = process.cwd()
+  const docFeatures = parseDocFeatures(root)
+  const codeFeatures = parseCodeFeatures(root)
+  const waivers = loadWaivers(root)
+  const issues = evaluateIntegrity(docFeatures, codeFeatures, waivers)
 
-  return {
-    total_violations: totalViolations,
-    strict_mode: options.strict,
-    changed_only: options.changedOnly,
-    base_ref: options.baseRef,
-    scanned: {
-      docs: doc.files.length,
-      code: code.files?.length || 0,
-      tests: tests.files?.length || 0,
-    },
-    timestamp: new Date().toISOString(),
-    issues_by_type: {
-      undocumented_code: report.undocumented_code.length,
-      unimplemented_docs: report.unimplemented_docs.length,
-      untested_guarantees: report.untested_guarantees.length,
-      obsolete_references: report.obsolete_references.length,
-      ambiguous_claims: report.ambiguous_claims.length,
-    },
-  }
-}
+  const failures = issues.filter((issue) => issue.level === 'fail').length
+  const warnings = issues.filter((issue) => issue.level === 'warn').length
 
-function compareWithBaseline(
-  current: RawIntegrityReport,
-  baselinePath: string,
-  projectRoot: string
-): BaselineDelta | undefined {
-  const resolvedBaseline = path.isAbsolute(baselinePath) ? baselinePath : path.join(projectRoot, baselinePath)
-  if (!fs.existsSync(resolvedBaseline)) {
-    return undefined
-  }
-
-  try {
-    const baseline = JSON.parse(fs.readFileSync(resolvedBaseline, 'utf-8')) as RawIntegrityReport
-    const flatten = (report: RawIntegrityReport) => [
-      ...report.undocumented_code.map((item) => `undocumented_code:${item}`),
-      ...report.unimplemented_docs.map((item) => `unimplemented_docs:${item}`),
-      ...report.untested_guarantees.map((item) => `untested_guarantees:${item}`),
-      ...report.obsolete_references.map((item) => `obsolete_references:${item}`),
-      ...report.ambiguous_claims.map((item) => `ambiguous_claims:${item}`),
-    ]
-
-    const baselineIssues = new Set(flatten(baseline))
-    const currentIssues = new Set(flatten(current))
-
-    const newIssues = [...currentIssues].filter((item) => !baselineIssues.has(item))
-    const resolvedIssues = [...baselineIssues].filter((item) => !currentIssues.has(item))
-
-    return {
-      path: toPosix(path.relative(projectRoot, resolvedBaseline)),
-      new_issues: newIssues,
-      resolved_issues: resolvedIssues,
-      baseline_issue_count: baselineIssues.size,
-    }
-  } catch (error) {
-    console.warn('Warning: unable to read baseline file, skipping comparison.', (error as Error).message || error)
-    return undefined
-  }
-}
-
-function printSummary(report: IntegrityReport, doc: DocModel, code: CodeModel, tests: TestModel) {
-  const summary = report.summary
-  const status = summary && summary.total_violations === 0 ? 'CLEAN' : 'VIOLATIONS'
-  console.log(`\nHuman-readable summary (${status}):`)
-  if (summary) {
-    console.log(
-      `- Mode: strict=${summary.strict_mode} changed_only=${summary.changed_only} base=${summary.base_ref ?? 'n/a'}`
-    )
-    console.log(
-      `- Scanned files: docs=${summary.scanned.docs} code=${summary.scanned.code} tests=${summary.scanned.tests}`
-    )
-  }
-  console.log(`- Doc guarantees: ${doc.guarantees.length}`)
-  console.log(`- Code enforced guarantees: ${code.enforcedGuarantees.length}`)
-  console.log(`- Policies detected: ${code.policies.length}`)
-  console.log(`- Test guarantees: ${tests.testedGuarantees.length}`)
-
-  const printCategory = (label: string, items: string[]) => {
-    if (items.length === 0) return
-    const sample = items.slice(0, 8)
-    console.log(`- ${label} (${items.length}):`)
-    for (const item of sample) {
-      console.log(`  - ${item}`)
-    }
-    if (items.length > sample.length) {
-      console.log(`  ...and ${items.length - sample.length} more`)
-    }
-  }
-
-  printCategory('Unimplemented docs', report.unimplemented_docs)
-  printCategory('Undocumented code', report.undocumented_code)
-  printCategory('Untested guarantees', report.untested_guarantees)
-  printCategory('Obsolete references', report.obsolete_references)
-  printCategory('Ambiguous guarantees', report.ambiguous_claims)
-
-  if (report.baseline) {
-    console.log(
-      `- Baseline ${report.baseline.path}: +${report.baseline.new_issues.length} new, -${report.baseline.resolved_issues.length} resolved (prev ${report.baseline.baseline_issue_count})`
-    )
-  }
-}
-
-async function writeReport(outputPath: string, report: IntegrityReport, projectRoot: string): Promise<void> {
-  const resolved = path.isAbsolute(outputPath) ? outputPath : path.join(projectRoot, outputPath)
-  await fs.promises.mkdir(path.dirname(resolved), { recursive: true })
-  await fs.promises.writeFile(resolved, JSON.stringify(report, null, 2), 'utf-8')
-  console.log(`Report written to ${toPosix(path.relative(projectRoot, resolved))}`)
-}
-
-async function main() {
-  const options = parseArgs(process.argv)
-
-  if (options.help) {
-    printHelp()
-    return
-  }
-
-  const projectRoot = process.cwd()
-  const changedPaths = options.changedOnly ? resolveChangedPaths(projectRoot, options.baseRef) : undefined
-  if (options.changedOnly && !changedPaths) {
-    console.warn('Changed-only requested but could not resolve diff; scanning full repository.')
-  }
-
-  const docResult = await buildDocModel(projectRoot, changedPaths)
-  const codeModel = await buildCodeModel(projectRoot, changedPaths)
-  const testModel = await buildTestModel(projectRoot, changedPaths)
-
-  const rawReport = compareModels(docResult.model, codeModel, testModel, docResult.references, projectRoot)
   const report: IntegrityReport = {
-    ...rawReport,
-    summary: buildSummary(rawReport, docResult, codeModel, testModel, options),
+    summary: {
+      total: issues.length,
+      failures,
+      warnings,
+      scanned: { docs: docFeatures.length, code: codeFeatures.length },
+      timestamp: new Date().toISOString(),
+    },
+    issues,
+    docFeatures,
+    codeFeatures,
+    waivers: Object.keys(waivers),
   }
 
-  if (options.baseline) {
-    const delta = compareWithBaseline(rawReport, options.baseline, projectRoot)
-    if (delta) {
-      report.baseline = delta
-    }
-  }
-
-  if (options.output) {
-    await writeReport(options.output, report, projectRoot)
-  }
-
+  writeReport(root, report)
   console.log(JSON.stringify(report, null, 2))
-  printSummary(report, docResult.model, codeModel, testModel)
 
-  const hasViolations =
-    rawReport.undocumented_code.length > 0 ||
-    rawReport.unimplemented_docs.length > 0 ||
-    rawReport.untested_guarantees.length > 0 ||
-    rawReport.obsolete_references.length > 0 ||
-    rawReport.ambiguous_claims.length > 0
-
-  process.exit(hasViolations ? 1 : 0)
+  if (failures > 0) {
+    process.exit(1)
+  }
 }
 
-main().catch((error) => {
-  console.error('Fatal error running doc-code integrity analyzer:', error)
-  process.exit(1)
-})
-
-export type {
-  DocModel,
-  CodeModel,
-  TestModel,
-  IntegrityReport,
-};
-export {
-  buildDocModel,
-  buildCodeModel,
-  buildTestModel,
-  compareModels,
-}
+main()

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from '@/config/supabase';
+import { buildSyntheticAwareFetch, detectSyntheticContext } from '@/lib/simcity/syntheticContext';
 
 /**
  * Server-side Supabase client using the secret key for admin operations
@@ -7,16 +8,20 @@ import { getSupabaseConfig } from '@/config/supabase';
  */
 export const createSupabaseServerClient = () => {
   const config = getSupabaseConfig();
-  
+
   if (!config.secretKey) {
     throw new Error('Missing Supabase secret key environment variable');
   }
+
+  const syntheticContext = detectSyntheticContext();
+  const syntheticFetch = buildSyntheticAwareFetch(syntheticContext);
 
   return createClient(config.url, config.secretKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
-    }
+    },
+    global: syntheticFetch ? { fetch: syntheticFetch } : undefined,
   });
 };
 
@@ -49,15 +54,19 @@ export const getSupabaseKey = (isServer: boolean = false, requireSecret: boolean
  */
 export const getSupabaseServerClient = () => {
   const config = getSupabaseConfig();
-  
+
   if (!config.publishableKey) {
     throw new Error('Missing Supabase publishable key environment variable');
   }
+
+  const syntheticContext = detectSyntheticContext();
+  const syntheticFetch = buildSyntheticAwareFetch(syntheticContext);
 
   return createClient(config.url, config.publishableKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
-    }
+    },
+    global: syntheticFetch ? { fetch: syntheticFetch } : undefined,
   });
 };

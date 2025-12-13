@@ -1,5 +1,6 @@
 // lib/supabaseClient.ts
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { buildSyntheticAwareFetch, detectSyntheticContext } from './simcity/syntheticContext'
 
 // We NEVER evaluate env vars or config at module load.
 // We NEVER create a client server-side unless explicitly requested.
@@ -53,5 +54,10 @@ export function getServerSupabase(): SupabaseClient {
     throw new Error('Missing Supabase env vars (server)')
   }
 
-  return createClient(url, key)
+  const syntheticContext = detectSyntheticContext()
+  const syntheticFetch = buildSyntheticAwareFetch(syntheticContext)
+
+  return createClient(url, key, {
+    global: syntheticFetch ? { fetch: syntheticFetch } : undefined,
+  })
 }

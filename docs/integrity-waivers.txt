@@ -1,0 +1,2 @@
+# feature_id|reason|expiration(YYYY-MM-DD)
+# Add waivers sparingly; expired entries will be ignored and reported.

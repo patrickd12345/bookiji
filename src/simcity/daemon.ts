@@ -10,6 +10,7 @@ const TARGET_ALLOWLIST = [
 ];
 
 function assertEnvironment(env: DaemonEnvironment): void {
+  // @feature simcity.prod_guard
   if (env.SIMCITY_ALLOWED !== "true") {
     throw new Error("SimCity daemon is disabled by SIMCITY_ALLOWED");
   }

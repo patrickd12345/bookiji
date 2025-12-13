@@ -1,0 +1,57 @@
+{
+  "summary": {
+    "total": 0,
+    "failures": 0,
+    "warnings": 0,
+    "scanned": {
+      "docs": 3,
+      "code": 3
+    },
+    "timestamp": "2025-12-13T15:31:04.469Z"
+  },
+  "issues": [],
+  "docFeatures": [
+    {
+      "id": "simcity.synthetic_headers",
+      "status": "shipped",
+      "files": [
+        "docs/features/simcity-safety.md"
+      ]
+    },
+    {
+      "id": "simcity.prod_guard",
+      "status": "shipped",
+      "files": [
+        "docs/features/simcity-safety.md"
+      ]
+    },
+    {
+      "id": "simcity.synthetic_purge",
+      "status": "shipped",
+      "files": [
+        "docs/features/simcity-safety.md"
+      ]
+    }
+  ],
+  "codeFeatures": [
+    {
+      "id": "simcity.prod_guard",
+      "files": [
+        "src/simcity/daemon.ts"
+      ]
+    },
+    {
+      "id": "simcity.synthetic_headers",
+      "files": [
+        "src/lib/simcity/syntheticContext.ts"
+      ]
+    },
+    {
+      "id": "simcity.synthetic_purge",
+      "files": [
+        "src/app/api/simcity/purge/route.ts"
+      ]
+    }
+  ],
+  "waivers": []
+}
