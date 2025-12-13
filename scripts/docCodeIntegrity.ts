@@ -654,11 +654,13 @@ main().catch((error) => {
   process.exit(1)
 })
 
-export {
+export type {
   DocModel,
   CodeModel,
   TestModel,
   IntegrityReport,
+};
+export {
   buildDocModel,
   buildCodeModel,
   buildTestModel,
