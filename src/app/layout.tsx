@@ -20,9 +20,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning className="font-sans">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="color-scheme" content="light dark" />
       </head>
-      <body className="min-h-screen bg-background text-foreground">
+      <body className="min-h-screen bg-background text-foreground overflow-x-hidden">
         <a href="#main" className="skip-link">Skip to main</a>
         <RootLayoutWrapper>
           <main id="main" tabIndex={-1}>{children}</main>

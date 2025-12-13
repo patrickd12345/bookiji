@@ -249,7 +249,7 @@ export default function UserDashboard() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div data-tour="dashboard-welcome">
               <h1 className="text-3xl font-bold text-gray-900">
                 Welcome back, {userProfile.name.split(' ')[0]}! 👋
@@ -276,7 +276,7 @@ export default function UserDashboard() {
               
               {/* Notifications dropdown */}
               {notifications.data && notifications.data.length > 0 && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-10">
+                <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-sm bg-white rounded-lg shadow-lg border z-10">
                   <div className="p-4">
                     <h3 className="font-medium text-gray-900 mb-3">Recent Notifications</h3>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -316,7 +316,7 @@ export default function UserDashboard() {
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow-sm border mb-8">
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6">
+            <nav className="-mb-px flex flex-nowrap gap-6 px-6 overflow-x-auto overscroll-x-contain">
               {[
                 { id: 'overview' as const, label: 'Overview', icon: '📊' },
                 { id: 'bookings' as const, label: 'Bookings', icon: '📅' },
@@ -328,7 +328,7 @@ export default function UserDashboard() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    'py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2',
+                    'py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 whitespace-nowrap',
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -460,13 +460,13 @@ export default function UserDashboard() {
                       whileHover={{ scale: 1.01 }}
                       className="bg-white rounded-2xl shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-4">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                        <div className="flex items-start gap-4">
                           <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
                           <div className="flex-1">
                             <h3 className="font-semibold text-gray-900">{booking.service_name}</h3>
                             <p className="text-gray-600">{booking.provider_name}</p>
-                            <div className="flex items-center space-x-4 mt-2">
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
                               <div className="flex items-center text-sm text-gray-500">
                                 <Calendar className="w-4 h-4 mr-1" />
                                 {formatDate(booking.date)}
@@ -486,7 +486,7 @@ export default function UserDashboard() {
                           </div>
                         </div>
                         
-                        <div className="text-right">
+                        <div className="text-left md:text-right">
                           <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
                             {booking.status === 'upcoming' && <Clock className="w-3 h-3 mr-1" />}
                             {booking.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
@@ -497,7 +497,7 @@ export default function UserDashboard() {
                             {formatCurrency(booking.price_cents)}
                           </p>
                           {booking.rating && (
-                            <div className="flex items-center mt-1">
+                            <div className="flex items-center mt-1 md:justify-end">
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}

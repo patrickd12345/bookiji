@@ -298,7 +298,7 @@ export default function VendorDashboard() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Welcome back, {vendorProfile.business_name}! 👋
@@ -308,7 +308,7 @@ export default function VendorDashboard() {
               </p>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
               {vendorProfile.is_verified && (
                 <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
                   <CheckCircle className="w-4 h-4" />
@@ -322,7 +322,7 @@ export default function VendorDashboard() {
               </div>
 
               <button
-                className="px-3 py-1 border rounded text-sm text-gray-700"
+                className="px-3 py-1 border rounded text-sm text-gray-700 w-full sm:w-auto"
                 data-tour="settings-menu"
               >
                 Settings
@@ -466,7 +466,7 @@ export default function VendorDashboard() {
                     transition={{ delay: index * 0.1 }}
                     className="px-6 py-4 hover:bg-gray-50 transition-colors"
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                           <Users className="w-5 h-5 text-gray-600" />
@@ -491,8 +491,8 @@ export default function VendorDashboard() {
                         </div>
                       </div>
                       
-                      <div className="text-right">
-                        <div className="flex items-center gap-2 mb-2">
+                      <div className="text-left sm:text-right w-full sm:w-auto">
+                        <div className="flex items-center gap-2 mb-2 sm:justify-end">
                           <span className={cn(
                             'inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
                             getStatusColor(booking.status)
@@ -507,7 +507,7 @@ export default function VendorDashboard() {
                         </p>
                         
                         {booking.customer_rating && (
-                          <div className="flex items-center gap-1 mt-1">
+                          <div className="flex items-center gap-1 mt-1 sm:justify-end">
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}

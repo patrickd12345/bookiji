@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -38,9 +38,32 @@ const navItems = [
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
   const pathname = usePathname()
 
   const toggleSidebar = () => setIsOpen(!isOpen)
+
+  useEffect(() => {
+    // Keep sidebar always visible on desktop, slide on mobile.
+    const mql = window.matchMedia('(min-width: 1024px)')
+    const update = () => {
+      setIsDesktop(mql.matches)
+      // Ensure we don't keep "open" mobile state around when entering desktop.
+      if (mql.matches) setIsOpen(false)
+    }
+
+    update()
+    mql.addEventListener?.('change', update)
+    // Safari fallback
+    // eslint-disable-next-line deprecation/deprecation
+    mql.addListener?.(update)
+
+    return () => {
+      mql.removeEventListener?.('change', update)
+      // eslint-disable-next-line deprecation/deprecation
+      mql.removeListener?.(update)
+    }
+  }, [])
 
   return (
     <>
@@ -68,7 +91,7 @@ export default function Sidebar() {
       {/* Sidebar */}
       <motion.aside
         initial={{ x: -280 }}
-        animate={{ x: isOpen ? 0 : -280 }}
+        animate={{ x: isDesktop || isOpen ? 0 : -280 }}
         transition={{ type: 'spring', damping: 20, stiffness: 100 }}
         className={`fixed lg:relative inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 shadow-xl lg:shadow-none`}
       >
