@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { POST } from '@/app/api/analytics/track/route'
-import { getSupabaseMock } from '../utils/supabase-mocks'
+import { NextRequest } from 'next/server'
 
 type AnalyticsRequestBody = {
   event?: string
@@ -13,19 +13,7 @@ const mkReq = (body: AnalyticsRequestBody) => new Request('https://example.com/a
   body: JSON.stringify(body)
 })
 
-import { NextRequest } from 'next/server'
-
-// Use shared Supabase mock
-vi.mock('@supabase/supabase-js', () => ({
-  createClient: vi.fn(() => getSupabaseMock())
-}))
-
-beforeEach(() => {
-  const supabase = getSupabaseMock()
-  supabase.from.mockImplementation(() => ({
-    insert: vi.fn(async () => ({ error: { message: 'fail' } }))
-  }) as any)
-})
+const supabaseMockState = (globalThis as any).__supabaseMockState
 
 describe('POST /api/analytics/track (error paths)', () => {
   it('400 when missing event', async () => {
@@ -34,6 +22,7 @@ describe('POST /api/analytics/track (error paths)', () => {
   })
 
   it('500 when storage fails', async () => {
+    supabaseMockState.insertErrors.add('analytics_events')
     const res = await POST(mkReq({ event: 'test_event', properties: {} }) as unknown as NextRequest)
     expect(res).toBeTruthy()
     const json = await res!.json()

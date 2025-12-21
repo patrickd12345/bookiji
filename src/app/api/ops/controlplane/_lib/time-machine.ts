@@ -28,9 +28,7 @@ function filterByTimestamp<T extends { startedAt?: string; completedAt?: string 
   if (Number.isNaN(ts)) return items
   return items.filter((item) => {
     const started = item.startedAt ? new Date(item.startedAt).getTime() : null
-    const completed = item.completedAt ? new Date(item.completedAt).getTime() : null
     if (started && started > ts) return false
-    if (completed && completed < ts) return false
     return true
   })
 }

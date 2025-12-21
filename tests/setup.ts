@@ -46,8 +46,15 @@ process.env.TEST_BASE_URL = 'http://localhost:3000'
 // The mock instance is stored globally in supabase-mocks.ts and can be accessed via getSupabaseMock()
 createSupabaseClientMocks()
 
+// Mock state for controlling insert errors in tests
+const supabaseMockState = {
+  insertErrors: new Set<string>()
+}
+;(global as any).__supabaseMockState = supabaseMockState
+
 beforeEach(() => {
   resetSupabaseMock()
+  supabaseMockState.insertErrors.clear()
 })
 
 // Mock fetch with default responses
@@ -87,6 +94,8 @@ global.fetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  supabaseMockState.insertErrors.clear()
+  resetSupabaseMock()
 })
 
 // Mock Next.js router
@@ -101,6 +110,18 @@ vi.mock('next/navigation', () => ({
   }),
   useSearchParams: () => new URLSearchParams(),
   usePathname: () => '/',
+}))
+
+// Mock Next.js headers/cookies for request-less tests
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(() => ({
+    get: vi.fn(),
+    set: vi.fn(),
+    delete: vi.fn(),
+    getAll: vi.fn(() => []),
+    has: vi.fn(() => false)
+  })),
+  headers: vi.fn(() => new Headers())
 }))
 
 // Mock useI18n hook

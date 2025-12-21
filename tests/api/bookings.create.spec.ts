@@ -28,15 +28,14 @@ vi.mock('stripe', () => ({
   }))
 }))
 
-// Mock Stripe
-vi.mock('../../lib/stripe', () => ({
-  createCommitmentFeePaymentIntent: async () => ({
-    success: true,
-    paymentIntent: {
-      id: 'pi_mock',
-      client_secret: 'cs_mock'
+// Mock Stripe (SDK used by the route)
+vi.mock('stripe', () => ({
+  default: class Stripe {
+    paymentIntents = {
+      create: vi.fn(async () => ({ id: 'pi_mock', client_secret: 'cs_mock' }))
     }
-  })
+    constructor() {}
+  }
 }))
 
 // Mock is already applied globally via setup.ts
@@ -65,9 +64,9 @@ describe('POST /api/bookings/create', () => {
   it('should create a booking', async () => {
     const bookingData = {
       providerId: 'test-provider-123',
-      serviceId: 'service-123',
-      startTime: '2024-06-01T14:00:00Z',
-      endTime: '2024-06-01T15:00:00Z',
+      serviceId: 'test-service-123',
+      startTime: '2024-06-01T14:00:00.000Z',
+      endTime: '2024-06-01T15:00:00.000Z',
       amountUSD: 25
     }
 
@@ -93,15 +92,9 @@ describe('POST /api/bookings/create', () => {
     }
     const data = await response.json()
 
-    // Should return a booking creation result
-    expect(response.status).toBeLessThanOrEqual(500) // Either success or controlled error
-    expect(data).toHaveProperty('success')
-    
-    if (data.success) {
-      expect(data).toHaveProperty('booking')
-      expect(data.booking).toHaveProperty('id')
-    } else {
-      expect(data).toHaveProperty('error')
-    }
+    expect(response.status).toBe(200)
+    expect(data).toHaveProperty('booking')
+    expect(data.booking).toHaveProperty('id')
+    expect(data).toHaveProperty('clientSecret')
   })
-}) 
+})
