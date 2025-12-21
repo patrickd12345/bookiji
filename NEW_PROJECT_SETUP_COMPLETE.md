@@ -143,3 +143,4 @@ supabase link --project-ref uradoazoyhhozbemrccj
 The new project is fully configured and ready for backup restoration.
 
 
+

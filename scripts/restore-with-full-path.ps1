@@ -106,3 +106,4 @@ Write-Host "  2. Run: supabase db push (to apply any pending migrations)" -Foreg
 Write-Host "  3. Update .env.local with new project keys" -ForegroundColor White
 
 
+

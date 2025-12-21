@@ -160,3 +160,4 @@ SUPABASE_SERVICE_ROLE_KEY=[Get from new project dashboard]
 6. ✅ Set up automated backups for the new project
 
 
+
