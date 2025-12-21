@@ -54,13 +54,12 @@ export default function Sidebar() {
 
     update()
     mql.addEventListener?.('change', update)
-    // Safari fallback
-    // eslint-disable-next-line deprecation/deprecation
+    // Safari fallback (deprecated but needed for compatibility)
     mql.addListener?.(update)
 
     return () => {
       mql.removeEventListener?.('change', update)
-      // eslint-disable-next-line deprecation/deprecation
+      // Safari fallback (deprecated but needed for compatibility)
       mql.removeListener?.(update)
     }
   }, [])
