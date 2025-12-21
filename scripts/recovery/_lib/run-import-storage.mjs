@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { withDefaultStorageDryRun } from './args.mjs'
 
 function fail(message) {
   console.error(message)
@@ -16,7 +17,7 @@ const __dirname = path.dirname(__filename)
 const scriptPath = path.join(__dirname, '..', 'import_storage.ps1')
 const scriptPathBash = path.join(__dirname, '..', 'import_storage.sh')
 
-const args = process.argv.slice(2)
+const args = withDefaultStorageDryRun(process.argv.slice(2), process.platform)
 
 const isWin = process.platform === 'win32'
 const command = isWin ? 'powershell' : 'bash'

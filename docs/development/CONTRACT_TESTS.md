@@ -28,4 +28,9 @@ Keep these rules:
 - no secrets in repo
 - deterministic inputs and assertions
 
+## ErrorEnvelope shape
+
+The OpenAPI `ErrorEnvelope` uses a `oneOf` to match runtime responses:
+- minimal `{ error: string }`
+- structured `{ ok: false, code, message }` (optionally with `details`, `correlation_id`)
 

@@ -237,7 +237,6 @@ components:
           enum: [healthy, unhealthy]
         timestamp:
           type: string
-          format: date-time
         version:
           type: string
         environment:
@@ -347,23 +346,31 @@ components:
               type: integer
 
     ErrorEnvelope:
-      type: object
-      required: [ok, code, message]
-      properties:
-        ok:
-          type: boolean
-          example: false
-        code:
-          type: string
-          example: VALIDATION_ERROR
-        message:
-          type: string
-        details:
-          type: object
+      description: Error response envelope.
+      oneOf:
+        - type: object
+          required: [error]
+          properties:
+            error:
+              type: string
           additionalProperties: true
-        correlation_id:
-          type: string
-
+        - type: object
+          required: [ok, code, message]
+          properties:
+            ok:
+              type: boolean
+              example: false
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+            correlation_id:
+              type: string
+          additionalProperties: true
 
 
 

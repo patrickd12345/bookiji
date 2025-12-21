@@ -88,14 +88,22 @@ paths:
 components:
   schemas:
     ErrorEnvelope:
-      type: object
-      required: [ok, code, message, correlation_id]
-      properties:
-        ok: { type: boolean, example: false }
-        code: { type: string, example: 'VALIDATION_ERROR' }
-        message: { type: string }
-        details: { type: object, additionalProperties: true }
-        correlation_id: { type: string }
+      description: Error response envelope.
+      oneOf:
+        - type: object
+          required: [error]
+          properties:
+            error: { type: string }
+          additionalProperties: true
+        - type: object
+          required: [ok, code, message]
+          properties:
+            ok: { type: boolean, example: false }
+            code: { type: string, example: 'VALIDATION_ERROR' }
+            message: { type: string }
+            details: { type: object, additionalProperties: true }
+            correlation_id: { type: string }
+          additionalProperties: true
     Ok:
       type: object
       properties:

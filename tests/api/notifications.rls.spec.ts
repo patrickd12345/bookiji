@@ -7,9 +7,6 @@ vi.mock('@supabase/ssr', () => ({ createServerClient: vi.fn(() => getSupabaseMoc
 
 import { GET, DELETE } from '@/app/api/notifications/route'
 
-vi.mock('next/headers', () => ({ cookies: vi.fn(async () => ({ get: vi.fn(() => undefined) })) }))
-vi.mock('@/config/supabase', () => ({ getSupabaseConfig: vi.fn(() => ({ url: 'u', publishableKey: 'k' })) }))
-
 const configureSupabase = () => {
   const supabase = getSupabaseMock()
   supabase.from.mockImplementation((table: string) => {

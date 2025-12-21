@@ -39,6 +39,7 @@
     "recovery:verify:db": "node -e \"if(process.env.RECOVERY_ENV!=='1'){console.error('RECOVERY_ENV=1 is required.');process.exit(1)}\" && tsx scripts/recovery/verify_db.ts",
     "recovery:verify:storage": "node -e \"if(process.env.RECOVERY_ENV!=='1'){console.error('RECOVERY_ENV=1 is required.');process.exit(1)}\" && tsx scripts/recovery/verify_storage.ts",
     "recovery:verify": "node -e \"if(process.env.RECOVERY_ENV!=='1'){console.error('RECOVERY_ENV=1 is required.');process.exit(1)}\" && pnpm recovery:verify:db && pnpm recovery:verify:storage",
+    "recovery:doctor": "node scripts/recovery/doctor.mjs",
     "ai:test": "node scripts/ai-test-loop.mjs",
     "maintenance:calendar": "node scripts/setup-maintenance-calendar.mjs",
     "i18n:check": "node scripts/i18n-check.js",
