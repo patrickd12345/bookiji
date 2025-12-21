@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "tables": {
+    "profiles": 123,
+    "services": 456,
+    "bookings": 789
+  }
+}

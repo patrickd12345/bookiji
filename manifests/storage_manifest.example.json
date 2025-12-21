@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "bucket": "recovery-bucket",
+  "objects": [
+    { "path": "avatars/user1.png", "size": 10240, "etag": "abc123" },
+    { "path": "services/hero.jpg", "size": 20480 }
+  ]
+}
