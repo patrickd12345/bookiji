@@ -9,14 +9,14 @@
 ```env
 # Required - Get from Supabase project settings
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SECRET_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<YOUR_SUPABASE_PUBLISHABLE_KEY>
+SUPABASE_SECRET_KEY=<YOUR_SUPABASE_SERVICE_ROLE_KEY>
 
 # Optional - for full functionality
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_MAPBOX_TOKEN=pk.your_mapbox_token_here
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_MAPBOX_TOKEN=<YOUR_MAPBOX_TOKEN>
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=<YOUR_STRIPE_PUBLISHABLE_KEY>
+STRIPE_SECRET_KEY=<YOUR_STRIPE_SECRET_KEY>
 ```
 
 ## Environment Variables
@@ -32,14 +32,11 @@ STRIPE_SECRET_KEY=sk_test_...
 
 ## Database Setup
 
-1. **Run the migrations** in your Supabase project:
+1. **Run the migrations** in your Supabase project using the CLI only:
    ```bash
-   pnpm supabase db push
+   supabase db push
    ```
-
-2. **Or manually run the SQL files** in the Supabase SQL editor:
-   - Copy contents from `supabase/migrations/*.sql`
-   - Run each migration in order
+Manual SQL execution in the dashboard is not allowed. If `supabase db push` fails, resolve it via CLI migration fixes.
 
 ## Troubleshooting
 

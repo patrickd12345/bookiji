@@ -20,6 +20,156 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+type AdminUser = { id: string; email?: string | null }
+
+async function loadExistingUsersByEmail(): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+
+  // Supabase Admin API returns paginated users; pilot datasets are small, but we still handle pagination safely.
+  let page = 1
+  const perPage = 1000
+  while (true) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage })
+    if (error) {
+      console.error('Failed to list existing users:', error)
+      break
+    }
+
+    const users = (data?.users || []) as AdminUser[]
+    for (const u of users) {
+      if (u.email) map.set(u.email.toLowerCase(), u.id)
+    }
+
+    if (users.length < perPage) break
+    page += 1
+  }
+
+  return map
+}
+
+function isUserAlreadyExistsError(err: unknown): boolean {
+  const msg = (err as { message?: string })?.message?.toLowerCase() || ''
+  return msg.includes('already registered') || msg.includes('user already registered') || msg.includes('already exists')
+}
+
+async function ensureAuthUserIdByEmail(
+  email: string,
+  metadata: Record<string, unknown>
+): Promise<string | null> {
+  const normalizedEmail = email.toLowerCase()
+  const existing = existingUsersByEmail.get(normalizedEmail)
+  if (existing) return existing
+
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password: 'pilot123!',
+    email_confirm: true,
+    user_metadata: metadata,
+  })
+
+  if (error) {
+    if (isUserAlreadyExistsError(error)) {
+      // Refresh once and retry lookup
+      existingUsersByEmail = await loadExistingUsersByEmail()
+      return existingUsersByEmail.get(normalizedEmail) || null
+    }
+
+    console.error(`Failed to create user ${email}:`, error)
+    return null
+  }
+
+  const id = data?.user?.id
+  if (id) existingUsersByEmail.set(normalizedEmail, id)
+  return id || null
+}
+
+async function ensureProfileRow(
+  id: string,
+  row: Record<string, unknown>
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Failed to check profiles row:', error)
+    return false
+  }
+
+  if (data?.id) return true
+
+  const { error: insertError } = await supabase.from('profiles').insert({ id, ...row })
+  if (insertError) {
+    console.error('Failed to insert profiles row:', insertError)
+    return false
+  }
+
+  return true
+}
+
+async function ensureProviderLocation(providerId: string, row: Record<string, unknown>): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('provider_locations')
+    .select('provider_id')
+    .eq('provider_id', providerId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Failed to check provider_locations row:', error)
+    return false
+  }
+
+  if (data?.provider_id) return true
+
+  const { error: insertError } = await supabase
+    .from('provider_locations')
+    .insert({ provider_id: providerId, ...row })
+
+  if (insertError) {
+    console.error('Failed to insert provider_locations row:', insertError)
+    return false
+  }
+
+  return true
+}
+
+async function ensureVendorSpecialty(providerId: string, specialty: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('vendor_specialties')
+    .select('provider_id,specialty')
+    .eq('provider_id', providerId)
+    .eq('specialty', specialty)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Failed to check vendor_specialties row:', error)
+    return false
+  }
+
+  if (data?.provider_id) return true
+
+  const { error: insertError } = await supabase
+    .from('vendor_specialties')
+    .insert({
+      provider_id: providerId,
+      specialty,
+      is_primary: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+
+  if (insertError) {
+    console.error('Failed to insert vendor_specialties row:', insertError)
+    return false
+  }
+
+  return true
+}
+
+let existingUsersByEmail: Map<string, string> = new Map()
+
 // Pilot data configuration
 const PILOT_CONFIG = {
   vendors: 5,
@@ -102,7 +252,6 @@ interface UserData {
 }
 
 interface ServiceData {
-  id: string
   vendorId: string
   name: string
   description: string
@@ -171,7 +320,6 @@ function generateServices(vendors: VendorData[], idMap: Record<string, string>):
 
     // Base service
     services.push({
-      id: faker.string.uuid(),
       vendorId: realProviderId,
       name: `${vendor.specialty.charAt(0).toUpperCase() + vendor.specialty.slice(1)}`,
       description: vendor.description,
@@ -182,7 +330,6 @@ function generateServices(vendors: VendorData[], idMap: Record<string, string>):
     
     // Premium service
     services.push({
-      id: faker.string.uuid(),
       vendorId: realProviderId,
       name: `Premium ${vendor.specialty}`,
       description: `Enhanced ${vendor.specialty} with premium products`,
@@ -193,7 +340,6 @@ function generateServices(vendors: VendorData[], idMap: Record<string, string>):
     
     // Express service
     services.push({
-      id: faker.string.uuid(),
       vendorId: realProviderId,
       name: `Express ${vendor.specialty}`,
       description: `Quick ${vendor.specialty} service`,
@@ -215,75 +361,46 @@ async function seedVendors(vendors: VendorData[]): Promise<Record<string, string
   
   for (const vendor of vendors) {
     try {
-      // Create user account for vendor
-      const { data: userData, error: userError } = await supabase.auth.admin.createUser({
-        email: vendor.email,
-        password: 'pilot123!',
-        email_confirm: true,
-        user_metadata: {
-          role: 'vendor',
-          vendor_id: vendor.id
-        }
+      const realId = await ensureAuthUserIdByEmail(vendor.email, {
+        role: 'vendor',
+        vendor_id: vendor.id,
       })
-      
-      if (userError) {
-        console.error(`Failed to create vendor user ${vendor.email}:`, userError)
+
+      if (!realId) {
         continue
       }
 
-      const realId = userData.user.id
       idMap[vendor.id] = realId
       
-      // Create vendor profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: realId,
-          email: vendor.email,
-          first_name: vendor.name.split(' ')[0],
-          last_name: vendor.name.split(' ').slice(1).join(' '),
-          role: 'vendor',
-          is_active: vendor.isActive,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-      
-      if (profileError) {
-        console.error(`Failed to create vendor profile for ${vendor.email}:`, profileError)
+      const okProfile = await ensureProfileRow(realId, {
+        email: vendor.email,
+        first_name: vendor.name.split(' ')[0],
+        last_name: vendor.name.split(' ').slice(1).join(' '),
+        role: 'vendor',
+        is_active: vendor.isActive,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+
+      if (!okProfile) {
         continue
       }
       
-      // Create vendor location
-      const { error: locationError } = await supabase
-        .from('provider_locations')
-        .insert({
-          provider_id: realId,
-          latitude: vendor.lat,
-          longitude: vendor.lng,
-          city: vendor.city,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-      
-      if (locationError) {
-        console.error(`Failed to create vendor location for ${vendor.email}:`, locationError)
+      const okLocation = await ensureProviderLocation(realId, {
+        latitude: vendor.lat,
+        longitude: vendor.lng,
+        city: vendor.city,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+
+      if (!okLocation) {
         continue
       }
       
-      // Create vendor specialty
-      const { error: specialtyError } = await supabase
-        .from('vendor_specialties')
-        .insert({
-          provider_id: realId,
-          specialty: vendor.specialty,
-          is_primary: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-      
-      if (specialtyError) {
-        console.error(`Failed to create vendor specialty for ${vendor.email}:`, specialtyError)
+      const okSpecialty = await ensureVendorSpecialty(realId, vendor.specialty)
+      if (!okSpecialty) {
         continue
       }
       
@@ -303,38 +420,26 @@ async function seedUsers(users: UserData[]): Promise<void> {
   
   for (const user of users) {
     try {
-      // Create user account
-      const { data: userData, error: userError } = await supabase.auth.admin.createUser({
-        email: user.email,
-        password: 'pilot123!',
-        email_confirm: true,
-        user_metadata: {
-          role: 'customer',
-          preferences: user.preferences
-        }
+      const realId = await ensureAuthUserIdByEmail(user.email, {
+        role: 'customer',
+        preferences: user.preferences,
       })
-      
-      if (userError) {
-        console.error(`Failed to create user ${user.email}:`, userError)
+
+      if (!realId) {
         continue
       }
       
-      // Create user profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: userData.user.id,
-          email: user.email,
-          first_name: user.firstName,
-          last_name: user.lastName,
-          role: 'customer',
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-      
-      if (profileError) {
-        console.error(`Failed to create user profile for ${user.email}:`, profileError)
+      const okProfile = await ensureProfileRow(realId, {
+        email: user.email,
+        first_name: user.firstName,
+        last_name: user.lastName,
+        role: 'customer',
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+
+      if (!okProfile) {
         continue
       }
       
@@ -353,10 +458,25 @@ async function seedServices(services: ServiceData[]): Promise<void> {
   
   for (const service of services) {
     try {
+      const { data: existing, error: existingError } = await supabase
+        .from('services')
+        .select('id')
+        .eq('provider_id', service.vendorId)
+        .eq('name', service.name)
+        .maybeSingle()
+
+      if (existingError) {
+        console.error(`Failed to check existing service ${service.name}:`, existingError)
+        continue
+      }
+
+      if (existing?.id) {
+        continue
+      }
+
       const { error } = await supabase
         .from('services')
         .insert({
-          id: service.id,
           provider_id: service.vendorId,
           name: service.name,
           description: service.description,
@@ -388,6 +508,8 @@ async function seedPilotData(): Promise<void> {
   console.log('=====================================')
   
   try {
+    existingUsersByEmail = await loadExistingUsersByEmail()
+
     // Generate data
     const vendors = generateVendors()
     const users = generateUsers()

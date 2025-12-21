@@ -1,21 +1,8 @@
 import { test, expect } from '../../fixtures/base'
-import Ajv from 'ajv'
-import * as fs from 'fs'
-import * as path from 'path'
-import yaml from 'js-yaml'
+import { createAjv, getOpenApiSpec, getResolvedSchema } from './_lib/openapi'
 
-const ajv = new Ajv()
-let openApiSpec: any
-
-// Load OpenAPI spec once
-try {
-  openApiSpec = yaml.load(
-    fs.readFileSync(path.join(process.cwd(), 'openapi/bookiji.yaml'), 'utf-8')
-  ) as any
-} catch (error) {
-  console.warn('Could not load OpenAPI spec:', error)
-  openApiSpec = {}
-}
+const ajv = createAjv()
+const openApiSpec = getOpenApiSpec()
 
 test.describe('API Contract Tests - Health Endpoint', () => {
   test('GET /api/health matches OpenAPI schema', async ({ request }) => {
@@ -27,7 +14,7 @@ test.describe('API Contract Tests - Health Endpoint', () => {
 
     if (schema) {
       // Validate response matches schema
-      const validate = ajv.compile(schema)
+      const validate = ajv.compile(getResolvedSchema(schema))
       const valid = validate(body)
 
       expect(valid, `Schema validation failed: ${JSON.stringify(validate.errors)}`).toBe(true)

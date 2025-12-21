@@ -9,9 +9,7 @@
 ## 🚨 **Next Steps Required**
 
 ### **1. Run Database Migrations**
-Your Supabase project needs the schema to be applied. You have two options:
-
-#### **Option A: Use Supabase CLI (Recommended)**
+Your Supabase project needs the schema to be applied. Use CLI-only migrations:
 ```bash
 # Install Supabase CLI
 npm install -g supabase
@@ -26,11 +24,7 @@ supabase link --project-ref YOUR_PROJECT_REF
 supabase db push
 ```
 
-#### **Option B: Manual SQL Execution**
-1. Go to your Supabase Dashboard
-2. Navigate to SQL Editor
-3. Run the contents of `supabase/migrations/001_initial_schema.sql`
-4. Run the contents of `supabase/migrations/20240320000000_create_profiles.sql`
+Manual SQL execution in the dashboard is not allowed. Follow the repository DB policy and use CLI-only migrations.
 
 ### **2. Test Database Connection**
 After running migrations, test the connection:

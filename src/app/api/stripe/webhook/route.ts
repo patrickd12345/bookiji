@@ -46,16 +46,22 @@ export async function POST(req: Request) {
   const sig = req.headers.get('stripe-signature')
 
   if (!sig) {
-    return new NextResponse('Missing stripe-signature header', { status: 400 })
+    return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 })
   }
 
   let event: Stripe.Event
+
+  // TypeScript narrowing - stripeWebhookSecret is checked at module level
+  const webhookSecret: string = stripeWebhookSecret!
+  if (!webhookSecret) {
+    return NextResponse.json({ error: 'STRIPE_WEBHOOK_SECRET is not configured' }, { status: 500 })
+  }
 
   try {
     event = stripe.webhooks.constructEvent(body, sig, stripeWebhookSecret)
   } catch (err: any) {
     console.error('Webhook signature failed:', err?.message || err)
-    return new NextResponse('Invalid signature', { status: 400 })
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
   if (event.type === 'payment_intent.succeeded') {
@@ -70,7 +76,7 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error('Supabase update error:', error.message)
-      return new NextResponse('Supabase error', { status: 500 })
+      return NextResponse.json({ error: 'Supabase error' }, { status: 500 })
     }
 
     console.log('Booking confirmed:', paymentIntentId)

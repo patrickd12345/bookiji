@@ -9,7 +9,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./tests/setup.ts"],
     testTimeout: 10000, // 10 second timeout for tests
-    maxWorkers: 2, // Limit concurrent workers to reduce memory usage
+    maxWorkers: 1, // Limit concurrent workers to reduce memory usage
     pool: "forks", // Use fork pool for better memory management
     poolOptions: {
       forks: {
@@ -32,7 +32,9 @@ export default defineConfig({
       "packages/**/tests/**/*.{test,spec}.{ts,tsx}"
     ],
     exclude: [
-      "node_modules/**/*"
+      "node_modules/**/*",
+      // Playwright "contract" tests live under tests/api/contracts and should NOT be executed by Vitest.
+      "tests/api/contracts/**/*",
     ],
   },
   resolve: {
