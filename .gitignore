@@ -10,6 +10,10 @@
 !.yarn/releases
 !.yarn/versions
 
+# Lock files (we use pnpm, ignore npm/yarn lock files)
+package-lock.json
+yarn.lock
+
 # Python virtual environment
 .venv/
 venv/
