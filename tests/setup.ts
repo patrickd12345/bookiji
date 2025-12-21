@@ -25,6 +25,7 @@ beforeAll(() => {
 
 // Set up environment variables for integration tests
 process.env.DEPLOY_ENV = 'test'
+process.env.NODE_ENV = 'test'
 
 // Supabase Test Project (create a dedicated test project)
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://your-test-project.supabase.co'
@@ -58,36 +59,29 @@ beforeEach(() => {
 })
 
 // Mock fetch with default responses
+function jsonResponse(body: unknown, init?: ResponseInit): Response {
+  const headers = new Headers(init?.headers)
+  if (!headers.has('content-type')) {
+    headers.set('content-type', 'application/json')
+  }
+  return new Response(JSON.stringify(body), { ...init, headers })
+}
+
 global.fetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
   const url = typeof input === 'string' ? input : input.toString()
   
   // Default successful response
   if (url.includes('/api/')) {
-    return Promise.resolve({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ success: true, data: [] }),
-      text: () => Promise.resolve('{"success": true, "data": []}'),
-    } as Response)
+    return Promise.resolve(jsonResponse({ success: true, data: [] }, { status: 200 }))
   }
   
   // AI radius endpoint
   if (url.includes('/api/ai/radius')) {
-    return Promise.resolve({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ radius: 25, confidence: 0.8 }),
-      text: () => Promise.resolve('{"radius": 25, "confidence": 0.8}'),
-    } as Response)
+    return Promise.resolve(jsonResponse({ radius: 25, confidence: 0.8 }, { status: 200 }))
   }
   
   // Default response
-  return Promise.resolve({
-    ok: true,
-    status: 200,
-    json: () => Promise.resolve({}),
-    text: () => Promise.resolve('{}'),
-  } as Response)
+  return Promise.resolve(jsonResponse({}, { status: 200 }))
 })
 
 // Cleanup after each test

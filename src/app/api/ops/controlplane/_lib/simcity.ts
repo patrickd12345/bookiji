@@ -1,4 +1,14 @@
 import { resolveActiveDomains } from './simcity-domains'
+import { makeEventId } from './simcity-hash'
+import type {
+  SimCityEvent,
+  SimCityEventEnvelope,
+  SimCityEventSpec,
+  SimCityProposalConfig,
+  ProposalMode,
+  SimCityProposal,
+} from './simcity-types'
+import { generateProposals } from './simcity-proposals'
 
 type SimCityLatencyConfig = {
   p50Ms: number
@@ -13,47 +23,8 @@ export type SimCityConfig = {
   scenarios?: string[]
   enabledDomains?: string[]
   domains?: Record<string, unknown>
+  proposals?: SimCityProposalConfig
 }
-
-export type SimCityEvent =
-  | {
-      id: string
-      type: 'tick'
-      timestamp: string
-      tick: number
-    }
-  | {
-      id: string
-      type: 'fault_injected'
-      timestamp: string
-      tick: number
-      domain: string
-      faultId: string
-    }
-  | {
-      id: string
-      type: 'LOAD_SPIKE'
-      timestamp: string
-      tick: number
-      domain: string
-      severity: number
-    }
-  | {
-      id: string
-      type: 'LATENCY_JITTER'
-      timestamp: string
-      tick: number
-      domain: string
-      ms: number
-    }
-  | {
-      id: string
-      type: 'SOFT_FAILURE'
-      timestamp: string
-      tick: number
-      domain: string
-      probability: number
-    }
 
 export type SimCityStatus = {
   running: boolean
@@ -62,15 +33,41 @@ export type SimCityStatus = {
   config?: SimCityConfig
   activeScenarios: string[]
   activeDomains: string[]
-  eventsByDomain: Record<string, SimCityEvent[]>
+  eventsByDomain: Record<string, SimCityEventEnvelope[]>
   lastInjectedFault?: { domain: string; faultId: string; tick: number; timestamp: string }
-  lastEvent?: SimCityEvent
-  events: SimCityEvent[]
+  lastEvent?: SimCityEventEnvelope
+  events: SimCityEventEnvelope[]
 }
 
-function getEventDomain(event: SimCityEvent): string {
-  if (event.type === 'tick') return 'engine'
-  return event.domain
+function emitEvent(spec: SimCityEventSpec): SimCityEvent {
+  const cfg = state.config
+  if (!cfg) throw new Error('SimCity is not initialized.')
+
+  return {
+    id: makeEventId({
+      seed: cfg.seed,
+      tick: state.tick,
+      domain: spec.domain,
+      type: spec.type,
+      payload: spec.payload,
+    }),
+    tick: state.tick,
+    domain: spec.domain,
+    type: spec.type,
+    payload: spec.payload,
+  }
+}
+
+function wrapEnvelope(event: SimCityEvent): SimCityEventEnvelope {
+  const cfg = state.config
+  if (!cfg) throw new Error('SimCity is not initialized.')
+
+  return {
+    version: 1,
+    seed: cfg.seed,
+    generatedAtTick: state.tick,
+    event,
+  }
 }
 
 function parseAllowList(value?: string): string[] {
@@ -113,7 +110,46 @@ function clampProbability(value: unknown): number {
   return Math.max(0, Math.min(1, asNumber))
 }
 
+function normalizeProposalConfig(
+  proposals: SimCityProposalConfig | undefined,
+  deployEnv: string
+): SimCityProposalConfig | undefined {
+  // Fail-closed: invalid config or production → proposals OFF
+  if (!proposals) {
+    return undefined
+  }
+
+  const deployEnvLower = deployEnv.toLowerCase()
+  if (deployEnvLower === 'production') {
+    return undefined
+  }
+
+  const validModes: ProposalMode[] = ['llm', 'rules', 'hybrid', 'off']
+  const mode = validModes.includes(proposals.mode) ? proposals.mode : 'off'
+
+  if (mode === 'off') {
+    return undefined
+  }
+
+  const maxPerTick = typeof proposals.maxPerTick === 'number' && Number.isFinite(proposals.maxPerTick)
+    ? Math.max(1, Math.min(10, Math.floor(proposals.maxPerTick)))
+    : 3
+
+  const minConfidence = typeof proposals.minConfidence === 'number' && Number.isFinite(proposals.minConfidence)
+    ? clampProbability(proposals.minConfidence)
+    : 0.6
+
+  return {
+    mode,
+    maxPerTick,
+    minConfidence,
+  }
+}
+
 function normalizeConfig(config: SimCityConfig): SimCityConfig {
+  const deployEnv = process.env.DEPLOY_ENV?.trim() ?? ''
+  const proposals = normalizeProposalConfig(config.proposals, deployEnv)
+
   return {
     seed: Number.isFinite(config.seed) ? config.seed : 1,
     tickRateMs: Math.max(0, Math.floor(config.tickRateMs)),
@@ -134,14 +170,11 @@ function normalizeConfig(config: SimCityConfig): SimCityConfig {
     scenarios: Array.isArray(config.scenarios) ? config.scenarios.filter(Boolean) : [],
     enabledDomains: Array.isArray(config.enabledDomains) ? config.enabledDomains.filter(Boolean) : undefined,
     domains: config.domains && typeof config.domains === 'object' ? config.domains : undefined,
+    proposals,
   }
 }
 
-function makeEventId(tick: number, suffix: string) {
-  return `simcity_${tick}_${suffix}`
-}
-
-const MAX_EVENTS = 200
+const MAX_EVENTS = 500
 
 type EngineState = {
   running: boolean
@@ -150,9 +183,9 @@ type EngineState = {
   config?: SimCityConfig
   rng?: () => number
   timer?: NodeJS.Timeout | null
-  events: SimCityEvent[]
+  events: SimCityEventEnvelope[]
   lastInjectedFault?: SimCityStatus['lastInjectedFault']
-  lastEvent?: SimCityEvent
+  lastEvent?: SimCityEventEnvelope
 }
 
 const state: EngineState = {
@@ -163,11 +196,12 @@ const state: EngineState = {
 }
 
 function pushEvent(event: SimCityEvent) {
-  state.events.push(event)
+  const envelope = wrapEnvelope(event)
+  state.events.push(envelope)
   if (state.events.length > MAX_EVENTS) {
     state.events.splice(0, state.events.length - MAX_EVENTS)
   }
-  state.lastEvent = event
+  state.lastEvent = envelope
 }
 
 export function simCityStart(config: SimCityConfig): SimCityStatus {
@@ -193,12 +227,15 @@ export function simCityStart(config: SimCityConfig): SimCityStatus {
 
   if (normalized.tickRateMs > 0) {
     state.timer = setInterval(() => {
-      try {
-        simCityTick()
-      } catch {
-        // fail closed: stop ticking if something goes wrong
-        simCityStop()
-      }
+      // Use void to explicitly ignore promise (tick is async for proposals)
+      void (async () => {
+        try {
+          await simCityTick()
+        } catch {
+          // fail closed: stop ticking if something goes wrong
+          simCityStop()
+        }
+      })()
     }, normalized.tickRateMs)
   }
 
@@ -215,7 +252,7 @@ export function simCityStop(): SimCityStatus {
   return simCityStatus()
 }
 
-export function simCityTick(): SimCityEvent[] {
+export async function simCityTick(): Promise<SimCityEventEnvelope[]> {
   if (!state.running) {
     throw new Error('SimCity is not running.')
   }
@@ -224,30 +261,23 @@ export function simCityTick(): SimCityEvent[] {
   }
 
   state.tick += 1
-  const now = new Date().toISOString()
-  const emitted: SimCityEvent[] = []
+  const emitted: SimCityEventEnvelope[] = []
 
-  const tickEvent: SimCityEvent = {
-    id: makeEventId(state.tick, 'tick'),
-    type: 'tick',
-    timestamp: now,
-    tick: state.tick,
-  }
+  const tickEvent = emitEvent({ domain: 'engine', type: 'tick', payload: {} })
   pushEvent(tickEvent)
-  emitted.push(tickEvent)
+  emitted.push(wrapEnvelope(tickEvent))
 
   const domains = resolveActiveDomains(state.config)
   for (const domain of domains) {
     const domainEvents = domain.onTick({
       tick: state.tick,
-      now,
       config: state.config,
       rand: state.rng,
-      makeEventId: (suffix) => makeEventId(state.tick, suffix),
     })
-    for (const event of domainEvents) {
+    for (const eventSpec of domainEvents) {
+      const event = emitEvent(eventSpec)
       pushEvent(event)
-      emitted.push(event)
+      emitted.push(wrapEnvelope(event))
     }
   }
 
@@ -258,30 +288,93 @@ export function simCityTick(): SimCityEvent[] {
     const roll = state.rng()
     if (roll < probability) {
       const faultId = `fault_${domain}_${state.tick}`
-      const faultEvent: SimCityEvent = {
-        id: makeEventId(state.tick, `fault_${domain}`),
+      const faultEvent = emitEvent({
+        domain: 'engine',
         type: 'fault_injected',
-        timestamp: now,
-        tick: state.tick,
-        domain,
-        faultId,
-      }
+        payload: { domain, faultId },
+      })
       pushEvent(faultEvent)
-      emitted.push(faultEvent)
-      state.lastInjectedFault = { domain, faultId, tick: state.tick, timestamp: now }
+      emitted.push(wrapEnvelope(faultEvent))
+      state.lastInjectedFault = { domain, faultId, tick: state.tick, timestamp: new Date().toISOString() }
       break
+    }
+  }
+
+  // Phase 4: Generate proposals if enabled
+  if (state.config.proposals && state.config.proposals.mode !== 'off') {
+    try {
+      const proposals = await generateProposals(
+        {
+          tick: state.tick,
+          config: state.config,
+          events: state.events,
+        },
+        state.config
+      )
+
+      // Emit each proposal as a proposal.generated event
+      for (const proposal of proposals) {
+        const proposalEvent = emitEvent({
+          domain: 'engine',
+          type: 'proposal.generated',
+          payload: {
+            proposalId: proposal.id,
+            domain: proposal.domain,
+            action: proposal.action,
+            description: proposal.description,
+            confidence: proposal.confidence,
+            evidenceEventIds: proposal.evidenceEventIds,
+            source: proposal.source,
+          },
+        })
+        pushEvent(proposalEvent)
+        emitted.push(wrapEnvelope(proposalEvent))
+      }
+    } catch (error) {
+      // Fail closed: if proposal generation fails, continue without proposals
+      // Log error but don't throw (proposals are advisory only)
+      console.warn('SimCity proposal generation failed:', error)
     }
   }
 
   return emitted
 }
 
+export function simCityGetEvents(opts?: {
+  sinceTick?: number
+  limit?: number
+  domain?: string
+}): SimCityEventEnvelope[] {
+  ensureSimCityAllowed()
+
+  const sinceTick = opts?.sinceTick
+  const domain = opts?.domain?.trim()
+  const limit = Math.max(0, Math.min(MAX_EVENTS, Math.floor(opts?.limit ?? 100)))
+
+  const filtered = state.events.filter((envelope) => {
+    if (typeof sinceTick === 'number' && Number.isFinite(sinceTick) && envelope.event.tick <= sinceTick) {
+      return false
+    }
+    if (domain && envelope.event.domain !== domain) {
+      return false
+    }
+    return true
+  })
+
+  return limit > 0 ? filtered.slice(-limit) : []
+}
+
+export function simCityCursor(): { seed: number | null; tick: number } {
+  ensureSimCityAllowed()
+  return { seed: state.config?.seed ?? null, tick: state.tick }
+}
+
 export function simCityStatus(): SimCityStatus {
   ensureSimCityAllowed()
   const activeDomains = state.config ? resolveActiveDomains(state.config).map((d) => d.name) : []
-  const eventsByDomain: Record<string, SimCityEvent[]> = {}
+  const eventsByDomain: Record<string, SimCityEventEnvelope[]> = {}
   for (const event of state.events) {
-    const domain = getEventDomain(event)
+    const domain = event.event.domain
     const bucket = eventsByDomain[domain] ?? []
     bucket.push(event)
     eventsByDomain[domain] = bucket

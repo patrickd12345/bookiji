@@ -26,3 +26,5 @@ CI does not run:
 Integration tests (`pnpm test:integration`) are opt-in and may fail while scenarios evolve; CI enforces `pnpm test:fast` only.
 
 SimCity note: Phase 1 state is in-memory only and resets on process restart.
+SimCity events note: Phase 3 events are deterministic; event IDs are derived from (seed, tick, domain, type, payload) and there are no wall-clock timestamps in the event contract.
+SimCity proposals note: Phase 4 proposals are advisory only and never executed. Proposals are read-only signals generated from LLM or rule-based analysis of SimCity events. Proposal IDs are content-hashed (deterministic) and proposals are disabled in production environments.

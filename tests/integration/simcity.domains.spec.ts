@@ -12,7 +12,7 @@ describe('SimCity domains (integration)', () => {
     }
   })
 
-  it('emits deterministic domain event streams for the same seed/config', () => {
+  it('emits deterministic domain event streams for the same seed/config', async () => {
     const cfg = {
       seed: 42,
       tickRateMs: 0,
@@ -30,13 +30,13 @@ describe('SimCity domains (integration)', () => {
 
     simCityStart(cfg)
     const eventsA = []
-    for (let i = 0; i < 5; i += 1) eventsA.push(...simCityTick())
+    for (let i = 0; i < 5; i += 1) eventsA.push(...(await simCityTick()))
     const statusA = simCityStatus()
     simCityStop()
 
     simCityStart(cfg)
     const eventsB = []
-    for (let i = 0; i < 5; i += 1) eventsB.push(...simCityTick())
+    for (let i = 0; i < 5; i += 1) eventsB.push(...(await simCityTick()))
     const statusB = simCityStatus()
     simCityStop()
 
@@ -44,8 +44,6 @@ describe('SimCity domains (integration)', () => {
     expect(statusA.activeDomains).toStrictEqual(['booking-load'])
     expect(statusB.activeDomains).toStrictEqual(['booking-load'])
     expect(statusA.eventsByDomain.engine?.length).toBeGreaterThan(0)
-    expect(statusA.eventsByDomain.booking?.length).toBeGreaterThan(0)
-    expect(statusA.eventsByDomain.payment?.length).toBeGreaterThan(0)
+    expect(statusA.eventsByDomain['booking-load']?.length).toBeGreaterThan(0)
   })
 })
-

@@ -1,16 +1,15 @@
-import type { SimCityConfig, SimCityEvent } from './simcity'
+import type { SimCityConfig } from './simcity'
+import type { SimCityEventSpec } from './simcity-types'
 
 export type TickContext = {
   tick: number
-  now: string
   config: SimCityConfig
   rand: () => number
-  makeEventId: (suffix: string) => string
 }
 
 export interface SimCityDomain {
   name: string
-  onTick: (ctx: TickContext) => SimCityEvent[]
+  onTick: (ctx: TickContext) => SimCityEventSpec[]
 }
 
 type BookingLoadDomainConfig = {
@@ -46,18 +45,15 @@ function createBookingLoadDomain(): SimCityDomain {
   return {
     name: 'booking-load',
     onTick: (ctx) => {
-      const emitted: SimCityEvent[] = []
+      const emitted: SimCityEventSpec[] = []
       const cfg = resolveBookingLoadConfig(ctx.config)
 
       if (ctx.rand() < cfg.spikeProbability) {
         const severity = 1 + Math.floor(ctx.rand() * cfg.maxSeverity)
         emitted.push({
-          id: ctx.makeEventId(`booking_load_spike_${severity}`),
-          type: 'LOAD_SPIKE',
-          timestamp: ctx.now,
-          tick: ctx.tick,
-          domain: 'booking',
-          severity,
+          domain: 'booking-load',
+          type: 'load_spike',
+          payload: { severity },
         })
       }
 
@@ -66,24 +62,18 @@ function createBookingLoadDomain(): SimCityDomain {
         const p95 = Math.max(p50, Math.floor(ctx.config.latency.p95Ms))
         const jitterMs = Math.round(p50 + (p95 - p50) * ctx.rand())
         emitted.push({
-          id: ctx.makeEventId(`booking_latency_${jitterMs}`),
-          type: 'LATENCY_JITTER',
-          timestamp: ctx.now,
-          tick: ctx.tick,
-          domain: 'booking',
-          ms: jitterMs,
+          domain: 'booking-load',
+          type: 'latency_jitter',
+          payload: { ms: jitterMs },
         })
       }
 
       if (ctx.rand() < cfg.softFailureProbability) {
         const probability = clampProbability(ctx.rand(), 0)
         emitted.push({
-          id: ctx.makeEventId(`payment_soft_failure_${Math.round(probability * 1000)}`),
-          type: 'SOFT_FAILURE',
-          timestamp: ctx.now,
-          tick: ctx.tick,
-          domain: 'payment',
-          probability,
+          domain: 'booking-load',
+          type: 'soft_failure',
+          payload: { target: 'payment', probability },
         })
       }
 
@@ -103,4 +93,3 @@ export function resolveActiveDomains(config: SimCityConfig): SimCityDomain[] {
 
   return out
 }
-

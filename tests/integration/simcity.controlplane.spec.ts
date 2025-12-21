@@ -12,7 +12,7 @@ describe('SimCity control plane (integration)', () => {
     }
   })
 
-  it('produces deterministic events for the same seed/config', () => {
+  it('produces deterministic events for the same seed/config', async () => {
     const cfg = {
       seed: 123,
       tickRateMs: 0,
@@ -23,24 +23,24 @@ describe('SimCity control plane (integration)', () => {
     simCityStart(cfg)
     const eventsA = []
     for (let i = 0; i < 10; i += 1) {
-      eventsA.push(...simCityTick())
+      eventsA.push(...(await simCityTick()))
     }
     simCityStop()
 
     simCityStart(cfg)
     const eventsB = []
     for (let i = 0; i < 10; i += 1) {
-      eventsB.push(...simCityTick())
+      eventsB.push(...(await simCityTick()))
     }
     simCityStop()
 
     expect(eventsA).toStrictEqual(eventsB)
   })
 
-  it('start → ticks → stop exposes stable status snapshot', () => {
+  it('start → ticks → stop exposes stable status snapshot', async () => {
     simCityStart({ seed: 1, tickRateMs: 0, scenarios: ['baseline'] })
-    simCityTick()
-    simCityTick()
+    await simCityTick()
+    await simCityTick()
     const running = simCityStatus()
     expect(running.running).toBe(true)
     expect(running.tick).toBe(2)

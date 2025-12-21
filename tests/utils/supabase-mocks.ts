@@ -5,6 +5,18 @@ type SupabaseResponse<T> = { data: T; error: null }
 const defaultListResponse: SupabaseResponse<any[]> = { data: [], error: null }
 const defaultSingleResponse: SupabaseResponse<any> = { data: null, error: null }
 
+function isInsertErrorEnabled(table: string): boolean {
+  const state = (globalThis as any).__supabaseMockState
+  return Boolean(state?.insertErrors?.has?.(table))
+}
+
+function thenable<T>(value: T) {
+  return {
+    then: (resolve: (value: T) => unknown, reject?: (reason: unknown) => unknown) =>
+      Promise.resolve(value).then(resolve, reject),
+  }
+}
+
 function createQueryChain(defaultThenResult: SupabaseResponse<any> = defaultListResponse) {
   const chain: any = {}
   const selectFallback = vi.fn(() => {
@@ -42,21 +54,9 @@ function createQueryChain(defaultThenResult: SupabaseResponse<any> = defaultList
     }))
   }))
 
-  const insertChain = vi.fn(() => ({
-    select: vi.fn(() => ({
-      single: vi.fn(async () => ({ data: { id: 'insert-id' }, error: null }))
-    }))
-  }))
-
-  const upsertChain = vi.fn(() => ({
-    select: vi.fn(() => ({
-      single: vi.fn(async () => ({ data: { id: 'upsert-id' }, error: null }))
-    }))
-  }))
-
   chain.select = selectFallback
-  chain.insert = insertChain
-  chain.upsert = upsertChain
+  chain.insert = vi.fn(() => chain)
+  chain.upsert = vi.fn(() => chain)
   chain.update = vi.fn(() => chain)
   chain.delete = deleteChain
   chain.eq = vi.fn(() => chain)
@@ -75,9 +75,33 @@ function createQueryChain(defaultThenResult: SupabaseResponse<any> = defaultList
 }
 
 export function createMockSupabaseClient() {
-  const buildFromChain = () => {
+  const buildFromChain = (table: string) => {
     const readChain = createQueryChain(defaultListResponse)
     const mutationChain = createQueryChain(defaultSingleResponse)
+
+    const insertResult = isInsertErrorEnabled(table)
+      ? ({ data: null, error: { message: 'forced insert error' } } as any)
+      : ({ data: { id: 'insert-id' }, error: null } as any)
+
+    const upsertResult = isInsertErrorEnabled(table)
+      ? ({ data: null, error: { message: 'forced upsert error' } } as any)
+      : ({ data: { id: 'upsert-id' }, error: null } as any)
+
+    const insertBuilder = {
+      select: vi.fn(() => ({
+        single: vi.fn(async () => insertResult),
+      })),
+      single: vi.fn(async () => insertResult),
+      ...thenable(insertResult),
+    }
+
+    const upsertBuilder = {
+      select: vi.fn(() => ({
+        single: vi.fn(async () => upsertResult),
+      })),
+      single: vi.fn(async () => upsertResult),
+      ...thenable(upsertResult),
+    }
 
     return {
       select: readChain.select,
@@ -93,9 +117,9 @@ export function createMockSupabaseClient() {
       single: readChain.single,
       maybeSingle: readChain.maybeSingle,
       then: readChain.then,
-      insert: mutationChain.insert,
+      insert: vi.fn(() => insertBuilder),
       update: vi.fn(() => mutationChain),
-      upsert: mutationChain.upsert,
+      upsert: vi.fn(() => upsertBuilder),
       delete: mutationChain.delete,
     }
   }
@@ -115,7 +139,7 @@ export function createMockSupabaseClient() {
         deleteUser: vi.fn(() => Promise.resolve({ error: null })),
       },
     },
-    from: vi.fn((table: string) => buildFromChain()),
+    from: vi.fn((table: string) => buildFromChain(table)),
     rpc: vi.fn(async () => ({ data: null, error: null })),
     storage: {
       from: vi.fn(() => ({
@@ -130,7 +154,7 @@ export function createMockSupabaseClient() {
   return mockSupabaseClient
 }
 
-const defaultSupabaseModules = ['@/lib/supabaseClient', '@/lib/supabase']
+const defaultSupabaseModules = ['@/lib/supabaseClient', '@/lib/supabase', '@/lib/supabaseServer']
 
 // Store the shared mock instance globally
 let sharedMockInstance: ReturnType<typeof createMockSupabaseClient> | null = null
