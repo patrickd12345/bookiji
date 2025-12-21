@@ -10,6 +10,7 @@ export type TickContext = {
 export interface SimCityDomain {
   name: string
   onTick: (ctx: TickContext) => SimCityEventSpec[]
+  getMetrics?: (ctx: TickContext) => Record<string, unknown>
 }
 
 type BookingLoadDomainConfig = {
@@ -78,6 +79,15 @@ function createBookingLoadDomain(): SimCityDomain {
       }
 
       return emitted
+    },
+    getMetrics: (ctx) => {
+      const cfg = resolveBookingLoadConfig(ctx.config)
+      return {
+        spikeProbability: cfg.spikeProbability,
+        latencyJitterProbability: cfg.latencyJitterProbability,
+        softFailureProbability: cfg.softFailureProbability,
+        tick: ctx.tick,
+      }
     },
   }
 }

@@ -148,7 +148,8 @@ function validateProposal(
   }
 
   // Validation: confidence must meet minimum threshold
-  if (confidence < config.minConfidence) {
+  const minConfidence = config.minConfidence ?? 0.6
+  if (confidence < minConfidence) {
     return null
   }
 

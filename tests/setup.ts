@@ -25,7 +25,9 @@ beforeAll(() => {
 
 // Set up environment variables for integration tests
 process.env.DEPLOY_ENV = 'test'
-process.env.NODE_ENV = 'test'
+// NODE_ENV is read-only in some TypeScript definitions, but can be set at runtime
+// Using type assertion to bypass TypeScript's readonly check for test setup
+;(process.env as { NODE_ENV?: string }).NODE_ENV = 'test'
 
 // Supabase Test Project (create a dedicated test project)
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://your-test-project.supabase.co'

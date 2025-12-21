@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { generateProposals } from '@/app/api/ops/controlplane/_lib/simcity-proposals'
-import type { SimCityConfig, SimCityState } from '@/app/api/ops/controlplane/_lib/simcity'
+import type { SimCityConfig } from '@/app/api/ops/controlplane/_lib/simcity'
+import type { SimCityState } from '@/app/api/ops/controlplane/_lib/simcity-proposals'
 import type { SimCityEventEnvelope } from '@/app/api/ops/controlplane/_lib/simcity-types'
 import * as simcityLLM from '@/app/api/ops/controlplane/_lib/simcity-llm'
 

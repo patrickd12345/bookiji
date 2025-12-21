@@ -4,7 +4,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && (value as any).constructor === Object
 }
 
-function stableStringify(value: unknown): string {
+export function stableStringify(value: unknown): string {
   if (value === null) return 'null'
   if (typeof value === 'string') return JSON.stringify(value)
   if (typeof value === 'number') return Number.isFinite(value) ? String(value) : 'null'

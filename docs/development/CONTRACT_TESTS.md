@@ -35,3 +35,5 @@ The OpenAPI `ErrorEnvelope` uses a `oneOf` to match runtime responses:
 - structured `{ ok: false, code, message }` (optionally with `details`, `correlation_id`)
 
 
+
+

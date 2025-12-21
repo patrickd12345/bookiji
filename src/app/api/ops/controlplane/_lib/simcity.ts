@@ -369,6 +369,42 @@ export function simCityCursor(): { seed: number | null; tick: number } {
   return { seed: state.config?.seed ?? null, tick: state.tick }
 }
 
+export function simCityGetProposals(): SimCityProposal[] {
+  ensureSimCityAllowed()
+  const proposals: SimCityProposal[] = []
+
+  // Extract proposals from proposal.generated events
+  for (const envelope of state.events) {
+    if (envelope.event.type === 'proposal.generated') {
+      const payload = envelope.event.payload as {
+        proposalId: string
+        domain: string
+        action: string
+        description: string
+        confidence: number
+        evidenceEventIds: string[]
+        source: 'llm' | 'rules'
+      }
+
+      proposals.push({
+        id: payload.proposalId,
+        tick: envelope.event.tick,
+        domain: payload.domain,
+        action: payload.action,
+        description: payload.description,
+        confidence: payload.confidence,
+        evidenceEventIds: payload.evidenceEventIds,
+        source: payload.source,
+      })
+    }
+  }
+
+  // Sort deterministically by proposal ID
+  proposals.sort((a, b) => a.id.localeCompare(b.id))
+
+  return proposals
+}
+
 export function simCityStatus(): SimCityStatus {
   ensureSimCityAllowed()
   const activeDomains = state.config ? resolveActiveDomains(state.config).map((d) => d.name) : []
