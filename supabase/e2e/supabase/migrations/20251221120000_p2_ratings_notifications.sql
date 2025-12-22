@@ -117,22 +117,12 @@ CREATE POLICY "Users can view own notification deliveries"
 -- 3. BATCH QUEUE EXTENSIONS (link to intents)
 -- ========================================
 
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'notification_batch_queue') THEN
-    ALTER TABLE notification_batch_queue
-      ADD COLUMN IF NOT EXISTS intent_id UUID REFERENCES notification_intents(id) ON DELETE SET NULL,
-      ADD COLUMN IF NOT EXISTS delivery_id UUID REFERENCES notification_deliveries(id) ON DELETE SET NULL;
-  END IF;
-END $$;
+ALTER TABLE notification_batch_queue
+  ADD COLUMN IF NOT EXISTS intent_id UUID REFERENCES notification_intents(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS delivery_id UUID REFERENCES notification_deliveries(id) ON DELETE SET NULL;
 
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'notification_batch_queue') THEN
-    CREATE INDEX IF NOT EXISTS notification_batch_queue_intent_idx
-      ON notification_batch_queue(intent_id);
+CREATE INDEX IF NOT EXISTS notification_batch_queue_intent_idx
+  ON notification_batch_queue(intent_id);
 
-    CREATE INDEX IF NOT EXISTS notification_batch_queue_delivery_idx
-      ON notification_batch_queue(delivery_id);
-  END IF;
-END $$;
+CREATE INDEX IF NOT EXISTS notification_batch_queue_delivery_idx
+  ON notification_batch_queue(delivery_id);

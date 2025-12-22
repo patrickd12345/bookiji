@@ -1,5 +1,11 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
+import dns from 'node:dns'
+
+// Force IPv4 for stability on Windows Docker Desktop
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first')
+}
 
 function parseArgs(argv) {
   const args = {}
@@ -26,6 +32,8 @@ function isAllowedTargetHost(hostname) {
   if (host === '::1') return true
   if (host === 'host.docker.internal') return true
   if (host === 'bookiji.local') return true
+  if (host.startsWith('172.')) return true // Docker bridge network
+  if (host.startsWith('192.')) return true // LAN
   return false
 }
 
@@ -58,10 +66,12 @@ function validateSupabaseUrl(raw) {
   if (host.endsWith('bookiji.com')) throw new Error('Refusing non-local SUPABASE_URL')
   if (!/^https?:$/.test(url.protocol)) throw new Error('SUPABASE_URL must be http(s)')
   if (url.username || url.password) throw new Error('SUPABASE_URL must not include credentials')
-  if (!isAllowedTargetHost(url.hostname)) throw new Error('Refusing non-local SUPABASE_URL')
-  url.hash = ''
-  url.search = ''
-  return url.toString().replace(/\/+$/, '')
+  if (!isAllowedTargetHost(url.hostname)) {
+    if (host.startsWith('supabase_')) return `${url.protocol}//${url.host}`
+    throw new Error('Refusing non-local SUPABASE_URL')
+  }
+  // Return only origin (protocol + host + port), strip any pathname
+  return `${url.protocol}//${url.host}`
 }
 
 function hashSeedToU32(seedStr) {
@@ -99,12 +109,13 @@ async function fetchJson(url, { method = 'GET', headers = {}, body, timeoutMs = 
   const controller = new AbortController()
   const t = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    const res = await fetch(url, {
+    const fetchOptions = {
       method,
       headers: { 'Content-Type': 'application/json', ...headers },
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: controller.signal
-    })
+    }
+    const res = await fetch(url, fetchOptions)
     const text = await res.text()
     let json = null
     try {
@@ -113,6 +124,9 @@ async function fetchJson(url, { method = 'GET', headers = {}, body, timeoutMs = 
       json = null
     }
     return { ok: res.ok, status: res.status, json, text }
+  } catch (err) {
+    console.error(`Fetch error for ${url}: ${err.message}`)
+    throw err
   } finally {
     clearTimeout(t)
   }
@@ -135,7 +149,7 @@ async function fetchWithHeaders(url, { method = 'GET', headers = {}, body, timeo
   }
 }
 
-function invariantFail({ invariant, seed, eventIndex, event, stateBefore, stateAfter, error }) {
+function invariantFail({ invariant, seed, eventIndex, event, stateBefore, stateAfter, error, forensic }) {
   const payload = {
     invariant,
     seed,
@@ -143,7 +157,8 @@ function invariantFail({ invariant, seed, eventIndex, event, stateBefore, stateA
     event,
     state_before: stateBefore,
     state_after: stateAfter,
-    ...(error ? { error: String(error) } : {})
+    ...(error ? { error: String(error) } : {}),
+    ...(forensic ? { forensic } : {})
   }
   return payload
 }
@@ -153,8 +168,8 @@ function snapshotSlot(slot) {
   return {
     exists: true,
     id: slot.id,
-    vendor_id: slot.vendor_id,
-    is_booked: !!slot.is_booked,
+    provider_id: slot.provider_id,
+    is_available: !!slot.is_available,
     start_time: slot.start_time,
     end_time: slot.end_time
   }
@@ -205,19 +220,24 @@ async function main() {
   const rng = mulberry32(hashSeedToU32(seedStr))
 
   const supabaseUrlRaw = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseServiceKey =
+  const rawKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_SECRET_KEY ||
-    process.env.SUPABASE_SERVICE_KEY
+    process.env.SUPABASE_SERVICE_KEY ||
+    ''
 
   if (!supabaseUrlRaw) throw new Error('SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) env is required')
-  if (!supabaseServiceKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SECRET_KEY) env is required')
+  if (!rawKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SECRET_KEY) env is required')
+
+  // Normalize JWT: strip "Bearer " prefix (case-insensitive) and trim whitespace
+  const supabaseServiceKey = rawKey.replace(/^Bearer\s+/i, '').trim()
 
   const supabaseUrl = validateSupabaseUrl(supabaseUrlRaw)
   const restBase = `${supabaseUrl}/rest/v1`
   const supabaseHeaders = {
     apikey: supabaseServiceKey,
-    Authorization: `Bearer ${supabaseServiceKey}`
+    Authorization: `Bearer ${supabaseServiceKey}`,
+    'Content-Type': 'application/json'
   }
 
   function qs(params) {
@@ -239,7 +259,7 @@ async function main() {
     return out
   }
 
-  async function restSelectInChunks({ table, select, column, values, chunkSize = 50 }) {
+  async function restSelectInChunks({ table, select, column, values, chunkSize = 2 }) {
     if (!values.length) return []
     const out = []
     for (const group of chunk(values, chunkSize)) {
@@ -310,10 +330,10 @@ async function main() {
   // Fail fast if local schema isn't present.
   {
     const checks = await Promise.all([
-      fetchJson(restUrl('users', { select: 'id', limit: 1 }), { method: 'GET', headers: { ...supabaseHeaders } }),
-      fetchJson(restUrl('services', { select: 'id,vendor_id', limit: 1 }), { method: 'GET', headers: { ...supabaseHeaders } }),
-      fetchJson(restUrl('availability_slots', { select: 'id,vendor_id,start_time,end_time,is_booked', limit: 1 }), { method: 'GET', headers: { ...supabaseHeaders } }),
-      fetchJson(restUrl('bookings', { select: 'id,slot_id,slot_start,slot_end,total_amount_cents', limit: 1 }), { method: 'GET', headers: { ...supabaseHeaders } })
+      fetchJson(restUrl('profiles', { select: 'id', limit: 1 }), { method: 'GET', headers: { ...supabaseHeaders } }),
+      fetchJson(restUrl('services', { select: 'id,provider_id', limit: 1 }), { method: 'GET', headers: { ...supabaseHeaders } }),
+      fetchJson(restUrl('availability_slots', { select: 'id,provider_id,start_time,end_time,is_available', limit: 1 }), { method: 'GET', headers: { ...supabaseHeaders } }),
+      fetchJson(restUrl('bookings', { select: 'id,provider_id,start_time,end_time,total_amount', limit: 1 }), { method: 'GET', headers: { ...supabaseHeaders } })
     ])
     for (const res of checks) {
       if (!res.ok) throw new Error(`schema_not_ready:${res.status}:${res.text}`)
@@ -321,8 +341,15 @@ async function main() {
   }
 
   const runId = stableUuid(`chaos-run:${seedStr}`)
-  const vendors = [stableUuid(`${runId}:vendor:A`), stableUuid(`${runId}:vendor:B`)]
-  const customers = [stableUuid(`${runId}:customer:A`), stableUuid(`${runId}:customer:B`)]
+  // Fixed IDs for bootstrap stability (matches migration)
+  const vendors = [
+    '00000000-0000-0000-0000-000000000001',
+    '00000000-0000-0000-0000-000000000002'
+  ]
+  const customers = [
+    '00000000-0000-0000-0000-000000000003',
+    '00000000-0000-0000-0000-000000000004'
+  ]
   const [vendorA, vendorB] = vendors
 
   const servicesByVendor = {
@@ -356,32 +383,39 @@ async function main() {
       slotIdsByVendor[vendorId].push(id)
       allSlots.push({
         id,
-        vendor_id: vendorId,
-        service_id: serviceId,
+        provider_id: vendorId,
         start_time: start,
         end_time: end,
-        is_booked: false
+        is_available: true
       })
     }
   }
 
-  await restUpsert({
-    table: 'users',
-    onConflict: 'id',
-    records: [
-      { id: vendors[0], email: `vendor.a+${seedStr}@chaos.dev`, role: 'vendor', full_name: 'Chaos Vendor A' },
-      { id: vendors[1], email: `vendor.b+${seedStr}@chaos.dev`, role: 'vendor', full_name: 'Chaos Vendor B' },
-      { id: customers[0], email: `customer.a+${seedStr}@chaos.dev`, role: 'customer', full_name: 'Chaos Customer A' },
-      { id: customers[1], email: `customer.b+${seedStr}@chaos.dev`, role: 'customer', full_name: 'Chaos Customer B' }
-    ]
-  })
-
+  // Pre-seeded auth users and profiles exist via migration 20251222170000_chaos_seed_auth.sql.
+  // We only need to upsert services and slots.
+  
   await restUpsert({
     table: 'services',
     onConflict: 'id',
     records: [
-      { id: servicesByVendor[vendorA], vendor_id: vendorA, name: 'Chaos Service A', category: 'chaos', duration_minutes: 60, is_active: true, price_cents: 0 },
-      { id: servicesByVendor[vendorB], vendor_id: vendorB, name: 'Chaos Service B', category: 'chaos', duration_minutes: 60, is_active: true, price_cents: 0 }
+      {
+        id: servicesByVendor[vendorA],
+        provider_id: vendorA,
+        name: 'Chaos Service A',
+        category: 'chaos',
+        price: 0,
+        is_active: true,
+        duration_minutes: slotDurationMinutes
+      },
+      {
+        id: servicesByVendor[vendorB],
+        provider_id: vendorB,
+        name: 'Chaos Service B',
+        category: 'chaos',
+        price: 0,
+        is_active: true,
+        duration_minutes: slotDurationMinutes
+      }
     ]
   })
 
@@ -392,7 +426,7 @@ async function main() {
   const initialSlot = allSlots.find((s) => s.id === initialSlotId)
   if (!initialSlot) throw new Error('bootstrap_missing_initial_slot')
 
-  await restPatch({ table: 'availability_slots', filters: { id: `eq.${initialSlotId}` }, patch: { is_booked: true } })
+  await restPatch({ table: 'availability_slots', filters: { id: `eq.${initialSlotId}` }, patch: { is_available: false } })
   await restUpsert({
     table: 'bookings',
     onConflict: 'id',
@@ -400,13 +434,12 @@ async function main() {
       {
         id: initialBookingId,
         customer_id: customers[0],
-        vendor_id: vendorA,
+        provider_id: vendorA,
         service_id: servicesByVendor[vendorA],
-        slot_id: initialSlotId,
-        slot_start: initialSlot.start_time,
-        slot_end: initialSlot.end_time,
+        start_time: initialSlot.start_time,
+        end_time: initialSlot.end_time,
         status: 'pending',
-        total_amount_cents: 0
+        total_amount: 0
       }
     ]
   })
@@ -523,24 +556,21 @@ async function main() {
     const slotIds = Array.isArray(query.slotIds) ? query.slotIds : []
     const keys = Array.isArray(query.notificationIdempotencyKeys) ? query.notificationIdempotencyKeys : []
 
-    const [bookingsById, bookingsBySlot, slots, intents] = await Promise.all([
+    // Merge all slot IDs: event slots + booking slot IDs (to ensure we have slots for all bookings)
+    const allSlotIds = Array.from(new Set([...slotIds, ...bookingSlotIds]))
+
+    const [bookingsById, slots, intents] = await Promise.all([
       restSelectInChunks({
         table: 'bookings',
-        select: 'id,customer_id,vendor_id,service_id,slot_id,slot_start,slot_end,status,total_amount_cents,created_at,updated_at',
+        select: 'id,customer_id,provider_id,service_id,start_time,end_time,status,total_amount,created_at,updated_at',
         column: 'id',
         values: bookingIds
       }),
       restSelectInChunks({
-        table: 'bookings',
-        select: 'id,customer_id,vendor_id,service_id,slot_id,slot_start,slot_end,status,total_amount_cents,created_at,updated_at',
-        column: 'slot_id',
-        values: bookingSlotIds
-      }),
-      restSelectInChunks({
         table: 'availability_slots',
-        select: 'id,vendor_id,service_id,start_time,end_time,is_booked,created_at',
+        select: 'id,provider_id,start_time,end_time,is_available,created_at',
         column: 'id',
-        values: slotIds
+        values: allSlotIds
       }),
       restSelectInChunks({
         table: 'notification_intents',
@@ -550,10 +580,28 @@ async function main() {
       })
     ])
 
-    const bookingsMap = new Map()
-    for (const b of bookingsById) bookingsMap.set(b.id, b)
-    for (const b of bookingsBySlot) bookingsMap.set(b.id, b)
-    const bookings = Array.from(bookingsMap.values())
+    const bookings = bookingsById
+
+    // Extract provider_ids from all bookings to find related slots by time range
+    // Note: bookings don't have slot_id, so we match by provider_id and time overlap
+    const bookingProviderIds = Array.from(new Set(bookings.map((b) => b.provider_id).filter(Boolean)))
+    const allRequiredSlotIds = Array.from(new Set(allSlotIds))
+    
+    // Query additional slots if needed (by provider_id)
+    const additionalSlots = bookingProviderIds.length
+      ? await restSelectInChunks({
+          table: 'availability_slots',
+          select: 'id,provider_id,start_time,end_time,is_available,created_at',
+          column: 'provider_id',
+          values: bookingProviderIds
+        })
+      : []
+
+    // Merge all slots
+    const allSlotsMap = new Map()
+    for (const s of slots) allSlotsMap.set(s.id, s)
+    for (const s of additionalSlots) allSlotsMap.set(s.id, s)
+    const allSlots = Array.from(allSlotsMap.values())
 
     const intentIds = intents.map((i) => i.id).filter(Boolean)
     const deliveries = intentIds.length
@@ -575,7 +623,7 @@ async function main() {
     return {
       ok: true,
       bookings,
-      slots,
+      slots: allSlots,
       notification_intents: intents,
       notification_deliveries: deliveries,
       payments
@@ -585,8 +633,8 @@ async function main() {
   async function claimSlot(slotId) {
     const res = await restPatch({
       table: 'availability_slots',
-      filters: { id: `eq.${slotId}`, is_booked: 'eq.false' },
-      patch: { is_booked: true }
+      filters: { id: `eq.${slotId}`, is_available: 'eq.true' },
+      patch: { is_available: false }
     })
     if (!res.ok) return { ok: false, status: res.status, json: res.json, text: res.text }
     const rows = Array.isArray(res.json) ? res.json : []
@@ -594,48 +642,51 @@ async function main() {
   }
 
   async function releaseSlot(slotId) {
-    await restPatch({ table: 'availability_slots', filters: { id: `eq.${slotId}` }, patch: { is_booked: false } }).catch(() => null)
+    await restPatch({ table: 'availability_slots', filters: { id: `eq.${slotId}` }, patch: { is_available: true } }).catch(() => null)
   }
 
   async function createBooking(payload) {
-    const slotRes = await fetchJson(restUrl('availability_slots', {
-      select: 'id,vendor_id,service_id,start_time,end_time,is_booked',
-      id: `eq.${payload.slotId}`
-    }), { method: 'GET', headers: { ...supabaseHeaders } })
-
-    if (!slotRes.ok) return slotRes
-    const slot = Array.isArray(slotRes.json) ? slotRes.json[0] : null
-    if (!slot) return { ok: false, status: 404, json: { error: 'Slot not found' }, text: 'Slot not found' }
-    if (slot.vendor_id !== payload.vendorId) return { ok: false, status: 400, json: { error: 'Slot vendor mismatch' }, text: 'Slot vendor mismatch' }
-    if (slot.service_id !== payload.serviceId) return { ok: false, status: 400, json: { error: 'Slot service mismatch' }, text: 'Slot service mismatch' }
-    if (slot.is_booked) return { ok: false, status: 409, json: { error: 'Slot is already booked' }, text: 'Slot is already booked' }
-
-    const claimed = await claimSlot(payload.slotId)
-    if (!claimed.ok) return claimed
-
-    const insert = await restInsert({
-      table: 'bookings',
-      record: {
-        id: payload.bookingId,
-        customer_id: payload.customerId,
-        vendor_id: payload.vendorId,
-        service_id: payload.serviceId,
-        slot_id: payload.slotId,
-        slot_start: slot.start_time,
-        slot_end: slot.end_time,
-        status: 'pending',
-        total_amount_cents: 0
-      }
+    // Use atomic function to claim slot and create booking in one transaction
+    const rpcRes = await fetchJson(`${restBase}/rpc/claim_slot_and_create_booking`, {
+      method: 'POST',
+      headers: { ...supabaseHeaders },
+      body: JSON.stringify({
+        p_slot_id: payload.slotId,
+        p_booking_id: payload.bookingId,
+        p_customer_id: payload.customerId,
+        p_provider_id: payload.vendorId,
+        p_service_id: payload.serviceId,
+        p_total_amount: 0
+      })
     })
 
-    if (!insert.ok) {
-      await releaseSlot(payload.slotId)
+    if (!rpcRes.ok) {
+      return { ok: false, status: rpcRes.status, json: rpcRes.json, text: rpcRes.text }
     }
-    return insert
+
+    const result = Array.isArray(rpcRes.json) ? rpcRes.json[0] : rpcRes.json
+    if (!result || !result.success) {
+      const errorMsg = result?.error_message || 'Failed to claim slot and create booking'
+      const status = errorMsg.includes('not found') ? 404 : errorMsg.includes('not available') ? 409 : errorMsg.includes('mismatch') ? 400 : 500
+      return { ok: false, status, json: { error: errorMsg }, text: errorMsg }
+    }
+
+    // Fetch the created booking to return full details
+    const bookingRes = await fetchJson(restUrl('bookings', {
+      select: 'id,customer_id,provider_id,service_id,start_time,end_time,status,total_amount,created_at,updated_at',
+      id: `eq.${result.booking_id}`
+    }), { method: 'GET', headers: { ...supabaseHeaders } })
+
+    if (!bookingRes.ok) {
+      return { ok: false, status: bookingRes.status, json: bookingRes.json, text: bookingRes.text }
+    }
+
+    const booking = Array.isArray(bookingRes.json) ? bookingRes.json[0] : bookingRes.json
+    return { ok: true, status: 200, json: booking, text: JSON.stringify(booking) }
   }
 
   async function cancelBooking(bookingId) {
-    const get = await fetchJson(restUrl('bookings', { select: 'id,status,slot_id', id: `eq.${bookingId}` }), {
+    const get = await fetchJson(restUrl('bookings', { select: 'id,status,provider_id,start_time,end_time', id: `eq.${bookingId}` }), {
       method: 'GET',
       headers: { ...supabaseHeaders }
     })
@@ -650,51 +701,54 @@ async function main() {
       patch: { status: 'cancelled', updated_at: new Date().toISOString() }
     })
     if (!patch.ok) return patch
-    if (booking.slot_id) await releaseSlot(booking.slot_id)
+    // Find and release the slot by matching provider_id and time range
+    if (booking.provider_id && booking.start_time && booking.end_time) {
+      const slotRes = await fetchJson(restUrl('availability_slots', {
+        select: 'id',
+        provider_id: `eq.${booking.provider_id}`,
+        start_time: `eq.${booking.start_time}`,
+        end_time: `eq.${booking.end_time}`
+      }), { method: 'GET', headers: { ...supabaseHeaders } })
+      if (slotRes.ok && Array.isArray(slotRes.json) && slotRes.json.length > 0) {
+        await releaseSlot(slotRes.json[0].id)
+      }
+    }
     return patch
   }
 
   async function rescheduleBooking(bookingId, newSlotId) {
-    const getBooking = await fetchJson(restUrl('bookings', { select: 'id,status,slot_id,vendor_id,service_id', id: `eq.${bookingId}` }), {
-      method: 'GET',
-      headers: { ...supabaseHeaders }
+    const rpcRes = await fetchJson(`${restBase}/rpc/reschedule_booking_atomically`, {
+      method: 'POST',
+      headers: { ...supabaseHeaders },
+      body: JSON.stringify({
+        p_booking_id: bookingId,
+        p_new_slot_id: newSlotId
+      })
     })
-    if (!getBooking.ok) return getBooking
-    const booking = Array.isArray(getBooking.json) ? getBooking.json[0] : null
-    if (!booking) return { ok: false, status: 404, json: { error: 'Booking not found' }, text: 'Booking not found' }
-    if (booking.status === 'cancelled') return { ok: false, status: 409, json: { error: 'Booking is cancelled' }, text: 'Booking is cancelled' }
 
-    const slotRes = await fetchJson(restUrl('availability_slots', { select: 'id,vendor_id,service_id,start_time,end_time,is_booked', id: `eq.${newSlotId}` }), {
-      method: 'GET',
-      headers: { ...supabaseHeaders }
-    })
-    if (!slotRes.ok) return slotRes
-    const slot = Array.isArray(slotRes.json) ? slotRes.json[0] : null
-    if (!slot) return { ok: false, status: 404, json: { error: 'Slot not found' }, text: 'Slot not found' }
-    if (slot.vendor_id !== booking.vendor_id) return { ok: false, status: 400, json: { error: 'Slot vendor mismatch' }, text: 'Slot vendor mismatch' }
-    if (slot.service_id !== booking.service_id) return { ok: false, status: 400, json: { error: 'Slot service mismatch' }, text: 'Slot service mismatch' }
-    if (slot.is_booked) return { ok: false, status: 409, json: { error: 'Slot is already booked' }, text: 'Slot is already booked' }
-
-    const claimed = await claimSlot(newSlotId)
-    if (!claimed.ok) return claimed
-
-    const patch = await restPatch({
-      table: 'bookings',
-      filters: { id: `eq.${bookingId}` },
-      patch: {
-        slot_id: newSlotId,
-        slot_start: slot.start_time,
-        slot_end: slot.end_time,
-        updated_at: new Date().toISOString()
-      }
-    })
-    if (!patch.ok) {
-      await releaseSlot(newSlotId)
-      return patch
+    if (!rpcRes.ok) {
+      return { ok: false, status: rpcRes.status, json: rpcRes.json, text: rpcRes.text }
     }
 
-    if (booking.slot_id) await releaseSlot(booking.slot_id)
-    return patch
+    const result = Array.isArray(rpcRes.json) ? rpcRes.json[0] : rpcRes.json
+    if (!result || !result.success) {
+      const errorMsg = result?.error_message || 'Failed to reschedule booking'
+      const status = errorMsg.includes('not found') ? 404 : errorMsg.includes('not available') ? 409 : errorMsg.includes('cancelled') ? 409 : errorMsg.includes('mismatch') ? 400 : 500
+      return { ok: false, status, json: { error: errorMsg }, text: errorMsg }
+    }
+
+    // Fetch the updated booking to return full details
+    const bookingRes = await fetchJson(restUrl('bookings', {
+      select: 'id,customer_id,provider_id,service_id,start_time,end_time,status,total_amount,created_at,updated_at',
+      id: `eq.${result.booking_id}`
+    }), { method: 'GET', headers: { ...supabaseHeaders } })
+
+    if (!bookingRes.ok) {
+      return { ok: false, status: bookingRes.status, json: bookingRes.json, text: bookingRes.text }
+    }
+
+    const booking = Array.isArray(bookingRes.json) ? bookingRes.json[0] : bookingRes.json
+    return { ok: true, status: 200, json: booking, text: JSON.stringify(booking) }
   }
 
   async function availabilityChange(payload) {
@@ -705,11 +759,10 @@ async function main() {
         records: [
           {
             id: payload.slotId,
-            vendor_id: payload.vendorId,
-            service_id: payload.serviceId,
+            provider_id: payload.vendorId,
             start_time: payload.startTime,
             end_time: payload.endTime,
-            is_booked: false
+            is_available: true
           }
         ]
       })
@@ -718,7 +771,7 @@ async function main() {
 
     const del = await restDelete({
       table: 'availability_slots',
-      filters: { id: `eq.${payload.slotId}`, vendor_id: `eq.${payload.vendorId}`, is_booked: 'eq.false' }
+      filters: { id: `eq.${payload.slotId}`, provider_id: `eq.${payload.vendorId}`, is_available: 'eq.true' }
     })
     if (!del.ok) return del
     const rows = Array.isArray(del.json) ? del.json : []
@@ -813,14 +866,14 @@ async function main() {
   }
 
   function checkInvariants({ event, seed, eventIndex, stateBefore, stateAfter }) {
-    // no_double_booking: for all touched slots, max 1 non-cancelled booking per slot
+    // no_double_booking: for all touched slots, max 1 non-cancelled booking per provider/time slot
     {
       const bookings = collectBookings(stateAfter)
       const counts = new Map()
       for (const b of bookings) {
-        if (!b?.slot_id) continue
+        if (!b?.provider_id || !b?.start_time || !b?.end_time) continue
         if (b.status === 'cancelled') continue
-        const k = `${b.vendor_id}:${b.slot_id}`
+        const k = `${b.provider_id}:${b.start_time}:${b.end_time}`
         counts.set(k, (counts.get(k) || 0) + 1)
       }
       for (const [k, n] of counts.entries()) {
@@ -904,29 +957,55 @@ async function main() {
     {
       const bookings = collectBookings(stateAfter)
       const slots = collectSlots(stateAfter)
-      const slotsById = new Map(slots.map((s) => [s.id, s]))
+      // Create a map of slots by provider_id and time range
+      const slotsByProviderTime = new Map()
+      for (const s of slots) {
+        const key = `${s.provider_id}:${s.start_time}:${s.end_time}`
+        slotsByProviderTime.set(key, s)
+      }
       for (const b of bookings) {
-        if (!b?.slot_id) continue
+        if (!b?.provider_id || !b?.start_time || !b?.end_time) continue
         if (b.status === 'cancelled') continue
-        const slot = slotsById.get(b.slot_id)
+        const key = `${b.provider_id}:${b.start_time}:${b.end_time}`
+        const matchingSlots = Array.from(slotsByProviderTime.values()).filter(
+          s => s.provider_id === b.provider_id && s.start_time === b.start_time && s.end_time === b.end_time
+        )
+        const slot = slotsByProviderTime.get(key)
         if (!slot) {
+          const forensic = {
+            event_payload: event.payload,
+            booking: { id: b.id, provider_id: b.provider_id, start_time: b.start_time, end_time: b.end_time },
+            matched_slots: [],
+            classification_hint: 'no slot matched'
+          }
           return invariantFail({
             invariant: 'booking_requires_availability',
             seed,
             eventIndex,
             event,
             stateBefore,
-            stateAfter
+            stateAfter,
+            forensic
           })
         }
-        if (slot.vendor_id !== b.vendor_id || slot.is_booked !== true) {
+        // Normalize is_available to boolean for comparison
+        // A booked slot should have is_available = false
+        const slotIsUnavailable = !slot.is_available
+        if (slot.provider_id !== b.provider_id || !slotIsUnavailable) {
+          const forensic = {
+            event_payload: event.payload,
+            booking: { id: b.id, provider_id: b.provider_id, start_time: b.start_time, end_time: b.end_time },
+            matched_slot: { id: slot.id, provider_id: slot.provider_id, start_time: slot.start_time, end_time: slot.end_time, is_available: slot.is_available },
+            classification_hint: matchingSlots.length > 1 ? 'multiple slots matched' : 'booking exists while slot still available'
+          }
           return invariantFail({
             invariant: 'booking_requires_availability',
             seed,
             eventIndex,
             event,
             stateBefore,
-            stateAfter
+            stateAfter,
+            forensic
           })
         }
       }
@@ -1135,18 +1214,22 @@ async function main() {
       if (outPath) {
         await fs.writeFile(outPath, JSON.stringify(fail, null, 2), 'utf8').catch(() => {})
       }
-      process.stdout.write(
-        [
-          'FAIL',
-          `invariant: ${fail.invariant}`,
-          `seed: ${fail.seed}`,
-          `event_index: ${fail.event_index}`,
-          `event: ${JSON.stringify(fail.event)}`,
-          `state_before: ${JSON.stringify(fail.state_before)}`,
-          `state_after: ${JSON.stringify(fail.state_after)}`,
-          ...(fail.error ? [`error: ${fail.error}`] : [])
-        ].join('\n') + '\n'
+      const output = [
+        'FAIL',
+        `invariant: ${fail.invariant}`,
+        `seed: ${fail.seed}`,
+        `event_index: ${fail.event_index}`,
+        `event: ${JSON.stringify(fail.event)}`
+      ]
+      if (fail.forensic) {
+        output.push(`forensic: ${JSON.stringify(fail.forensic)}`)
+      }
+      output.push(
+        `state_before: ${JSON.stringify(fail.state_before)}`,
+        `state_after: ${JSON.stringify(fail.state_after)}`,
+        ...(fail.error ? [`error: ${fail.error}`] : [])
       )
+      process.stdout.write(output.join('\n') + '\n')
       process.exit(1)
     }
 

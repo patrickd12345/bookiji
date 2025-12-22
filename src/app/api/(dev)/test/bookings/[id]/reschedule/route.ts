@@ -21,12 +21,14 @@ export async function POST(request: Request, context: { params: Promise<Record<s
     if (!cfg.secretKey) return NextResponse.json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 })
 
     const admin = createClient(cfg.url, cfg.secretKey, { auth: { persistSession: false, autoRefreshToken: false } })
-    const { error } = await admin
-      .from('bookings')
-      .update({ slot_start: slotStart, slot_end: slotEnd, updated_at: new Date().toISOString() })
-      .eq('id', bookingId)
+    const { data, error } = await admin.rpc('reschedule_booking_atomically', {
+      p_booking_id: bookingId,
+      p_new_slot_id: body.new_slot_id || body.slot_id // Accept multiple formats
+    })
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (data && !data[0].success) return NextResponse.json({ error: data[0].error_message }, { status: 400 })
+    
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 })
