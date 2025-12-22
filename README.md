@@ -167,6 +167,35 @@ No state, intent, or knowledge persists between runs.
 
 ---
 
+## Deterministic Chaos Harness (Non-Prod)
+
+Note: This harness is a fully external tool.  
+Bookiji does not expose any chaos- or stress-specific APIs.
+
+This is a **short-lived chaos runner** that generates **deterministic event sequences** against Bookiji Scheduling **via existing public HTTP APIs and direct Supabase service-role queries**, continuously asserts **hard invariants**, then exits.
+
+### What It Is Not
+- Not a simulator, world model, analytics engine, learning system, daemon, or decision maker
+- Not allowed to touch production URLs, credentials, or databases
+
+### Invariants (Continuously Asserted)
+- No double booking for same vendor/slot
+- Canceled booking never resurrects
+- Notification idempotency (no duplicates)
+- Booking requires availability
+- No payment or billing state touched
+- No cross-vendor data leakage
+
+### How To Run (Local Only)
+1. Start local Supabase + app with E2E enabled (example): `E2E=true FORCE_LOCAL_DB=true pnpm dev`
+2. Build the harness image: `docker build -f chaos/Dockerfile -t bookiji-chaos chaos`
+3. Run one bounded execution (no volumes by default):
+   - `docker run --rm -e SUPABASE_URL=http://host.docker.internal:54321 -e SUPABASE_SERVICE_ROLE_KEY=... bookiji-chaos --seed 812736 --duration 30 --max-events 500 --concurrency 8 --target-url http://host.docker.internal:3000`
+
+Optional: write a failure artifact inside the container with `--out /tmp/failure.json` (mount a volume if you want it on the host).
+
+Example failure artifact shape: `chaos/examples/example_failure.json`
+
 ## 🎯 **What's Coming Next (Roadmap)**
 
 ### **🚧 P1 - Launch Polish (This Week)**
@@ -318,4 +347,3 @@ This project is proprietary software. All rights reserved.
 
 *Last Updated: January 23, 2025*
 *Version: 1.0.0-beta*
-
