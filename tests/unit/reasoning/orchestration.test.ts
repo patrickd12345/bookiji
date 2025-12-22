@@ -158,7 +158,7 @@ describe("ReasoningOrchestrator", () => {
     const envelope: AnalyticsEnvelope = {
       ...baseEnvelope,
       id: "env-unknown",
-      event: { type: "unknown.created", payload: {} as any },
+      event: { type: "unknown.created", payload: {} } as any,
     };
 
     await expect(

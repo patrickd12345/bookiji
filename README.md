@@ -137,33 +137,11 @@ This replaces any prior implicit or narrative definitions of "core" functionalit
 
 ---
 
-## 🧪 SimCity — Stress & Resilience Testing (Internal)
+## 🧪 SimCity — Synthetic Load (Non-Prod)
 
-SimCity is an **internal, non-authoritative stress-testing harness** used to validate Bookiji's resilience under hostile, chaotic, and realistic conditions.
+SimCity is a **non-production** synthetic load generator used for dashboards, demos, and bounded traffic patterns.
 
-It exists to **falsify assumptions**, not to simulate business logic or make decisions.
-
-### What SimCity Does
-- Generates **synthetic external pressure** (traffic bursts, failures, retries, delays)
-- Simulates adversarial behavior from users, providers, networks, and dependencies
-- Replays constrained scenarios to stress concurrency, latency, and edge cases
-- Validates system invariants (e.g. no double booking, no trust leakage)
-
-### What SimCity Is Not
-- Not part of production request paths
-- Not a decision-maker or optimizer
-- Not a simulator of Bookiji's internal logic
-- Not persistent, learning, or adaptive
-- Not authoritative over bookings, payments, or trust rules
-
-### Authority Boundary
-**SimCity generates inputs only.  
-Bookiji owns all decisions.**
-
-Each SimCity run is time-bounded, disposable, and produces a report.  
-No state, intent, or knowledge persists between runs.
-
-> If SimCity ever becomes something Bookiji needs to run, SimCity is wrong.
+It does **not** inject failures, outages, or other chaos behaviors into Bookiji runtime code.
 
 ---
 

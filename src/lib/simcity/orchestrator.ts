@@ -12,7 +12,6 @@ import {
 } from './types';
 import { InvariantViolation } from './types';
 import { InvariantChecker } from './invariants';
-import { ScenarioExecutor, SimEvent as ScenarioEvent } from './scenarios';
 
 export class SimOrchestrator extends EventEmitter {
   private state: SimState;
@@ -21,7 +20,6 @@ export class SimOrchestrator extends EventEmitter {
   private telemetry: SimTelemetry;
   private agentCounter = 0;
   private invariantChecker: InvariantChecker | null = null;
-  private scenarioExecutor: ScenarioExecutor | null = null;
   private currentRunId: string | null = null;
   private currentSeed: number | null = null;
   private currentScenario: string | null = null;
@@ -63,15 +61,6 @@ export class SimOrchestrator extends EventEmitter {
     
     // Initialize invariant checker
     this.invariantChecker = new InvariantChecker(this.currentRunId, this.currentSeed);
-    
-    // Initialize scenario executor if scenario specified
-    if (options?.scenario) {
-      this.scenarioExecutor = new ScenarioExecutor((event: ScenarioEvent) => {
-        this.handleScenarioEvent(event);
-      });
-      const scenario = await this.scenarioExecutor.startScenario(options.scenario);
-      this.currentScenario = scenario.id;
-    }
     
     // Apply custom policies if provided
     if (options?.policies) {
@@ -323,64 +312,6 @@ export class SimOrchestrator extends EventEmitter {
     };
   }
 
-  // Handle scenario events
-  private handleScenarioEvent(event: ScenarioEvent): void {
-    console.log(`🔴 SimCity Scenario Event: ${event.type}`);
-    
-    switch (event.type) {
-      case 'CACHE_INVALIDATION_STORM':
-        this.triggerCacheInvalidationStorm(event.parameters?.invalidationRate || 0.8);
-        break;
-      case 'PAUSE_MV_REFRESH':
-        this.pauseMaterializedViewRefresh(event.parameters?.pauseDuration || 60);
-        break;
-      case 'RLS_MISCONFIG':
-        this.triggerRLSMisconfig(event.parameters?.misconfigType || 'admin_access');
-        break;
-      case 'RATE_LIMIT_BURST':
-        this.triggerRateLimitBurst(event.parameters?.multiplier || 2.0);
-        break;
-    }
-    
-    this.emitEvent('scenario_event', { event, timestamp: new Date().toISOString() });
-  }
-
-  // Trigger cache invalidation storm
-  private triggerCacheInvalidationStorm(invalidationRate: number): void {
-    // Simulate cache invalidation storm
-    this.emitEvent('cache_invalidation_storm', { 
-      invalidationRate, 
-      timestamp: new Date().toISOString() 
-    });
-  }
-
-  // Pause materialized view refresh
-  private pauseMaterializedViewRefresh(durationMinutes: number): void {
-    // Simulate pausing MV refresh
-    this.emitEvent('mv_refresh_paused', { 
-      durationMinutes, 
-      timestamp: new Date().toISOString() 
-    });
-  }
-
-  // Trigger RLS misconfiguration
-  private triggerRLSMisconfig(misconfigType: string): void {
-    // Simulate RLS misconfiguration
-    this.emitEvent('rls_misconfig', { 
-      misconfigType, 
-      timestamp: new Date().toISOString() 
-    });
-  }
-
-  // Trigger rate limit burst
-  private triggerRateLimitBurst(multiplier: number): void {
-    // Simulate rate limit burst
-    this.emitEvent('rate_limit_burst', { 
-      multiplier, 
-      timestamp: new Date().toISOString() 
-    });
-  }
-
   // Check invariants
   async checkInvariants(): Promise<InvariantViolation[]> {
     if (!this.invariantChecker) {
@@ -412,7 +343,7 @@ export class SimOrchestrator extends EventEmitter {
     return {
       runId: this.currentRunId,
       seed: this.currentSeed,
-      scenario: this.currentScenario || this.scenarioExecutor?.getCurrentScenario()?.id || null,
+      scenario: this.currentScenario || null,
       startedAt: this.startedAt?.toISOString(),
       finishedAt: this.finishedAt?.toISOString(),
     };

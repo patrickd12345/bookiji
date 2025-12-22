@@ -70,10 +70,6 @@ export type StandardizedEvent =
   | {
       type: "simcity.scenario.completed";
       payload: { scenarioId: string; runId: string; outcome: "success" | "failure" | "mixed"; durationMs?: number };
-    }
-  | {
-      type: "simcity.inject.failure";
-      payload: { scenarioId: string; injector: string; errorType: string; message?: string };
     };
 
 export type StandardizedEventType = StandardizedEvent["type"];

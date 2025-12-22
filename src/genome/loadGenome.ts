@@ -53,7 +53,6 @@ export interface OpsDiagnosticsSpec {
 
 export interface ScenarioSpec {
   folder: string;
-  chaosProfile?: string;
 }
 
 export interface TrafficSpec {

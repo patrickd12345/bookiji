@@ -18,13 +18,6 @@ export async function validateSimCity(genome: GenomeSpec, context: RepoContext):
     warnings.push(`${DOMAIN}: SimCity scenarios folder not declared in genome spec`);
   }
 
-  if (scenarios?.chaosProfile) {
-    const chaosPath = resolveRepoPath(context.repoRoot, scenarios.chaosProfile);
-    if (!safeExists(chaosPath)) {
-      warnings.push(`${DOMAIN}: Optional chaos profile missing at ${scenarios.chaosProfile} (expected at ${chaosPath})`);
-    }
-  }
-
   const traffic = genome.domains.simcity.traffic;
   if (traffic?.samples) {
     const samplesPath = resolveRepoPath(context.repoRoot, traffic.samples);

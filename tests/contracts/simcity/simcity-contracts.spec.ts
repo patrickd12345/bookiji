@@ -10,7 +10,7 @@ const scenario: ScenarioContract = {
   seedData: { region: "us-east", userCount: 4 },
   steps: [
     { id: "step-1", label: "boot", action: "initialize world", at: 0 },
-    { id: "step-2", label: "inject failure", action: "network drop", at: 1500, syntheticEventType: "simcity.inject.failure" },
+    { id: "step-2", label: "observe anomaly", action: "record anomaly", at: 1500, syntheticEventType: "anomaly.detected" },
   ],
 };
 
@@ -28,11 +28,11 @@ describe("SimCity contracts", () => {
   it("models scenarios with ordered steps and optional seeds", () => {
     expect(scenario.steps).toHaveLength(2);
     expect(scenario.seedData?.region).toBe("us-east");
-    expect(scenario.steps[1].syntheticEventType).toBe("simcity.inject.failure");
+    expect(scenario.steps[1].syntheticEventType).toBe("anomaly.detected");
   });
 
   it("adapts analytics envelopes with simulated timestamps and anomaly injections", () => {
-    const anomalyInjection = { injector: "chaos-kit", code: "NET_DROP" };
+    const anomalyInjection = { source: "probe", code: "NET_DROP" };
     const adapted = adaptAnalyticsEnvelopeToSimCity(baseEnvelope, {
       scenario,
       simulatedTimestamp: 3000,
@@ -48,8 +48,8 @@ describe("SimCity contracts", () => {
 
   it("supports synthetic event overrides for playback and time travel", () => {
     const syntheticEvent: StandardizedEvent = {
-      type: "simcity.inject.failure",
-      payload: { scenarioId: scenario.id, injector: "sim-engine", errorType: "timeout" },
+      type: "anomaly.detected",
+      payload: { anomalyId: "anom-1", severity: "medium", description: "Synthetic anomaly for playback" },
     };
 
     const adapted = adaptAnalyticsEnvelopeToSimCity(baseEnvelope, {
