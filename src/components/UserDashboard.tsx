@@ -30,6 +30,7 @@ import { NetworkError } from '@/components/ui/ErrorDisplay'
 import { SuccessMessage } from '@/components/ui/StatusMessage'
 import { useAsyncData } from '@/hooks/useAsyncState'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n/useI18n'
 import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
 import { customerDashboardSteps, customerDashboardTourId } from '@/tours/dashboardNavigation'
 
@@ -111,6 +112,7 @@ export default function UserDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('all')
   const router = useRouter()
+  const { t } = useI18n()
   const { startTour, hasCompletedTour } = useGuidedTour()
 
   // Use the new async state hook for notifications
@@ -238,6 +240,10 @@ export default function UserDashboard() {
 
   const formatCurrency = (cents: number) => {
     return `$${(Math.abs(cents) / 100).toFixed(2)}`
+  }
+
+  const canRateBooking = (status: string) => {
+    return status === 'completed' || status === 'confirmed'
   }
 
   if (!userProfile) {
@@ -505,8 +511,16 @@ export default function UserDashboard() {
                                     i < booking.rating! ? 'text-yellow-400 fill-current' : 'text-gray-300'
                                   }`}
                                 />
-                              ))}
+                                ))}
                             </div>
+                          )}
+                          {canRateBooking(booking.status) && (
+                            <Link
+                              href={`/ratings/booking/${booking.id}`}
+                              className="mt-2 inline-flex text-sm text-blue-600 hover:text-blue-700"
+                            >
+                              {t('rating.rate_booking')}
+                            </Link>
                           )}
                         </div>
                       </div>

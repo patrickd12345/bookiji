@@ -10,10 +10,9 @@ describe('Email System', () => {
         serviceName: 'Haircut',
         slotStart: '2024-01-15T10:00:00Z',
         slotEnd: '2024-01-15T11:00:00Z',
-        totalAmount: '$50.00',
         bookingId: 'booking_123',
         vendorAddress: '123 Main St, City',
-        notes: 'Please arrive 10 minutes early'
+        expectations: 'Please arrive 10 minutes early'
       };
 
       const emailHtml = generateBookingConfirmationEmail(bookingData);
@@ -21,10 +20,10 @@ describe('Email System', () => {
       expect(emailHtml).toContain('John Doe');
       expect(emailHtml).toContain('Acme Services');
       expect(emailHtml).toContain('Haircut');
-      expect(emailHtml).toContain('$50.00');
       expect(emailHtml).toContain('booking_123');
       expect(emailHtml).toContain('123 Main St, City');
       expect(emailHtml).toContain('Please arrive 10 minutes early');
+      expect(emailHtml).toContain('Expectations:');
       expect(emailHtml).toContain('🎉 Booking Confirmed!');
     });
 
@@ -35,7 +34,6 @@ describe('Email System', () => {
         serviceName: 'Massage',
         slotStart: '2024-01-16T14:00:00Z',
         slotEnd: '2024-01-16T15:00:00Z',
-        totalAmount: '$75.00',
         bookingId: 'booking_456'
       };
 
@@ -44,10 +42,10 @@ describe('Email System', () => {
       expect(emailHtml).toContain('Jane Smith');
       expect(emailHtml).toContain('Quick Fix');
       expect(emailHtml).toContain('Massage');
-      expect(emailHtml).toContain('$75.00');
       expect(emailHtml).toContain('booking_456');
       expect(emailHtml).not.toContain('Location:');
       expect(emailHtml).not.toContain('Notes:');
+      expect(emailHtml).not.toContain('Expectations:');
     });
 
     it('should generate simple email template', () => {
@@ -70,7 +68,6 @@ describe('Email System', () => {
         serviceName: 'Test Service',
         slotStart: '2024-01-15T10:00:00Z',
         slotEnd: '2024-01-15T11:00:00Z',
-        totalAmount: '$100.00',
         bookingId: 'test_booking'
       };
 

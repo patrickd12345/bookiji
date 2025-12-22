@@ -2,6 +2,8 @@
 // Handles batching notifications for users who have batching enabled
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { buildPushPayload } from '@/lib/notifications/pushPayload'
+import type { NotificationAttemptResult } from '@/lib/services/notificationQueue'
 
 let _supabase: SupabaseClient | null = null
 
@@ -32,6 +34,8 @@ export interface QueuedNotification {
   }
   priority?: 'low' | 'normal' | 'high' | 'urgent'
   expires_at: Date
+  intent_id?: string
+  delivery_id?: string
 }
 
 /**
@@ -43,6 +47,8 @@ export async function queueNotification(
   options?: {
     priority?: QueuedNotification['priority']
     batchDelayMinutes?: number
+    intentId?: string
+    deliveryId?: string
   }
 ): Promise<void> {
   const supabase = getSupabase()
@@ -55,7 +61,9 @@ export async function queueNotification(
     notification_data: notification,
     priority: options?.priority || 'normal',
     expires_at: expiresAt.toISOString(),
-    processed: false
+    processed: false,
+    intent_id: options?.intentId || null,
+    delivery_id: options?.deliveryId || null
   })
 }
 
@@ -81,10 +89,12 @@ export async function processBatch(userId: string, batchId: string): Promise<voi
   // If only one notification, send it immediately
   if (notifications.length === 1) {
     // Send single notification
-    await sendPushNotification(userId, notifications[0].notification_data)
+    const result = await sendPushNotification(userId, notifications[0].notification_data)
+    await updateDeliveries(notifications, result)
   } else {
     // Send batched notification
-    await sendBatchedPushNotification(userId, notifications.map(n => n.notification_data))
+    const result = await sendBatchedPushNotification(userId, notifications.map(n => n.notification_data))
+    await updateDeliveries(notifications, result)
   }
 
   // Mark as processed
@@ -131,10 +141,27 @@ export async function processExpiredBatches(): Promise<void> {
 /**
  * Send push notification directly (bypasses batching)
  */
+export async function sendWebPushNotificationToUser(
+  userId: string,
+  template: string,
+  data: Record<string, unknown>
+): Promise<NotificationAttemptResult> {
+  const payload = buildPushPayload(template, data)
+  return sendPushNotification(userId, {
+    title: payload.title,
+    body: payload.body,
+    icon: payload.icon,
+    badge: payload.badge,
+    tag: payload.tag,
+    data: payload.data,
+    type: template
+  })
+}
+
 async function sendPushNotification(
   userId: string,
   notification: QueuedNotification['notification_data']
-): Promise<void> {
+): Promise<NotificationAttemptResult> {
   const supabase = getSupabase()
   // Get user's push subscriptions
   const { data: subscriptions } = await supabase
@@ -143,7 +170,7 @@ async function sendPushNotification(
     .eq('user_id', userId)
 
   if (!subscriptions || subscriptions.length === 0) {
-    return
+    return { success: false, error: 'no_subscriptions' }
   }
 
   // Send to all subscriptions using web-push
@@ -153,7 +180,7 @@ async function sendPushNotification(
 
   if (!vapidPublicKey || !vapidPrivateKey) {
     console.warn('⚠️ VAPID keys not configured, skipping push notification')
-    return
+    return { success: false, error: 'missing_vapid_keys' }
   }
 
   // Set VAPID details
@@ -198,6 +225,7 @@ async function sendPushNotification(
         status: 'sent',
         metadata: notification.data
       })
+      return { success: true }
     } catch (error: any) {
       console.error(`Failed to send push to subscription ${subscription.id}:`, error)
 
@@ -219,10 +247,18 @@ async function sendPushNotification(
         error_message: error.message,
         metadata: notification.data
       })
+      return { success: false, error: error.message }
     }
   })
 
-  await Promise.allSettled(sendPromises)
+  const results = await Promise.allSettled(sendPromises)
+  const successCount = results.filter(
+    (result) => result.status === 'fulfilled' && result.value.success
+  ).length
+  if (successCount === 0) {
+    return { success: false, error: 'push_delivery_failed' }
+  }
+  return { success: true }
 }
 
 /**
@@ -231,11 +267,11 @@ async function sendPushNotification(
 async function sendBatchedPushNotification(
   userId: string,
   notifications: QueuedNotification['notification_data'][]
-): Promise<void> {
+): Promise<NotificationAttemptResult> {
   const title = `You have ${notifications.length} new notifications`
   const body = generateBatchBody(notifications)
 
-  await sendPushNotification(userId, {
+  return sendPushNotification(userId, {
     title,
     body,
     icon: '/icons/icon-192x192.png',
@@ -274,4 +310,38 @@ function getBatchId(userId: string, delayMinutes: number): string {
   const windowMs = delayMinutes * 60 * 1000
   const windowStart = Math.floor(now / windowMs) * windowMs
   return `${userId}_${windowStart}`
+}
+
+async function updateDeliveries(
+  queued: Array<{ delivery_id?: string }>,
+  result: NotificationAttemptResult
+) {
+  const deliveryIds = queued
+    .map((item) => item.delivery_id)
+    .filter(Boolean) as string[]
+
+  if (deliveryIds.length === 0) return
+
+  const supabase = getSupabase()
+  const { data: deliveries } = await supabase
+    .from('notification_deliveries')
+    .select('id, attempt_count')
+    .in('id', deliveryIds)
+
+  if (!deliveries || deliveries.length === 0) return
+
+  await Promise.all(
+    deliveries.map((delivery) =>
+      supabase
+        .from('notification_deliveries')
+        .update({
+          status: result.success ? 'sent' : 'failed',
+          attempt_count: (delivery.attempt_count || 0) + 1,
+          error_message: result.success ? null : result.error || 'push_delivery_failed',
+          last_attempt_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', delivery.id)
+    )
+  )
 }

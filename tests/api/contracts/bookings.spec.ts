@@ -60,7 +60,7 @@ test.describe('API Contract Tests - Bookings', () => {
       const validate = ajv.compile(getResolvedSchema(errorSchema))
       const valid = validate(body)
       if (!valid) {
-        // eslint-disable-next-line no-console
+         
         console.warn('ErrorEnvelope schema mismatch (continuing with runtime contract):', validate.errors)
       }
     } else {

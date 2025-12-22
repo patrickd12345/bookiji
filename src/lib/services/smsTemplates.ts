@@ -1,23 +1,35 @@
+import { t } from '@/lib/i18n/server'
+
 interface TemplateData {
   [key: string]: unknown;
 }
 
 export function getSmsTemplate(template: string, data: TemplateData): string {
+  const locale = typeof data.locale === 'string' ? data.locale : undefined
+  const name = typeof data.name === 'string' ? data.name : ''
+  const service = typeof data.service === 'string' ? data.service : ''
+  const date = typeof data.date === 'string' ? data.date : ''
+  const time = typeof data.time === 'string' ? data.time : ''
   switch (template) {
     case 'verify_email':
-      return `Verify your email, ${data.name}.`;
+      return t(locale, 'sms.verify_email', { name });
     case 'password_reset':
-      return `Reset your password, ${data.name}.`;
+      return t(locale, 'sms.password_reset', { name });
     case 'booking_created':
-      return `Booking confirmed for ${data.service} on ${data.date} at ${data.time}.`;
+      return t(locale, 'sms.booking_created', { service, date, time });
     case 'booking_updated':
-      return `Booking updated for ${data.service} on ${data.date}.`;
+      return t(locale, 'sms.booking_updated', { service, date });
     case 'booking_cancelled':
-      return `Booking for ${data.service} cancelled.`;
+      return t(locale, 'sms.booking_cancelled', { service });
     case 'review_reminder':
-      return `Please review your recent service.`;
+      return t(locale, 'sms.review_reminder');
+    case 'rating_prompt':
+      return t(locale, 'sms.rating_prompt', {
+        service,
+        link: typeof data.rating_link === 'string' ? data.rating_link : ''
+      });
     default:
-      return 'Notification from Bookiji';
+      return t(locale, 'sms.default');
   }
 }
 

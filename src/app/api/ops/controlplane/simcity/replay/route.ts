@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ensureSimCityAllowed } from '../../_lib/simcity'
-import { simCityStatus, simCityCursor } from '../../_lib/simcity'
+import { ensureSimCityAllowed, simCityStatus, simCityCursor } from '../../_lib/simcity'
+import type { SimCityConfig } from '../../_lib/simcity'
 import { runReplayVariant } from '../../_lib/simcity-replay'
 import { generateReplayReport } from '../../_lib/simcity-replay-reports'
 import { storeReplay, updateReplay, generateRunId } from '../../_lib/simcity-replay-store'
@@ -150,4 +150,3 @@ export async function POST(request: NextRequest) {
     message: 'Replay started',
   })
 }
-

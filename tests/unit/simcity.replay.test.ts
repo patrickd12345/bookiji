@@ -194,7 +194,7 @@ describe('SimCity replay (integration)', () => {
       2,
       5,
       baseline,
-      [{ name: 'with-intervention', ...variant }]
+      [{ ...variant, name: 'with-intervention' }]
     )
 
     // Should have differences
@@ -274,6 +274,5 @@ describe('SimCity replay (integration)', () => {
     }
   })
 })
-
 
 

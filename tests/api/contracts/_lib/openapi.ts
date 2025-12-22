@@ -15,7 +15,7 @@ export function getOpenApiSpec(): AnyRecord {
       fs.readFileSync(path.join(process.cwd(), 'openapi/bookiji.yaml'), 'utf-8')
     ) as AnyRecord
   } catch (error) {
-    // eslint-disable-next-line no-console
+     
     console.warn('Could not load OpenAPI spec:', error)
     openApiSpec = {}
   }

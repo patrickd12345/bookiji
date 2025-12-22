@@ -6,6 +6,7 @@ export interface NotificationAttemptResult {
   success: boolean;
   providerResponse?: string;
   error?: string;
+  attempts?: number;
 }
 
 interface AttemptLog {

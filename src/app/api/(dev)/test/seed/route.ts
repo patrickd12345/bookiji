@@ -66,6 +66,7 @@ export async function POST() {
     }
 
     // Create a simple service for the vendor
+    const expectationText = 'Arrive 10 minutes early'
     // Try new schema first, fallback to old schema if it fails
     interface Service {
       id: string
@@ -87,7 +88,7 @@ export async function POST() {
         .insert({ 
           vendor_id: vendorId, 
           name: 'Test Service', 
-          description: 'E2E Service', 
+          description: expectationText, 
           duration_minutes: 60, 
           price_cents: 2000, 
           category: 'test', 
@@ -111,7 +112,7 @@ export async function POST() {
         .insert({ 
           vendor_id: vendorId, 
           name: 'Test Service', 
-          description: 'E2E Service', 
+          description: expectationText, 
           duration: 60, 
           price: 20.00, 
           category: 'test', 
@@ -195,5 +196,4 @@ export async function POST() {
     return NextResponse.json({ error: `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}` }, { status: 500 })
   }
 }
-
 

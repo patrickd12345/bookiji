@@ -39,6 +39,23 @@ export type StandardizedEvent =
       };
     }
   | {
+      type: "rating.submitted";
+      payload: {
+        ratingId: string;
+        bookingId: string;
+        raterId: string;
+        rateeId: string;
+        stars: number;
+      };
+    }
+  | {
+      type: "rating.viewed";
+      payload: {
+        bookingId: string;
+        viewerId: string;
+      };
+    }
+  | {
       type: "anomaly.detected";
       payload: { anomalyId: string; severity: "low" | "medium" | "high" | "critical"; description?: string };
     }

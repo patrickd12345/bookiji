@@ -6,15 +6,12 @@ import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { VendorCalendar, VendorAnalytics, GuidedTourManager } from '@/components'
 import { registerTour } from '@/lib/guidedTourRegistry'
 import { useAutoTour } from '@/lib/useAutoTour'
-import { TrendingUp } from 'lucide-react'
 
 interface BookingStats {
   totalBookings: number
   confirmedBookings: number
   pendingBookings: number
-  totalRevenue: number
   thisWeekBookings: number
-  noShowRate: number
   avgRating: number
 }
 
@@ -24,8 +21,6 @@ interface RecentBooking {
   service_name: string
   slot_start: string
   status: string
-  total_amount_cents: number
-  commitment_fee_paid: boolean
 }
 
 export default function VendorDashboard() {
@@ -33,9 +28,7 @@ export default function VendorDashboard() {
     totalBookings: 0,
     confirmedBookings: 0,
     pendingBookings: 0,
-    totalRevenue: 0,
     thisWeekBookings: 0,
-    noShowRate: 0,
     avgRating: 0
   })
   const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([])
@@ -85,21 +78,14 @@ export default function VendorDashboard() {
         const totalBookings = bookings.length
         const confirmedBookings = bookings.filter(b => b.status === 'confirmed').length
         const pendingBookings = bookings.filter(b => b.status === 'pending').length
-        const totalRevenue = bookings
-          .filter(b => b.commitment_fee_paid)
-          .reduce((sum, b) => sum + b.total_amount_cents, 0)
         const thisWeekBookings = bookings
           .filter(b => new Date(b.created_at) > weekAgo).length
-        const noShowCount = bookings.filter(b => b.status === 'no-show').length
-        const noShowRate = totalBookings > 0 ? (noShowCount / totalBookings) * 100 : 0
 
         setStats({
           totalBookings,
           confirmedBookings,
           pendingBookings,
-          totalRevenue,
           thisWeekBookings,
-          noShowRate,
           avgRating: 4.8 // Mock rating
         })
 
@@ -112,9 +98,7 @@ export default function VendorDashboard() {
             customer_name: b.customers?.full_name || 'Unknown',
             service_name: b.services?.name || 'Unknown Service',
             slot_start: b.slot_start,
-            status: b.status,
-            total_amount_cents: b.total_amount_cents,
-            commitment_fee_paid: b.commitment_fee_paid
+            status: b.status
           }))
 
         setRecentBookings(recent)
@@ -181,12 +165,6 @@ export default function VendorDashboard() {
               <p className="text-gray-600">Manage your bookings and track performance</p>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="text-right" data-tour="revenue-overview">
-                <p className="text-sm text-gray-600">Total Revenue</p>
-                <p className="text-xl font-bold text-green-600">
-                  ${(stats.totalRevenue / 100).toFixed(2)}
-                </p>
-              </div>
               <div className="relative">
                 <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
                   P
@@ -250,11 +228,11 @@ export default function VendorDashboard() {
                 color="green"
               />
               <StatCard
-                title="No-Show Rate"
-                value={`${stats.noShowRate.toFixed(1)}%`}
-                subtitle="Lower is better"
-                icon="⚠️"
-                color="red"
+                title="Pending Bookings"
+                value={stats.pendingBookings}
+                subtitle="Awaiting confirmation"
+                icon="?"
+                color="yellow"
               />
               <StatCard
                 title="Avg Rating"
@@ -265,24 +243,8 @@ export default function VendorDashboard() {
               />
             </div>
 
-            {/* No Wasted Leads Banner */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white" data-tour="no-show-guarantee">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">🎯 No Wasted Leads Guarantee</h3>
-                  <p className="text-blue-100">
-                    Every booking comes with a $1 commitment fee - ensuring serious customers only.
-                  </p>
-                  <p className="text-blue-100 mt-1">
-                    <strong>{stats.confirmedBookings}</strong> confirmed bookings • 
-                    <strong> {((stats.confirmedBookings / Math.max(stats.totalBookings, 1)) * 100).toFixed(1)}%</strong> success rate
-                  </p>
-                </div>
-                <TrendingUp className="w-7 h-7 opacity-80" />
-              </div>
-            </div>
-
-            {/* Recent Bookings */}
+            {
+/* Recent Bookings */}
             <div className="bg-white rounded-lg shadow-sm p-6" data-tour="recent-bookings">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Bookings</h3>
               <div className="space-y-4">
@@ -297,9 +259,6 @@ export default function VendorDashboard() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-gray-900">
-                        ${(booking.total_amount_cents / 100).toFixed(2)}
-                      </p>
                       <span
                         className={`px-2 py-1 text-xs rounded-full ${
                           booking.status === 'confirmed'

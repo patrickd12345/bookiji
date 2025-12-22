@@ -70,7 +70,7 @@ export default function ConfirmationPage() {
     )
   }
 
-  const isConfirmed = booking.status === 'confirmed' && booking.commitment_fee_paid
+  const isConfirmed = booking.status === 'confirmed'
   const bookingDate = new Date(booking.slot_start)
   const endDate = new Date(booking.slot_end)
 
@@ -85,7 +85,7 @@ export default function ConfirmationPage() {
               Booking Confirmed!
             </h1>
             <p className="text-lg text-gray-600 mb-8">
-              Confirm your booking details. You&apos;ll be charged a $1 commitment fee to secure your appointment.
+              Review your booking details and keep this confirmation for your records.
             </p>
           </div>
 
@@ -203,20 +203,6 @@ export default function ConfirmationPage() {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Payment Summary */}
-          <div className="border-t pt-6 mb-8">
-            <h3 className="font-semibold text-lg mb-4">Payment Summary</h3>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Commitment Fee Paid</span>
-              <span className="font-bold text-green-600">
-                ${(booking.total_amount_cents / 100).toFixed(2)} ✓
-              </span>
-            </div>
-            <p className="text-sm text-gray-500 mt-2">
-              This fee guarantees your spot and reduces no-shows. The provider will collect payment for the full service separately.
-            </p>
           </div>
 
           {/* Action Buttons */}

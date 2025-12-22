@@ -120,3 +120,8 @@ export function validateAllDials(): { valid: boolean; errors: Array<{ dial: Metr
   return { valid: allErrors.length === 0, errors: allErrors }
 }
 
+
+
+
+
+

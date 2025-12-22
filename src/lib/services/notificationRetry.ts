@@ -15,13 +15,13 @@ export async function retryNotification(
     const result = await sendFn();
     await logAttempt(notification, attempt, result);
     if (result.success) {
-      return result;
+      return { ...result, attempts: attempt };
     }
     await new Promise((resolve) => setTimeout(resolve, delay));
     delay *= 2;
   }
 
   await addToDeadLetterQueue(notification, 'max_attempts');
-  return { success: false, error: 'max_attempts' };
+  return { success: false, error: 'max_attempts', attempts: attempt };
 }
 

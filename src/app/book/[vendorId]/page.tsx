@@ -168,7 +168,7 @@ export default function BookVendorPage() {
             Book with {vendor.full_name}
           </h1>
           <p className="text-lg text-gray-600 mb-8">
-            Book your appointment with {vendor?.full_name || 'this provider'}. You&apos;ll only pay a $1 commitment fee now, with the full payment due after service completion.
+            Book your appointment with {vendor?.full_name || 'this provider'}. Pick a service and a time that works for you.
           </p>
 
           {/* Services Selection */}
@@ -190,9 +190,6 @@ export default function BookVendorPage() {
                       <h3 className="font-semibold">{service.name}</h3>
                       <p className="text-gray-600 text-sm">{service.description}</p>
                       <p className="text-sm text-gray-500">{service.duration_minutes} minutes</p>
-                    </div>
-                    <div className="text-lg font-semibold">
-                      ${(service.price_cents / 100).toFixed(2)}
                     </div>
                   </div>
                 </div>

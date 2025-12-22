@@ -19,7 +19,9 @@ import {
   AlertCircle,
   XCircle
 } from 'lucide-react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n/useI18n'
 import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
 import { vendorDashboardSteps, vendorDashboardTourId } from '@/tours/dashboardNavigation'
 
@@ -74,6 +76,7 @@ export default function VendorDashboard() {
   const statsData = useAsyncData<VendorStats>()
   const bookingsData = useAsyncData<RecentBooking[]>()
   const { startTour, hasCompletedTour } = useGuidedTour()
+  const { t } = useI18n()
 
   // Load vendor profile
   const loadVendorProfile = useCallback(async () => {
@@ -270,6 +273,10 @@ export default function VendorDashboard() {
       default:
         return <AlertCircle className="w-4 h-4" />
     }
+  }
+
+  const canRateBooking = (status: string) => {
+    return status === 'completed' || status === 'confirmed'
   }
 
   // Show loading state while profile is loading
@@ -523,6 +530,14 @@ export default function VendorDashboard() {
                               ({booking.customer_rating})
                             </span>
                           </div>
+                        )}
+                        {canRateBooking(booking.status) && (
+                          <Link
+                            href={`/ratings/booking/${booking.id}`}
+                            className="mt-2 inline-flex text-sm text-blue-600 hover:text-blue-700"
+                          >
+                            {t('rating.rate_booking')}
+                          </Link>
                         )}
                       </div>
                     </div>

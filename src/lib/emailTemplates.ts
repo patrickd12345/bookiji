@@ -4,9 +4,9 @@ export interface BookingConfirmationData {
   serviceName: string;
   slotStart: string;
   slotEnd: string;
-  totalAmount: string;
   bookingId: string;
   vendorAddress?: string;
+  expectations?: string;
   notes?: string;
 }
 
@@ -48,9 +48,9 @@ export function generateBookingConfirmationEmail(data: BookingConfirmationData):
         <p><strong>Service:</strong> ${data.serviceName}</p>
         <p><strong>Provider:</strong> ${data.vendorName}</p>
         <p><strong>Date & Time:</strong> ${formattedStart} - ${formattedEnd}</p>
-        <p><strong>Total Amount:</strong> ${data.totalAmount}</p>
         <p><strong>Booking ID:</strong> ${data.bookingId}</p>
         ${data.vendorAddress ? `<p><strong>Location:</strong> ${data.vendorAddress}</p>` : ''}
+        ${data.expectations ? `<p><strong>Expectations:</strong> ${data.expectations}</p>` : ''}
         ${data.notes ? `<p><strong>Notes:</strong> ${data.notes}</p>` : ''}
       </div>
       

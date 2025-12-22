@@ -17,6 +17,7 @@ for (const file of localeFiles) {
   const locale = path.basename(file, '.json')
   const data = JSON.parse(fs.readFileSync(path.join(localesDir, file), 'utf8'))
   const keys = Object.keys(data)
+  const missing = baseKeys.filter(k => !keys.includes(k))
 
   // track keys not in base
   for (const k of keys) {
@@ -30,7 +31,11 @@ for (const file of localeFiles) {
   const present = keys.filter(k => baseKeys.includes(k))
   const coverage = (present.length / baseKeys.length) * 100
   console.log(`${locale}: ${coverage.toFixed(1)}%`)
-  if (locale !== baseLocale && coverage < 95) {
+  if (missing.length > 0) {
+    console.error(`Missing ${missing.length} key(s) in ${file}`)
+    success = false
+  }
+  if (locale !== baseLocale && coverage < 100) {
     success = false
   }
 

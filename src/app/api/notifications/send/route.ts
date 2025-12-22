@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { limitRequest } from '@/middleware/requestLimiter'
-import { retryNotification } from '@/lib/services/notificationRetry'
-import { sendEmail, sendSMS, sendPushNotification } from '@/lib/notifications/providers'
+import { dispatchIntentToRecipient } from '@/lib/notifications/intentDispatcher'
 
 export interface NotificationRequest {
   type: 'email' | 'sms' | 'push'
@@ -13,8 +12,12 @@ export interface NotificationRequest {
     | 'booking_updated'
     | 'booking_cancelled'
     | 'review_reminder'
+    | 'rating_prompt'
   data: Record<string, unknown>
   priority?: 'low' | 'normal' | 'high' | 'urgent'
+  idempotency_key?: string
+  intent_type?: string
+  user_id?: string
 }
 
 export async function POST(request: Request) {
@@ -32,47 +35,33 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
-    // Process notification based on type
-    let result = null
+    const normalizedPriority =
+      notification.priority && notification.priority !== 'urgent'
+        ? notification.priority
+        : 'high'
 
-    const sendContext = { type, recipient, template, data }
+    const result = await dispatchIntentToRecipient({
+      channel: type,
+      recipient,
+      template,
+      data,
+      priority: normalizedPriority,
+      intentType: notification.intent_type,
+      idempotencyKey: notification.idempotency_key,
+      userId: notification.user_id || (type === 'push' ? recipient : undefined)
+    })
 
-    switch (type) {
-      case 'email':
-        result = await retryNotification(
-          () => sendEmail(recipient, template, data),
-          sendContext
-        )
-        break
-      case 'sms':
-        result = await retryNotification(
-          () => sendSMS(recipient, template, data),
-          sendContext
-        )
-        break
-      case 'push':
-        result = await retryNotification(
-          () => sendPushNotification(recipient, template, data),
-          sendContext
-        )
-        break
-      default:
-        return NextResponse.json({
-          error: 'Invalid notification type'
-        }, { status: 400 })
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`OK ${type} notification sent to ${recipient}`)
     }
-
-    if (result.success) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`✅ ${type} notification sent to ${recipient}`)
-      }
-      return NextResponse.json({
-        success: true,
-        message: `${type} notification sent successfully`
-      })
-    } else {
-      throw new Error(result.error || `Failed to send ${type} notification`)
-    }
+    return NextResponse.json({
+      success: true,
+      message: result.queued
+        ? `${type} notification queued successfully`
+        : `${type} notification sent successfully`,
+      intent_id: result.intentId,
+      delivery_id: result.deliveryId
+    })
 
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {

@@ -1,5 +1,6 @@
 import { getEmailTemplate } from '@/lib/services/emailTemplates'
 import { getSmsTemplate } from '@/lib/services/smsTemplates'
+import { buildPushPayload } from '@/lib/notifications/pushPayload'
 
 export interface NotificationResult {
   success: boolean
@@ -159,37 +160,5 @@ export async function sendPushNotification(recipient: string, template: string, 
 
 // Push notification content generator
 function generatePushContent(template: string, data: Record<string, unknown>) {
-  const templates = {
-    booking_confirmation: {
-      title: 'Booking Confirmed!',
-      body: `${data.service} on ${data.date} at ${data.time}`,
-      icon: '/icons/confirm.png'
-    },
-    booking_cancelled: {
-      title: 'Booking Cancelled',
-      body: 'Refund will be processed within 3-5 days',
-      icon: '/icons/cancel.png'
-    },
-    vendor_welcome: {
-      title: 'Welcome to Bookiji!',
-      body: data.requires_approval ? 'Review pending' : 'Verify email to start',
-      icon: '/icons/welcome.png'
-    },
-    admin_alert: {
-      title: 'Admin Alert',
-      body: `${data.type}: ${data.details}`,
-      icon: '/icons/alert.png'
-    },
-    reminder: {
-      title: 'Appointment Reminder',
-      body: `${data.service} tomorrow at ${data.time}`,
-      icon: '/icons/reminder.png'
-    }
-  }
-
-  return templates[template as keyof typeof templates] || {
-    title: 'Notification',
-    body: 'You have a new notification',
-    icon: '/icons/default.png'
-  }
+  return buildPushPayload(template, data)
 }
