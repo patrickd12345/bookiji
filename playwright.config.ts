@@ -1,5 +1,22 @@
 // playwright.config.ts
 import { defineConfig, devices } from '@playwright/test'
+import fs from 'node:fs'
+import path from 'node:path'
+import dotenv from 'dotenv'
+
+const envPath = path.resolve(process.cwd(), '.env.e2e')
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath, override: true })
+}
+
+if (process.env.E2E !== 'true') {
+  throw new Error('Refusing to run Playwright without `E2E=true` (use `.env.e2e`).')
+}
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+if (!supabaseUrl || !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(supabaseUrl)) {
+  throw new Error(`Refusing to run E2E against non-local Supabase: ${supabaseUrl ?? '(missing)'}`)
+}
 
 const baseURL = process.env.BASE_URL || 'http://localhost:3000'
 
@@ -13,6 +30,7 @@ export default defineConfig({
   use: {
     baseURL,
     headless: true,
+    bypassCSP: true,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'off',

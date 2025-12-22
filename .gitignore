@@ -45,6 +45,7 @@ yarn-error.log*
 
 # env templates allowed
 !.env.example
+!.env.e2e
 !.env.recovery.example
 
 # vercel
@@ -78,6 +79,10 @@ next-env.d.ts
 
 # Supabase Edge Functions (Deno runtime, not compatible with Node.js build)
 /supabase/functions/
+
+# Supabase E2E workdir runtime state
+/supabase/e2e/supabase/.branches/
+/supabase/e2e/supabase/.temp/
 
 # Temporary files
 nul

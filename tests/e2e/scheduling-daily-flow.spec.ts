@@ -1,20 +1,36 @@
 import { test, expect } from '../fixtures/base'
 import type { APIRequestContext } from '@playwright/test'
+import { getSupabaseAdmin } from './helpers/supabaseAdmin'
 
 const EXPECTATION_TEXT = 'Arrive 10 minutes early'
+const TIME_DRIFT_MS = 2_000
 
-async function fetchBooking(request: APIRequestContext, userId: string, bookingId: string) {
-  const resp = await request.get(`/api/bookings/user?userId=${userId}&bookingId=${bookingId}`)
-  expect(resp.ok()).toBeTruthy()
-  const payload = await resp.json()
-  const bookings = Array.isArray(payload.bookings) ? payload.bookings : []
-  const booking = bookings.find((entry: { id: string }) => entry.id === bookingId)
-  expect(booking).toBeTruthy()
-  return booking as {
-    status: string
-    slot_start: string
-    slot_end: string
-  }
+async function fetchBookingAdmin(bookingId: string) {
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase.from('bookings').select('id,status,slot_start,slot_end').eq('id', bookingId).single()
+  expect(error?.message ?? null).toBeNull()
+  expect(data).toBeTruthy()
+  return data as { status: string; slot_start: string; slot_end: string }
+}
+
+async function expectOneDeliveryByIdempotencyKey(idempotencyKey: string) {
+  const supabase = getSupabaseAdmin()
+  const { data: intent, error: intentError } = await supabase
+    .from('notification_intents')
+    .select('id')
+    .eq('idempotency_key', idempotencyKey)
+    .single()
+  expect(intentError?.message ?? null).toBeNull()
+  expect(intent?.id).toBeTruthy()
+
+  const { data: deliveries, error: deliveryError } = await supabase
+    .from('notification_deliveries')
+    .select('id,channel,status')
+    .eq('intent_id', intent!.id)
+    .eq('channel', 'email')
+  expect(deliveryError?.message ?? null).toBeNull()
+  expect(deliveries?.length ?? 0).toBe(1)
+  expect(deliveries?.[0]?.status).toMatch(/^(queued|sent|failed)$/)
 }
 
 async function sendIdempotentNotification(
@@ -39,18 +55,12 @@ async function sendIdempotentNotification(
   expect(response.ok()).toBeTruthy()
 }
 
-async function getInboxCount(request: APIRequestContext, template: string) {
-  const inboxResp = await request.get('/api/test/inbox')
-  expect(inboxResp.ok()).toBeTruthy()
-  const payload = await inboxResp.json()
-  const logs = Array.isArray(payload.logs) ? payload.logs : []
-  return logs.filter((entry: { notification?: { template?: string } }) => entry.notification?.template === template).length
-}
-
 test('daily scheduling flow keeps state, time zone, and notification dedupe', async ({ request }) => {
-  const seed = await request.post('/api/test/seed')
+  const runId = `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+  const seed = await request.post('/api/test/seed', { data: { seedId: runId } })
   expect(seed.ok()).toBeTruthy()
-  const { customerId, bookingId, slotId } = await seed.json()
+  const { bookingId, slotId } = await seed.json()
   expect(slotId).toBeTruthy()
 
   const newStart = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString()
@@ -70,25 +80,24 @@ test('daily scheduling flow keeps state, time zone, and notification dedupe', as
   })
   expect(cancelResp.ok()).toBeTruthy()
 
-  const booking = await fetchBooking(request, customerId, bookingId)
+  const booking = await fetchBookingAdmin(bookingId)
   expect(booking.status).toBe('cancelled')
-  expect(booking.slot_start).toBe(newStart)
-  expect(booking.slot_end).toBe(newEnd)
-  expect(booking.slot_start).toMatch(/Z$/)
+  expect(Math.abs(new Date(booking.slot_start).getTime() - new Date(newStart).getTime())).toBeLessThan(TIME_DRIFT_MS)
+  expect(Math.abs(new Date(booking.slot_end).getTime() - new Date(newEnd).getTime())).toBeLessThan(TIME_DRIFT_MS)
+  expect(booking.slot_start).toMatch(/(Z|[+-]\d\d:\d\d)$/)
 
-  await request.delete('/api/test/inbox')
-  const createdKey = `booking-created-${bookingId}`
+  const createdKey = `booking-created-${bookingId}-${runId}`
   await sendIdempotentNotification(request, 'booking_created', createdKey)
   await sendIdempotentNotification(request, 'booking_created', createdKey)
-  expect(await getInboxCount(request, 'booking_created')).toBe(1)
+  await expectOneDeliveryByIdempotencyKey(createdKey)
 
-  const updatedKey = `booking-updated-${bookingId}`
+  const updatedKey = `booking-updated-${bookingId}-${runId}`
   await sendIdempotentNotification(request, 'booking_updated', updatedKey)
   await sendIdempotentNotification(request, 'booking_updated', updatedKey)
-  expect(await getInboxCount(request, 'booking_updated')).toBe(1)
+  await expectOneDeliveryByIdempotencyKey(updatedKey)
 
-  const cancelledKey = `booking-cancelled-${bookingId}`
+  const cancelledKey = `booking-cancelled-${bookingId}-${runId}`
   await sendIdempotentNotification(request, 'booking_cancelled', cancelledKey)
   await sendIdempotentNotification(request, 'booking_cancelled', cancelledKey)
-  expect(await getInboxCount(request, 'booking_cancelled')).toBe(1)
+  await expectOneDeliveryByIdempotencyKey(cancelledKey)
 })

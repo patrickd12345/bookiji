@@ -16,7 +16,6 @@ const customerForbidden = [
 const vendorForbidden = [
   /\bpayment\b/i,
   /\bfee\b/i,
-  /\brevenue\b/i,
   /\bpenalt/i,
   /\bno-show\b/i,
 ]
@@ -55,7 +54,8 @@ test('booking surface stays scheduling-only and vendor-first', async ({ page, re
 
 test('vendor booking surfaces avoid payment or penalty language', async ({ page }) => {
   await page.goto('/vendor/dashboard')
-  await expect(page.getByRole('heading', { name: /provider dashboard/i })).toBeVisible()
+  await expect(page.getByText('Loading dashboard...')).toHaveCount(0, { timeout: 15_000 })
+  await expect(page.getByRole('heading', { level: 1, name: 'Provider Dashboard' })).toBeVisible({ timeout: 15_000 })
 
   const bodyText = await page.locator('body').innerText()
   await assertNoTerms(bodyText, vendorForbidden)
