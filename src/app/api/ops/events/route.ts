@@ -1,54 +1,49 @@
 import { NextResponse } from 'next/server'
-import {
-  loadEvents,
-  getEventsByIncident,
-  getEventsByTimeRange
-} from '@/scripts/ops-events-store'
+import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const incidentId = searchParams.get('incidentId')
-    const startTime = searchParams.get('startTime')
-    const endTime = searchParams.get('endTime')
-    const type = searchParams.get('type')
-    const severity = searchParams.get('severity')
+    const source = searchParams.get('source') || 'fused'
+    const runId = searchParams.get('run_id')
+    const providerId = searchParams.get('provider_id')
+    const since = searchParams.get('since')
     const limit = parseInt(searchParams.get('limit') || '100', 10)
     
-    let events = loadEvents()
+    const supabase = createSupabaseServerClient()
     
-    // Filter by incident ID if provided
-    if (incidentId) {
-      events = getEventsByIncident(incidentId)
+    let query = supabase
+      .from('ops_events')
+      .select('*')
+      .order('ts', { ascending: false })
+      .limit(limit)
+
+    if (source !== 'fused') {
+      query = query.eq('source', source)
+    }
+
+    if (runId) {
+      query = query.eq('run_id', runId)
+    }
+
+    if (providerId) {
+      query = query.eq('provider_id', providerId)
+    }
+
+    if (since) {
+      query = query.gte('ts', since)
     }
     
-    // Filter by time range if provided
-    if (startTime) {
-      events = getEventsByTimeRange(startTime, endTime || undefined)
+    const { data: events, error } = await query
+
+    if (error) {
+      throw error
     }
-    
-    // Filter by type if provided
-    if (type) {
-      events = events.filter((e) => e.type === type)
-    }
-    
-    // Filter by severity if provided
-    if (severity) {
-      events = events.filter((e) => e.severity === severity)
-    }
-    
-    // Sort by timestamp (newest first)
-    events.sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    )
-    
-    // Apply limit
-    events = events.slice(0, limit)
     
     return NextResponse.json({
       ok: true,
       data: events,
-      count: events.length
+      count: events?.length || 0
     })
   } catch (error) {
     console.error('Error listing events:', error)
@@ -58,18 +53,3 @@ export async function GET(request: Request) {
     )
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

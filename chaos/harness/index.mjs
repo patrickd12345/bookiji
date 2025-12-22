@@ -208,6 +208,7 @@ async function main() {
   const concurrency = Number(args.concurrency)
   const targetUrlRaw = args['target-url']
   const outPath = typeof args.out === 'string' ? args.out : null
+  const tier = args.tier || 'unknown'
 
   if (!seed) throw new Error('--seed is required')
   if (!Number.isFinite(durationSec) || durationSec <= 0) throw new Error('--duration must be a positive number (seconds)')
@@ -324,6 +325,24 @@ async function main() {
     return res
   }
 
+  async function emitOpsEvent({ type, payload, providerId }) {
+    if (!runId) return;
+    try {
+      await restInsert({
+        table: 'ops_events',
+        record: {
+          source: 'simcity',
+          run_id: runId,
+          provider_id: providerId || null,
+          type: type,
+          payload: payload || {}
+        }
+      });
+    } catch (err) {
+      // Best-effort only
+    }
+  }
+
   // Verify app is reachable (no chaos-specific APIs required).
   await fetchJson(`${targetUrl}/api/health`).catch(() => null)
 
@@ -393,6 +412,44 @@ async function main() {
 
   // Pre-seeded auth users and profiles exist via migration 20251222170000_chaos_seed_auth.sql.
   // We only need to upsert services and slots.
+
+  // Best-effort: persist chaos run start
+  let runDbId = null
+  try {
+    const insertRes = await restInsert({
+      table: 'simcity_runs',
+      record: {
+        id: runId,
+        tier,
+        seed: hashSeedToU32(seedStr),
+        concurrency,
+        max_events: maxEvents,
+        duration_seconds: durationSec,
+        started_at: new Date().toISOString()
+      }
+    })
+    if (insertRes.ok) {
+      const rows = Array.isArray(insertRes.json) ? insertRes.json : []
+      if (rows.length > 0) runDbId = rows[0].id
+    }
+  } catch (err) {
+    // Best-effort only
+  }
+
+  // Initialize live status
+  if (runDbId) {
+    await restUpsert({
+      table: 'simcity_run_live',
+      onConflict: 'run_id',
+      records: [{
+        run_id: runDbId,
+        status: 'RUNNING',
+        last_event_index: -1,
+        last_heartbeat_at: new Date().toISOString(),
+        last_metrics: {}
+      }]
+    }).catch(() => {})
+  }
   
   await restUpsert({
     table: 'services',
@@ -682,6 +739,13 @@ async function main() {
     }
 
     const booking = Array.isArray(bookingRes.json) ? bookingRes.json[0] : bookingRes.json
+    
+    // Emit ops events
+    await Promise.all([
+      emitOpsEvent({ type: 'booking_created', payload: { booking_id: booking.id }, providerId: booking.provider_id }),
+      emitOpsEvent({ type: 'slot_claimed', payload: { slot_id: payload.slotId }, providerId: booking.provider_id })
+    ]);
+
     return { ok: true, status: 200, json: booking, text: JSON.stringify(booking) }
   }
 
@@ -710,9 +774,14 @@ async function main() {
         end_time: `eq.${booking.end_time}`
       }), { method: 'GET', headers: { ...supabaseHeaders } })
       if (slotRes.ok && Array.isArray(slotRes.json) && slotRes.json.length > 0) {
-        await releaseSlot(slotRes.json[0].id)
+        const slotId = slotRes.json[0].id;
+        await releaseSlot(slotId)
+        await emitOpsEvent({ type: 'slot_released', payload: { slot_id: slotId }, providerId: booking.provider_id });
       }
     }
+
+    await emitOpsEvent({ type: 'booking_cancelled', payload: { booking_id: bookingId }, providerId: booking.provider_id });
+
     return patch
   }
 
@@ -748,6 +817,13 @@ async function main() {
     }
 
     const booking = Array.isArray(bookingRes.json) ? bookingRes.json[0] : bookingRes.json
+    
+    // Emit ops events
+    await Promise.all([
+      emitOpsEvent({ type: 'booking_rescheduled', payload: { booking_id: booking.id, new_slot_id: newSlotId }, providerId: booking.provider_id }),
+      emitOpsEvent({ type: 'slot_claimed', payload: { slot_id: newSlotId }, providerId: booking.provider_id })
+    ]);
+
     return { ok: true, status: 200, json: booking, text: JSON.stringify(booking) }
   }
 
@@ -766,6 +842,7 @@ async function main() {
           }
         ]
       })
+      await emitOpsEvent({ type: 'slot_released', payload: { slot_id: payload.slotId }, providerId: payload.vendorId });
       return { ok: true, status: 200, json: res, text: '' }
     }
 
@@ -776,6 +853,9 @@ async function main() {
     if (!del.ok) return del
     const rows = Array.isArray(del.json) ? del.json : []
     if (!rows.length) return { ok: false, status: 409, json: { error: 'Slot not deleted' }, text: 'Slot not deleted' }
+    
+    await emitOpsEvent({ type: 'slot_claimed', payload: { slot_id: payload.slotId }, providerId: payload.vendorId });
+    
     return del
   }
 
@@ -1204,13 +1284,103 @@ async function main() {
     const query = eventRelevantStateQuery(event)
     const stateBefore = await getState(query)
 
+    // Push event telemetry
+    if (runDbId) {
+      await restInsert({
+        table: 'simcity_run_events',
+        record: {
+          run_id: runDbId,
+          event_index: eventIndex,
+          event_type: type,
+          event_payload: event.payload,
+          observed_at: new Date().toISOString()
+        }
+      }).catch(() => {})
+    }
+
     const eventResult = await runEvent(event).catch((e) => ({ ok: false, status: 0, json: null, text: '', error: e }))
 
     const stateAfter = await getState(query)
 
+    // Periodic snapshot and live update
+    if (runDbId && (eventIndex % 5 === 0 || eventIndex === maxEvents - 1)) {
+      try {
+        const metricsRes = await fetchJson(`${restBase}/rpc/get_simcity_metrics`, {
+          method: 'POST',
+          headers: { ...supabaseHeaders }
+        })
+        const metrics = (Array.isArray(metricsRes.json) ? metricsRes.json[0] : metricsRes.json) || {}
+        
+        await Promise.all([
+          restInsert({
+            table: 'simcity_run_snapshots',
+            record: {
+              run_id: runDbId,
+              event_index: eventIndex,
+              metrics: metrics,
+              state_summary: {
+                bookings: stateAfter.bookings?.length || 0,
+                slots: stateAfter.slots?.length || 0
+              }
+            }
+          }),
+          restPatch({
+            table: 'simcity_run_live',
+            filters: { run_id: `eq.${runDbId}` },
+            patch: {
+              last_event_index: eventIndex,
+              last_heartbeat_at: new Date().toISOString(),
+              last_metrics: metrics
+            }
+          })
+        ]).catch(() => {})
+      } catch (err) {
+        // Best-effort
+      }
+    }
+
     const fail = checkInvariants({ event, seed: seedStr, eventIndex, stateBefore, stateAfter })
     if (fail) {
       if (eventResult?.error) fail.error = String(eventResult.error)
+
+      // Emit invariant failure to ops_events
+      await emitOpsEvent({
+        type: 'invariant_failed',
+        payload: {
+          invariant: fail.invariant,
+          event_index: fail.event_index,
+          event: fail.event,
+          forensic: fail.forensic || null
+        }
+      });
+
+      // Best-effort: persist chaos run fail
+      if (runDbId) {
+        await Promise.all([
+          restPatch({
+            table: 'simcity_runs',
+            filters: { id: `eq.${runDbId}` },
+            patch: {
+              ended_at: new Date().toISOString(),
+              result: 'FAIL',
+              pass: false,
+              fail_invariant: fail.invariant,
+              fail_event_index: fail.event_index,
+              fail_forensic: fail.forensic || null,
+              duration_seconds_actual: (Date.now() - startedAt) / 1000
+            }
+          }),
+          restPatch({
+            table: 'simcity_run_live',
+            filters: { run_id: `eq.${runDbId}` },
+            patch: {
+              status: 'FAILED',
+              last_message: `Failed on invariant: ${fail.invariant}`
+            }
+          })
+        ]).catch(() => {})
+      }
+
       if (outPath) {
         await fs.writeFile(outPath, JSON.stringify(fail, null, 2), 'utf8').catch(() => {})
       }
@@ -1237,6 +1407,31 @@ async function main() {
   }
 
   const durationActual = Math.round(((Date.now() - startedAt) / 1000) * 10) / 10
+
+  // Best-effort: persist chaos run pass
+  if (runDbId) {
+    const durationActual = (Date.now() - startedAt) / 1000
+    await Promise.all([
+      restPatch({
+        table: 'simcity_runs',
+        filters: { id: `eq.${runDbId}` },
+        patch: {
+          ended_at: new Date().toISOString(),
+          result: 'PASS',
+          pass: true,
+          duration_seconds_actual: durationActual
+        }
+      }),
+      restPatch({
+        table: 'simcity_run_live',
+        filters: { run_id: `eq.${runDbId}` },
+        patch: {
+          status: 'PASSED'
+        }
+      })
+    ]).catch(() => {})
+  }
+
   process.stdout.write(['PASS', `seed: ${seedStr}`, `events: ${executed}`, `duration: ${durationActual}s`].join('\n') + '\n')
   process.exit(0)
 }
