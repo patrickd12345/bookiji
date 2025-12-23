@@ -4,57 +4,71 @@
 
 ### When Creating a New Feature
 
-**MANDATORY**: Whenever a new feature is created, you MUST update `TEST_PLAN.md` to include test requirements for that feature.
+**MANDATORY**: Whenever a new feature is created, you MUST update `TEST_PLAN.md` to include functional test cases for that feature.
 
-1. **Identify Feature Type**: Determine which category the feature falls into:
-   - API Endpoint
-   - UI Component
-   - Page/Route
-   - Business Logic/Service
-   - Database Operation
-   - External Integration
-   - Authentication/Authorization
+1. **Identify Feature Area**: Determine which functional area the feature belongs to:
+   - Customer Features
+   - Vendor Features
+   - Admin Features
+   - Booking System
    - Payment Processing
-   - Notification
-   - Admin Feature
+   - Authentication & Authorization
+   - Security
+   - Reviews & Ratings
+   - Notifications
+   - Support & Help Center
+   - Analytics & Reporting
+   - Settings & Configuration
+   - Search & Discovery
+   - Calendar & Scheduling
+   - Credits & Referrals
+   - Disputes & Moderation
+   - Knowledge Base
+   - Operational Features
 
-2. **Update TEST_PLAN.md**: Add the feature to the appropriate section in "Testing Requirements by Feature Type" with:
-   - Required test types (Unit, Integration, E2E, Contract, etc.)
-   - Specific test files that should be created/updated
-   - Test coverage requirements
-   - Critical test scenarios
+2. **Update TEST_PLAN.md**: Add functional test cases to the appropriate section following this format:
+   ```
+   #### TC-AREA-XXX: Test Case Name
+   **Priority**: High/Medium/Low
+   **Test Steps**:
+   1. Step 1
+   2. Step 2
+   3. Step 3
 
-3. **Create Tests**: Implement the tests according to the test plan:
-   - Follow the naming conventions
-   - Place tests in the correct directory
-   - Use appropriate testing tools (Vitest for unit/integration, Playwright for E2E)
-   - Follow existing test patterns
+   **Expected Results**:
+   - Result 1
+   - Result 2
+   - Result 3
 
-4. **Verify Test Execution**: Ensure all tests pass:
-   ```bash
-   pnpm test:run              # Unit/integration tests
-   pnpm e2e                   # E2E tests
+   **Acceptance Criteria**:
+   - Criterion 1
+   - Criterion 2
+   - Criterion 3
    ```
 
-### Feature-Specific Test Checklist
+3. **Test Case Requirements**:
+   - Use consistent naming: TC-[AREA]-[NUMBER]
+   - Assign appropriate priority (Critical/High/Medium/Low)
+   - Include detailed test steps
+   - List all expected results
+   - Define clear acceptance criteria
+   - Cover happy path and error scenarios
+   - Include edge cases
 
-When adding a new feature, update `TEST_PLAN.md` under "Feature-Specific Test Requirements" section:
+4. **Update Table of Contents**: If adding a new section, update the table of contents
 
-- Add a new subsection if it's a major feature area
-- List all required test types
-- Reference specific test files that should exist
-- Include critical test scenarios
+5. **Update Version**: Update the version history section with the new feature
 
 ### Example Workflow
 
 1. Feature created: "New booking cancellation feature"
 2. Update `TEST_PLAN.md`:
    - Add to "Booking System" section
-   - List required tests: E2E cancellation flow, API cancellation endpoint tests, refund processing tests
-   - Reference test files: `tests/e2e/booking-cancellation.spec.ts`, `tests/api/bookings/cancel.spec.ts`
-3. Create the tests
-4. Verify tests pass
-5. Commit both feature and updated test plan
+   - Create test case: TC-BOOK-007: Cancel Booking
+   - Include test steps, expected results, and acceptance criteria
+   - Add any additional test cases for edge cases (e.g., TC-BOOK-008: Cancel Booking After Payment)
+3. Update version history
+4. Commit both feature and updated test plan
 
 ## General Development Rules
 
