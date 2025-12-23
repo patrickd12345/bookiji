@@ -48,10 +48,19 @@ export default function SupportChat({ onClose }: { onClose: () => void }) {
     setIsTyping(true)
 
     try {
-      const response = await fetch('/api/support/ask', {
+      // Build history from previous messages for context
+      const history = messages
+        .filter(m => m.role === 'assistant' && 'confidence' in m)
+        .map(m => ({ confidence: (m as any).confidence || 0 }))
+        .slice(-5); // Keep last 5 for context
+
+      const response = await fetch('/api/support/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: userMessage.content }),
+        body: JSON.stringify({ 
+          message: userMessage.content,
+          history: history
+        }),
       })
 
       if (!response.ok) throw new Error('Failed to get response')
@@ -61,12 +70,19 @@ export default function SupportChat({ onClose }: { onClose: () => void }) {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.answer || "I'm sorry, I couldn't find an answer to that.",
+        content: data.reply || "I'm sorry, I couldn't find an answer to that.",
         sources: data.sources,
-        timestamp: new Date()
+        timestamp: new Date(),
+        ...(data.confidence !== undefined && { confidence: data.confidence } as any),
+        ...(data.escalated && { escalated: true, ticketId: data.ticketId } as any)
       }
 
       setMessages(prev => [...prev, aiMessage])
+      
+      // Show escalation message if ticket was created
+      if (data.escalated && data.ticketId) {
+        console.log('Ticket created:', data.ticketId);
+      }
     } catch (error) {
       console.error('Support chat error:', error)
       const errorMessage: Message = {
