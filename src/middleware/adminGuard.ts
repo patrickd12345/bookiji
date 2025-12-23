@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
+import { createServerClient } from '@supabase/ssr'
+import { getSupabaseConfig } from '@/config/supabase'
 
 // Admin allow-list - production should use environment variables
 const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') || [
   'admin@bookiji.com',
-  'patri@bookiji.com'
+  'patri@bookiji.com',
+  'patrick_duchesneau_1@hotmail.com'
 ]
 
 const ADMIN_ORG_IDS = process.env.ADMIN_ORG_IDS?.split(',') || [
@@ -20,7 +22,26 @@ export async function adminGuard(request: NextRequest) {
   }
 
   try {
-    const supabase = createSupabaseServerClient()
+    const config = getSupabaseConfig()
+    
+    // Create Supabase client with cookie access for middleware
+    const supabase = createServerClient(
+      config.url,
+      config.publishableKey,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value
+          },
+          set(name: string, value: string, options: any) {
+            // Middleware can't set cookies, but we need to provide the interface
+          },
+          remove(name: string, options: any) {
+            // Middleware can't remove cookies, but we need to provide the interface
+          }
+        }
+      }
+    )
     
     // Verify user session
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -36,6 +57,8 @@ export async function adminGuard(request: NextRequest) {
       }
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/login'
+      // Preserve the original destination so user can be redirected back after login
+      redirectUrl.searchParams.set('next', url.pathname + url.search)
       return NextResponse.redirect(redirectUrl)
     }
 

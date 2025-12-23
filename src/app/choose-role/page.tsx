@@ -10,8 +10,39 @@ import Loading from './loading'
 export default function ChooseRolePage() {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [checkingAdmin, setCheckingAdmin] = useState(true)
   const { ready, session } = useAuthReady()
   const router = useRouter()
+
+  // Check if user is admin
+  useEffect(() => {
+    if (!ready || !session) return
+    
+    const checkAdmin = async () => {
+      try {
+        const response = await fetch('/api/auth/check-admin', { 
+          method: 'GET', 
+          credentials: 'include' 
+        })
+        if (response.ok) {
+          const { isAdmin: adminStatus } = await response.json()
+          setIsAdmin(adminStatus)
+          if (adminStatus) {
+            // Auto-redirect admins to admin dashboard
+            router.push('/admin')
+            return
+          }
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error)
+      } finally {
+        setCheckingAdmin(false)
+      }
+    }
+    
+    checkAdmin()
+  }, [ready, session, router])
 
   useEffect(() => {
     if (!ready) return
@@ -20,9 +51,14 @@ export default function ChooseRolePage() {
     }
   }, [ready, session, router])
 
-  if (!ready) return <Loading />
+  if (!ready || checkingAdmin) return <Loading />
 
   if (!session) {
+    return <Loading />
+  }
+
+  // If admin, show loading while redirecting
+  if (isAdmin) {
     return <Loading />
   }
 
@@ -119,6 +155,19 @@ export default function ChooseRolePage() {
                 Service Provider
               </label>
             </div>
+          </div>
+          
+          <div className="pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-500 mb-2">
+              Need admin access? Contact support or check if your email is in the admin allow-list.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => router.push('/admin')}
+              className="w-full text-sm"
+            >
+              Try Admin Dashboard
+            </Button>
           </div>
 
           <Button

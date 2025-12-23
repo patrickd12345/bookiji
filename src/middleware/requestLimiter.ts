@@ -37,13 +37,21 @@ export function limitRequest(request: Request, config: LimiterConfig): NextRespo
       return (async () => {
         try {
           const { data, error } = await s.rpc('bump_rate_limit', { p_ip: ip, p_window_seconds: windowSec, p_max: config.max })
-          if (error) return memoryFallback(request, config)
+          if (error) {
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('Rate limit RPC error, falling back to memory:', error)
+            }
+            return memoryFallback(request, config)
+          }
           if (data === false) {
             const status = config.statusCode ?? 429
             return NextResponse.json({ error: 'Too many requests' }, { status })
           }
           return undefined
-        } catch {
+        } catch (err) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Rate limit RPC exception, falling back to memory:', err)
+          }
           return memoryFallback(request, config)
         }
       })()

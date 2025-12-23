@@ -1,9 +1,41 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import { canonicalUrl } from '@/lib/seo'
+import { JsonLd } from '@/lib/seo'
+
+export const metadata: Metadata = {
+  title: 'About Us',
+  description: 'Learn about Bookiji, the world\'s first universal booking platform connecting customers with service providers instantly.',
+  alternates: {
+    canonical: canonicalUrl('/about'),
+  },
+  openGraph: {
+    title: 'About Bookiji',
+    description: 'Learn about Bookiji, the world\'s first universal booking platform.',
+    url: '/about',
+  },
+}
+
+const aboutJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Bookiji',
+  description: 'Universal booking platform connecting customers with service providers',
+  url: canonicalUrl('/'),
+  logo: canonicalUrl('/logo.png'),
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'Customer Service',
+    url: canonicalUrl('/contact'),
+  },
+}
 
 export default function AboutPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8 text-center">About Bookiji</h1>
+    <>
+      <JsonLd id="about-jsonld" json={aboutJsonLd} />
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold mb-8 text-center">About Bookiji</h1>
       
       <div className="prose prose-lg max-w-none">
         <p className="text-lg text-gray-600 mb-8">
@@ -105,5 +137,6 @@ export default function AboutPage() {
         </section>
       </div>
     </div>
+    </>
   )
 } 

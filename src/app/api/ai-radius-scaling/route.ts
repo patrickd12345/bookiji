@@ -7,7 +7,16 @@ export async function POST(request: Request) {
   try {
     const limited = await limitRequest(request, { windowMs: 10_000, max: 20 })
     if (limited) return limited
-    const { service, location, providerDensity, currentRadius } = await request.json()
+    let body;
+    try {
+      body = await request.json()
+    } catch (e) {
+      if (process.env.NODE_ENV === 'development' && !ADSENSE_APPROVAL_MODE) {
+        console.error('❌ AI Radius Scaling: Failed to parse request JSON:', e)
+      }
+      throw e; // Re-throw to be caught by outer catch
+    }
+    const { service, location, providerDensity, currentRadius } = body
     
     if (!service || !location) {
       return NextResponse.json({ 
@@ -59,6 +68,20 @@ export async function POST(request: Request) {
     const density = 'medium'
     const recommendedRadius = 5
     const explanation = 'Service temporarily unavailable. Using default radius.'
+    
+    const isAborted = error instanceof Error && 
+      (error.name === 'AbortError' || 
+       error.message.includes('aborted') || 
+       (error as any).code === 'ECONNRESET');
+
+    if (process.env.NODE_ENV === 'development' && !ADSENSE_APPROVAL_MODE) {
+      if (isAborted) {
+        console.warn('⚠️ AI Radius Scaling: Request aborted or connection reset by client.');
+      } else {
+        console.error('❌ AI Radius Scaling error:', error)
+      }
+    }
+
     return NextResponse.json({ 
       success: true,
       recommendedRadius,

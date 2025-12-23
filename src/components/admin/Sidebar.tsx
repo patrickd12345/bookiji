@@ -17,22 +17,49 @@ import {
   MessageSquare,
   Database,
   Activity,
-  Brain
+  Brain,
+  Target,
+  FileText,
+  AlertTriangle,
+  HelpCircle,
+  TrendingUp,
+  Shield,
+  Wrench,
+  Ticket
 } from 'lucide-react'
 
 const navItems = [
+  // Core Admin
   { href: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
+  
+  // Operations & Monitoring
+  { href: '/admin/ops-ai', icon: Brain, label: 'OpsAI Console' },
+  { href: '/admin/simcity/mission-control', icon: Target, label: 'Mission Control' },
   { href: '/admin/slo', icon: Activity, label: 'SLO Monitoring' },
   { href: '/admin/cache', icon: Database, label: 'Cache Management' },
-  { href: '/admin/ops-ai', icon: Brain, label: 'OpsAI Console' },
+  { href: '/admin/performance', icon: TrendingUp, label: 'Performance' },
+  { href: '/admin/resilience', icon: Shield, label: 'Resilience' },
+  { href: '/admin/operational-insights', icon: BarChart3, label: 'Operational Insights' },
+  
+  // User Management
   { href: '/admin/vendors', icon: Users, label: 'Vendors' },
   { href: '/admin/customers', icon: Users, label: 'Customers' },
-  { href: '/admin/specialties', icon: Settings, label: 'Specialties' },
-  { href: '/admin/suggestions', icon: Plus, label: 'Suggestions' },
   { href: '/admin/bookings', icon: Calendar, label: 'Bookings' },
   { href: '/admin/reviews', icon: MessageSquare, label: 'Review Moderation' },
+  
+  // Content & Configuration
+  { href: '/admin/specialties', icon: Settings, label: 'Specialties' },
+  { href: '/admin/service-types', icon: Wrench, label: 'Service Types' },
+  { href: '/admin/suggestions', icon: Plus, label: 'Suggestions' },
   { href: '/admin/broadcasts', icon: Radio, label: 'Broadcasts' },
+  { href: '/admin/disputes', icon: AlertTriangle, label: 'Disputes' },
+  { href: '/admin/support/tickets', icon: Ticket, label: 'Support Tickets' },
+  { href: '/admin/unanswered', icon: HelpCircle, label: 'Unanswered' },
+  { href: '/admin/faq', icon: FileText, label: 'FAQ' },
+  { href: '/admin/parameters', icon: Settings, label: 'Parameters' },
+  
+  // Settings
   { href: '/admin/settings', icon: Settings, label: 'Settings' }
 ]
 

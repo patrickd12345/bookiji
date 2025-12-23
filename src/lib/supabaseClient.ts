@@ -5,10 +5,11 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 // We NEVER create a client server-side unless explicitly requested.
 
 function getBrowserEnv() {
-  return {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  }
+  // Get the first valid URL (in case multiple are set)
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').split(/\s+/)[0].trim()
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  
+  return { url, key }
 }
 
 // ---------- Browser client (auth, sessions) ----------
@@ -21,17 +22,26 @@ export function getBrowserSupabase(): SupabaseClient | null {
   const { url, key } = getBrowserEnv()
 
   if (!url || !key) {
-    console.warn('Supabase env vars missing (browser)')
+    console.error('Supabase env vars missing (browser)', { 
+      hasUrl: !!url, 
+      hasKey: !!key,
+      urlPreview: url ? `${url.substring(0, 30)}...` : 'missing'
+    })
     return null
   }
 
-  return createClient(url, key, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-  })
+  try {
+    return createClient(url, key, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
+  } catch (error) {
+    console.error('Failed to create Supabase client:', error)
+    return null
+  }
 }
 
 // Lazy singleton for convenience

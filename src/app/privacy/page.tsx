@@ -1,4 +1,5 @@
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy – Bookiji',
@@ -142,11 +143,28 @@ export default function PrivacyPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">12. Contact us</h2>
           <p className="text-gray-700 leading-relaxed mb-4">
-            If you have questions about this Privacy Policy or how we handle your data, you can contact us at:
+            If you have questions about this Privacy Policy or how we handle your data, you can contact us through:
           </p>
-          <p className="text-gray-700 leading-relaxed">
-            Email: 
-          </p>
+          <ul className="text-gray-700 leading-relaxed space-y-2">
+            <li>
+              <strong>Support Tickets:</strong>{' '}
+              <Link href="/help/tickets" className="text-blue-600 hover:underline">
+                Submit a support ticket
+              </Link>
+            </li>
+            <li>
+              <strong>Contact Page:</strong>{' '}
+              <Link href="/contact" className="text-blue-600 hover:underline">
+                Visit our contact page
+              </Link>
+            </li>
+            <li>
+              <strong>Help Center:</strong>{' '}
+              <Link href="/help" className="text-blue-600 hover:underline">
+                Browse help articles
+              </Link>
+            </li>
+          </ul>
         </section>
       </div>
     </div>

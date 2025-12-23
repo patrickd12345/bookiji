@@ -8,6 +8,8 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 // Dynamically import to defer Supabase initialization
 const MainNavigation = dynamic(() => import('@/components/MainNavigation'), { ssr: false })
+const Footer = dynamic(() => import('@/components/Footer'), { ssr: false })
+const ConsentManager = dynamic(() => import('@/components/ConsentManager'), { ssr: false })
 
 interface RootLayoutWrapperProps {
   children: ReactNode
@@ -21,7 +23,15 @@ export default function RootLayoutWrapper({ children }: RootLayoutWrapperProps) 
           <Suspense fallback={null}>
             <MainNavigation />
           </Suspense>
-          {children}
+          <div className="flex flex-col min-h-screen">
+            {children}
+            <Suspense fallback={null}>
+              <Footer />
+            </Suspense>
+          </div>
+          <Suspense fallback={null}>
+            <ConsentManager />
+          </Suspense>
         </GuidedTourProvider>
       </ThemeProvider>
     </ErrorBoundary>

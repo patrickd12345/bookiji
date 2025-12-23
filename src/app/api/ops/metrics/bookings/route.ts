@@ -69,9 +69,10 @@ export async function GET(request: NextRequest) {
 
     // Fetch booking metrics grouped by 5-minute buckets
     // We'll aggregate from the bookings table
+    // Note: bookings table has total_amount (DECIMAL), not total_amount_cents
     const { data: bookings, error: bookingsError } = await supabase
       .from('bookings')
-      .select('id, status, created_at, confirmed_at, cancelled_at, total_amount_cents, price_cents')
+      .select('id, status, created_at, updated_at, total_amount')
       .gte('created_at', startTime.toISOString())
       .order('created_at', { ascending: true })
 
@@ -110,13 +111,14 @@ export async function GET(request: NextRequest) {
       const bucket = bucketMap.get(bucketKey)!
       bucket.bookings_created++
 
-      const amount = booking.total_amount_cents || booking.price_cents || 0
+      // Convert total_amount (DECIMAL) to cents
+      const amount = booking.total_amount ? Math.round(Number(booking.total_amount) * 100) : 0
       bucket.total_revenue_cents += amount
 
-      if (booking.status === 'confirmed' || booking.confirmed_at) {
+      if (booking.status === 'confirmed') {
         bucket.bookings_confirmed++
       }
-      if (booking.status === 'cancelled' || booking.cancelled_at) {
+      if (booking.status === 'cancelled') {
         bucket.bookings_cancelled++
       }
       if (booking.status === 'completed') {
@@ -144,7 +146,7 @@ export async function GET(request: NextRequest) {
     if (compareStartTime && compareWith) {
       const { data: prevBookings } = await supabase
         .from('bookings')
-        .select('id, status, created_at, confirmed_at, cancelled_at, total_amount_cents, price_cents')
+        .select('id, status, created_at, updated_at, total_amount')
         .gte('created_at', compareStartTime.toISOString())
         .lt('created_at', startTime.toISOString())
         .order('created_at', { ascending: true })
@@ -175,13 +177,14 @@ export async function GET(request: NextRequest) {
         const bucket = prevBucketMap.get(bucketKey)!
         bucket.bookings_created++
 
-        const amount = booking.total_amount_cents || booking.price_cents || 0
+        // Convert total_amount (DECIMAL) to cents
+        const amount = booking.total_amount ? Math.round(Number(booking.total_amount) * 100) : 0
         bucket.total_revenue_cents += amount
 
-        if (booking.status === 'confirmed' || booking.confirmed_at) {
+        if (booking.status === 'confirmed') {
           bucket.bookings_confirmed++
         }
-        if (booking.status === 'cancelled' || booking.cancelled_at) {
+        if (booking.status === 'cancelled') {
           bucket.bookings_cancelled++
         }
         if (booking.status === 'completed') {

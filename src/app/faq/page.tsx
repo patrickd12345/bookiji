@@ -1,9 +1,58 @@
+import type { Metadata } from 'next'
 import SmartFAQ from '@/components/SmartFAQ'
 import Link from 'next/link'
+import { canonicalUrl } from '@/lib/seo'
+import { JsonLd } from '@/lib/seo'
+
+export const metadata: Metadata = {
+  title: 'Frequently Asked Questions',
+  description: 'Find answers to common questions about Bookiji, our booking process, services, and how to get started.',
+  alternates: {
+    canonical: canonicalUrl('/faq'),
+  },
+  openGraph: {
+    title: 'FAQ - Bookiji',
+    description: 'Frequently asked questions about Bookiji booking platform.',
+    url: '/faq',
+  },
+}
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'How does the $1 commitment fee work?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'The $1 commitment fee guarantees your booking spot and reduces no-shows. It\'s a small charge that ensures serious bookings and protects both customers and service providers.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'What if my vendor cancels?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'If a vendor cancels, you\'ll get the provider\'s contact info after booking - you can arrange directly with them or get a refund.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'How is my privacy protected?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Both parties\' contact details are abstracted until booking is confirmed. We use map abstraction to protect provider locations.',
+      },
+    },
+  ],
+}
 
 export default function FAQPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <>
+      <JsonLd id="faq-jsonld" json={faqJsonLd} />
+      <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-4">Frequently Asked Questions</h1>
         <p className="text-lg text-gray-600">
@@ -113,5 +162,6 @@ export default function FAQPage() {
         </div>
       </div>
     </div>
+    </>
   )
 } 

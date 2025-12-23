@@ -1,16 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabaseBrowserClient } from '@/lib/supabaseClient';
 
-export default function LoginPage() {
+function LoginFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Get the redirect destination from query params
+  const nextUrl = searchParams.get('next') || '/get-started';
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,26 +23,85 @@ export default function LoginPage() {
 
     const supabase = supabaseBrowserClient()
     if (!supabase) {
-      setError('Supabase client not available');
+      setError('Supabase client not available. Please check your browser console for details.');
       setIsLoading(false);
       return;
     }
 
+    // Log the Supabase URL being used (for debugging)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    console.log('Attempting login with Supabase URL:', supabaseUrl?.split(/\s+/)[0] || 'not set')
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Login error:', error);
+        throw error;
+      }
 
-      // Successful login
-      router.push('/get-started');
+      if (!data?.user || !data?.session) {
+        throw new Error('No user data returned');
+      }
+
+      // Sync session to server cookies so middleware can read it
+      try {
+        await fetch('/api/auth/sync-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token
+          })
+        })
+      } catch (syncError) {
+        console.warn('Failed to sync session to cookies:', syncError)
+        // Continue anyway - session is in localStorage
+      }
+
+      // Check if user is admin and redirect accordingly
+      try {
+        const adminCheck = await fetch('/api/auth/check-admin', {
+          method: 'GET',
+          credentials: 'include'
+        })
+        
+        if (adminCheck.ok) {
+          const { isAdmin } = await adminCheck.json()
+          if (isAdmin) {
+            // If trying to access admin page, go there; otherwise go to admin dashboard
+            if (nextUrl.startsWith('/admin')) {
+              router.push(nextUrl)
+              return
+            } else {
+              router.push('/admin')
+              return
+            }
+          }
+        }
+      } catch (adminError) {
+        console.warn('Failed to check admin status:', adminError)
+        // Continue with normal redirect
+      }
+
+      // Successful login - redirect to next URL or default
+      router.push(nextUrl);
     } catch (error: unknown) {
+      console.error('Login exception:', error);
       if (error instanceof Error) {
-        setError(error.message || 'Failed to sign in');
+        // Provide more helpful error messages
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          setError('Unable to connect to authentication server. Please check your internet connection and try again.');
+        } else if (error.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please try again.');
+        } else {
+          setError(error.message || 'Failed to sign in');
+        }
       } else {
-        setError('Failed to sign in');
+        setError('Failed to sign in. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -236,5 +299,20 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LoginFormContent />
+    </Suspense>
   );
 } 

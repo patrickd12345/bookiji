@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, BarChart3, GitCompare } from 'lucide-react'
+import { LayoutDashboard, FileText, BarChart3, GitCompare, Target } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/admin/simcity/cockpit', label: 'Overview', icon: LayoutDashboard },
+  { href: '/admin/simcity/mission-control', label: 'Mission Control', icon: Target },
   { href: '/admin/simcity/cockpit/proposals', label: 'Proposals', icon: FileText },
   { href: '/admin/simcity/cockpit/metrics', label: 'Metrics & Dials', icon: BarChart3 },
   { href: '/admin/simcity/cockpit/replays', label: 'Replays & Diffs', icon: GitCompare },

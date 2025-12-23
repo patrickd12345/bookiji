@@ -134,12 +134,10 @@ export default function MyTicketsPage() {
         )
         .subscribe((status) => {
           if (status === 'CHANNEL_ERROR') {
-            console.error('Support chat channel error')
-            alert('Chat connection lost. Reconnecting')
+            console.error('Support chat channel error - reconnecting automatically...')
             attemptReconnect()
           } else if (status === 'CLOSED') {
-            console.warn('Support chat channel closed')
-            alert('Chat connection closed. Reconnecting')
+            console.warn('Support chat channel closed - reconnecting automatically...')
             attemptReconnect()
           }
         })

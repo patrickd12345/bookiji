@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
+import { supabaseAdmin as supabase } from '@/lib/supabaseProxies'
 
 export async function GET(request: Request) {
   try {
@@ -9,8 +9,6 @@ export async function GET(request: Request) {
     const providerId = searchParams.get('provider_id')
     const since = searchParams.get('since')
     const limit = parseInt(searchParams.get('limit') || '100', 10)
-    
-    const supabase = createSupabaseServerClient()
     
     let query = supabase
       .from('ops_events')

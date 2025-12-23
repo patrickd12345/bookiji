@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const isProd = process.env.VERCEL_ENV === 'production';
 
+// Get Supabase URL from environment or use wildcard for *.supabase.co
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://*.supabase.co';
+const supabaseDomain = supabaseUrl.replace(/^https?:\/\//, '').split('/')[0];
+
 const securityHeaders = [
   {
     key: 'Content-Security-Policy',
@@ -8,7 +12,7 @@ const securityHeaders = [
       "default-src 'self'; " +
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; " +
       "style-src 'self' 'unsafe-inline'; " +
-      "connect-src 'self' ws: wss: https://lzgynywojluwdccqkeop.supabase.co https://api.stripe.com; " +
+      `connect-src 'self' ws: wss: https://${supabaseDomain} https://*.supabase.co https://api.stripe.com; ` +
       "img-src 'self' data: blob: https:; " +
       "font-src 'self' data:; " +
       "frame-src https://js.stripe.com;",

@@ -19,6 +19,7 @@ export default function MainNavigation() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [isBetaUser, setIsBetaUser] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false)
   const { t } = useI18n();
   const router = useRouter();
@@ -85,11 +86,30 @@ export default function MainNavigation() {
           const defaultRole = r.includes('customer') ? 'customer' : r[0] || null;
           setUserRole(defaultRole);
           setIsBetaUser(!!profile.beta_status);
+          
+          // Check if user is admin
+          const adminCheck = async () => {
+            try {
+              const response = await fetch('/api/auth/check-admin', { 
+                method: 'GET', 
+                credentials: 'include' 
+              });
+              if (response.ok) {
+                const { isAdmin: admin } = await response.json();
+                setIsAdmin(admin);
+              }
+            } catch (error) {
+              console.error('Error checking admin status:', error);
+              setIsAdmin(false);
+            }
+          };
+          adminCheck();
         } else {
           // No profile found, set defaults
           setRoles(['customer']);
           setUserRole('customer');
           setIsBetaUser(false);
+          setIsAdmin(false);
         }
       } catch (error) {
         console.error('Exception in checkAuth:', error);
@@ -153,6 +173,20 @@ export default function MainNavigation() {
                           data-test="nav-vendor-portal"
                         >
                           {t('nav.vendor_portal')}
+                        </Link>
+                      )}
+
+                      {isAdmin && (
+                        <Link
+                          href="/admin"
+                          className={`px-3 py-2 rounded-md text-sm font-medium ${
+                            pathname.startsWith('/admin')
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-foreground hover:bg-muted'
+                          }`}
+                          data-test="nav-admin"
+                        >
+                          Admin
                         </Link>
                       )}
 
@@ -261,6 +295,18 @@ export default function MainNavigation() {
                         Help
                       </Link>
                       <Link
+                        href="/faq"
+                        className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                      >
+                        FAQ
+                      </Link>
+                      <Link
+                        href="/how-it-works"
+                        className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                      >
+                        How It Works
+                      </Link>
+                      <Link
                         href="/login"
                         className="px-3 py-2 rounded-md text-sm font-medium text-primary hover:opacity-80"
                         data-test="nav-login"
@@ -299,6 +345,16 @@ export default function MainNavigation() {
                       onClick={() => setMobileOpen(false)}
                     >
                       {t('nav.vendor_portal')}
+                    </Link>
+                  )}
+
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      Admin
                     </Link>
                   )}
 

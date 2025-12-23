@@ -1,5 +1,35 @@
 {
   "baseUrlEnv": "NEXT_PUBLIC_APP_URL",
-  "required": ["/", "/vendors", "/services", "/pricing", "/contact"],
-  "forbidden": ["/admin", "/preview", "/api"]
+  "required": [
+    "/",
+    "/get-started",
+    "/how-it-works",
+    "/about",
+    "/help",
+    "/faq",
+    "/privacy",
+    "/terms",
+    "/login",
+    "/register"
+  ],
+  "forbidden": [
+    "/admin",
+    "/preview",
+    "/api",
+    "/customer/dashboard",
+    "/customer/bookings",
+    "/customer/favorites",
+    "/customer/profile",
+    "/customer/credits",
+    "/vendor/dashboard",
+    "/vendor/calendar",
+    "/vendor/onboarding",
+    "/provider/profile",
+    "/provider/analytics",
+    "/pay",
+    "/confirm",
+    "/auth/callback",
+    "/verify-email",
+    "/forgot-password"
+  ]
 }

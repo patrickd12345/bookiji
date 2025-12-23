@@ -1,4 +1,20 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import { canonicalUrl } from '@/lib/seo'
+
+export const metadata: Metadata = {
+  title: 'Blog',
+  description: 'Read the latest articles about service booking, platform features, industry insights, and tips for customers and providers.',
+  alternates: {
+    canonical: canonicalUrl('/blog'),
+  },
+  openGraph: {
+    title: 'Bookiji Blog',
+    description: 'Latest articles about service booking and platform features.',
+    url: '/blog',
+    type: 'website',
+  },
+}
 
 export default function BlogPage() {
   const blogPosts = [

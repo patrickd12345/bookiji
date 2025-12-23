@@ -191,13 +191,21 @@ export default function MissionControlPage() {
   const fetchRequests = async () => {
     try {
       const res = await fetch('/api/ops/simcity/run-requests');
+      if (!res.ok) {
+        console.error('Failed to fetch requests:', res.statusText);
+        setRequests([]);
+        return;
+      }
       const data = await res.json();
-      setRequests(data);
-      if (data.length > 0 && !selectedRunId) {
-        setSelectedRunId(data[0].run_id);
+      // Ensure data is an array
+      const requestsArray = Array.isArray(data) ? data : [];
+      setRequests(requestsArray);
+      if (requestsArray.length > 0 && !selectedRunId) {
+        setSelectedRunId(requestsArray[0].run_id);
       }
     } catch (err) {
       console.error('Failed to fetch requests', err);
+      setRequests([]); // Set to empty array on error
     }
   };
 
@@ -248,22 +256,28 @@ export default function MissionControlPage() {
             </Button>
           </div>
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {requests.map((req) => (
-              <button
-                key={req.id}
-                onClick={() => setSelectedRunId(req.run_id)}
-                className={`w-full text-left p-3 rounded-lg border transition-all ${
-                  selectedRunId === req.run_id ? 'bg-cyan-500/10 border-cyan-500/50' : 'hover:bg-slate-800/50 border-transparent'
-                }`}
-              >
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-mono text-[10px] text-slate-500">#{req.run_id?.slice(0, 8) || 'PENDING'}</span>
-                  <Badge variant="outline" className="text-[8px] uppercase">{req.status}</Badge>
-                </div>
-                <div className="text-sm font-medium">Tier {req.tier} • Seed {req.seed}</div>
-                <div className="text-[10px] text-slate-600 mt-1">{new Date(req.created_at).toLocaleString()}</div>
-              </button>
-            ))}
+            {Array.isArray(requests) && requests.length > 0 ? (
+              requests.map((req) => (
+                <button
+                  key={req.id}
+                  onClick={() => setSelectedRunId(req.run_id)}
+                  className={`w-full text-left p-3 rounded-lg border transition-all ${
+                    selectedRunId === req.run_id ? 'bg-cyan-500/10 border-cyan-500/50' : 'hover:bg-slate-800/50 border-transparent'
+                  }`}
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-mono text-[10px] text-slate-500">#{req.run_id?.slice(0, 8) || 'PENDING'}</span>
+                    <Badge variant="outline" className="text-[8px] uppercase">{req.status}</Badge>
+                  </div>
+                  <div className="text-sm font-medium">Tier {req.tier} • Seed {req.seed}</div>
+                  <div className="text-[10px] text-slate-600 mt-1">{new Date(req.created_at).toLocaleString()}</div>
+                </button>
+              ))
+            ) : (
+              <div className="p-4 text-center text-slate-500 text-sm">
+                No SimCity runs found
+              </div>
+            )}
           </div>
         </div>
       )}
