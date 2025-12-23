@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n/useI18n'
 import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
 import { customerDashboardSteps, customerDashboardTourId } from '@/tours/dashboardNavigation'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface UserProfile {
   id: string
@@ -113,7 +114,8 @@ export default function UserDashboard() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('all')
   const router = useRouter()
   const { t } = useI18n()
-  const { startTour, hasCompletedTour } = useGuidedTour()
+  // Tour functionality removed - users can start tour manually via GuidedTourManager button
+  // const { startTour, hasCompletedTour } = useGuidedTour()
 
   // Use the new async state hook for notifications
   const notifications = useAsyncData<NotificationResponse['notifications']>({
@@ -127,8 +129,13 @@ export default function UserDashboard() {
     
     try {
       const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        // Don't fetch notifications if not authenticated
+        return
+      }
+      
       const response = await fetch('/api/notifications', {
-        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined
+        headers: { Authorization: `Bearer ${session.access_token}` }
       })
       if (!response.ok) {
         const errorData = await response.json() as NotificationError
@@ -141,7 +148,8 @@ export default function UserDashboard() {
       console.error('Failed to load notifications:', error)
       notifications.setError(error instanceof Error ? error.message : 'Failed to load notifications')
     }
-  }, [notifications])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Intentionally empty - notifications object methods are stable
 
   // Load user data (profile, bookings, credits, favorites) in parallel
   useEffect(() => {
@@ -168,16 +176,80 @@ export default function UserDashboard() {
             .select('*')
             .eq('customer_id', session.user.id)
             .order('created_at', { ascending: false }),
-          fetch('/api/credits/balance').then(res => res.ok ? res.json() : null),
+          fetch('/api/credits/balance', {
+            headers: { Authorization: `Bearer ${session.access_token}` }
+          }).then(res => res.ok ? res.json() : null).catch(() => null),
           supabase
             .from('favorite_providers')
             .select('provider_id, providers(*)')
             .eq('user_id', session.user.id)
         ])
 
-        // Handle profile
+        // Handle profile - with fallback to profiles table if user_role_summary fails
+        let profileData: UserProfile | null = null
         if (profileResult.status === 'fulfilled' && profileResult.value.data) {
-          setUserProfile(profileResult.value.data as UserProfile)
+          profileData = profileResult.value.data as UserProfile
+        } else if (profileResult.status === 'rejected' || !profileResult.value?.data) {
+          // Fallback: query profiles table directly
+          try {
+            const { data: fallbackProfile } = await supabase
+              .from('profiles')
+              .select('id, full_name, email, role, created_at, updated_at')
+              .eq('id', session.user.id)
+              .single()
+            
+            if (fallbackProfile) {
+              // Map profiles table data to UserProfile format
+              profileData = {
+                id: fallbackProfile.id,
+                name: fallbackProfile.full_name || fallbackProfile.email || 'User',
+                email: fallbackProfile.email || '',
+                phone: undefined,
+                avatar_url: undefined,
+                member_since: fallbackProfile.created_at || new Date().toISOString(),
+                verification_status: 'unverified' as const,
+                preferences: {
+                  notifications: true,
+                  marketing_emails: false,
+                  sms_alerts: false
+                },
+                stats: {
+                  total_bookings: 0,
+                  total_spent_cents: 0,
+                  favorite_providers: 0,
+                  average_rating_given: 0
+                }
+              }
+            }
+          } catch (fallbackError) {
+            console.error('Fallback profile query failed:', fallbackError)
+          }
+        }
+        
+        if (profileData) {
+          setUserProfile(profileData)
+        } else {
+          // Create minimal profile if all queries fail to prevent infinite loading
+          setUserProfile({
+            id: session.user.id,
+            name: session.user.email?.split('@')[0] || 'User',
+            email: session.user.email || '',
+            phone: undefined,
+            avatar_url: undefined,
+            member_since: new Date().toISOString(),
+            verification_status: 'unverified' as const,
+            preferences: {
+              notifications: true,
+              marketing_emails: false,
+              sms_alerts: false
+            },
+            stats: {
+              total_bookings: 0,
+              total_spent_cents: 0,
+              favorite_providers: 0,
+              average_rating_given: 0
+            }
+          })
         }
 
         // Handle bookings
@@ -206,13 +278,15 @@ export default function UserDashboard() {
     }
 
     loadUserData()
-  }, [router, loadNotifications])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]) // Only re-run if router changes
 
-  useEffect(() => {
-    if (!hasCompletedTour(customerDashboardTourId)) {
-      startTour(customerDashboardTourId, customerDashboardSteps)
-    }
-  }, [hasCompletedTour, startTour])
+  // Auto-start tour removed - users can start tour manually via GuidedTourManager button
+  // useEffect(() => {
+  //   if (!hasCompletedTour(customerDashboardTourId)) {
+  //     startTour(customerDashboardTourId, customerDashboardSteps)
+  //   }
+  // }, [hasCompletedTour, startTour])
 
   // Helper functions
   const getStatusColor = (status: string) => {
@@ -227,6 +301,23 @@ export default function UserDashboard() {
         return 'bg-blue-100 text-blue-800'
       default:
         return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getStatusDescription = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case 'confirmed':
+        return 'Your booking has been confirmed by the provider. The appointment is scheduled and ready.'
+      case 'pending':
+        return 'Your booking request is waiting for provider confirmation. You will be notified once confirmed.'
+      case 'cancelled':
+        return 'This booking has been cancelled. Contact the provider if you need to reschedule.'
+      case 'completed':
+        return 'This service has been completed. You can leave a review to help others.'
+      case 'upcoming':
+        return 'This booking is confirmed and scheduled for the future.'
+      default:
+        return `Booking status: ${status}`
     }
   }
 
@@ -493,12 +584,21 @@ export default function UserDashboard() {
                         </div>
                         
                         <div className="text-left md:text-right">
-                          <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
-                            {booking.status === 'upcoming' && <Clock className="w-3 h-3 mr-1" />}
-                            {booking.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
-                            {booking.status === 'cancelled' && <AlertCircle className="w-3 h-3 mr-1" />}
-                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                          </div>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium cursor-help ${getStatusColor(booking.status)}`}>
+                                  {booking.status === 'upcoming' && <Clock className="w-3 h-3 mr-1" />}
+                                  {booking.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
+                                  {booking.status === 'cancelled' && <AlertCircle className="w-3 h-3 mr-1" />}
+                                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="max-w-xs">{getStatusDescription(booking.status)}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           <p className="text-lg font-semibold text-gray-900 mt-2">
                             {formatCurrency(booking.price_cents)}
                           </p>

@@ -29,6 +29,11 @@ export async function GET(req: NextRequest) {
       .from('kb_article_chunks')
       .select('*', { count: 'exact', head: true });
 
+    // Get embeddings count (to verify vectorization)
+    const { count: embeddingCount, error: embeddingCountError } = await supabase
+      .from('kb_embeddings')
+      .select('*', { count: 'exact', head: true });
+
     // Get last RAG usage timestamp
     const { data: lastRagUsage, error: ragError } = await supabase
       .from('kb_rag_usage')
@@ -37,11 +42,19 @@ export async function GET(req: NextRequest) {
       .limit(1)
       .single();
 
+    // Check if vectorization is complete (embeddings should match chunks)
+    const safeChunkCount = chunkCount ?? 0
+    const safeEmbeddingCount = embeddingCount ?? 0
+    const isVectorized = safeEmbeddingCount === safeChunkCount && safeChunkCount > 0;
+
     return NextResponse.json({
       lastCrawlTime: lastCrawl?.last_crawled_at || null,
       lastRagTime: lastRagUsage?.used_at || null,
       articleCount: articleCount || 0,
-      chunkCount: chunkCount || 0,
+      chunkCount: safeChunkCount,
+      embeddingCount: safeEmbeddingCount,
+      isVectorized: isVectorized,
+      vectorizationStatus: isVectorized ? 'complete' : (safeEmbeddingCount === 0 ? 'not_started' : 'partial'),
       status: 'ok'
     });
   } catch (error) {

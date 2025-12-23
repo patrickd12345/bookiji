@@ -24,7 +24,27 @@ export default function AuthCallbackPage() {
       }
 
       if (session) {
-        // Successful login
+        // Check if user is admin and redirect accordingly
+        try {
+          const adminCheck = await fetch('/api/auth/check-admin', {
+            method: 'GET',
+            credentials: 'include'
+          })
+          
+          if (adminCheck.ok) {
+            const { isAdmin } = await adminCheck.json()
+            if (isAdmin) {
+              // Always redirect admins to admin cockpit
+              router.push('/admin')
+              return
+            }
+          }
+        } catch (adminError) {
+          console.warn('Failed to check admin status:', adminError)
+          // Continue with normal redirect
+        }
+        
+        // Successful login - redirect to get-started for non-admins
         router.push('/get-started');
       } else {
         // No session found

@@ -43,6 +43,7 @@ const navItems = [
   { href: '/admin/operational-insights', icon: BarChart3, label: 'Operational Insights' },
   
   // User Management
+  { href: '/admin/users', icon: Users, label: 'Users' },
   { href: '/admin/vendors', icon: Users, label: 'Vendors' },
   { href: '/admin/customers', icon: Users, label: 'Customers' },
   { href: '/admin/bookings', icon: Calendar, label: 'Bookings' },

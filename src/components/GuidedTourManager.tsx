@@ -135,13 +135,24 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
         const isLast = index === steps.length - 1
         const isFirst = index === 0
 
+        // Check if target element exists before attaching
+        const targetElement = typeof step.target === 'string' 
+          ? document.querySelector(step.target)
+          : step.target
+
+        // Skip step if element doesn't exist (except for body)
+        if (!targetElement && step.target !== 'body') {
+          console.warn(`Tour step "${step.title}" skipped: element "${step.target}" not found`)
+          return
+        }
+
         newTour.addStep({
           title: step.title,
           text: step.text,
-          attachTo: {
+          attachTo: targetElement ? {
             element: step.target,
             on: step.placement || 'bottom'
-          },
+          } : undefined,
           buttons: [
             ...(!isFirst ? [{
               text: 'Back',

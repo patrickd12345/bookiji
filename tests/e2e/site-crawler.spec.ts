@@ -314,8 +314,8 @@ test.describe('Site Crawler', () => {
         }
 
         // Check for "Access Denied" or similar
-        const bodyText = await page.textContent('body').catch(() => '')
-        if (bodyText.includes('Access Denied') || bodyText.includes('Unauthorized')) {
+        const bodyTextResult = await page.textContent('body').catch(() => null)
+        if (bodyTextResult && (bodyTextResult.includes('Access Denied') || bodyTextResult.includes('Unauthorized'))) {
           console.log(`   ⚠️  Access denied message detected`)
         }
 

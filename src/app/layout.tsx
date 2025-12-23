@@ -73,7 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <RootLayoutWrapper>
           <main id="main" tabIndex={-1}>{children}</main>
         </RootLayoutWrapper>
-        <SpeedInsights />
+        {process.env.NODE_ENV === 'production' && <SpeedInsights />}
       </body>
     </html>
   )

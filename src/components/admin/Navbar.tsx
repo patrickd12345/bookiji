@@ -1,15 +1,96 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, User, Settings, LogOut, ChevronDown } from 'lucide-react'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
+
+interface UserProfile {
+  full_name: string | null
+  email: string | null
+  role: string | null
+}
 
 export default function Navbar() {
+  const router = useRouter()
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      const supabase = supabaseBrowserClient()
+      if (!supabase) return
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.user) return
+
+        // Check admin status first
+        let userIsAdmin = false
+        try {
+          const adminResponse = await fetch('/api/auth/check-admin')
+          const adminData = await adminResponse.json()
+          userIsAdmin = adminData.isAdmin === true
+          setIsAdmin(userIsAdmin)
+        } catch (error) {
+          console.error('Error checking admin status:', error)
+          setIsAdmin(false)
+        }
+
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('full_name, email, role')
+          .eq('id', session.user.id)
+          .single()
+
+        if (error) {
+          console.error('Error loading profile:', error)
+          // Fallback to auth user email
+          setUserProfile({
+            full_name: session.user.user_metadata?.full_name || null,
+            email: session.user.email || null,
+            role: userIsAdmin ? 'admin' : 'customer' // Use admin status if available
+          })
+        } else {
+          // If user is admin (via email allow-list), override role to admin
+          const finalRole = userIsAdmin ? 'admin' : (profile?.role || 'customer')
+          setUserProfile({
+            full_name: profile?.full_name || null,
+            email: profile?.email || session.user.email || null,
+            role: finalRole
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error)
+      }
+    }
+
+    loadUserProfile()
+  }, [])
 
   const toggleNotifications = () => setIsNotificationsOpen(!isNotificationsOpen)
   const toggleProfile = () => setIsProfileOpen(!isProfileOpen)
+
+  const handleSignOut = async () => {
+    const supabase = supabaseBrowserClient()
+    if (supabase) {
+      await supabase.auth.signOut()
+      router.push('/login')
+    }
+  }
+
+  const displayName = userProfile?.full_name || 'User'
+  const displayEmail = userProfile?.email || ''
+  const displayRole = userProfile?.role || 'customer'
+  // Determine role label: admin takes precedence, then use profile role
+  const roleLabel = isAdmin ? 'Admin' : 
+    displayRole === 'vendor' ? 'Provider' : 
+    displayRole === 'customer' ? 'Customer' : 
+    displayRole.charAt(0).toUpperCase() + displayRole.slice(1)
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
@@ -101,7 +182,8 @@ export default function Navbar() {
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                   <User className="text-white" size={16} />
                 </div>
-                <span className="hidden md:block font-medium">Admin User</span>
+                <span className="hidden md:block font-medium">{displayName}</span>
+                <span className="hidden md:block text-xs text-gray-500 ml-1">({roleLabel})</span>
                 <ChevronDown 
                   size={16} 
                   className={`transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`}
@@ -118,23 +200,35 @@ export default function Navbar() {
                     className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-200 py-2 z-50"
                   >
                     <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900">Admin User</p>
-                      <p className="text-xs text-gray-500">admin@bookiji.com</p>
+                      <p className="text-sm font-medium text-gray-900">{displayName}</p>
+                      <p className="text-xs text-gray-500">{displayEmail}</p>
+                      <p className="text-xs text-gray-400 mt-1">{roleLabel}</p>
                     </div>
                     
                     <div className="py-1">
-                      <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                      <Link 
+                        href="/settings/profile"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                      >
                         <User size={16} />
                         Profile
-                      </button>
-                      <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                      </Link>
+                      <Link 
+                        href="/settings"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                      >
                         <Settings size={16} />
                         Settings
-                      </button>
+                      </Link>
                     </div>
                     
                     <div className="border-t border-gray-100 pt-1">
-                      <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200">
+                      <button 
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"
+                      >
                         <LogOut size={16} />
                         Sign out
                       </button>

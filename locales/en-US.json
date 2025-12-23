@@ -42,5 +42,9 @@
   "cta.open_customer_dashboard": "Open Customer Dashboard",
   "cta.open_vendor_dashboard": "Open Vendor Dashboard",
   "cta.get_started": "Get Started",
+  "buttons.book_appointment": "Book an Appointment",
+  "buttons.offer_services": "Offer Your Services",
+  "buttons.search": "Search",
+  "buttons.start_chat": "Start Chat",
   "locale.select_language_region": "Select Language & Region"
- }
+}

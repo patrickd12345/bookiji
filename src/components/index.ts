@@ -69,3 +69,9 @@ export { default as VendorDashboard } from './VendorDashboard'
 export { default as VendorRegistration } from './VendorRegistration'
 export { default as VoiceInput } from './VoiceInput'
 export { default as SupportChat } from './SupportChat'
+
+// UI Components
+export { Button } from './ui/button'
+export { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from './ui/card'
+export { Input } from './ui/input'
+export { Label } from './ui/label'

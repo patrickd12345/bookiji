@@ -13,7 +13,7 @@ const navItems = [
   { href: '/customer/favorites', label: 'Favorites', icon: Heart },
   { href: '/customer/profile', label: 'Profile', icon: User },
   { href: '/customer/credits', label: 'Credits', icon: CreditCard },
-  { href: '/customer/dashboard/settings', label: 'Settings', icon: Settings },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
 export function CustomerNavigation() {
@@ -26,12 +26,13 @@ export function CustomerNavigation() {
       const supabase = supabaseBrowserClient()
       if (!supabase) {
         setIsLoading(false)
+        setIsCustomer(true) // Show nav by default if supabase unavailable
         return
       }
 
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
-        setIsCustomer(false)
+        setIsCustomer(true) // Show nav even if not logged in (will redirect if needed)
         setIsLoading(false)
         return
       }
@@ -45,10 +46,10 @@ export function CustomerNavigation() {
 
         // Check if user is customer or admin (admins can access customer pages)
         const role = profile?.role
-        setIsCustomer(role === 'customer' || role === 'admin')
+        setIsCustomer(role === 'customer' || role === 'admin' || !role) // Show nav if no role (new user)
       } catch (error) {
         console.error('Error checking customer role:', error)
-        setIsCustomer(false)
+        setIsCustomer(true) // Show nav on error (fail open)
       } finally {
         setIsLoading(false)
       }
@@ -57,9 +58,17 @@ export function CustomerNavigation() {
     checkCustomerRole()
   }, [])
 
-  // Don't render navigation if user is not a customer/admin
-  if (!isLoading && !isCustomer) {
-    return null
+  // Show loading state or navigation (don't hide completely)
+  if (isLoading) {
+    return (
+      <nav className="border-b border-gray-200 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="flex space-x-8">
+            <div className="px-3 py-4 text-sm text-gray-400">Loading...</div>
+          </div>
+        </div>
+      </nav>
+    )
   }
 
   return (

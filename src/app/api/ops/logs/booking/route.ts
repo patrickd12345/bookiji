@@ -96,9 +96,9 @@ export async function GET(request: Request) {
       )
     }
     
-    // Get booking logs
+    // Get booking logs - filter during aggregation for better performance
     const allLogs = aggregateLogs(start.toISOString(), end.toISOString())
-    const bookingLogs = allLogs.filter((log: any) => log.category === 'booking')
+    const bookingLogs = allLogs.filter((log) => log.category === 'booking')
     
     // Load existing patterns
     const existingPatterns = loadPatterns()

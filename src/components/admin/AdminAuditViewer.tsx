@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -43,7 +43,7 @@ interface ApiResponse {
   hint?: string
 }
 
-export default function AdminAuditViewer() {
+function AdminAuditViewerContent() {
   const searchParams = useSearchParams()
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
   const [pagination, setPagination] = useState<Pagination>({
@@ -427,5 +427,26 @@ export default function AdminAuditViewer() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function AdminAuditViewer() {
+  return (
+    <Suspense fallback={
+      <div className="p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Loading audit logs...</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <AdminAuditViewerContent />
+    </Suspense>
   )
 }

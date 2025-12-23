@@ -44,11 +44,32 @@ export default function AuthEntry({ mode = "signup" }: { mode?: "signup" | "logi
         // Redirect immediately - useAuthReady will handle session readiness
         router.push("/choose-role");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
+        
+        // Check if user is admin and redirect accordingly
+        try {
+          const adminCheck = await fetch('/api/auth/check-admin', {
+            method: 'GET',
+            credentials: 'include'
+          })
+          
+          if (adminCheck.ok) {
+            const { isAdmin } = await adminCheck.json()
+            if (isAdmin) {
+              // Always redirect admins to admin cockpit
+              router.push('/admin')
+              return
+            }
+          }
+        } catch (adminError) {
+          console.warn('Failed to check admin status:', adminError)
+          // Continue with normal redirect
+        }
+        
         router.push("/customer/dashboard");
       }
     } catch (err: unknown) {

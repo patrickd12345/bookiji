@@ -34,6 +34,27 @@ const nextConfig = {
     optimizeCss: true,
   },
 
+  webpack: (config: any, { dev, isServer }: { dev: boolean; isServer: boolean }) => {
+    // Improve file watching for hot reload on Windows
+    if (dev && !isServer) {
+      config.watchOptions = {
+        poll: 1000, // Check for changes every second
+        aggregateTimeout: 300, // Delay before rebuilding once the first file changed
+        ignored: [
+          '**/node_modules/**',
+          '**/.git/**',
+          '**/.next/**',
+          '**/dist/**',
+          '**/build/**',
+          '**/coverage/**',
+          '**/test-results/**',
+          '**/playwright-report/**',
+        ],
+      };
+    }
+    return config;
+  },
+
   async headers() {
     const finalHeaders = [...securityHeaders];
 

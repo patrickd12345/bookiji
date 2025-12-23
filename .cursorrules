@@ -1,0 +1,60 @@
+# Bookiji Repository Agent Instructions
+
+## Mandatory Context Loading
+
+**ALWAYS** load and reference `docs/BOOKIJI_CONTINUITY_KERNEL.md` at the start of every conversation. This document contains:
+- Canonical architecture definitions
+- Cursor constraints and boundaries
+- AI collaboration norms
+- Current development phase status
+- Genome specifications
+
+## Key Constraints
+
+### Cursor Must:
+- Never delete or refactor outside instructions
+- Never modify runtime code when instructed to modify tests or tooling only
+- Never infer structural updates — only implement what's in the Genome
+
+### AI Collaboration Norms:
+- Treat `docs/BOOKIJI_CONTINUITY_KERNEL.md` as canonical
+- Reload it upon each new context
+- Maintain phase continuity
+
+## Database Management
+
+**CRITICAL**: Always use migrations via Supabase CLI. Never run SQL directly.
+- Create migrations: `supabase migration new <name>`
+- Apply migrations: `supabase db push`
+- See: `docs/development/DATABASE_MANAGEMENT_POLICY.md`
+
+## Current Phase
+
+Check `docs/BOOKIJI_CONTINUITY_KERNEL.md` section 7 for current rollout phase status.
+
+## Reference Files
+
+### Core Architecture & Constraints
+- Architecture: `docs/BOOKIJI_CONTINUITY_KERNEL.md`
+- Genome Spec: `genome/master-genome.yaml`
+- Genome Linter: `genome/linter-rules.md`
+- JSON Index: `docs/BOOKIJI_CONTINUITY_INDEX.json`
+
+### Important Documentation
+- **README.md** - Main project documentation including Self-Improving KB process
+- **docs/development/DATABASE_MANAGEMENT_POLICY.md** - Database migration policy
+- **docs/support-module/** - Support module documentation (KB crawl, RAG, suggestions)
+- **docs/bookiji-kb/** - Knowledge base content and structure
+- **docs/development/LOCAL_CRON_SETUP.md** - Local cron job setup
+
+### When Creating New Documentation
+- Always reference existing docs in `docs/` directory
+- Update README.md if adding major features
+- Follow existing documentation patterns and structure
+- **Update .cursorrules** if adding important documentation that agents should reference
+
+### Maintenance
+- `.cursorrules` does NOT auto-update - it requires manual updates
+- Run `pnpm check:cursorrules` to verify all important docs are referenced
+- Update this file when adding major features or important documentation
+

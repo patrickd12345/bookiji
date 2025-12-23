@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n/useI18n'
 import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
 import { vendorDashboardSteps, vendorDashboardTourId } from '@/tours/dashboardNavigation'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface VendorStats {
   totalBookings: number
@@ -275,6 +276,21 @@ export default function VendorDashboard() {
     }
   }
 
+  const getStatusDescription = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'This booking has been completed. The service was provided successfully.'
+      case 'pending':
+        return 'This booking is waiting for your confirmation. Review and confirm or decline the request.'
+      case 'cancelled':
+        return 'This booking has been cancelled. No further action is needed.'
+      case 'confirmed':
+        return 'This booking is confirmed and scheduled. Prepare for the appointment.'
+      default:
+        return `Booking status: ${status}`
+    }
+  }
+
   const canRateBooking = (status: string) => {
     return status === 'completed' || status === 'confirmed'
   }
@@ -500,13 +516,22 @@ export default function VendorDashboard() {
                       
                       <div className="text-left sm:text-right w-full sm:w-auto">
                         <div className="flex items-center gap-2 mb-2 sm:justify-end">
-                          <span className={cn(
-                            'inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
-                            getStatusColor(booking.status)
-                          )}>
-                            {getStatusIcon(booking.status)}
-                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                          </span>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className={cn(
+                                  'inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium cursor-help',
+                                  getStatusColor(booking.status)
+                                )}>
+                                  {getStatusIcon(booking.status)}
+                                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="max-w-xs">{getStatusDescription(booking.status)}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                         
                         <p className="text-lg font-semibold text-gray-900">

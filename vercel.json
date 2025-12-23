@@ -1,2 +1,20 @@
 {
+  "crons": [
+    {
+      "path": "/api/cron/kb-auto-dedupe",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/kb-crawl",
+      "schedule": "0 2 * * 1"
+    },
+    {
+      "path": "/api/cron/kb-ensure-embeddings",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/sitemap-refresh",
+      "schedule": "0 3 * * 1"
+    }
+  ]
 }

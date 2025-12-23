@@ -32,9 +32,9 @@
 
 ### ✅ **User Experience (100% Complete)**
 - **🎯 Complete Guided Tours System** - Multiple tour categories with replay functionality
-- **📚 Help Center MVP** - A growing set of help articles with AI-powered search and suggestions
+- **📚 Self-Improving Knowledge Base** - AI-powered help center that learns from every support conversation
 - **🔄 Role Clarity System** - Customer/provider role selection and switching
-- **ℹ️ Smart Tooltips** - Contextual help across 5 key features
+- **ℹ️ Smart Tooltips** - Contextual help across 5 key features, including hoverable status badges with explanations
 - **📡 Dynamic Broadcasting** - Intelligent service request system
 - **🗺️ Interactive Map v1** - Privacy-respecting provider discovery
 
@@ -42,9 +42,91 @@
 - **📊 Comprehensive Analytics Dashboard** - Conversion funnels, error monitoring, geographic insights
 - **🚨 Error Monitoring & Alerting** - Sentry integration with automatic error capture and reporting
 - **📈 Funnel Tracking** - Real-time conversion metrics from landing to booking confirmation
-- **👨‍💼 Admin Management System** - Complete platform oversight and approvals
+- **👨‍💼 Admin Cockpit** - Complete platform oversight with KB management, manual job triggers, and operational controls
+- **🤖 Automated Cron Jobs** - Scheduled KB crawling, auto-deduplication, and vectorization (production + local dev)
 - **🔔 Multi-Channel Notifications** - Email, SMS with retry logic and DLQ
-- **🛡️ Security & Compliance** - RLS policies, rate limiting, daily backups
+- **🛡️ Security & Compliance** - RLS policies, rate limiting, daily backups, admin auto-redirect
+
+---
+
+## 🧠 **Self-Improving Knowledge Base**
+
+Bookiji features a **self-improving knowledge base** that automatically learns from every support conversation, making it smarter over time without manual intervention.
+
+### **How It Works**
+
+#### **1. Automatic KB Suggestions from Support Tickets**
+When a support ticket is resolved:
+- The conversation transcript is automatically analyzed using GPT-4o-mini
+- A concise Q&A pair is distilled from the conversation
+- PII (emails, phone numbers, credit cards) is automatically redacted
+- Embeddings are generated for semantic search
+- The suggestion is checked against existing KB articles for duplicates
+- If unique, it's added to `kb_suggestions` for review
+
+#### **2. Auto-Deduplication**
+- **Scheduled**: Runs hourly via cron job
+- **Process**: Compares pending suggestions against existing KB articles using vector similarity
+- **Threshold**: 92% similarity marks suggestions as duplicates automatically
+- **Result**: Reduces manual review workload by filtering obvious duplicates
+
+#### **3. Support Agent Review**
+- Support agents can review pending suggestions in the admin interface
+- **Actions Available**:
+  - **Approve**: Creates a new KB article from the suggestion
+  - **Link**: Links the suggestion to an existing article
+  - **Reject**: Marks the suggestion as rejected
+
+#### **4. Weekly KB Crawling**
+- **Schedule**: Every Monday at 2 AM UTC (via GitHub Actions)
+- **Process**: Crawls public pages, extracts content, chunks text, generates embeddings
+- **Idempotent**: Only re-indexes changed pages (content hash comparison)
+- **Vectorization**: Automatically generates embeddings for all chunks during crawl
+
+#### **5. Vectorization Job**
+- **Schedule**: Runs every 6 hours via cron job
+- **Purpose**: Ensures all KB suggestions have embeddings (for suggestions created before vectorization was added)
+- **Process**: Finds suggestions with missing embeddings and generates them
+
+### **Admin Controls**
+
+The Admin Cockpit provides manual triggers for all KB operations:
+- **🕷️ Crawl**: Manually trigger KB crawl (useful for testing or urgent updates)
+- **🔍 Dedupe**: Manually run auto-deduplication (processes up to 50 pending suggestions)
+- **🔢 Vectorize**: Ensure all suggestions have embeddings (processes up to 50 items)
+
+### **Automation Schedule**
+
+| Job | Frequency | Method | Purpose |
+|-----|-----------|--------|---------|
+| KB Crawl | Weekly (Mondays 2 AM UTC) | GitHub Actions | Index public pages |
+| Auto-Dedupe | Hourly | Vercel Cron | Mark duplicate suggestions |
+| Vectorization | Every 6 hours | Vercel Cron | Ensure all embeddings exist |
+
+### **Local Development**
+
+For local development, a cron scheduler is available:
+```bash
+pnpm dev:cron
+```
+
+This runs the same jobs locally using `node-cron`, perfect for testing automation workflows.
+
+### **Technical Details**
+
+- **Vector Store**: PostgreSQL with `pgvector` extension
+- **Embeddings**: OpenAI (1536 dimensions) or Gemini (configurable)
+- **Similarity Search**: Cosine similarity with configurable thresholds
+- **Chunking**: 500-1000 tokens per chunk for optimal retrieval
+- **PII Redaction**: Automatic removal of emails, phone numbers, credit cards
+
+### **Benefits**
+
+✅ **Zero Manual Content Creation**: KB articles are created automatically from real support conversations  
+✅ **Always Up-to-Date**: Weekly crawls ensure documentation reflects current site content  
+✅ **Duplicate Prevention**: Auto-deduplication prevents redundant articles  
+✅ **Semantic Search**: Vector embeddings enable natural language queries  
+✅ **Self-Improving**: Gets smarter with every support interaction  
 
 ---
 
@@ -323,5 +405,5 @@ This project is proprietary software. All rights reserved.
 
 **Built with ❤️ by the Bookiji Team**
 
-*Last Updated: January 23, 2025*
+*Last Updated: January 24, 2025*
 *Version: 1.0.0-beta*

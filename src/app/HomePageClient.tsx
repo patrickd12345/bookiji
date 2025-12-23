@@ -95,41 +95,40 @@ export default function HomePageClient() {
       </div>
 
       {/* Support Chat Button (Magenta) - Bottom Right */}
-      <div 
-        className="fixed bottom-6 right-6 z-[9999]"
-        style={{ 
-          zIndex: 9999,
-          pointerEvents: 'auto'
+      <button
+        ref={helpButtonRef}
+        onClick={(e) => {
+          console.log('=== SUPPORT CHAT BUTTON CLICKED ===')
+          console.log('Event:', e)
+          console.log('Current showSupportChat state:', showSupportChat)
+          e.preventDefault()
+          e.stopPropagation()
+          const newState = !showSupportChat
+          console.log('Setting showSupportChat to:', newState)
+          setShowSupportChat(newState)
+          console.log('State updated, new state:', newState)
         }}
+        onMouseDown={(e) => {
+          console.log('Help button mouseDown:', e)
+          e.preventDefault()
+        }}
+        onMouseUp={(e) => {
+          console.log('Help button mouseUp:', e)
+        }}
+        onPointerDown={(e) => {
+          console.log('Help button pointerDown:', e)
+        }}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-fuchsia-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-fuchsia-700 transition-transform hover:scale-105 cursor-pointer z-[100]"
+        style={{ 
+          pointerEvents: 'auto',
+          zIndex: 100
+        }}
+        aria-label="Open Support Chat"
+        type="button"
+        data-testid="help-button"
       >
-        <button
-          ref={helpButtonRef}
-          onClick={(e) => {
-            console.log('=== SUPPORT CHAT BUTTON CLICKED ===')
-            console.log('Event:', e)
-            console.log('Current showSupportChat state:', showSupportChat)
-            e.preventDefault()
-            e.stopPropagation()
-            const newState = !showSupportChat
-            console.log('Setting showSupportChat to:', newState)
-            setShowSupportChat(newState)
-            console.log('State updated, new state:', newState)
-          }}
-          className="w-14 h-14 bg-fuchsia-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-fuchsia-700 transition-transform hover:scale-105 cursor-pointer"
-          style={{ 
-            pointerEvents: 'auto',
-            zIndex: 9999,
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px'
-          }}
-          aria-label="Open Support Chat"
-          type="button"
-          data-testid="help-button"
-        >
-          <span className="text-2xl">?</span>
-        </button>
-      </div>
+        <span className="text-2xl pointer-events-none">?</span>
+      </button>
 
       {/* Support Chat Widget */}
       <AnimatePresence>
@@ -140,7 +139,7 @@ export default function HomePageClient() {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="fixed bottom-24 right-6 z-[60] w-[350px] h-[500px] bg-background rounded-xl shadow-2xl border border-border overflow-hidden"
           >
-            <SupportChat onClose={() => setShowSupportChat(false)} />
+            <SupportChat onCloseAction={() => setShowSupportChat(false)} />
           </motion.div>
         )}
       </AnimatePresence>

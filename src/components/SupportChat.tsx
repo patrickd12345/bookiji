@@ -3,16 +3,84 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
-  sources?: { title: string, score: number }[]
+  sources?: { title: string, score: number, url?: string | null }[]
 }
 
-export default function SupportChat({ onClose }: { onClose: () => void }) {
+// Render message content with clickable markdown links
+function renderMessageWithLinks(content: string) {
+  // Match markdown links: [text](/path) or [text](http://url)
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const parts: (string | JSX.Element)[] = [];
+  let lastIndex = 0;
+  let key = 0;
+  
+  // Find all matches first
+  const matches: Array<{ index: number; text: string; url: string; length: number }> = [];
+  let match;
+  
+  // Reset regex lastIndex to ensure we start from the beginning
+  linkRegex.lastIndex = 0;
+  while ((match = linkRegex.exec(content)) !== null) {
+    matches.push({
+      index: match.index,
+      text: match[1],
+      url: match[2],
+      length: match[0].length
+    });
+  }
+  
+  // If no links found, return original content
+  if (matches.length === 0) {
+    return <>{content}</>;
+  }
+  
+  // Build parts array with text and links
+  matches.forEach((m) => {
+    // Add text before the link
+    if (m.index > lastIndex) {
+      parts.push(content.substring(lastIndex, m.index));
+    }
+    
+    // Convert full URL to relative path for Next.js Link
+    let linkUrl = m.url;
+    if (linkUrl.startsWith('http')) {
+      try {
+        linkUrl = new URL(linkUrl).pathname;
+      } catch {
+        // Keep original if URL parsing fails
+      }
+    }
+    
+    // Add the link
+    parts.push(
+      <Link
+        key={key++}
+        href={linkUrl}
+        className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+      >
+        {m.text}
+      </Link>
+    );
+    
+    lastIndex = m.index + m.length;
+  });
+  
+  // Add remaining text
+  if (lastIndex < content.length) {
+    parts.push(content.substring(lastIndex));
+  }
+  
+  return <>{parts}</>;
+}
+
+export default function SupportChat({ onCloseAction }: { onCloseAction: () => void }) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -54,16 +122,34 @@ export default function SupportChat({ onClose }: { onClose: () => void }) {
         .map(m => ({ confidence: (m as any).confidence || 0 }))
         .slice(-5); // Keep last 5 for context
 
-      const response = await fetch('/api/support/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          message: userMessage.content,
-          history: history
-        }),
-      })
+      // Add timeout to prevent infinite spinning
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-      if (!response.ok) throw new Error('Failed to get response')
+      let response;
+      try {
+        response = await fetch('/api/support/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            message: userMessage.content,
+            history: history
+          }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          throw new Error('Request timed out. Please try again.');
+        }
+        throw fetchError;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to get response: ${response.status}`);
+      }
 
       const data = await response.json()
       
@@ -85,10 +171,15 @@ export default function SupportChat({ onClose }: { onClose: () => void }) {
       }
     } catch (error) {
       console.error('Support chat error:', error)
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error occurred';
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "I'm having trouble connecting to the knowledge base right now. Please try again later.",
+        content: errorMsg.includes('timeout') 
+          ? "The request took too long. Please try again with a shorter question."
+          : errorMsg.includes('Failed to get response')
+          ? "I'm having trouble connecting to the support system right now. Please try again later."
+          : `Sorry, I encountered an error: ${errorMsg}. Please try again.`,
         timestamp: new Date()
       }
       setMessages(prev => [...prev, errorMessage])
@@ -117,7 +208,7 @@ export default function SupportChat({ onClose }: { onClose: () => void }) {
             <span className="text-xs text-muted-foreground">Powered by RAG</span>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={onClose}>×</Button>
+        <Button variant="ghost" size="sm" onClick={onCloseAction}>×</Button>
       </div>
 
       {/* Messages */}
@@ -139,16 +230,35 @@ export default function SupportChat({ onClose }: { onClose: () => void }) {
                 ? 'bg-primary text-primary-foreground rounded-br-none' 
                 : 'bg-muted rounded-tl-none'
             }`}>
-              <p className="whitespace-pre-wrap">{message.content}</p>
+              <div className="whitespace-pre-wrap">
+                {renderMessageWithLinks(message.content)}
+              </div>
               {message.sources && message.sources.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-muted-foreground/20">
-                  <p className="text-xs font-semibold mb-1 opacity-70">Sources:</p>
-                  <ul className="list-disc pl-4 space-y-0.5">
-                    {message.sources.slice(0, 3).map((s, i) => (
-                      <li key={i} className="text-xs opacity-70 truncate max-w-[200px]" title={s.title}>
-                        {s.title}
-                      </li>
-                    ))}
+                  <p className="text-xs font-semibold mb-1.5 opacity-70">Sources:</p>
+                  <ul className="list-none pl-0 space-y-1">
+                    {message.sources.slice(0, 3).map((s, i) => {
+                      // Convert full URL to relative path for Next.js Link
+                      const url = s.url ? (s.url.startsWith('http') ? new URL(s.url).pathname : s.url) : null;
+                      return (
+                        <li key={i} className="text-xs">
+                          {url ? (
+                            <Link 
+                              href={url}
+                              className="text-blue-600 hover:text-blue-800 hover:underline font-medium flex items-center gap-1.5 group cursor-pointer"
+                              title={s.title}
+                            >
+                              <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+                              <span className="truncate max-w-[250px]">{s.title}</span>
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground truncate block max-w-[250px]" title={s.title}>
+                              {s.title}
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               )}

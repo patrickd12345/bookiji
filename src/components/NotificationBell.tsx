@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Bell } from 'lucide-react'
 import {
   DropdownMenu,
@@ -8,9 +9,27 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { NotificationList } from './NotificationList'
 import { useNotifications } from '@/hooks/useNotifications'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 
 export default function NotificationBell() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const { unreadCount } = useNotifications()
+
+  // Only fetch notifications if authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = supabaseBrowserClient()
+      if (!supabase) return
+      const { data: { session } } = await supabase.auth.getSession()
+      setIsAuthenticated(!!session)
+    }
+    checkAuth()
+  }, [])
+
+  // Don't render if not authenticated
+  if (!isAuthenticated) {
+    return null
+  }
 
   return (
     <DropdownMenu>

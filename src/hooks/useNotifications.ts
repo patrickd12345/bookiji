@@ -19,8 +19,6 @@ export function useNotifications() {
   const notificationService = NotificationService.getInstance()
 
   const fetchNotifications = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }))
-
     const supabase = supabaseBrowserClient()
     if (!supabase) {
       setState(prev => ({ ...prev, isLoading: false, error: 'Supabase client not available' }))
@@ -29,13 +27,17 @@ export function useNotifications() {
 
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
+      // Don't set error for unauthenticated users - just return empty state
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: 'User is not authenticated'
+        error: null,
+        data: []
       }))
       return
     }
+
+    setState(prev => ({ ...prev, isLoading: true, error: null }))
 
     try {
       const notifications = await notificationService.fetchNotifications(session.access_token)
@@ -270,10 +272,11 @@ export function useNotifications() {
     }
   }, [])
 
-  // Initial fetch
+  // Initial fetch - only run once on mount
   useEffect(() => {
     fetchNotifications()
-  }, [fetchNotifications])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Intentionally empty - only fetch once on mount
 
   return {
     notifications: state.data,

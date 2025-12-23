@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSupabase } from '@/lib/supabaseServer'
 
 export interface CreditsBalanceResponse {
   success: boolean
@@ -23,28 +24,54 @@ export interface CreditsBalanceHandler {
 export class CreditsBalanceHandlerImpl implements CreditsBalanceHandler {
   async handle(request: NextRequest): Promise<NextResponse<CreditsBalanceResponse>> {
     try {
-      const { searchParams } = new URL(request.url);
-      const userId = searchParams.get("userId");
+      // Get user from session (more secure than query param)
+      const supabase = getServerSupabase()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        // Fallback to query param for backward compatibility
+        const { searchParams } = new URL(request.url)
+        const userId = searchParams.get("userId")
+        
+        if (!userId) {
+          return NextResponse.json(
+            { error: "Unauthorized - User ID is required", success: false }, 
+            { status: 401 }
+          )
+        }
+        
+        console.log("Fetching credit balance for user (from query param):", userId)
+        
+        const mockCredits = {
+          user_id: userId,
+          balance_cents: 2500,
+          total_purchased_cents: 5000,
+          total_used_cents: 2500,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
 
-      if (!userId) {
-        return NextResponse.json(
-          { error: "User ID is required", success: false }, 
-          { status: 400 }
-        );
+        return NextResponse.json({
+          success: true,
+          credits: mockCredits,
+          balance_dollars: mockCredits.balance_cents / 100,
+          mock: true,
+          message: "Mock credit balance retrieved successfully"
+        })
       }
 
-      console.log("Fetching credit balance for user:", userId);
+      console.log("Fetching credit balance for user:", user.id)
 
       const mockCredits = {
-        user_id: userId,
+        user_id: user.id,
         balance_cents: 2500,
         total_purchased_cents: 5000,
         total_used_cents: 2500,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      };
+      }
 
-      console.log("Using mock credit balance");
+      console.log("Using mock credit balance")
 
       return NextResponse.json({
         success: true,
@@ -52,15 +79,15 @@ export class CreditsBalanceHandlerImpl implements CreditsBalanceHandler {
         balance_dollars: mockCredits.balance_cents / 100,
         mock: true,
         message: "Mock credit balance retrieved successfully"
-      });
+      })
 
     } catch (error) {
-      console.error("Error in credit balance API:", error);
+      console.error("Error in credit balance API:", error)
       return NextResponse.json({
         success: false,
         error: "Failed to fetch credit balance",
         mock: true
-      }, { status: 500 });
+      }, { status: 500 })
     }
   }
 }

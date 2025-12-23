@@ -22,7 +22,9 @@ Bookiji is a universal booking platform that connects customers with service pro
 ## Getting Started as a Customer
 
 ### 1. Create Your Account
-- Sign up with your email or social media account
+- Click "Book an Appointment" (for customers) or "Offer Your Services" (for providers) in the top navigation
+- Or visit /register directly
+- Sign up with your email and password
 - Complete your profile with preferences and contact information
 - Add a payment method (we'll verify with a $1 hold)
 

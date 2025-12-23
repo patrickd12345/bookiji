@@ -1,12 +1,13 @@
+import { NextRequest } from 'next/server'
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id: runId } = await params
+  const { id: runId } = await context.params
 
   const stream = new ReadableStream({
     async start(controller) {

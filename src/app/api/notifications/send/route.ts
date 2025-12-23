@@ -24,7 +24,18 @@ export async function POST(request: Request) {
   try {
     const limited = await limitRequest(request, { windowMs: 60_000, max: 20 })
     if (limited) return limited
-    const notification: NotificationRequest = await request.json();
+    
+    let notification: NotificationRequest;
+    try {
+      const bodyText = await request.text();
+      if (!bodyText) {
+         return NextResponse.json({ error: 'Empty request body' }, { status: 400 });
+      }
+      notification = JSON.parse(bodyText);
+    } catch (e) {
+      console.error('Invalid JSON in notification request:', e);
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
     const { type, recipient, template, data } = notification
 

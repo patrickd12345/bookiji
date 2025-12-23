@@ -97,6 +97,9 @@ export default function AdminCockpit() {
     status: string;
   } | null>(null);
   const [kbLoading, setKbLoading] = useState(false);
+  const [crawlRunning, setCrawlRunning] = useState(false);
+  const [dedupeRunning, setDedupeRunning] = useState(false);
+  const [vectorizeRunning, setVectorizeRunning] = useState(false);
 
   // Fetch KB Status
   const fetchKbStatus = async () => {
@@ -110,6 +113,123 @@ export default function AdminCockpit() {
       setKbStatus({ lastCrawlTime: null, lastRagTime: null, articleCount: 0, chunkCount: 0, status: 'error' });
     } finally {
       setKbLoading(false);
+    }
+  };
+
+  // Trigger KB Crawl manually
+  const triggerCrawl = async () => {
+    setCrawlRunning(true);
+    try {
+      const supabase = supabaseBrowserClient();
+      if (!supabase) {
+        alert('Not authenticated');
+        return;
+      }
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Not authenticated');
+        return;
+      }
+
+      const response = await fetch('/api/admin/kb/trigger-crawl', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert('KB crawl triggered successfully!');
+        // Refresh status after a short delay
+        setTimeout(() => fetchKbStatus(), 2000);
+      } else {
+        alert(`Failed to trigger crawl: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to trigger crawl:', error);
+      alert('Failed to trigger KB crawl');
+    } finally {
+      setCrawlRunning(false);
+    }
+  };
+
+  // Trigger RAG Auto-Deduplication manually
+  const triggerDedupe = async () => {
+    setDedupeRunning(true);
+    try {
+      const supabase = supabaseBrowserClient();
+      if (!supabase) {
+        alert('Not authenticated');
+        return;
+      }
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Not authenticated');
+        return;
+      }
+
+      const response = await fetch('/api/admin/kb/trigger-dedupe', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert(`RAG auto-deduplication completed: ${data.message || 'Success'}`);
+        // Refresh status after a short delay
+        setTimeout(() => fetchKbStatus(), 2000);
+      } else {
+        alert(`Failed to trigger deduplication: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to trigger dedupe:', error);
+      alert('Failed to trigger RAG auto-deduplication');
+    } finally {
+      setDedupeRunning(false);
+    }
+  };
+
+  // Trigger KB Vectorizing (Ensure Embeddings) manually
+  const triggerVectorize = async () => {
+    setVectorizeRunning(true);
+    try {
+      const supabase = supabaseBrowserClient();
+      if (!supabase) {
+        alert('Not authenticated');
+        return;
+      }
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Not authenticated');
+        return;
+      }
+
+      const response = await fetch('/api/admin/kb/trigger-vectorize', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert(`Vectorizing completed: ${data.message || 'Success'}`);
+        // Refresh status after a short delay
+        setTimeout(() => fetchKbStatus(), 2000);
+      } else {
+        alert(`Failed to trigger vectorizing: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to trigger vectorize:', error);
+      alert('Failed to trigger KB vectorizing');
+    } finally {
+      setVectorizeRunning(false);
     }
   };
 
@@ -244,13 +364,39 @@ export default function AdminCockpit() {
               <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Knowledge Base Status</h3>
-                  <button
-                    onClick={fetchKbStatus}
-                    disabled={kbLoading}
-                    className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100 disabled:opacity-50"
-                  >
-                    {kbLoading ? 'Loading...' : 'Refresh'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={triggerCrawl}
+                      disabled={crawlRunning || kbLoading}
+                      className="px-3 py-1 text-sm bg-green-50 text-green-600 rounded hover:bg-green-100 disabled:opacity-50"
+                      title="Manually trigger KB crawl"
+                    >
+                      {crawlRunning ? 'Crawling...' : '🕷️ Crawl'}
+                    </button>
+                    <button
+                      onClick={triggerDedupe}
+                      disabled={dedupeRunning || kbLoading}
+                      className="px-3 py-1 text-sm bg-purple-50 text-purple-600 rounded hover:bg-purple-100 disabled:opacity-50"
+                      title="Manually trigger RAG auto-deduplication"
+                    >
+                      {dedupeRunning ? 'Running...' : '🔍 Dedupe'}
+                    </button>
+                    <button
+                      onClick={triggerVectorize}
+                      disabled={vectorizeRunning || kbLoading}
+                      className="px-3 py-1 text-sm bg-orange-50 text-orange-600 rounded hover:bg-orange-100 disabled:opacity-50"
+                      title="Manually trigger KB vectorizing (ensure embeddings)"
+                    >
+                      {vectorizeRunning ? 'Vectorizing...' : '🔢 Vectorize'}
+                    </button>
+                    <button
+                      onClick={fetchKbStatus}
+                      disabled={kbLoading}
+                      className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100 disabled:opacity-50"
+                    >
+                      {kbLoading ? 'Loading...' : 'Refresh'}
+                    </button>
+                  </div>
                 </div>
                 
                 {kbStatus ? (

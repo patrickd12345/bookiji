@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import DashboardCards from '@/components/admin/DashboardCards'
 
 // Hardcode stats for now to avoid import issues
@@ -38,7 +39,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="space-y-3">
-            <button className="w-full text-left p-3 rounded-xl hover:bg-blue-50 transition-colors duration-200 group">
+            <Link href="/admin/vendors" className="block w-full text-left p-3 rounded-xl hover:bg-blue-50 transition-colors duration-200 group">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors duration-200">
                   <span className="text-blue-600 font-semibold">+</span>
@@ -48,9 +49,9 @@ export default function AdminDashboard() {
                   <p className="text-sm text-gray-600">Register a new service provider</p>
                 </div>
               </div>
-            </button>
+            </Link>
             
-            <button className="w-full text-left p-3 rounded-xl hover:bg-green-50 transition-colors duration-200 group">
+            <Link href="/admin/analytics" className="block w-full text-left p-3 rounded-xl hover:bg-green-50 transition-colors duration-200 group">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors duration-200">
                   <span className="text-green-600 font-semibold">📊</span>
@@ -60,9 +61,9 @@ export default function AdminDashboard() {
                   <p className="text-sm text-gray-600">Check detailed performance metrics</p>
                 </div>
               </div>
-            </button>
+            </Link>
             
-            <button className="w-full text-left p-3 rounded-xl hover:bg-purple-50 transition-colors duration-200 group">
+            <Link href="/admin/settings" className="block w-full text-left p-3 rounded-xl hover:bg-purple-50 transition-colors duration-200 group">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors duration-200">
                   <span className="text-purple-600 font-semibold">⚙️</span>
@@ -72,7 +73,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-gray-600">Configure admin preferences</p>
                 </div>
               </div>
-            </button>
+            </Link>
           </div>
         </div>
 

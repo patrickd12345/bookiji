@@ -3,7 +3,6 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAnalytics } from '@/hooks/useAnalytics'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -23,6 +22,20 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // Handle chunk loading errors gracefully (network issues, code splitting)
+    if (error.name === 'ChunkLoadError' || error.message?.includes('chunk') || error.message?.includes('Loading chunk')) {
+      console.warn('Chunk loading error detected, will retry on next navigation:', error.message)
+      // Don't show error UI for chunk loading errors - they're usually transient
+      return { hasError: false }
+    }
+    
+    // Handle lazy component errors
+    if (error.message?.includes('Lazy component') || error.message?.includes('lazy')) {
+      console.warn('Lazy component loading error:', error.message)
+      // These are usually recoverable, don't show error UI
+      return { hasError: false }
+    }
+    
     return { hasError: true, error }
   }
 
@@ -74,15 +87,41 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
 }
 
 function DefaultErrorFallback({ error, resetError }: { error: Error; resetError: () => void }) {
-  const { trackError } = useAnalytics()
-
+  // Use useEffect with error tracking - ensure hooks are always called
   React.useEffect(() => {
-    trackError(error.message, {
-      stack: error.stack,
-      name: error.name,
-      component: 'ErrorBoundary',
-    })
-  }, [error, trackError])
+    // Track error asynchronously to avoid blocking render
+    const trackErrorAsync = async () => {
+      try {
+        const response = await fetch('/api/analytics/track', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            event: 'error_occurred',
+            properties: {
+              error: error.message,
+              context: {
+                stack: error.stack,
+                name: error.name,
+                component: 'ErrorBoundary',
+              },
+              url: typeof window !== 'undefined' ? window.location.href : undefined,
+            },
+          }),
+        })
+        if (!response.ok) {
+          console.warn('Analytics tracking failed:', response.status)
+        }
+      } catch (err) {
+        // Silently fail - don't break error UI
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Analytics tracking error:', err)
+        }
+      }
+    }
+    trackErrorAsync()
+  }, [error.message, error.stack, error.name])
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">

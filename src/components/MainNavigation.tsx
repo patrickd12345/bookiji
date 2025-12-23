@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabaseBrowserClient } from '@/lib/supabaseClient';
 import { useI18n } from '@/lib/i18n/useI18n';
 import NotificationBell from '@/components/NotificationBell';
@@ -24,16 +24,11 @@ export default function MainNavigation() {
   const { t } = useI18n();
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  // Hide MainNavigation on customer pages (CustomerNavigation handles those)
+  const shouldHide = pathname.startsWith('/customer/') || pathname.startsWith('/vendor/') || pathname.startsWith('/provider/');
 
-  useEffect(() => {
-    // Close the mobile menu on route changes.
-    setMobileOpen(false)
-  }, [pathname])
-
-  const checkAuth = async () => {
+  // Define checkAuth BEFORE any conditional returns to ensure hooks are consistent
+  const checkAuth = useCallback(async () => {
     const supabase = supabaseBrowserClient()
     if (!supabase) return
     const { data: { session } } = await supabase.auth.getSession();
@@ -119,10 +114,24 @@ export default function MainNavigation() {
         setIsBetaUser(false);
       }
     }
-  };
+  }, []); // Empty deps - only needs to run once on mount
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    // Close the mobile menu on route changes.
+    setMobileOpen(false)
+  }, [pathname])
+
+  // Return null AFTER all hooks are called
+  if (shouldHide) {
+    return null;
+  }
 
   return (
-    <nav className="bg-background border-b border-border">
+    <nav className="bg-background border-b border-border" data-test="main-nav">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
@@ -132,22 +141,21 @@ export default function MainNavigation() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            {SHOW_NAV_ITEMS && (
-              <>
-                {/* Mobile hamburger (prevents overflow on small screens) */}
-                <button
-                  type="button"
-                  className="sm:hidden p-2 rounded-md border border-border hover:bg-muted"
-                  aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-                  aria-expanded={mobileOpen}
-                  onClick={() => setMobileOpen((v) => !v)}
-                  data-test="nav-mobile-menu"
-                >
-                  {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-                </button>
+            {/* Mobile hamburger (prevents overflow on small screens) */}
+            <button
+              type="button"
+              className="sm:hidden p-2 rounded-md border border-border hover:bg-muted"
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen((v) => !v)}
+              data-test="nav-mobile-menu"
+            >
+              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
 
-                {/* Desktop nav items */}
-                <div className="hidden sm:flex items-center gap-4">
+            {/* Desktop nav items - Controlled by SHOW_NAV_ITEMS or login state */}
+            {(SHOW_NAV_ITEMS || isLoggedIn) && (
+              <div className="hidden sm:flex items-center gap-4">
                   {isLoggedIn ? (
                     <>
                       <Link
@@ -186,7 +194,7 @@ export default function MainNavigation() {
                           }`}
                           data-test="nav-admin"
                         >
-                          Admin
+                          Admin Cockpit
                         </Link>
                       )}
 
@@ -209,7 +217,7 @@ export default function MainNavigation() {
                         </select>
                       )}
 
-                      <NotificationBell />
+                      {isLoggedIn && <NotificationBell />}
 
                       <Link
                         href="/help"
@@ -315,8 +323,52 @@ export default function MainNavigation() {
                       </Link>
                     </>
                   )}
-                </div>
-              </>
+              </div>
+            )}
+
+            {/* Always show basic CTAs even if SHOW_NAV_ITEMS is false */}
+            {!SHOW_NAV_ITEMS && !isLoggedIn && (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/get-started"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                  data-test="nav-start-booking"
+                >
+                  {t('nav.start_booking')}
+                </Link>
+                <button
+                  onClick={() => router.push('/register?redirect=/customer/dashboard')}
+                  className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                  aria-label="Book an appointment as a customer"
+                  data-test="nav-book-appointment"
+                >
+                  Book an Appointment
+                </button>
+                <Link
+                  href="/login"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-primary hover:opacity-80"
+                  data-test="nav-login"
+                >
+                  {t('nav.log_in')}
+                </Link>
+              </div>
+            )}
+
+            {/* Show Admin Cockpit link for admin users even when SHOW_NAV_ITEMS is false */}
+            {!SHOW_NAV_ITEMS && isLoggedIn && isAdmin && (
+              <div className="hidden sm:flex items-center gap-2">
+                <Link
+                  href="/admin"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    pathname.startsWith('/admin')
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-foreground hover:bg-muted'
+                  }`}
+                  data-test="nav-admin-cockpit"
+                >
+                  Admin Cockpit
+                </Link>
+              </div>
             )}
 
             {/* Always show theme switcher at top-right */}
@@ -354,7 +406,7 @@ export default function MainNavigation() {
                       className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
                       onClick={() => setMobileOpen(false)}
                     >
-                      Admin
+                      Admin Cockpit
                     </Link>
                   )}
 

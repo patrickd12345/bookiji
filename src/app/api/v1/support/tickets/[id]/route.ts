@@ -167,7 +167,7 @@ export async function PATCH(
     try {
       const { data: t } = await admin
         .from('support_tickets')
-        .select('id,subject,body')
+        .select('id,title,description,subject,body')
         .eq('id', id)
         .single();
 
@@ -192,10 +192,14 @@ export async function PATCH(
       }
 
       if (t) {
+        // Handle both old schema (title/description) and new schema (subject/body)
+        const question = String(t.subject || t.title || 'Support question');
+        const answer = String(agentAnswer || t.body || t.description || 'Thanks for reaching out. Our team will add a definitive KB answer shortly.');
+        
         await admin.from('kb_candidates').insert({
           ticket_id: t.id,
-          question: String(t.subject || 'Support question'),
-          answer: String(agentAnswer || t.body || 'Thanks for reaching out. Our team will add a definitive KB answer shortly.')
+          question,
+          answer
         });
       }
     } catch (e) {

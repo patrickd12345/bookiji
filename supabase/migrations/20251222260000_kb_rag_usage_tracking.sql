@@ -23,3 +23,10 @@ grant insert on public.kb_rag_usage to authenticated;
 
 
 
+
+
+
+
+
+
+

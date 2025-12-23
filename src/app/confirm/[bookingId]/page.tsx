@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -22,7 +22,7 @@ interface Booking {
   customers: { full_name: string; email: string; phone?: string }
 }
 
-export default function ConfirmationPage() {
+function ConfirmationPageContent() {
   const params = useParams<{ bookingId: string }>()
   const bookingId = params?.bookingId ?? ''
   const searchParams = useSearchParams()
@@ -230,5 +230,17 @@ export default function ConfirmationPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading confirmation</div>
+      </div>
+    }>
+      <ConfirmationPageContent />
+    </Suspense>
   )
 } 

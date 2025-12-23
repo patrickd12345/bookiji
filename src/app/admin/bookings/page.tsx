@@ -1,10 +1,68 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
 import DataTable from '@/components/admin/DataTable'
 import { bookings } from '@/lib/mockData'
+import { exportToCSV, exportToJSON } from '@/lib/admin/exportUtils'
+import { X } from 'lucide-react'
 
 export default function BookingsPage() {
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showReminderModal, setShowReminderModal] = useState(false)
+  const [exportFormat, setExportFormat] = useState<'csv' | 'json'>('csv')
+
+  const handleExport = () => {
+    if (exportFormat === 'csv') {
+      exportToCSV(bookings, 'bookings')
+    } else {
+      exportToJSON(bookings, 'bookings')
+    }
+  }
+
+  const handleCreateBooking = async (data: any) => {
+    try {
+      const response = await fetch('/api/bookings/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      
+      const result = await response.json()
+      if (result.success) {
+        alert('Booking created successfully')
+        setShowCreateModal(false)
+        window.location.reload()
+      } else {
+        alert(result.error || 'Failed to create booking')
+      }
+    } catch (error) {
+      console.error('Create booking error:', error)
+      alert('Error creating booking')
+    }
+  }
+
+  const handleSendReminders = async () => {
+    try {
+      const response = await fetch('/api/admin/bookings/reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      
+      const result = await response.json()
+      if (result.success) {
+        alert(`Reminders sent to ${result.recipientCount} customers`)
+        setShowReminderModal(false)
+      } else {
+        alert(result.error || 'Failed to send reminders')
+      }
+    } catch (error) {
+      console.error('Reminder error:', error)
+      alert('Error sending reminders')
+    }
+  }
+
   const columns = [
     { key: 'id', label: 'Booking ID', sortable: true },
     { key: 'customer', label: 'Customer', sortable: true },
@@ -112,21 +170,249 @@ export default function BookingsPage() {
       >
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
         <div className="flex flex-wrap gap-4">
-          <button className="px-6 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-colors duration-200 font-medium">
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="px-6 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-colors duration-200 font-medium"
+          >
             Create Booking
           </button>
-          <button className="px-6 py-3 bg-green-600 text-white rounded-2xl hover:bg-green-700 transition-colors duration-200 font-medium">
-            Export Data
-          </button>
-          <button className="px-6 py-3 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 transition-colors duration-200 font-medium">
+          <div className="flex gap-2">
+            <select 
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value as 'csv' | 'json')}
+              className="px-3 py-3 bg-gray-100 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="csv">CSV</option>
+              <option value="json">JSON</option>
+            </select>
+            <button 
+              onClick={handleExport}
+              className="px-6 py-3 bg-green-600 text-white rounded-2xl hover:bg-green-700 transition-colors duration-200 font-medium"
+            >
+              Export Data
+            </button>
+          </div>
+          <button 
+            onClick={() => setShowReminderModal(true)}
+            className="px-6 py-3 bg-purple-600 text-white rounded-2xl hover:bg-purple-700 transition-colors duration-200 font-medium"
+          >
             Send Reminders
           </button>
-          <button className="px-6 py-3 bg-orange-600 text-white rounded-2xl hover:bg-orange-700 transition-colors duration-200 font-medium">
+          <Link 
+            href="/vendor/calendar"
+            className="px-6 py-3 bg-orange-600 text-white rounded-2xl hover:bg-orange-700 transition-colors duration-200 font-medium inline-block"
+          >
             View Calendar
+          </Link>
+        </div>
+      </motion.div>
+
+      {/* Create Booking Modal */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <CreateBookingModal
+            onClose={() => setShowCreateModal(false)}
+            onSubmit={handleCreateBooking}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Reminder Modal */}
+      <AnimatePresence>
+        {showReminderModal && (
+          <ReminderModal
+            onClose={() => setShowReminderModal(false)}
+            onSend={handleSendReminders}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function CreateBookingModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: any) => void }) {
+  const [formData, setFormData] = useState({
+    customer: '',
+    vendor: '',
+    service: '',
+    date: '',
+    time: '',
+    amount: ''
+  })
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.customer || !formData.vendor || !formData.service || !formData.date) {
+      alert('Please fill in all required fields')
+      return
+    }
+    setSubmitting(true)
+    await onSubmit({
+      ...formData,
+      amount: parseFloat(formData.amount) || 0,
+      datetime: `${formData.date}T${formData.time}`
+    })
+    setSubmitting(false)
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
+        className="bg-white rounded-2xl p-6 max-w-lg w-full"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold">Create Booking</h3>
+          <button onClick={onClose}>
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Customer Email *</label>
+            <input
+              type="email"
+              value={formData.customer}
+              onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Vendor Email *</label>
+            <input
+              type="email"
+              value={formData.vendor}
+              onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Service *</label>
+            <input
+              type="text"
+              value={formData.service}
+              onChange={(e) => setFormData({ ...formData, service: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Date *</label>
+              <input
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Time *</label>
+              <input
+                type="time"
+                value={formData.time}
+                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Amount</label>
+            <input
+              type="number"
+              step="0.01"
+              value={formData.amount}
+              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50"
+            >
+              {submitting ? 'Creating...' : 'Create Booking'}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+function ReminderModal({ onClose, onSend }: { onClose: () => void; onSend: () => void }) {
+  const [sending, setSending] = useState(false)
+
+  const handleSend = async () => {
+    setSending(true)
+    await onSend()
+    setSending(false)
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
+        className="bg-white rounded-2xl p-6 max-w-md w-full"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold">Send Booking Reminders</h3>
+          <button onClick={onClose}>
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mb-4">
+          Send reminders to customers with upcoming bookings in the next 24 hours.
+        </p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSend}
+            disabled={sending}
+            className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50"
+          >
+            {sending ? 'Sending...' : 'Send Reminders'}
           </button>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   )
 }
 

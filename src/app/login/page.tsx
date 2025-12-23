@@ -32,9 +32,35 @@ function LoginFormContent() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     console.log('Attempting login with Supabase URL:', supabaseUrl?.split(/\s+/)[0] || 'not set')
 
+    // Check if input is email or username
+    let loginEmail = email;
+    
+    // Simple email regex validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      // Input is likely a username, try to find associated email
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('username', email)
+          .single();
+        
+        if (profileError || !profile) {
+          // If username not found, let it fail with original input or show specific error
+          console.warn('Username lookup failed:', profileError);
+          // We continue with original input, Supabase will likely reject it as invalid email
+        } else if (profile.email) {
+          loginEmail = profile.email;
+        }
+      } catch (err) {
+        console.error('Error looking up username:', err);
+      }
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: loginEmail,
         password,
       });
 
@@ -72,14 +98,9 @@ function LoginFormContent() {
         if (adminCheck.ok) {
           const { isAdmin } = await adminCheck.json()
           if (isAdmin) {
-            // If trying to access admin page, go there; otherwise go to admin dashboard
-            if (nextUrl.startsWith('/admin')) {
-              router.push(nextUrl)
-              return
-            } else {
-              router.push('/admin')
-              return
-            }
+            // Always redirect admins to admin cockpit
+            router.push('/admin')
+            return
           }
         }
       } catch (adminError) {
@@ -164,14 +185,14 @@ function LoginFormContent() {
           <form className="space-y-6" onSubmit={handleEmailLogin}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
+                Email address or Username
               </label>
               <div className="mt-1">
                 <input
                   id="email"
                   name="email"
-                  type="email"
-                  autoComplete="email"
+                  type="text"
+                  autoComplete="username"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

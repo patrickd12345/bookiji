@@ -85,3 +85,10 @@ GRANT EXECUTE ON FUNCTION reschedule_booking_atomically(UUID, UUID) TO authentic
 
 
 
+
+
+
+
+
+
+

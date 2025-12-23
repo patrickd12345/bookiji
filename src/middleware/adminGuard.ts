@@ -2,16 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { getSupabaseConfig } from '@/config/supabase'
 
-// Admin allow-list - production should use environment variables
-const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') || [
-  'admin@bookiji.com',
-  'patri@bookiji.com',
-  'patrick_duchesneau_1@hotmail.com'
-]
-
-const ADMIN_ORG_IDS = process.env.ADMIN_ORG_IDS?.split(',') || [
-  '00000000-0000-0000-0000-000000000000' // Default admin org
-]
+// Optional: Admin org IDs via environment variable (for organization-based admin access)
+// This should be used sparingly and only for special cases
+const ADMIN_ORG_IDS = process.env.ADMIN_ORG_IDS?.split(',').filter(Boolean) || []
 
 export async function adminGuard(request: NextRequest) {
   const url = request.nextUrl
@@ -61,31 +54,40 @@ export async function adminGuard(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    // Check if user is admin via email allow-list
-    if (ADMIN_EMAILS.includes(user.email || '')) {
-      return NextResponse.next()
-    }
-
-    // Check if user is admin via org_id
+    // Check if user has admin role in profiles table (primary role source)
     const { data: profile } = await supabase
       .from('profiles')
-      .select('org_id')
+      .select('role, org_id')
       .eq('id', user.id)
       .single()
 
-    if (profile?.org_id && ADMIN_ORG_IDS.includes(profile.org_id)) {
+    if (profile?.role === 'admin') {
       return NextResponse.next()
     }
 
-    // Check if user has admin role in user_roles table
-    const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('app_user_id', user.id)
-      .eq('role', 'admin')
-      .single()
+    // Check if user has admin role in user_roles table (flexible role management)
+    // user_roles.app_user_id references app_users.id, so we need to join through app_users
+    const { data: appUser } = await supabase
+      .from('app_users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .maybeSingle()
 
-    if (userRole?.role === 'admin') {
+    if (appUser?.id) {
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('app_user_id', appUser.id)
+        .eq('role', 'admin')
+        .maybeSingle()
+
+      if (userRole?.role === 'admin') {
+        return NextResponse.next()
+      }
+    }
+
+    // Optional: Check if user is admin via org_id (only if ADMIN_ORG_IDS is configured)
+    if (ADMIN_ORG_IDS.length > 0 && profile?.org_id && ADMIN_ORG_IDS.includes(profile.org_id)) {
       return NextResponse.next()
     }
 

@@ -85,17 +85,27 @@ export default function MyTicketsPage() {
   useEffect(() => {
     const getSession = async () => {
       const supabase = supabaseBrowserClient()
-      if (!supabase) return
-      
-      const { data: { session } } = await supabase.auth.getSession()
-      // Skip auth check during AdSense approval
-      if (!session?.user?.id && !ADSENSE_APPROVAL_MODE) {
-        // redirect to login
-        window.location.href = '/login?redirect=/help/tickets'
+      if (!supabase) {
+        setLoading(false)
         return
       }
-      if (session?.user?.id) {
-      loadTickets(session.user.id)
+      
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        // Skip auth check during AdSense approval
+        if (!session?.user?.id && !ADSENSE_APPROVAL_MODE) {
+          // redirect to login
+          window.location.href = '/login?redirect=/help/tickets'
+          return
+        }
+        if (session?.user?.id) {
+          await loadTickets(session.user.id)
+        } else {
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error('Error loading tickets:', error)
+        setLoading(false)
       }
     }
     getSession()
@@ -197,9 +207,17 @@ export default function MyTicketsPage() {
         <p className="text-lg text-gray-600 mb-8">
           Need help? Create a support ticket and we&apos;ll get back to you as soon as possible.
         </p>
-        {loading && <p>Loading</p>}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+            <span className="ml-3 text-gray-600">Loading tickets...</span>
+          </div>
+        )}
         {!loading && tickets.length === 0 && (
-          <p className="text-gray-500">You have no support tickets yet.</p>
+          <div className="text-center py-12">
+            <p className="text-gray-500 mb-4">You have no support tickets yet.</p>
+            <a href="/help" className="text-blue-600 hover:underline">Get help or create a ticket</a>
+          </div>
         )}
         <div className="space-y-4">
           {tickets.map((t) => (

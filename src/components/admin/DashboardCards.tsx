@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import { Users, Calendar, DollarSign, AlertTriangle } from 'lucide-react'
 
 interface DashboardStats {
@@ -35,7 +36,8 @@ const cards = [
     icon: Users,
     color: 'from-blue-500 to-blue-600',
     bgColor: 'bg-blue-50',
-    textColor: 'text-blue-700'
+    textColor: 'text-blue-700',
+    href: '/admin/customers'
   },
   {
     title: 'Bookings Today',
@@ -43,7 +45,8 @@ const cards = [
     icon: Calendar,
     color: 'from-green-500 to-green-600',
     bgColor: 'bg-green-50',
-    textColor: 'text-green-700'
+    textColor: 'text-green-700',
+    href: '/admin/bookings'
   },
   {
     title: 'Revenue',
@@ -51,7 +54,8 @@ const cards = [
     icon: DollarSign,
     color: 'from-purple-500 to-purple-600',
     bgColor: 'bg-purple-50',
-    textColor: 'text-purple-700'
+    textColor: 'text-purple-700',
+    href: '/admin/analytics'
   },
   {
     title: 'Errors',
@@ -59,7 +63,8 @@ const cards = [
     icon: AlertTriangle,
     color: 'from-red-500 to-red-600',
     bgColor: 'bg-red-50',
-    textColor: 'text-red-700'
+    textColor: 'text-red-700',
+    href: '/admin/performance'
   }
 ]
 
@@ -99,15 +104,8 @@ export default function DashboardCards({ stats }: DashboardCardsProps) {
         const Icon = card.icon
         const value = getValue(card.value)
         
-        return (
-          <motion.div
-            key={card.title}
-            custom={index}
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            className={`${card.bgColor} rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300`}
-          >
+        const CardContent = (
+          <>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">
@@ -132,6 +130,25 @@ export default function DashboardCards({ stats }: DashboardCardsProps) {
                 {index === 3 && '-2 from yesterday'}
               </span>
             </div>
+          </>
+        )
+        
+        return (
+          <motion.div
+            key={card.title}
+            custom={index}
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            className={`${card.bgColor} rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 ${card.href ? 'cursor-pointer' : ''}`}
+          >
+            {card.href ? (
+              <Link href={card.href} className="block">
+                {CardContent}
+              </Link>
+            ) : (
+              CardContent
+            )}
           </motion.div>
         )
       })}

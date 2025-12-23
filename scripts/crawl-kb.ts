@@ -15,6 +15,8 @@ import { getEmbeddingService } from '../src/lib/support/llm-service';
 const BASE_URL = process.env.KB_CRAWLER_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://bookiji.com';
 const MAX_PAGES = parseInt(process.env.KB_CRAWLER_MAX_PAGES || '100', 10);
 const MAX_DEPTH = parseInt(process.env.KB_CRAWLER_MAX_DEPTH || '5', 10);
+const FORCE_RECRAWL = process.env.KB_CRAWLER_FORCE === 'true';
+const VERBOSE = process.env.KB_CRAWLER_VERBOSE === 'true';
 const IGNORE_PATHS = ['/admin', '/login', '/api', '/_next', '/auth', '/dashboard', '/_vercel', '/.well-known'];
 const IGNORE_QUERY_PARAMS = true; // Normalize URLs by removing query params
 
@@ -35,6 +37,47 @@ interface QueueItem {
 }
 const queue: QueueItem[] = [{ url: BASE_URL, depth: 0 }];
 const visited = new Set<string>();
+
+// Seed URLs from sitemap if available
+async function seedFromSitemap() {
+  try {
+    const sitemapUrl = new URL('/sitemap.xml', BASE_URL).toString();
+    const res = await fetch(sitemapUrl, {
+      headers: { 'User-Agent': 'Bookiji-KB-Crawler/1.0' },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (res.ok) {
+      const xml = await res.text();
+      const urlMatches = xml.match(/<loc>(.*?)<\/loc>/g);
+      if (urlMatches) {
+        const urls = urlMatches.map(match => {
+          const url = match.replace(/<\/?loc>/g, '');
+          return normalizeUrl(url);
+        }).filter(url => {
+          try {
+            const u = new URL(url);
+            return u.origin === new URL(BASE_URL).origin && !shouldExclude(url);
+          } catch {
+            return false;
+          }
+        });
+        
+        if (urls.length > 0) {
+          console.log(`Found ${urls.length} URLs in sitemap, adding to queue...`);
+          urls.forEach(url => {
+            if (!visited.has(url)) {
+              queue.push({ url, depth: 0 });
+            }
+          });
+        }
+      }
+    }
+  } catch (e) {
+    if (VERBOSE) {
+      console.log(`Could not fetch sitemap: ${e}`);
+    }
+  }
+}
 
 // Normalize URL: remove fragments, query params, trailing slashes
 function normalizeUrl(url: string): string {
@@ -115,7 +158,37 @@ async function processPage(item: QueueItem) {
     const $ = cheerio.load(html);
 
     // Extract content
-    const title = $('title').text() || url;
+    let title = $('title').text() || url;
+    
+    // If title is generic/default, make it unique using URL path
+    const genericTitles = [
+      'bookiji — universal booking platform',
+      'bookiji - universal booking platform',
+      'bookiji',
+      'universal booking platform'
+    ];
+    const titleLower = title.toLowerCase().trim();
+    if (genericTitles.some(gt => titleLower === gt || titleLower.includes(gt))) {
+      // Extract meaningful title from URL path
+      try {
+        const urlObj = new URL(normalizedUrl);
+        const pathParts = urlObj.pathname.split('/').filter(p => p);
+        if (pathParts.length > 0) {
+          // Use last path segment, formatted nicely
+          const lastPart = pathParts[pathParts.length - 1];
+          title = lastPart
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        } else {
+          title = 'Homepage';
+        }
+      } catch {
+        // Fallback to URL if parsing fails
+        title = normalizedUrl;
+      }
+    }
+    
     // Remove scripts, styles, etc.
     $('script').remove();
     $('style').remove();
@@ -132,8 +205,12 @@ async function processPage(item: QueueItem) {
       .eq('url', normalizedUrl)
       .maybeSingle();
 
-    if (existing && existing.content_hash === contentHash) {
-      console.log(`Skipping (Unchanged): ${normalizedUrl}`);
+    if (existing && existing.content_hash === contentHash && !FORCE_RECRAWL) {
+      if (VERBOSE) {
+        console.log(`Skipping (Unchanged): ${normalizedUrl} (use KB_CRAWLER_FORCE=true to force re-crawl)`);
+      } else {
+        console.log(`Skipping (Unchanged): ${normalizedUrl}`);
+      }
       stats.skipped++;
       // Still extract links even if content unchanged
     } else {
@@ -260,9 +337,15 @@ async function processPage(item: QueueItem) {
 
     // Extract Links (only if within depth limit)
     if (depth < MAX_DEPTH) {
+      let linksFound = 0;
+      let linksAdded = 0;
+      let linksExcluded = 0;
+      let linksVisited = 0;
+      
       $('a').each((_, element) => {
         const href = $(element).attr('href');
         if (!href) return;
+        linksFound++;
         
         try {
           let fullUrl: string;
@@ -272,6 +355,9 @@ async function processPage(item: QueueItem) {
             fullUrl = href;
           } else if (href.startsWith('http://') || href.startsWith('https://')) {
             // External link - skip
+            if (VERBOSE) {
+              console.log(`  External link skipped: ${href}`);
+            }
             return;
           } else {
             // Relative path
@@ -279,13 +365,37 @@ async function processPage(item: QueueItem) {
           }
           
           const normalized = normalizeUrl(fullUrl);
-          if (!shouldExclude(normalized) && !visited.has(normalized)) {
-            queue.push({ url: normalized, depth: depth + 1 });
+          if (shouldExclude(normalized)) {
+            linksExcluded++;
+            if (VERBOSE) {
+              console.log(`  Excluded path: ${normalized}`);
+            }
+            return;
+          }
+          if (visited.has(normalized)) {
+            linksVisited++;
+            if (VERBOSE) {
+              console.log(`  Already visited: ${normalized}`);
+            }
+            return;
+          }
+          
+          queue.push({ url: normalized, depth: depth + 1 });
+          linksAdded++;
+          if (VERBOSE) {
+            console.log(`  Added to queue: ${normalized}`);
           }
         } catch (linkErr) {
           // Skip invalid URLs
+          if (VERBOSE) {
+            console.log(`  Invalid URL skipped: ${href}`);
+          }
         }
       });
+      
+      if (VERBOSE && linksFound > 0) {
+        console.log(`  Link extraction: ${linksFound} found, ${linksAdded} added, ${linksExcluded} excluded, ${linksVisited} already visited`);
+      }
     }
 
     return stats;
@@ -297,7 +407,11 @@ async function processPage(item: QueueItem) {
 }
 
 async function crawl() {
-  console.log(`Starting crawl: MAX_PAGES=${MAX_PAGES}, MAX_DEPTH=${MAX_DEPTH}`);
+  console.log(`Starting crawl: MAX_PAGES=${MAX_PAGES}, MAX_DEPTH=${MAX_DEPTH}, FORCE_RECRAWL=${FORCE_RECRAWL}, VERBOSE=${VERBOSE}`);
+  
+  // Try to seed from sitemap first
+  await seedFromSitemap();
+  
   const totalStats = { crawled: 0, skipped: 0, errors: 0, reEmbedded: 0 };
   
   while (queue.length > 0 && visited.size < MAX_PAGES) {
