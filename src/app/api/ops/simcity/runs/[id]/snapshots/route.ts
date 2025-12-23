@@ -3,12 +3,12 @@ import { supabaseAdmin as supabase } from '@/lib/supabaseProxies'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { searchParams } = new URL(request.url)
   const from = parseInt(searchParams.get('from') || '0')
   const limit = parseInt(searchParams.get('limit') || '50')
-  const { id } = params
+  const { id } = await params
 
   const { data, error } = await supabase
     .from('simcity_run_snapshots')

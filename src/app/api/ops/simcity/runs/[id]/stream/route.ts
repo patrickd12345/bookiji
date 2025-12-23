@@ -4,9 +4,9 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const runId = params.id
+  const { id: runId } = await params
 
   const stream = new ReadableStream({
     async start(controller) {
