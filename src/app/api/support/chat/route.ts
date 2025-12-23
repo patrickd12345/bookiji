@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from '@/config/supabase';
 import { classifyIntent } from '@/lib/support/intents';
-import { embed } from '@/lib/support/embeddings';
-import { type Hit } from '@/lib/support/rag';
+import { getLLMService, getEmbeddingService } from '@/lib/support/llm-service';
 import { sendSupportEmail } from '@/lib/services/notificationQueue';
 
 const cfg = {
@@ -39,44 +38,38 @@ export async function POST(req: Request) {
     const intent = classifyIntent(message);
     const admin = await getAdmin();
     
-    // Generate embeddings for KB search (fallback to zeros if failed)
-    try {
-      await embed([message]);
-    } catch (e) {
-      console.error('Embedding failed:', e);
-    }
+    // Initialize LLM and embedding services
+    const llmService = getLLMService();
+    const embeddingService = getEmbeddingService();
     
-    let hits: Hit[] = [];
+    let chunks: any[] = [];
     let top = 0;
     
     try {
-      // Workaround: Call the search endpoint directly since it works
-      const searchResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/v1/support/search?q=${encodeURIComponent(message)}`, {
-        headers: {
-          'X-Dev-Agent': 'allow'
-        }
+      // 1. Generate embedding for the query
+      const embedding = await embeddingService.getEmbedding(message);
+      
+      // 2. Search vector store using RPC function
+      const { data: searchResults, error: searchError } = await admin.rpc('kb_search', {
+        q_embedding: embedding,
+        k: 5
       });
       
-      if (searchResponse.ok) {
-        const searchData = await searchResponse.json();
-        if (searchData.results && searchData.results.length > 0) {
-          // Convert search results to Hit format
-          hits = searchData.results.map((r: { excerpt: string; confidence: number }) => ({
-            article_id: 'kb',
-            chunk_id: 'kb',
-            chunk_index: 0,
-            content: r.excerpt,
-            similarity: r.confidence
-          }));
-          top = hits[0]?.similarity ?? 0;
-        }
+      if (searchError) {
+        console.error('Vector search error:', searchError);
+        throw searchError;
       }
       
-      console.log('KB search results (via endpoint):', { hits: hits.length, top, firstHit: hits[0] });
+      if (searchResults && searchResults.length > 0) {
+        chunks = searchResults;
+        top = chunks[0]?.score ?? 0;
+      }
+      
+      console.log('KB search results:', { chunks: chunks.length, top, firstChunk: chunks[0] });
     } catch (e) {
       console.error('KB search failed:', e);
       // If KB search fails, escalate the ticket
-      hits = [];
+      chunks = [];
       top = 0;
     }
 
@@ -85,6 +78,10 @@ export async function POST(req: Request) {
     const lowStreak = recent.filter(s => s < cfg.OK).length >= cfg.MAX_LOW_STREAK;
     const restricted = RESTRICTED.test(message);
 
+    // Apply similarity threshold guardrail
+    const SIMILARITY_THRESHOLD = parseFloat(process.env.SUPPORT_KB_SIMILARITY_THRESHOLD || '0.7');
+    const validChunks = chunks.filter((c: any) => c.score >= SIMILARITY_THRESHOLD);
+    
     // Debug logging
     console.log('Support chat debug:', {
       top,
@@ -92,18 +89,42 @@ export async function POST(req: Request) {
       cfg_OK: cfg.OK,
       lowStreak,
       restricted,
-      hitsLength: hits.length,
-      mustEscalate: top < cfg.LOW || lowStreak || restricted
+      chunksLength: chunks.length,
+      validChunksLength: validChunks.length,
+      similarityThreshold: SIMILARITY_THRESHOLD,
+      mustEscalate: top < cfg.LOW || lowStreak || restricted || validChunks.length === 0
     });
 
-    // Only escalate if confidence is too low, there's a low streak, or content is restricted
-    const mustEscalate = top < cfg.LOW || lowStreak || restricted;
+    // Only escalate if confidence is too low, there's a low streak, content is restricted, or no valid chunks
+    const mustEscalate = top < cfg.LOW || lowStreak || restricted || validChunks.length === 0;
 
-    if (!mustEscalate && hits.length > 0) {
-      // Use the best KB answer
-      const bestHit = hits[0];
-      const answer = bestHit.content;
-      console.log('Using KB answer:', { answer, confidence: top });
+    if (!mustEscalate && validChunks.length > 0) {
+      // Construct context from valid chunks
+      const contextText = validChunks.map((c: any) => c.snippet).join('\n---\n');
+      
+      // Generate answer using LLM with strict guardrails
+      const systemPrompt = `You are the Bookiji Support Bot. Answer the user strictly using ONLY the context provided below. 
+    
+CRITICAL RULES:
+- If the answer is NOT in the context, respond EXACTLY: "I don't have enough information to answer that based on the current documentation."
+- Do NOT make up information, speculate, or use knowledge outside the provided context.
+- Cite specific details from the context when available.
+- Keep answers concise and helpful.
+- Be friendly and conversational.
+
+Context:
+${contextText}
+`;
+
+      let answer: string;
+      try {
+        answer = await llmService.generateAnswer(systemPrompt, message) || "I don't have enough information to answer that based on the current documentation.";
+        console.log('Generated LLM answer:', { answer: answer.substring(0, 100), confidence: top });
+      } catch (llmError) {
+        console.error('LLM generation failed:', llmError);
+        // Fallback to best chunk if LLM fails
+        answer = validChunks[0]?.snippet || "I'm having trouble processing your question right now. Please try again later.";
+      }
 
       // Persist lightweight conversation for suggestion engine
       try {
@@ -132,12 +153,23 @@ export async function POST(req: Request) {
         console.warn('Non-fatal: failed to persist kb conversation', e);
       }
 
+      // Get sources for citation
+      const sources = validChunks
+        .map((c: any) => ({
+          title: c.title,
+          url: c.url || null,
+          score: c.score
+        }))
+        .filter((s: any, i: number, arr: any[]) => 
+          arr.findIndex((x: any) => x.url === s.url) === i // Dedupe by URL
+        );
+
       return NextResponse.json({ 
         reply: answer, 
         intent, 
         confidence: top,
         source: 'kb',
-        articleId: bestHit.article_id
+        sources: sources.slice(0, 3) // Return top 3 sources
       });
     }
 
