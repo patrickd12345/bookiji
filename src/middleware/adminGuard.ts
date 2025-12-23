@@ -33,10 +33,10 @@ export async function adminGuard(request: NextRequest) {
           get(name: string) {
             return request.cookies.get(name)?.value
           },
-          set(name: string, value: string, options: any) {
+          set() {
             // Middleware can't set cookies, but we need to provide the interface
           },
-          remove(name: string, options: any) {
+          remove() {
             // Middleware can't remove cookies, but we need to provide the interface
           }
         }

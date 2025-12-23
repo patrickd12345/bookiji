@@ -9,7 +9,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 // Dynamically import to defer Supabase initialization
 const MainNavigation = dynamic(() => import('@/components/MainNavigation'), { ssr: false })
 const Footer = dynamic(() => import('@/components/Footer'), { ssr: false })
-const ConsentManager = dynamic(() => import('@/components/ConsentManager'), { ssr: false })
+const ConsentManager = dynamic(() => import('@/components/ConsentManager').then(mod => ({ default: mod.ConsentManager })), { ssr: false })
 
 interface RootLayoutWrapperProps {
   children: ReactNode

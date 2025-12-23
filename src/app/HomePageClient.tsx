@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/lib/i18n/useI18n'
 import { useAuth } from '../../hooks/useAuth'
 import { 
@@ -11,7 +12,8 @@ import {
   GuidedTourManager,
   SimpleTourButton,
   PlatformDisclosures,
-  RealAIChat
+  RealAIChat,
+  SupportChat
 } from '@/components'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
@@ -45,6 +47,7 @@ export default function HomePageClient() {
   const [showAIChat, setShowAIChat] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [showDemo, setShowDemo] = useState(false)
+  const [showSupportChat, setShowSupportChat] = useState(false)
 
   // Note: Locale is now managed through i18n hook internally
 
@@ -75,6 +78,31 @@ export default function HomePageClient() {
       <div className="fixed bottom-6 right-6 z-50">
         <SimpleTourButton onClick={() => setShowTour(true)} />
       </div>
+
+      {/* Support Chat Button (Magenta) */}
+      <div className="fixed bottom-6 left-6 z-50">
+        <HydrationSafeButton
+          onClick={() => setShowSupportChat(!showSupportChat)}
+          className="w-14 h-14 bg-fuchsia-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-fuchsia-700 transition-transform hover:scale-105"
+          aria-label="Open Support Chat"
+        >
+          <span className="text-2xl">?</span>
+        </HydrationSafeButton>
+      </div>
+
+      {/* Support Chat Widget */}
+      <AnimatePresence>
+        {showSupportChat && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-24 left-6 z-50 w-[350px] h-[500px] bg-background rounded-xl shadow-2xl border border-border overflow-hidden"
+          >
+            <SupportChat onClose={() => setShowSupportChat(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Hero Section */}
       <div className="relative overflow-hidden">

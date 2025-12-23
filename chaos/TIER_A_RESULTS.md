@@ -67,3 +67,6 @@ const allSlotIds = Array.from(new Set([...slotIds, ...bookingSlotIds]))
 - The slot query fix is a harness data completeness issue, not a product bug
 - Test environment needs Supabase instance running for full test execution
 
+
+
+

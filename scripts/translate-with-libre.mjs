@@ -17,27 +17,46 @@ const LIBRE_LANG_CODES = {
   'ar-SA': 'ar',
   'cs-CZ': 'cs',
   'da-DK': 'da',
+  'de-CH': 'de',
+  'de-DE': 'de',
   'en-IN': 'en',
+  'es-ES': 'es',
+  'es-MX': 'es',
   'fi-FI': 'fi',
+  'fr-CA': 'fr',
+  'fr-FR': 'fr',
   'hu-HU': 'hu',
   'id-ID': 'id',
+  'ja-JP': 'ja',
+  'ko-KR': 'ko',
   'ms-MY': 'ms',
   'nl-NL': 'nl',
   'no-NO': 'no',
   'pl-PL': 'pl',
+  'pt-BR': 'pt',
   'ru-RU': 'ru',
   'sv-SE': 'sv',
+  'th-TH': 'th',
   'tr-TR': 'tr',
-  'uk-UA': 'uk'
+  'uk-UA': 'uk',
+  'vi-VN': 'vi',
+  'zh-CN': 'zh',
+  'hi-IN': 'hi'
 }
 
 const incompleteLocales = Object.keys(LIBRE_LANG_CODES)
 const LIBRETRANSLATE_URL = 'https://libretranslate.com/translate'
+const BATCH_SIZE = 5
+const MAX_RETRIES = 3
+
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 /**
  * Translate text using LibreTranslate public API
  */
-async function translateLibre(text, targetLang) {
+async function translateLibre(text, targetLang, retries = 0) {
   try {
     const response = await fetch(LIBRETRANSLATE_URL, {
       method: 'POST',
@@ -51,6 +70,12 @@ async function translateLibre(text, targetLang) {
     })
 
     if (!response.ok) {
+      if (response.status === 429 && retries < MAX_RETRIES) {
+        const waitMs = 1000 * (retries + 1)
+        console.warn(`LibreTranslate 429 – backing off ${waitMs}ms (retry ${retries + 1}/${MAX_RETRIES})`)
+        await sleep(waitMs)
+        return translateLibre(text, targetLang, retries + 1)
+      }
       throw new Error(`LibreTranslate error: ${response.statusText}`)
     }
 
@@ -93,36 +118,44 @@ async function translateLocale(locale, keys, dryRun = false) {
   let errors = 0
   const errorsList = []
 
-  for (const key of keys) {
-    const englishText = base[key]
-    
-    // Skip if already translated (not matching English)
-    if (key in data && data[key] !== englishText) {
-      continue
-    }
+  const batches = []
+  for (let i = 0; i < keys.length; i += BATCH_SIZE) {
+    batches.push(keys.slice(i, i + BATCH_SIZE))
+  }
+
+  for (const batch of batches) {
+    const englishTexts = batch.map(key => base[key])
 
     try {
       if (dryRun) {
-        console.log(`  [DRY RUN] Would translate: ${key}`)
-        translated++
-      } else {
-        const translatedText = await translateLibre(englishText, langCode)
-        data[key] = translatedText
-        translated++
-        console.log(`  ✅ ${key}`)
-        
-        // Rate limiting - wait 200ms between requests (free tier)
-        await new Promise(resolve => setTimeout(resolve, 200))
+        batch.forEach(key => {
+          console.log(`  [DRY RUN] Would translate: ${key}`)
+          translated++
+        })
+        continue
       }
+
+      const result = await translateLibre(englishTexts, langCode)
+      const translations = Array.isArray(result) ? result : [result]
+
+      batch.forEach((key, idx) => {
+        data[key] = translations[idx] ?? base[key]
+        translated++
+        console.log(`  ? ${key}`)
+      })
     } catch (error) {
-      console.error(`  ❌ ${key}: ${error.message}`)
-      errors++
-      errorsList.push({ key, error: error.message })
-      // Keep English fallback on error
-      data[key] = englishText
+      errors += batch.length
+      batch.forEach(key => {
+        console.error(`  ? ${key}: ${error.message}`)
+        errorsList.push({ key, error: error.message })
+        data[key] = base[key]
+      })
+    }
+
+    if (!dryRun) {
+      await sleep(200)
     }
   }
-
   if (!dryRun && translated > 0) {
     // Sort keys to match base locale
     const sorted = {}

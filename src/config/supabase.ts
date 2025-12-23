@@ -37,8 +37,15 @@ export function getSupabaseConfig(): SupabaseConfig {
   }
 
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Prefer JWT format (SUPABASE_SERVICE_ROLE_KEY) over CLI format (SUPABASE_SECRET_KEY)
+  // The JS client requires JWT format (starts with eyJ...), not CLI format (sb_secret__...)
+  const secretKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  // Validate key format for JS client (must be JWT, not CLI format)
+  if (secretKey && !secretKey.startsWith('eyJ') && secretKey.startsWith('sb_secret__')) {
+    console.warn('⚠️ SUPABASE_SECRET_KEY appears to be CLI format (sb_secret__...). The JS client requires JWT format (eyJ...). Use SUPABASE_SERVICE_ROLE_KEY instead.');
+  }
 
   if (!url || !publishableKey) {
     console.warn('⚠️ Missing Supabase environment variables, using fallback configuration');

@@ -66,3 +66,6 @@ The SimCity Control Plane UI is designed as a "Mission Control" center for the B
 ## 4. Tone
 "Mission control, not spreadsheet." Every action should feel impactful. Data is dense but prioritized.
 
+
+
+

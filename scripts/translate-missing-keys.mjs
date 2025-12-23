@@ -152,9 +152,30 @@ function getMissingKeys(locale) {
 }
 
 /**
- * Translate missing keys for a locale
+ * Get untranslated keys (keys that exist but match English values)
  */
-async function translateLocale(locale, keys, dryRun = false) {
+function getUntranslatedKeys(locale) {
+  const localePath = path.join(localesDir, `${locale}.json`)
+  if (!fs.existsSync(localePath)) return []
+
+  const data = JSON.parse(fs.readFileSync(localePath, 'utf8'))
+  const baseKeys = Object.keys(base)
+  
+  // For English variants, don't consider them untranslated
+  const isEnglishVariant = locale.startsWith('en-')
+  
+  return baseKeys.filter(k => {
+    if (!(k in data)) return false
+    // Check if the value is the same as master (untranslated)
+    // But for English variants, this is acceptable
+    return !isEnglishVariant && base[k] === data[k]
+  })
+}
+
+/**
+ * Translate missing or untranslated keys for a locale
+ */
+async function translateLocale(locale, keys, dryRun = false, translateUntranslated = false) {
   console.log(`\n🌍 Translating ${locale}...`)
   const localePath = path.join(localesDir, `${locale}.json`)
   const data = JSON.parse(fs.readFileSync(localePath, 'utf8'))
@@ -165,14 +186,22 @@ async function translateLocale(locale, keys, dryRun = false) {
   for (const key of keys) {
     const englishText = base[key]
     
-    // Skip if already exists
-    if (key in data && data[key] !== englishText) {
+    // Skip if already translated (exists and different from English)
+    if (key in data && data[key] !== englishText && !translateUntranslated) {
+      continue
+    }
+
+    // If translating untranslated keys, only translate if value matches English
+    if (translateUntranslated && key in data && data[key] !== englishText) {
       continue
     }
 
     try {
       if (dryRun) {
-        console.log(`  [DRY RUN] Would translate: ${key}`)
+        const currentValue = data[key] || '(missing)'
+        const status = currentValue === englishText ? '[UNTRANSLATED]' : '[MISSING]'
+        console.log(`  [DRY RUN] ${status} Would translate: ${key}`)
+        console.log(`    English: "${englishText}"`)
         translated++
       } else {
         const translatedText = await translate(englishText, locale)
@@ -212,6 +241,7 @@ async function translateLocale(locale, keys, dryRun = false) {
 async function main() {
   const args = process.argv.slice(2)
   const dryRun = args.includes('--dry-run')
+  const translateUntranslated = args.includes('--untranslated') || args.includes('--all')
   const localeFilter = args.find(arg => arg.startsWith('--locale='))?.split('=')[1]
 
   if (!API_KEY && !dryRun) {
@@ -223,15 +253,22 @@ async function main() {
 
   console.log(`\n🚀 Translation Service: ${TRANSLATION_SERVICE}`)
   console.log(`📝 Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`)
+  console.log(`🎯 Scope: ${translateUntranslated ? 'Missing + Untranslated keys' : 'Missing keys only'}`)
   if (localeFilter) {
     console.log(`🎯 Filter: ${localeFilter}`)
   }
 
+  // Get all locales that need translation
+  const allLocales = fs.readdirSync(localesDir)
+    .filter(file => file.endsWith('.json') && file !== 'en-US.json')
+    .map(file => file.replace('.json', ''))
+
   const localesToProcess = localeFilter 
     ? [localeFilter] 
-    : incompleteLocales.filter(locale => {
+    : allLocales.filter(locale => {
         const missing = getMissingKeys(locale)
-        return missing.length > 0
+        const untranslated = translateUntranslated ? getUntranslatedKeys(locale) : []
+        return missing.length > 0 || untranslated.length > 0
       })
 
   if (localesToProcess.length === 0) {
@@ -246,12 +283,17 @@ async function main() {
 
   for (const locale of localesToProcess) {
     const missing = getMissingKeys(locale)
-    if (missing.length === 0) {
+    const untranslated = translateUntranslated ? getUntranslatedKeys(locale) : []
+    const allKeys = [...new Set([...missing, ...untranslated])]
+
+    if (allKeys.length === 0) {
       console.log(`\n⏭️  ${locale}: Already complete`)
       continue
     }
 
-    const result = await translateLocale(locale, missing, dryRun)
+    console.log(`\n📋 ${locale}: ${missing.length} missing, ${untranslated.length} untranslated`)
+    
+    const result = await translateLocale(locale, allKeys, dryRun, translateUntranslated)
     totalTranslated += result.translated
     totalErrors += result.errors
   }
@@ -262,6 +304,7 @@ async function main() {
   
   if (dryRun) {
     console.log(`\n💡 Run without --dry-run to apply translations`)
+    console.log(`💡 Use --untranslated or --all to also translate keys that match English`)
   }
 }
 

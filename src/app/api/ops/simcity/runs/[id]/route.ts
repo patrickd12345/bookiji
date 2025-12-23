@@ -3,9 +3,9 @@ import { supabaseAdmin as supabase } from '@/lib/supabaseProxies'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params
+  const { id } = await context.params
 
   const { data, error } = await supabase
     .from('simcity_runs')

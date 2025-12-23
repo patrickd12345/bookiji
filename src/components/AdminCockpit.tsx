@@ -87,6 +87,66 @@ export default function AdminCockpit() {
   ]);
 
   const [selectedAction, setSelectedAction] = useState<AdminAction | null>(null);
+  
+  // KB Status State
+  const [kbStatus, setKbStatus] = useState<{
+    lastCrawlTime: string | null;
+    lastRagTime: string | null;
+    articleCount: number;
+    chunkCount: number;
+    status: string;
+  } | null>(null);
+  const [kbLoading, setKbLoading] = useState(false);
+
+  // Fetch KB Status
+  const fetchKbStatus = async () => {
+    setKbLoading(true);
+    try {
+      const response = await fetch('/api/support/kb-status');
+      const data = await response.json();
+      setKbStatus(data);
+    } catch (error) {
+      console.error('Failed to fetch KB status:', error);
+      setKbStatus({ lastCrawlTime: null, lastRagTime: null, articleCount: 0, chunkCount: 0, status: 'error' });
+    } finally {
+      setKbLoading(false);
+    }
+  };
+
+  // Fetch KB status when overview tab is active
+  useEffect(() => {
+    if (activeTab === 'overview' && !kbStatus) {
+      fetchKbStatus();
+    }
+  }, [activeTab]);
+
+  // Helper to format last crawl time
+  const formatLastCrawl = (timestamp: string | null) => {
+    if (!timestamp) return 'Never';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    
+    if (diffDays > 0) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    if (diffHours > 0) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    return diffMins < 1 ? 'Just now' : `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+  };
+
+  // Determine KB health status
+  const getKbHealthStatus = () => {
+    if (!kbStatus || kbStatus.status === 'error') return { label: 'Error', color: 'red' };
+    if (!kbStatus.lastCrawlTime) return { label: 'Not Crawled', color: 'yellow' };
+    
+    const lastCrawl = new Date(kbStatus.lastCrawlTime);
+    const daysSinceCrawl = (Date.now() - lastCrawl.getTime()) / (1000 * 60 * 60 * 24);
+    
+    if (daysSinceCrawl > 8) return { label: 'Stale', color: 'yellow' };
+    if (daysSinceCrawl > 14) return { label: 'Critical', color: 'red' };
+    return { label: 'Healthy', color: 'green' };
+  };
 
   if (!showAdminCockpit) return null;
 
@@ -178,6 +238,96 @@ export default function AdminCockpit() {
                   <h3 className="text-sm font-medium text-gray-500">Pending Verifications</h3>
                   <p className="mt-1 text-2xl font-semibold text-gray-900">{stats.pendingVerifications}</p>
                 </div>
+              </div>
+
+              {/* Knowledge Base Monitoring */}
+              <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Knowledge Base Status</h3>
+                  <button
+                    onClick={fetchKbStatus}
+                    disabled={kbLoading}
+                    className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100 disabled:opacity-50"
+                  >
+                    {kbLoading ? 'Loading...' : 'Refresh'}
+                  </button>
+                </div>
+                
+                {kbStatus ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h4 className="text-sm font-medium text-blue-700 mb-1">Last Crawl for Support</h4>
+                        <p className="text-lg font-semibold text-blue-900">
+                          {formatLastCrawl(kbStatus.lastCrawlTime)}
+                        </p>
+                        {kbStatus.lastCrawlTime && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            {new Date(kbStatus.lastCrawlTime).toLocaleString()}
+                          </p>
+                        )}
+                        {!kbStatus.lastCrawlTime && (
+                          <p className="text-xs text-yellow-600 mt-1">No crawl recorded</p>
+                        )}
+                      </div>
+                      <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <h4 className="text-sm font-medium text-purple-700 mb-1">Last RAG Query for Support</h4>
+                        <p className="text-lg font-semibold text-purple-900">
+                          {formatLastCrawl(kbStatus.lastRagTime)}
+                        </p>
+                        {kbStatus.lastRagTime && (
+                          <p className="text-xs text-purple-600 mt-1">
+                            {new Date(kbStatus.lastRagTime).toLocaleString()}
+                          </p>
+                        )}
+                        {!kbStatus.lastRagTime && (
+                          <p className="text-xs text-gray-500 mt-1">No queries yet</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-1">Articles Indexed</h4>
+                        <p className="text-lg font-semibold text-gray-900">{kbStatus.articleCount}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-1">Total Chunks</h4>
+                        <p className="text-lg font-semibold text-gray-900">{kbStatus.chunkCount}</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Loading KB status...</p>
+                )}
+                
+                {kbStatus && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-500">Status:</span>
+                      {(() => {
+                        const health = getKbHealthStatus();
+                        return (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              health.color === 'green'
+                                ? 'bg-green-100 text-green-800'
+                                : health.color === 'yellow'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {health.label}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                    {kbStatus.articleCount === 0 && (
+                      <p className="text-xs text-yellow-600 mt-2">
+                        ⚠️ No articles indexed. Run the crawler to populate the knowledge base.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

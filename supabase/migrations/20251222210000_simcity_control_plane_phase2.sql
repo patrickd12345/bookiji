@@ -27,3 +27,6 @@ CREATE POLICY "service_role_all" ON simcity_run_requests FOR ALL USING (true) WI
 -- Allow authenticated users to read
 CREATE POLICY "authenticated_read" ON simcity_run_requests FOR SELECT TO authenticated USING (true);
 
+
+
+

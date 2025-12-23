@@ -19,3 +19,6 @@ test('vendor can register and reach dashboard', async ({ vendor, page }) => {
 
 
 
+
+
+

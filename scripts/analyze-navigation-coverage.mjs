@@ -46,7 +46,7 @@ function getAllPages(dir = 'src/app', basePath = '') {
         pages.push(route)
       }
     }
-  } catch (err) {
+  } catch {
     // Directory doesn't exist or can't be read
   }
   
@@ -78,7 +78,7 @@ function extractNavLinks() {
           links.add(href)
         }
       }
-    } catch (err) {
+    } catch {
       // File doesn't exist
     }
   }

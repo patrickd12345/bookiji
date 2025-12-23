@@ -155,11 +155,12 @@ describe("ReasoningOrchestrator", () => {
 
   it("blocks reasoning for non-registered domains per governance", async () => {
     const orchestrator = new ReasoningOrchestrator([stubPersona("p1", "ignored")]);
-    const envelope: AnalyticsEnvelope = {
+    const invalidEvent = { type: "unknown.created", payload: {} } as any;
+    const envelope = {
       ...baseEnvelope,
       id: "env-unknown",
-      event: { type: "unknown.created", payload: {} } as any,
-    };
+      event: invalidEvent,
+    } as AnalyticsEnvelope;
 
     await expect(
       orchestrator.run(
