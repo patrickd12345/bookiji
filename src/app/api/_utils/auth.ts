@@ -1,6 +1,6 @@
-import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { getSupabaseConfig } from '@/config/supabase'
+import { cookies } from 'next/headers'
 
 /**
  * Returns the authenticated user's id using either the Supabase session cookie
@@ -8,7 +8,6 @@ import { getSupabaseConfig } from '@/config/supabase'
  */
 export async function getAuthenticatedUserId(request: Request): Promise<string | null> {
   const cookieStore = await cookies()
-  
   const config = getSupabaseConfig()
   
   const supabase = createServerClient(
@@ -16,8 +15,18 @@ export async function getAuthenticatedUserId(request: Request): Promise<string |
     config.publishableKey,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch (error) {
+            // The `setAll` method was called from a Server Component or Route Handler.
+            // This can be ignored if you have middleware refreshing user sessions.
+          }
         }
       }
     }

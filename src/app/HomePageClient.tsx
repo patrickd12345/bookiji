@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/lib/i18n/useI18n'
 import { useAuth } from '../../hooks/useAuth'
@@ -48,6 +48,21 @@ export default function HomePageClient() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showDemo, setShowDemo] = useState(false)
   const [showSupportChat, setShowSupportChat] = useState(false)
+  const helpButtonRef = useRef<HTMLButtonElement>(null)
+
+  // Debug: Log when component mounts and button is available
+  useEffect(() => {
+    console.log('HomePageClient mounted')
+    if (helpButtonRef.current) {
+      console.log('Help button element found:', helpButtonRef.current)
+      // Test if button is clickable
+      helpButtonRef.current.addEventListener('click', (e) => {
+        console.log('Direct event listener fired!', e)
+      }, { capture: true })
+    } else {
+      console.warn('Help button element NOT found in DOM')
+    }
+  }, [])
 
   // Note: Locale is now managed through i18n hook internally
 
@@ -75,19 +90,45 @@ export default function HomePageClient() {
       </div>
       
       {/* Guided Tour Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-20 right-6 z-50">
         <SimpleTourButton onClick={() => setShowTour(true)} />
       </div>
 
-      {/* Support Chat Button (Magenta) */}
-      <div className="fixed bottom-6 left-6 z-50">
-        <HydrationSafeButton
-          onClick={() => setShowSupportChat(!showSupportChat)}
-          className="w-14 h-14 bg-fuchsia-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-fuchsia-700 transition-transform hover:scale-105"
+      {/* Support Chat Button (Magenta) - Bottom Right */}
+      <div 
+        className="fixed bottom-6 right-6 z-[9999]"
+        style={{ 
+          zIndex: 9999,
+          pointerEvents: 'auto'
+        }}
+      >
+        <button
+          ref={helpButtonRef}
+          onClick={(e) => {
+            console.log('=== SUPPORT CHAT BUTTON CLICKED ===')
+            console.log('Event:', e)
+            console.log('Current showSupportChat state:', showSupportChat)
+            e.preventDefault()
+            e.stopPropagation()
+            const newState = !showSupportChat
+            console.log('Setting showSupportChat to:', newState)
+            setShowSupportChat(newState)
+            console.log('State updated, new state:', newState)
+          }}
+          className="w-14 h-14 bg-fuchsia-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-fuchsia-700 transition-transform hover:scale-105 cursor-pointer"
+          style={{ 
+            pointerEvents: 'auto',
+            zIndex: 9999,
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px'
+          }}
           aria-label="Open Support Chat"
+          type="button"
+          data-testid="help-button"
         >
           <span className="text-2xl">?</span>
-        </HydrationSafeButton>
+        </button>
       </div>
 
       {/* Support Chat Widget */}
@@ -97,7 +138,7 @@ export default function HomePageClient() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 left-6 z-50 w-[350px] h-[500px] bg-background rounded-xl shadow-2xl border border-border overflow-hidden"
+            className="fixed bottom-24 right-6 z-[60] w-[350px] h-[500px] bg-background rounded-xl shadow-2xl border border-border overflow-hidden"
           >
             <SupportChat onClose={() => setShowSupportChat(false)} />
           </motion.div>

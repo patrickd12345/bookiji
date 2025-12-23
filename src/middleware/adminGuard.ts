@@ -25,19 +25,18 @@ export async function adminGuard(request: NextRequest) {
     const config = getSupabaseConfig()
     
     // Create Supabase client with cookie access for middleware
+    // Note: Middleware can't set/remove cookies, but we need to provide the interface
     const supabase = createServerClient(
       config.url,
       config.publishableKey,
       {
         cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value
+          getAll() {
+            return request.cookies.getAll()
           },
-          set() {
+          setAll() {
             // Middleware can't set cookies, but we need to provide the interface
-          },
-          remove() {
-            // Middleware can't remove cookies, but we need to provide the interface
+            // Cookie setting is handled by the response in Next.js middleware
           }
         }
       }

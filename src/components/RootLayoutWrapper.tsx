@@ -7,9 +7,19 @@ import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 // Dynamically import to defer Supabase initialization
-const MainNavigation = dynamic(() => import('@/components/MainNavigation'), { ssr: false })
-const Footer = dynamic(() => import('@/components/Footer'), { ssr: false })
-const ConsentManager = dynamic(() => import('@/components/ConsentManager').then(mod => ({ default: mod.ConsentManager })), { ssr: false })
+// Use explicit default import to avoid chunk loading errors
+const MainNavigation = dynamic(() => import('@/components/MainNavigation').then(mod => ({ default: mod.default })), { 
+  ssr: false,
+  loading: () => null // Show nothing while loading to avoid layout shift
+})
+const Footer = dynamic(() => import('@/components/Footer').then(mod => ({ default: mod.default })), { 
+  ssr: false,
+  loading: () => null
+})
+const ConsentManager = dynamic(() => import('@/components/ConsentManager').then(mod => ({ default: mod.ConsentManager })), { 
+  ssr: false,
+  loading: () => null
+})
 
 interface RootLayoutWrapperProps {
   children: ReactNode

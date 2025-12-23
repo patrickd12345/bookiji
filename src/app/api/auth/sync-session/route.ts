@@ -23,14 +23,18 @@ export async function POST(request: NextRequest) {
       config.publishableKey,
       {
         cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
+          getAll() {
+            return cookieStore.getAll()
           },
-          set(name: string, value: string, options: any) {
-            cookieStore.set(name, value, options)
-          },
-          remove(name: string, options: any) {
-            cookieStore.delete(name)
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                cookieStore.set(name, value, options)
+              })
+            } catch (error) {
+              // The `setAll` method was called from a Server Component or Route Handler.
+              // This can be ignored if you have middleware refreshing user sessions.
+            }
           }
         }
       }
