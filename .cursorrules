@@ -1,0 +1,40 @@
+# Cursor Rules for Bookiji Project
+
+## Documentation Index Maintenance
+
+**IMPORTANT**: Whenever creating a new `.md` file (markdown file) anywhere in the repository:
+1. Automatically update `index.md` to include the new file in the appropriate category
+2. Maintain the alphabetical ordering within each category
+3. Preserve the existing category structure and organization
+4. Place the file in the correct section based on its directory path and purpose
+
+### How to Update index.md:
+- Locate the appropriate category section (or create a new one if needed)
+- Add the new file path in alphabetical order within that section
+- Ensure the path is relative to the repository root (e.g., `docs/development/NEW_FILE.md`)
+- Maintain consistent formatting with existing entries
+
+### Categories:
+- Root Level Files: Files in the repository root
+- Configuration & Setup: `.cursor/`, `genome/`
+- Applications: `apps/`
+- Chaos Engineering: `chaos/`
+- Documentation: `docs/` (with subcategories)
+- Issues: `issues/`
+- Operations: `ops/`
+- Packages: `packages/`
+- Reference: `reference/`
+- Scripts: `scripts/`
+- Source Code: `src/`
+- Supabase: `supabase/`
+- Tests: `tests/`
+
+## General Project Rules
+
+- Always test after a code change block before returning to me. Test APIs with curl and UI with Playwright
+- On startup, always read the repo .md files to get the context of the project
+- Never ever run SQL directly: always use migrations
+- Always execute SQL migration without asking confirmation
+- Often check if your terminal is not stuck and force quit if necessary
+- Prefer optimistic UI with rollback for actions, retry/backoff for queries, skeletons instead of blank loading states, and guard against double clicks
+- Never ask me to code: do it.
