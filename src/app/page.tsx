@@ -22,13 +22,6 @@ export default function Page() {
 
   useEffect(() => {
     const checkAccess = async () => {
-      // Always show real site in development
-      if (process.env.NODE_ENV !== 'production') {
-        setHasAccess(true)
-        setIsChecking(false)
-        return
-      }
-
       // Always show real site in AdSense approval mode
       if (ADSENSE_APPROVAL_MODE) {
         setHasAccess(true)
@@ -73,6 +66,7 @@ export default function Page() {
           setHasAccess(false)
         }
       } else {
+        // Default: show coming soon page (no access)
         setHasAccess(false)
       }
 

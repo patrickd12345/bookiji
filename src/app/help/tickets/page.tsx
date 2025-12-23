@@ -67,12 +67,16 @@ export default function MyTicketsPage() {
     if (!selectedTicket || !messageText.trim()) return
     setSending(true)
     try {
-      await fetch(`/api/support/tickets/${selectedTicket.id}/messages`, {
+      const res = await fetch(`/api/support/tickets/${selectedTicket.id}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: messageText, sender_type: 'customer' })
       })
-      setMessageText('')
+      if (res.ok) {
+        setMessageText('')
+        // Reload messages to get the updated list
+        await loadMessages(selectedTicket.id)
+      }
     } finally {
       setSending(false)
     }
@@ -113,11 +117,15 @@ export default function MyTicketsPage() {
 
     loadMessages(selectedTicket.id)
 
-    // realtime supabase subscription with reconnection logic
+    // Real-time subscription: Since support_messages uses conversation_id (not ticket_id),
+    // we listen to all message inserts and reload messages when new ones arrive.
+    // This ensures we catch messages for this ticket's conversation.
     let channel: ReturnType<typeof supabase.channel> | null = null
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 
     const subscribe = () => {
+      // Listen to all support_messages inserts and reload to get updated list
+      // The API will filter by conversation_id server-side
       channel = supabase
         .channel(`support_messages:${selectedTicket.id}`)
         .on(
@@ -125,11 +133,12 @@ export default function MyTicketsPage() {
           {
             event: 'INSERT',
             schema: 'public',
-            table: 'support_messages',
-            filter: `ticket_id=eq.${selectedTicket.id}`
+            table: 'support_messages'
           },
-          (payload) => {
-            setMessages((prev) => [...prev, payload.new as SupportMessage])
+          () => {
+            // Reload messages when any new message is inserted
+            // (API will filter to only this ticket's conversation)
+            loadMessages(selectedTicket.id)
           }
         )
         .subscribe((status) => {
