@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate vendor ID
-    const vendorId = `vendor_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
+    const vendorId = crypto.randomUUID()
 
     // Process image uploads (in production, upload to cloud storage)
     const uploadedImageUrls: string[] = []
