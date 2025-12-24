@@ -33,6 +33,7 @@ This file contains an index of all markdown files in the repository, organized b
 - `RESTORE_QUICK_START.md`
 - `SIMCITY_V1_ARCHITECTURE.md`
 - `STEP_BY_STEP_RESTORE.md`
+- `TEST_TRACKER.md`
 - `VALIDATION.md`
 - `VERCEL_AUDIT_SUMMARY.md`
 - `VSCODE_GITHUB_ACTIONS_SETTINGS.md`

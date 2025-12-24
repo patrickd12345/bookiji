@@ -16,7 +16,7 @@ const COOKIE_CONFIG = {
   path: '/'
 } as const
 
-class AuthManager {
+export class AuthManager {
   private static readonly AUTH_COOKIE = 'auth_token'
   private static readonly REFRESH_COOKIE = 'refresh_token'
 

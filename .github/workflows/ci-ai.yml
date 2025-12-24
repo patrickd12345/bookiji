@@ -31,11 +31,16 @@ jobs:
 
       - name: Run AI PR Review
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || '' }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_EVENT_PATH: ${{ github.event_path }}
-        run: node scripts/ai-pr-review.mjs
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "⚠️  OPENAI_API_KEY secret not configured. Skipping AI review."
+            exit 0
+          fi
+          node scripts/ai-pr-review.mjs
         continue-on-error: true
 
 
