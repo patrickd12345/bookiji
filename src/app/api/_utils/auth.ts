@@ -23,7 +23,7 @@ export async function getAuthenticatedUserId(request: Request): Promise<string |
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options)
             })
-          } catch (error) {
+          } catch (_error) {
             // The `setAll` method was called from a Server Component or Route Handler.
             // This can be ignored if you have middleware refreshing user sessions.
           }

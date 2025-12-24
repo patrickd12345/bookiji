@@ -18,16 +18,18 @@ export async function POST(request: NextRequest) {
     const supabase = getServerSupabase()
     
     // Update vendor statuses based on action
-    let status: string
+     
+    let _status: string
     switch (action) {
       case 'approve':
-        status = 'active'
+        _status = 'active'
         break
       case 'reject':
-        status = 'suspended'
+         
+        _status = 'suspended'
         break
       case 'suspend':
-        status = 'suspended'
+        _status = 'suspended'
         break
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })

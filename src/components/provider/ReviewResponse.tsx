@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { motion } from 'framer-motion'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { MessageSquare, Edit, CheckCircle, AlertCircle } from 'lucide-react'
 
 interface Review {
@@ -40,6 +42,7 @@ export default function ReviewResponse({ review, providerId, onResponseSubmitted
   useEffect(() => {
     // Check if there's an existing response
     checkExistingResponse()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [review.id, providerId])
 
   const checkExistingResponse = async () => {

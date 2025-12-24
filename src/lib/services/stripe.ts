@@ -243,6 +243,7 @@ export class StripeService {
         reason: null,
         source_transfer_reversal: null,
         transfer_reversal: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
     }
 
@@ -299,6 +300,7 @@ export class StripeService {
           idempotency_key: null,
         },
         type: 'payment_intent.succeeded',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
     }
 
@@ -354,6 +356,7 @@ export class StripeService {
         metadata: {
           source: 'bookiji_platform',
         },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
     }
 
@@ -383,6 +386,7 @@ export class StripeService {
         metadata: {
           source: 'bookiji_platform',
         },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
     }
 

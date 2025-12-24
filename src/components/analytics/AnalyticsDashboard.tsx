@@ -39,6 +39,7 @@ export function AnalyticsDashboard() {
   useEffect(() => {
     trackPageView('analytics-dashboard')
     fetchFunnelData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange, trackPageView])
 
   const fetchFunnelData = async () => {

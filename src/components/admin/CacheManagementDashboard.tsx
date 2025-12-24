@@ -8,14 +8,13 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
-  Loader2, TrendingUp, TrendingDown, Activity, Clock, AlertTriangle, 
-  Zap, Database, Globe, RefreshCw, Play, Pause, Settings, BarChart3,
-  Target, Gauge, History, Plus, Trash2, Edit3
+  Loader2, Activity, Clock, AlertTriangle, 
+  Zap, RefreshCw, Play, Pause, Settings, BarChart3,
+  Target, Gauge, History
 } from 'lucide-react'
 import { 
   CachePerformanceMetrics, 
-  CacheInvalidationPattern, 
-  CacheTTLOptimization 
+  CacheInvalidationPattern
 } from '@/lib/cache/monitoring'
 import { 
   CacheWarmingStrategy, 
@@ -51,7 +50,7 @@ export default function CacheManagementDashboard() {
   const [timeRange, setTimeRange] = useState('24h')
   const [activeTab, setActiveTab] = useState('overview')
   const [warmingServiceStatus, setWarmingServiceStatus] = useState<'running' | 'stopped'>('stopped')
-  const [systemStatus, setSystemStatus] = useState<'healthy' | 'warning' | 'critical'>('healthy')
+  const [systemStatus, _setSystemStatus] = useState<'healthy' | 'warning' | 'critical'>('healthy')
   const [showEmergencyControls, setShowEmergencyControls] = useState(false)
 
   const fetchCacheData = async () => {
@@ -246,6 +245,7 @@ export default function CacheManagementDashboard() {
     fetchCacheData()
     fetchWarmingStrategies()
     fetchWarmingHistory()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange])
 
   if (loading) {
@@ -788,7 +788,7 @@ export default function CacheManagementDashboard() {
                 <div className="text-center text-muted-foreground py-8">
                   <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>TTL optimization analysis will appear here</p>
-                  <p className="text-sm">Click "Analyze TTL" to generate recommendations</p>
+                  <p className="text-sm">Click &quot;Analyze TTL&quot; to generate recommendations</p>
                 </div>
               </div>
             </CardContent>

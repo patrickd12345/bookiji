@@ -468,7 +468,7 @@ export default function HomePageClient() {
             Own a booking platform?
           </h3>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Expose your providers' availability on Bookiji and gain exposure for your customers. 
+            Expose your providers&apos; availability on Bookiji and gain exposure for your customers. 
             Integrate seamlessly with Calendly, Acuity, and other popular scheduling platforms.
           </p>
           <Link href="/vendor/integrations">

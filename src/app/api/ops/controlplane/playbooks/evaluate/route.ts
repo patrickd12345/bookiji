@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { evaluatePlaybooks } from '../../_lib/playbooks'
 
 export async function POST(request: NextRequest) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let body: any
   try {
     body = await request.json()

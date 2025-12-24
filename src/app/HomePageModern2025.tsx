@@ -42,7 +42,7 @@ import {
 
 export default function HomePageModern2025() {
   const { t, formatCurrency } = useI18n()
-  const { isAuthenticated, canBookServices, canOfferServices, loading } = useAuth()
+  const { isAuthenticated, canBookServices, canOfferServices } = useAuth()
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isDark, setIsDark] = useState(false)
   const [showSupportChat, setShowSupportChat] = useState(false)

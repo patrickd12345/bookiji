@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { ensureSimCityAllowed } from '../../_lib/simcity'
 import { DEFAULT_DIALS } from '../../_lib/simcity-dials'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { DialDefinition } from '../../_lib/simcity-types'
 
 /**

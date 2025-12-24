@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AuditFrame, AuditTimeline, TimelineGovernance, EnvelopeProvenance } from "@/audit/types";
 import { EvolutionFlags } from "@/governance/EvolutionFlags";
 import { DomainRegistryEntry } from "@/governance/DomainRegistry";

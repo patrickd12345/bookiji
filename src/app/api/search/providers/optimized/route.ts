@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
@@ -178,7 +179,7 @@ async function performOptimizedSearch(filters: SearchFilters) {
 async function filterByAvailability(
   providers: ProviderWithDistance[],
   date: string,
-  time?: string
+  _time?: string
 ): Promise<ProviderWithDistance[]> {
   try {
     const providerIds = providers.map(p => p.provider_id)
@@ -294,6 +295,7 @@ async function getCachedResults(cacheKey: string) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function cacheResults(cacheKey: string, data: any, ttlMinutes: number) {
   try {
     await supabase

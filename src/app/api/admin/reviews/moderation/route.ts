@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js';
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine update data based on action
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {
       moderation_status: action === 'approve' ? 'approved' : 
                          action === 'reject' ? 'rejected' : 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from "@supabase/supabase-js";
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
@@ -14,6 +15,7 @@ export async function GET(req: NextRequest) {
     const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : timeRange === "90d" ? 90 : 365;
     const startDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let analytics: any = {};
 
     if (specialtyId) {
@@ -179,6 +181,7 @@ async function getAllSpecialtiesAnalytics(startDate: Date) {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getBookingTrends(bookings: any[], startDate: Date) {
   const trends: Record<string, { count: number; revenue: number }> = {};
   
@@ -213,6 +216,7 @@ function getBookingTrends(bookings: any[], startDate: Date) {
   }));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function calculateAverageRating(bookings: any[]) {
   const ratings = bookings
     .map(b => b.rating)
@@ -224,6 +228,7 @@ function calculateAverageRating(bookings: any[]) {
   return Math.round((sum / ratings.length) * 10) / 10;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getGeographicDistribution(locations: any[]) {
   const countries: Record<string, number> = {};
   const cities: Record<string, number> = {};

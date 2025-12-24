@@ -55,6 +55,7 @@ const PLAYBOOKS: Playbook[] = [
 
 type EvaluationInput = {
   health?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metrics?: any
   incidents?: Incident[]
 }

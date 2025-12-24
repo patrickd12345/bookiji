@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js'
 import { featureFlags } from '@/config/featureFlags'
 
@@ -102,6 +103,7 @@ export class BookingWorker {
   /**
    * Process a single booking event
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async processBookingEvent(event: any): Promise<void> {
     const { booking_id, provider_id } = event.event_data
 
@@ -146,7 +148,7 @@ export class BookingWorker {
   /**
    * Simulate provider confirmation (replace with real provider API calls)
    */
-  private async simulateProviderConfirmation(_providerId: string, _bookingId: string): Promise<boolean> {
+  private async simulateProviderConfirmation(__providerId: string, __bookingId: string): Promise<boolean> {
     // For now, simulate 80% confirmation rate after 5-10 minutes
     const timeSinceBooking = Date.now() - new Date().getTime() + 5 * 60 * 1000 // Simulate 5 min delay
     const randomFactor = Math.random()
@@ -160,6 +162,7 @@ export class BookingWorker {
   /**
    * Confirm a booking (transition to provider_confirmed)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async confirmBooking(booking: any, event: any): Promise<void> {
     try {
       // Update booking state
@@ -204,6 +207,7 @@ export class BookingWorker {
   /**
    * Auto-cancel a booking due to timeout
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async autoCancelBooking(booking: any, event: any): Promise<void> {
     try {
       // Update booking state

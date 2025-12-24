@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
 
   try {
     // Convert legacy params to new interface
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const answerResult = await Kb.answer(query, locale as any, section);
     const data = {
       answer: answerResult.text,
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
     };
     const res = new Response(JSON.stringify(data), { status: 200, headers: { ...cors, 'Cache-Control': 'no-store' } });
     return withCommonHeaders(res);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (e?.message === 'NO_CONTENT') {
       return withCommonHeaders(new Response(JSON.stringify({ error: 'No relevant content', code: 'NO_CONTENT' }), { status: 422, headers: cors }));

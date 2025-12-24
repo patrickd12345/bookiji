@@ -11,8 +11,6 @@ import {
   CreditsTier,
   CreditsReferral,
   UserCreditsSummary,
-  CreditsEarningConfig,
-  CreditsRedemptionConfig,
   CreditsCalculator,
   CREDITS_CONSTANTS,
 } from '@/types/credits';
@@ -89,6 +87,7 @@ export class CreditsService implements CreditsCalculator {
     description: string,
     referenceType?: string,
     referenceId?: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata?: Record<string, any>
   ): Promise<number | null> {
     try {
@@ -117,6 +116,7 @@ export class CreditsService implements CreditsCalculator {
     description: string,
     referenceType?: string,
     referenceId?: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata?: Record<string, any>
   ): Promise<boolean> {
     try {

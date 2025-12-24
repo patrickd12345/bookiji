@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getStripeOrThrow } from '@/lib/stripe'
 import { getServerSupabase } from '@/lib/supabaseServer'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 import { trackPaymentSuccess, trackPaymentFailure, PaymentMetadata } from '@/lib/analytics'
 import Stripe from 'stripe'
@@ -83,6 +84,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       const testKey = request.headers.get('x-test-webhook-key')
       if (testKey === process.env.TEST_WEBHOOK_KEY) {
         try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const event = JSON.parse(body) as any
           
           // Check for duplicate events

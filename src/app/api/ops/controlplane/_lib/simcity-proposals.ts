@@ -13,7 +13,6 @@ import { stableHash } from './simcity-hash'
 import type {
   SimCityProposal,
   SimCityProposalConfig,
-  SimCityEvent,
   SimCityEventEnvelope,
 } from './simcity-types'
 import type { SimCityConfig } from './simcity'

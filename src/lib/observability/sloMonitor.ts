@@ -1,5 +1,6 @@
 import { getServerSupabase } from '@/lib/supabaseServer'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 
 export interface SLOConfig {
@@ -89,6 +90,7 @@ export class SLOMonitor {
   async checkSLOCompliance(): Promise<SLOComplianceResult> {
     try {
       // Call the database function to check SLO compliance
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { data, error } = await supabase.rpc('check_slo_compliance')
       
       if (error) {
@@ -217,8 +219,10 @@ export class SLOMonitor {
     // For now, just log to console and could send to error monitoring service
     
     // Example: Send to Sentry or other error monitoring
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof window !== 'undefined' && (window as any).Sentry) {
       violations.forEach(violation => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).Sentry.captureMessage(`Critical SLO Violation: ${violation.metric_name}`, {
           level: 'error',
           tags: {

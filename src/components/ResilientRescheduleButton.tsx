@@ -6,6 +6,7 @@ import { LoadingSkeleton, ButtonSkeleton } from '@/components/ui/LoadingSkeleton
 import { useOptimisticActionWithTelemetry } from '@/hooks/useOptimisticActionWithTelemetry'
 import { useDebouncedClickWithTelemetry } from '@/hooks/useDebouncedClickWithTelemetry'
 import { useResilientQuery } from '@/hooks/useResilientQuery'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Calendar, Clock, CheckCircle, AlertCircle, Loader2, RotateCcw } from 'lucide-react'
 
 interface RescheduleDetails {
@@ -34,7 +35,7 @@ export function ResilientRescheduleButton({
 }: ResilientRescheduleButtonProps) {
   const [rescheduleStatus, setRescheduleStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle')
   const [rescheduleId, setRescheduleId] = useState<string | null>(null)
-  const [oldSlot, setOldSlot] = useState<{ start: string; end: string } | null>(null)
+  const [_oldSlot, setOldSlot] = useState<{ start: string; end: string } | null>(null)
 
   // 1. OPTIMISTIC RESCHEDULE ACTION with TELEMETRY
   const { execute: executeReschedule, status, error, rollback } = useOptimisticActionWithTelemetry({

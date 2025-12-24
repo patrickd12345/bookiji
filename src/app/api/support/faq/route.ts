@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
   const categoryId = searchParams.get('category')
   const limit = Number(searchParams.get('limit') || 10)
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 
   try {
@@ -51,6 +52,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match expected format (add slug from url or id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transformedData = (data || []).map((article: any) => ({
       id: article.id,
       title: article.title,

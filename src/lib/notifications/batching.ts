@@ -29,6 +29,7 @@ export interface QueuedNotification {
     icon?: string
     badge?: string
     tag?: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: Record<string, any>
     type: string
   }
@@ -226,6 +227,7 @@ async function sendPushNotification(
         metadata: notification.data
       })
       return { success: true }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error(`Failed to send push to subscription ${subscription.id}:`, error)
 

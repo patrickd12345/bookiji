@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
 async function checkDatabase() {
   try {
     const { getServerSupabase } = await import('@/lib/supabaseServer')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
     
     const startTime = Date.now()
@@ -133,6 +134,7 @@ async function checkCache() {
   try {
     // Check cache invalidation queue health
     const { getServerSupabase } = await import('@/lib/supabaseServer')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
     
     const { data: queueStats, error } = await supabase
@@ -170,6 +172,7 @@ async function checkCache() {
 async function checkSearch() {
   try {
     const { getServerSupabase } = await import('@/lib/supabaseServer')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
     
     // Test basic search functionality
@@ -225,6 +228,7 @@ async function checkSearch() {
 async function checkAuth() {
   try {
     const { getServerSupabase } = await import('@/lib/supabaseServer')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
     
     // Check auth service availability

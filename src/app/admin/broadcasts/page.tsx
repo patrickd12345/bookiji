@@ -38,6 +38,7 @@ export default function BroadcastsPage() {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleCreateBroadcast = async (data: any) => {
     try {
       const response = await fetch('/api/admin/broadcasts', {
@@ -288,6 +289,7 @@ export default function BroadcastsPage() {
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CreateBroadcastModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: any) => void }) {
   const [formData, setFormData] = useState({
     service: '',

@@ -1,6 +1,7 @@
 import { getServerSupabase } from '@/lib/supabaseServer'
 import type { SLOConfig, SLOViolation } from './sloMonitor'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 
 export interface ErrorBudget {
@@ -309,8 +310,8 @@ export class SLOAI {
   generateCustomerImpact(
     riskLevel: 'low' | 'medium' | 'high' | 'critical',
     metricType: 'latency' | 'errors' | 'availability',
-    currentValue: number,
-    targetValue: number
+    _currentValue: number,
+    _targetValue: number
   ): string {
     const impactMap: Record<string, Record<string, string>> = {
       latency: {
@@ -341,7 +342,7 @@ export class SLOAI {
    */
   generateRecommendations(
     riskLevel: 'low' | 'medium' | 'high' | 'critical',
-    metricType: 'latency' | 'errors' | 'availability'
+    _metricType: 'latency' | 'errors' | 'availability'
   ): string[] {
     const recommendations: string[] = []
 

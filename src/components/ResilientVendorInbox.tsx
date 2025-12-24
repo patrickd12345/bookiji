@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { LoadingSkeleton, CardSkeleton, GridSkeleton } from '@/components/ui/LoadingSkeleton'
 import { useOptimisticActionWithTelemetry } from '@/hooks/useOptimisticActionWithTelemetry'
 import { useDebouncedClickWithTelemetry } from '@/hooks/useDebouncedClickWithTelemetry'
@@ -237,7 +238,7 @@ export function ResilientVendorInbox({
           No service requests yet
         </h3>
         <p className="text-gray-600">
-          When customers request your services, they'll appear here.
+          When customers request your services, they&apos;ll appear here.
         </p>
       </div>
     )

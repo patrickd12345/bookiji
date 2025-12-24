@@ -125,7 +125,7 @@ export function useNotifications() {
     const MAX_RECONNECT_ATTEMPTS = 5
     const INITIAL_RECONNECT_DELAY = 2000 // 2 seconds
     const MAX_RECONNECT_DELAY = 30000 // 30 seconds
-    let isSubscribed = false
+    let _isSubscribed = false
 
     const subscribe = async () => {
       const supabase = supabaseBrowserClient()
@@ -200,11 +200,11 @@ export function useNotifications() {
           )
           .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
-              isSubscribed = true
+              _isSubscribed = true
               reconnectAttempts = 0 // Reset on successful subscription
               lastErrorTime = 0
             } else if (status === 'CHANNEL_ERROR') {
-              isSubscribed = false
+              _isSubscribed = false
               // Only log if it's been more than 10 seconds since last error (avoid spam)
               const now = Date.now()
               if (now - lastErrorTime > 10000) {
@@ -217,13 +217,13 @@ export function useNotifications() {
                 console.warn('Max reconnection attempts reached. Real-time notifications disabled. Polling will continue.')
               }
             } else if (status === 'CLOSED') {
-              isSubscribed = false
+              _isSubscribed = false
               // Only attempt reconnect if it wasn't intentionally closed
               if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
                 attemptReconnect()
               }
             } else if (status === 'TIMED_OUT') {
-              isSubscribed = false
+              _isSubscribed = false
               if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
                 attemptReconnect()
               }
@@ -231,7 +231,7 @@ export function useNotifications() {
           })
       } catch (error) {
         console.error('Failed to set up notifications channel:', error)
-        isSubscribed = false
+        _isSubscribed = false
         if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
           attemptReconnect()
         }
@@ -268,7 +268,7 @@ export function useNotifications() {
         clearTimeout(reconnectTimeout)
         reconnectTimeout = null
       }
-      isSubscribed = false
+      _isSubscribed = false
     }
   }, [])
 

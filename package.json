@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3000",
+    "dev:kill": "powershell -ExecutionPolicy Bypass -File scripts/kill-dev-server.ps1",
     "dev:cron": "tsx scripts/local-cron-scheduler.ts",
     "build": "node scripts/build-without-supabase-functions.js",
     "vercel:build": "node scripts/build-without-supabase-functions.js",
@@ -109,6 +110,9 @@
     "framer-motion": "^11.0.8",
     "googleapis": "^150.0.1",
     "groq-sdk": "^0.37.0",
+    "@langchain/community": "^0.3.0",
+    "@langchain/openai": "^0.3.0",
+    "langchain": "^0.3.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.358.0",
     "mapbox-gl": "^3.6.0",

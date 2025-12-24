@@ -98,6 +98,7 @@ export async function GET(request: Request) {
     
     // Get system logs
     const allLogs = aggregateLogs(start.toISOString(), end.toISOString())
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const systemLogs = allLogs.filter((log: any) => log.category === 'system')
     
     // Load existing patterns
@@ -117,8 +118,11 @@ export async function GET(request: Request) {
     const insights = generateInsights(systemLogs, patterns, correlations)
     
     // Calculate statistics
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const errorCount = systemLogs.filter((l: any) => l.severity === 'error').length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const criticalCount = systemLogs.filter((l: any) => l.severity === 'critical').length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const warningCount = systemLogs.filter((l: any) => l.severity === 'warning').length
     
     const analysis: LogAnalysis = {

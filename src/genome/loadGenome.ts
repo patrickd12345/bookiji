@@ -185,6 +185,7 @@ export function loadGenome(genomePath = path.join(process.cwd(), "genome", "mast
 
   const domains = domainsRaw as Record<string, unknown>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const normalizeModules = coerceArray<ModuleSpec>(domains.core && (domains.core as any).modules).map((module) => {
     if (!module || typeof module !== "object") {
       throw new Error("Module entries must be objects");
@@ -210,70 +211,103 @@ export function loadGenome(genomePath = path.join(process.cwd(), "genome", "mast
     domains: {
       core: {
         modules: normalizeModules,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         runtimeProfiles: coerceArray<RuntimeProfileSpec>(domains.core && (domains.core as any).runtimeProfiles),
       },
       events: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         contracts: coerceArray<ContractSpec>(domains.events && (domains.events as any).contracts),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         catalog: (domains.events && (domains.events as any).catalog) as CatalogSpec | undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         telemetry: (domains.events && (domains.events as any).telemetry) as GenomeDomains["events"]["telemetry"],
       },
       analytics: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         schema: typeof (domains.analytics as any)?.schema === "string" ? (domains.analytics as any).schema : undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         required: coerceArray<string>(domains.analytics && (domains.analytics as any).required),
       },
       temporal: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         audit: (domains.temporal && (domains.temporal as any).audit) as GenomeDomains["temporal"]["audit"],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         timelines: coerceArray<TimelineSpec>(domains.temporal && (domains.temporal as any).timelines),
       },
       opsai: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         services: coerceArray<ServiceSpec>(domains.opsai && (domains.opsai as any).services),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         diagnostics: (domains.opsai && (domains.opsai as any).diagnostics) as OpsDiagnosticsSpec | undefined,
       },
       simcity: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         scenarios: (domains.simcity && (domains.simcity as any).scenarios) as ScenarioSpec | undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         traffic: (domains.simcity && (domains.simcity as any).traffic) as TrafficSpec | undefined,
       },
       helpCenter: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         knowledgeBase: (domains.helpCenter && (domains.helpCenter as any).knowledgeBase) as KnowledgeBaseSpec | undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         userGuides: (domains.helpCenter && (domains.helpCenter as any).userGuides) as GenomeDomains["helpCenter"]["userGuides"],
       },
       notifications: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         channels: coerceArray<ChannelSpec>(domains.notifications && (domains.notifications as any).channels),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         requiredFiles: coerceArray<string>(domains.notifications && (domains.notifications as any).requiredFiles),
       },
       trustSafety: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ledgers: coerceArray<string>(domains.trustSafety && (domains.trustSafety as any).ledgers),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         drills: (domains.trustSafety && (domains.trustSafety as any).drills) as GenomeDomains["trustSafety"]["drills"],
       },
       businessIntelligence: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         telemetry: (domains.businessIntelligence && (domains.businessIntelligence as any).telemetry) as GenomeDomains["businessIntelligence"]["telemetry"],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         qualityGates: coerceArray<string>(domains.businessIntelligence && (domains.businessIntelligence as any).qualityGates),
       },
       governance: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         policies: coerceArray<string>(domains.governance && (domains.governance as any).policies),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         approvals: (domains.governance && (domains.governance as any).approvals) as GenomeDomains["governance"]["approvals"],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         contracts: coerceArray<string>(domains.governance && (domains.governance as any).contracts),
         required:
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           typeof (domains.governance as any)?.required === "boolean"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ? ((domains.governance as any).required as boolean)
             : false,
       },
       evolution: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         flags: coerceArray<string>(domains.evolution && (domains.evolution as any).flags),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         roadmap: (domains.evolution && (domains.evolution as any).roadmap) as GenomeDomains["evolution"]["roadmap"],
       },
       notifications_2: {
         schema:
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           typeof (domains as any)?.notifications_2?.schema === "string"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ? (domains as any).notifications_2.schema
             : undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         required: coerceArray<string>((domains as any)?.notifications_2?.required),
       },
       trust_safety: {
         schema:
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           typeof (domains as any)?.trust_safety?.schema === "string"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ? (domains as any).trust_safety.schema
             : undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         required: coerceArray<string>((domains as any)?.trust_safety?.required),
       },
     },

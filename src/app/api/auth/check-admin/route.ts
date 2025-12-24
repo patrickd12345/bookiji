@@ -6,7 +6,7 @@ import { cookies } from 'next/headers'
 // Optional: Admin org IDs via environment variable (for organization-based admin access)
 const ADMIN_ORG_IDS = process.env.ADMIN_ORG_IDS?.split(',').filter(Boolean) || []
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const config = getSupabaseConfig()
     const cookieStore = await cookies()
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
               cookiesToSet.forEach(({ name, value, options }) => {
                 cookieStore.set(name, value, options)
               })
-            } catch (error) {
+            } catch (_error) {
               // The `setAll` method was called from a Server Component or Route Handler.
               // This can be ignored if you have middleware refreshing user sessions.
             }

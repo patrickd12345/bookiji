@@ -87,6 +87,7 @@ export async function GET(
     // Filter by pattern if provided
     if (pattern) {
       const patternRegex = new RegExp(pattern, 'i')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       logs = logs.filter((log: any) => 
         patternRegex.test(log.message) ||
         patternRegex.test(log.source) ||
@@ -96,16 +97,19 @@ export async function GET(
     
     // Filter by source
     if (source) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       logs = logs.filter((log: any) => log.source === source)
     }
     
     // Filter by service
     if (service) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       logs = logs.filter((log: any) => log.service === service)
     }
     
     // Filter by severity
     if (severity) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       logs = logs.filter((log: any) => log.severity === severity)
     }
     
@@ -126,8 +130,11 @@ export async function GET(
     const insights = generateInsights(logs, detectedPatterns, correlations)
     
     // Calculate statistics
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const errorCount = logs.filter((l: any) => l.severity === 'error').length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const criticalCount = logs.filter((l: any) => l.severity === 'critical').length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const warningCount = logs.filter((l: any) => l.severity === 'warning').length
     
     const analysis: LogAnalysis = {

@@ -5,6 +5,7 @@
  * All functions are deterministic and pure.
  */
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { stableHash } from './simcity-hash'
 import type {
   MetricDelta,
@@ -81,7 +82,7 @@ export function evalDials(
 
     const [greenMin, greenMax] = dial.green
     const [yellowMin, yellowMax] = dial.yellow
-    const [redMin, redMax] = dial.red
+    const [_redMin, _redMax] = dial.red
 
     // Classify zone based on metric direction
     if (metric.direction === 'lower-is-better') {

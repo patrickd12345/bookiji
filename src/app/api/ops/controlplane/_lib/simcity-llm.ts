@@ -46,7 +46,7 @@ export type LLMProposalDraft = {
  * @returns Array of proposal drafts (empty on failure)
  */
 export async function generateLLMProposals(
-  snapshot: SimCityLLMSnapshot
+  _snapshot: SimCityLLMSnapshot
 ): Promise<LLMProposalDraft[]> {
   // Fail-closed: return empty array if LLM is not available or fails
   try {

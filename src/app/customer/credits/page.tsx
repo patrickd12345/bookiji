@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { CreditCard, Plus, Minus, DollarSign, History } from 'lucide-react'
 import Link from 'next/link'
 

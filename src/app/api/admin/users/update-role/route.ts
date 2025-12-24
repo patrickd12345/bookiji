@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
           getAll() {
             return request.cookies.getAll()
           },
-          setAll(cookiesToSet) {
+          setAll(_cookiesToSet) {
             // API routes typically don't set cookies, but if they did, we'd handle it here
             // or let the response handling do it.
           }

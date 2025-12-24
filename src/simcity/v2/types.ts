@@ -1,4 +1,5 @@
 import { AnalyticsEnvelope } from "@/contracts/analytics/AnalyticsEnvelope";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { StandardizedEvent } from "@/contracts/analytics/StandardizedEvent";
 import { EvolutionFlags } from "@/governance/EvolutionFlags";
 import { DomainRegistry, DomainRegistryEntry } from "@/governance/DomainRegistry";

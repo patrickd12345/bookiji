@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { Incident, IncidentStatus } from '../types/incidents'
 
 const IS_SERVERLESS = process.env.VERCEL === '1'

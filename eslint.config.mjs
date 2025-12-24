@@ -30,7 +30,11 @@ const eslintConfig = [
     rules: {
       // TEMPORARY: Downgrade noisy rules to warnings during the integrity sprint.
       // Turn off unused-vars to silence safe but noisy warnings. We can re-enable after full cleanup.
-      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }],
       "@typescript-eslint/no-explicit-any": "warn",
       "react-hooks/exhaustive-deps": "warn",
       "react/no-unescaped-entities": "warn",

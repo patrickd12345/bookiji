@@ -4,6 +4,7 @@ import { CreditsResponse, AddCreditsRequest } from '@/types/credits';
 
 export async function POST(request: NextRequest): Promise<NextResponse<CreditsResponse>> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>;
     
     // Get user from auth

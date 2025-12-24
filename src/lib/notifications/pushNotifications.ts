@@ -32,6 +32,7 @@ export interface NotificationBatch {
     icon?: string
     badge?: string
     tag?: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: Record<string, any>
     actions?: Array<{
       action: string
@@ -107,6 +108,7 @@ class PushNotificationManager {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleServiceWorkerMessage(data: any) {
     switch (data.type) {
       case 'NOTIFICATION_CLICKED':
@@ -121,6 +123,7 @@ class PushNotificationManager {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleNotificationClick(notification: any) {
     // Handle notification click - focus window, navigate to relevant page
     if (notification.data?.url) {
@@ -129,6 +132,7 @@ class PushNotificationManager {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleNotificationAction(action: string, notification: any) {
     // Handle notification action buttons
     switch (action) {
@@ -144,6 +148,7 @@ class PushNotificationManager {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handlePushReceived(payload: any) {
     // Handle push notification payload from service worker
     if (this.shouldShowNotification(payload)) {
@@ -151,6 +156,7 @@ class PushNotificationManager {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private shouldShowNotification(notification: any): boolean {
     if (!this.preferences.enabled) return false
     if (!this.preferences.types[notification.type as keyof typeof this.preferences.types]) return false
@@ -179,6 +185,7 @@ class PushNotificationManager {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async showNotification(notification: any) {
     if (this.preferences.batching.enabled) {
       this.addToBatch(notification)
@@ -187,6 +194,7 @@ class PushNotificationManager {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private addToBatch(notification: any) {
     const batchId = this.getCurrentBatchId()
     
@@ -242,6 +250,7 @@ class PushNotificationManager {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async showImmediateNotification(notification: any) {
     if (!this.swRegistration) return
 
@@ -297,6 +306,7 @@ class PushNotificationManager {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private generateBatchBody(notifications: any[]): string {
     const types = notifications.reduce((acc, n) => {
       acc[n.type] = (acc[n.type] || 0) + 1
@@ -367,16 +377,19 @@ class PushNotificationManager {
   }
 
   // Action handlers
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleAcceptAction(notification: any) {
     // Handle accept action (e.g., accept booking request)
     console.log('Accept action for notification:', notification)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleDeclineAction(notification: any) {
     // Handle decline action (e.g., decline booking request)
     console.log('Decline action for notification:', notification)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleSnoozeAction(notification: any) {
     // Handle snooze action (e.g., remind later)
     console.log('Snooze action for notification:', notification)

@@ -4,9 +4,12 @@ import type { DeploymentRecord, TimeMachineDiff, TimeMachineState } from './type
 import { createOpsClient } from './ops-client'
 
 type OpsDataSource = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   summary: () => Promise<any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metrics: (kind: 'bookings' | 'system') => Promise<any>
   deployments: () => Promise<DeploymentRecord[]>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   incidents: () => Promise<any>
 }
 
@@ -33,6 +36,7 @@ function filterByTimestamp<T extends { startedAt?: string; completedAt?: string 
   })
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normalizeIncidents(payload: any): Incident[] {
   if (Array.isArray(payload)) return payload as Incident[]
   if (payload?.incidents && Array.isArray(payload.incidents)) {
@@ -51,6 +55,7 @@ function uniqueById<T extends { id?: string }>(items: T[]) {
   })
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractMetricValue(metrics: any): number | undefined {
   if (!metrics) return undefined
   if (typeof metrics?.current === 'number') return metrics.current
@@ -80,7 +85,9 @@ export async function getTimeMachineState(
 
   const deployments = Array.isArray(deploymentsRaw)
     ? deploymentsRaw
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     : Array.isArray((deploymentsRaw as any)?.deployments)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ? ((deploymentsRaw as any).deployments as DeploymentRecord[])
     : []
 

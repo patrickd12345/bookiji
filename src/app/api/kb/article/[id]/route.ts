@@ -42,6 +42,7 @@ export async function GET(
     };
     const res = new Response(JSON.stringify(legacyArticle), { status: 200, headers: { ...cors, 'Cache-Control': 'public, max-age=300' } });
     return withCommonHeaders(res);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (e?.message === 'NOT_FOUND') {
       return withCommonHeaders(new Response(JSON.stringify({ error: 'Not found', code: 'NOT_FOUND' }), { status: 404, headers: cors }));

@@ -9,16 +9,13 @@ import {
   User, 
   Award, 
   GraduationCap, 
-  Briefcase, 
   Globe, 
   Star,
   MapPin,
   Clock,
   DollarSign,
   CheckCircle,
-  AlertCircle,
-  Edit,
-  Save
+  AlertCircle
 } from 'lucide-react';
 import ProfileEditor from '@/components/provider/ProfileEditor';
 import { RichProviderProfile, ProviderProfileUpdate } from '@/types/provider';
@@ -26,7 +23,7 @@ import { RichProviderProfile, ProviderProfileUpdate } from '@/types/provider';
 export default function ProviderProfilePage() {
   const [profile, setProfile] = useState<RichProviderProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [_isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Mock profile data for development
@@ -122,13 +119,14 @@ export default function ProviderProfilePage() {
           setProfile(mockProfile);
           setIsLoading(false);
         }, 1000);
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to load profile');
         setIsLoading(false);
       }
     };
 
     loadProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSaveProfile = async (profileData: ProviderProfileUpdate) => {
@@ -217,6 +215,7 @@ export default function ProviderProfilePage() {
           <Card>
             <CardHeader className="text-center">
               <div className="relative mx-auto mb-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={profile.avatar_url || '/api/placeholder/150/150'}
                   alt={profile.full_name}

@@ -57,12 +57,14 @@ export default function IncidentsAgentPage() {
             label="Severity"
             value={severityFilter}
             options={['all', 'low', 'medium', 'high', 'critical']}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onChange={(v) => setSeverityFilter(v as any)}
           />
           <SelectFilter
             label="Status"
             value={statusFilter}
             options={['all', 'open', 'monitoring', 'resolved']}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onChange={(v) => setStatusFilter(v as any)}
           />
         </div>

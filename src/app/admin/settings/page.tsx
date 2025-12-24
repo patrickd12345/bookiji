@@ -27,6 +27,7 @@ export default function SettingsPage() {
       .catch(err => console.error('Failed to load settings:', err))
   }, [])
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateSetting = async (key: string, value: any) => {
     setLoading({ ...loading, [key]: true })
     try {

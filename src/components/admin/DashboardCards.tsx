@@ -84,6 +84,7 @@ export default function DashboardCards({ stats }: DashboardCardsProps) {
 
   const getValue = (valuePath: string) => {
     const path = valuePath.split('.')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any = stats
     for (const key of path) {
       result = result[key]
@@ -91,6 +92,7 @@ export default function DashboardCards({ stats }: DashboardCardsProps) {
     return result
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const formatValue = (title: string, value: any) => {
     if (title === 'Revenue') {
       return `$${value.toLocaleString()}`

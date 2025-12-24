@@ -51,6 +51,7 @@ export function GuidedTourProvider({ children }: { children: ReactNode }) {
         container.appendChild(button);
         rest.text = container;
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       tour.addStep(rest as any);
     });
 

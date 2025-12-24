@@ -10,5 +10,6 @@ export interface AnalyticsEnvelope {
   };
   source: "core" | "opsai" | "simcity" | "n8n";
   event: StandardizedEvent;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }

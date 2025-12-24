@@ -255,6 +255,7 @@ export async function GET(request: NextRequest) {
 /**
  * Handle health endpoint data
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleHealth(data: any): AnomalySignal[] {
   return AnomalyAI.detectHealthAnomalies(data)
 }
@@ -262,6 +263,7 @@ function handleHealth(data: any): AnomalySignal[] {
 /**
  * Handle system metrics endpoint data
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleMetricsSystem(data: any, endpoint: string): AnomalySignal[] {
   return AnomalyAI.detectMetricsAnomalies(data, endpoint)
 }
@@ -269,6 +271,7 @@ function handleMetricsSystem(data: any, endpoint: string): AnomalySignal[] {
 /**
  * Handle error metrics endpoint data
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleMetricsErrors(data: any, endpoint: string): AnomalySignal[] {
   return AnomalyAI.detectMetricsAnomalies(data, endpoint)
 }
@@ -276,6 +279,7 @@ function handleMetricsErrors(data: any, endpoint: string): AnomalySignal[] {
 /**
  * Handle P95 metrics endpoint data
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleMetricsP95(data: any, endpoint: string): AnomalySignal[] {
   return AnomalyAI.detectMetricsAnomalies(data, endpoint)
 }
@@ -283,6 +287,7 @@ function handleMetricsP95(data: any, endpoint: string): AnomalySignal[] {
 /**
  * Handle SLO endpoint data
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleSLO(data: any): AnomalySignal[] {
   return AnomalyAI.detectSLOAnomalies(data)
 }
@@ -290,6 +295,7 @@ function handleSLO(data: any): AnomalySignal[] {
 /**
  * Handle incidents endpoint data
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleIncidents(data: any): AnomalySignal[] {
   return AnomalyAI.detectIncidentAnomalies(data)
 }
@@ -297,6 +303,7 @@ function handleIncidents(data: any): AnomalySignal[] {
 /**
  * Handle error logs endpoint data
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleLogsErrors(data: any, endpoint: string): AnomalySignal[] {
   return AnomalyAI.detectLogAnomalies(data, endpoint)
 }
@@ -304,6 +311,7 @@ function handleLogsErrors(data: any, endpoint: string): AnomalySignal[] {
 /**
  * Handle system logs endpoint data
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleLogsSystem(data: any, endpoint: string): AnomalySignal[] {
   return AnomalyAI.detectLogAnomalies(data, endpoint)
 }
@@ -311,6 +319,7 @@ function handleLogsSystem(data: any, endpoint: string): AnomalySignal[] {
 /**
  * Handle booking logs endpoint data
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleLogsBooking(data: any, endpoint: string): AnomalySignal[] {
   return AnomalyAI.detectLogAnomalies(data, endpoint)
 }
@@ -318,6 +327,7 @@ function handleLogsBooking(data: any, endpoint: string): AnomalySignal[] {
 /**
  * Handle events endpoint data
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleEvents(data: any, endpoint: string): AnomalySignal[] {
   return AnomalyAI.detectEventAnomalies(data, endpoint)
 }

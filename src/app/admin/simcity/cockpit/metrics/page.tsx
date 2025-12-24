@@ -53,7 +53,7 @@ function formatMetricValue(value: number, unit: string): string {
 export default async function CockpitMetricsPage() {
   const { tick, metrics, dialStatuses, error } = await getMetricsData()
 
-  const dialMap = new Map(DEFAULT_DIALS.map(d => [d.metric, d]))
+  const _dialMap = new Map(DEFAULT_DIALS.map(d => [d.metric, d]))
   const dialStatusMap = new Map(dialStatuses.map(d => [d.metric, d]))
 
   if (error) {

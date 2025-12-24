@@ -10,11 +10,11 @@ import { evaluateProposal } from './simcity-governance'
 import type {
   ShadowComparisonReport,
   ShadowEvent,
-  DialStatus,
   GovernanceVerdict,
   SimCityProposal,
   GovernanceContext,
 } from './simcity-types'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { DEFAULT_DIALS } from './simcity-dials'
 import { simulateShadow } from './simcity-shadow-simulate'
 

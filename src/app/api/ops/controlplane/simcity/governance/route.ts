@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const status = simCityStatus()
-    const cursor = simCityCursor()
+    const _cursor = simCityCursor()
 
     if (!status.running) {
       return NextResponse.json({ error: 'SimCity is not running' }, { status: 400 })

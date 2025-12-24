@@ -17,6 +17,7 @@ export interface PaymentOutboxEntry {
   event_type: string;
   idempotency_key: string;
   state: 'queued' | 'in_flight' | 'committed' | 'failed';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload: any;
   created_at: string;
   processed_at?: string;
@@ -29,6 +30,7 @@ export interface AuditLogEntry {
   actor_id?: string;
   action: string;
   reason?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meta?: any;
   created_at: string;
 }
@@ -59,6 +61,7 @@ export class OutboxService {
     bookingId: string,
     eventType: string,
     idempotencyKey: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     payload: any
   ): Promise<string> {
     const { data, error } = await supabase
@@ -125,6 +128,7 @@ export class AuditService {
     actorId?: string,
     bookingId?: string,
     reason?: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     meta?: any
   ): Promise<string> {
     const { data, error } = await supabase

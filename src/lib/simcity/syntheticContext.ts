@@ -50,6 +50,7 @@ export function tagSyntheticBody(body: unknown, context?: SyntheticRequestContex
   if (!context?.synthetic) return body
 
   if (Array.isArray(body)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return body.map((record) => (typeof record === 'object' && record ? applySyntheticTags(record as any, context) : record))
   }
 

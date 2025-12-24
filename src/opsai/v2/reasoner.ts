@@ -45,7 +45,9 @@ function computePredictionMetrics(envelope: AnalyticsEnvelope, metadata: Record<
   const latencyP95 = extractLatency(metadata) ?? 0;
   const sloViolation = extractSloViolation(metadata);
   const normalizedType = normalizeEventType(envelope.event.type);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const severity = (envelope.event as any)?.payload?.severity as string | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const anomalyScore = typeof (metadata as any).anomalyScore === "number" ? (metadata as any).anomalyScore : undefined;
 
   const severityWeight = (() => {
@@ -94,6 +96,7 @@ function computePredictionMetrics(envelope: AnalyticsEnvelope, metadata: Record<
 
 function deriveCounterfactual(envelope: AnalyticsEnvelope, metadata: Record<string, unknown>, horizonMs: number, sloBreachProbability: number) {
   const baselineLatency = extractLatency(metadata) ?? 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const severity = (envelope.event as any)?.payload?.severity as string | undefined;
   const normalizedType = normalizeEventType(envelope.event.type);
   const anomalySignal = normalizedType.includes("ANOMALY") || normalizedType.includes("INCIDENT") ? 1 : 0;
@@ -208,6 +211,7 @@ export function runOpsAIV2(envelope: AnalyticsEnvelope, registry?: DomainRegistr
     diagnostics: {
       latencyP95Ms: predictionMetrics.latencyP95,
       sloViolation: extractSloViolation(metadata),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       anomalySeverity: (envelope.event as any)?.payload?.severity,
     },
     evolutionFlags: config.evolutionFlags?.[governance.domain] ?? governance.evolution,

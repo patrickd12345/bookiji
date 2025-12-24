@@ -51,6 +51,7 @@ export default function SLOAgentPage() {
           {['all', 'ok', 'warning', 'breach'].map((f) => (
             <button
               key={f}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onClick={() => setFilter(f as any)}
               className={`px-3 py-1 rounded-md border ${
                 filter === f

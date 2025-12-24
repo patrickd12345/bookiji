@@ -11,6 +11,7 @@ type OpsEvent = {
   title?: string
   severity?: string
   service?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: Record<string, any>
 }
 

@@ -5,6 +5,7 @@ const violation = (
   code: string,
   severity: InvariantSeverity,
   message: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: Record<string, any>
 ): InvariantViolation => ({
   code,

@@ -69,6 +69,7 @@ export interface AnomalyDetection {
 
 export class CachePerformanceMonitor {
   private static instance: CachePerformanceMonitor;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private metricsBuffer: Map<string, any[]> = new Map();
   private invalidationTracker: Map<string, number> = new Map();
   private ttlAdjustmentHistory: Map<string, { lastAdjustment: Date; adjustmentCount: number; lastValue: number }> = new Map();
@@ -198,6 +199,7 @@ export class CachePerformanceMonitor {
       }
 
       // Group metrics by query type
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const queryTypeMetrics = new Map<string, any[]>();
       performanceData?.forEach(metric => {
         const queryType = this.extractQueryType(metric.endpoint);
@@ -272,6 +274,7 @@ export class CachePerformanceMonitor {
       }
 
       // Group by tag and analyze patterns
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tagPatterns = new Map<string, any[]>();
       invalidationData?.forEach(entry => {
         if (!tagPatterns.has(entry.tag)) {

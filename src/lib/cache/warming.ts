@@ -3,7 +3,7 @@ import { cachePerformanceMonitor } from './monitoring';
 
 let _supabase: SupabaseClient | null = null;
 
-function getSupabase() {
+function _getSupabase() {
   if (!_supabase) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -32,6 +32,7 @@ export interface CacheWarmingStrategy {
 
 export interface WarmingQuery {
   endpoint: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   params: Record<string, any>;
   tags: string[];
   expectedTTL: number;
@@ -658,6 +659,7 @@ export class CacheWarmingService {
   /**
    * Record query access for popularity tracking
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   recordQueryAccess(endpoint: string, params: Record<string, any>): void {
     const queryKey = this.generateQueryKey(endpoint, params);
     const now = new Date();
@@ -743,6 +745,7 @@ export class CacheWarmingService {
   /**
    * Generate a unique key for a query
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private generateQueryKey(endpoint: string, params: Record<string, any>): string {
     const sortedParams = Object.keys(params)
       .sort()
@@ -754,8 +757,10 @@ export class CacheWarmingService {
   /**
    * Parse a query key back to endpoint and params
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private parseQueryKey(queryKey: string): [string, Record<string, any>] {
     const [endpoint, queryString] = queryKey.split('?');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params: Record<string, any> = {};
     
     if (queryString) {

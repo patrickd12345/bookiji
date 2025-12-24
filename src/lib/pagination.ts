@@ -77,6 +77,7 @@ export class PaginationHelper {
     page: number,
     limit: number,
     total: number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): PaginationResult<any>['pagination'] {
     const totalPages = Math.ceil(total / limit);
     
@@ -93,10 +94,12 @@ export class PaginationHelper {
   /**
    * Apply pagination to a Supabase query
    */
-  public applyToQuery<T>(
+  public applyToQuery<_T>(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     query: any, // Supabase query builder
     params: PaginationParams,
     options: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       countQuery?: any; // Separate query for counting (optional)
       selectCount?: boolean; // Whether to include count in the main query
     } = {}
@@ -131,7 +134,9 @@ export class PaginationHelper {
     params: PaginationParams,
     options: {
       select?: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       filters?: (query: any) => any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       countFilters?: (query: any) => any;
     } = {}
   ): Promise<PaginationResult<T>> {
@@ -246,6 +251,7 @@ export class CursorPagination {
     params: CursorPaginationParams,
     options: {
       select?: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       filters?: (query: any) => any;
       cursorField?: string;
     } = {}
@@ -288,10 +294,12 @@ export class CursorPagination {
     }
 
     const nextCursor = hasMore && items.length > 0 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? (items[items.length - 1] as any)[cursorField] as string
       : undefined;
       
     const prevCursor = items.length > 0 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? (items[0] as any)[cursorField] as string
       : undefined;
 

@@ -220,7 +220,7 @@ export class RegressionAI {
     const endpointGroups = this.groupP95ByEndpoint(current)
 
     for (const [endpointKey, metrics] of endpointGroups.entries()) {
-      const [method, ...endpointParts] = endpointKey.split(' ')
+      const [_method, ...endpointParts] = endpointKey.split(' ')
       const endpoint = endpointParts.join(' ')
 
       // Find matching baseline
@@ -543,6 +543,7 @@ export class RegressionAI {
 
   // Helper methods
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static calculateAverage(metrics: any[], field: string): number {
     const values = metrics.map(m => m[field]).filter(v => v != null && !isNaN(v) && v > 0)
     if (values.length === 0) return 0

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { pushNotificationManager } from '@/lib/notifications/pushNotifications'
 
 export interface PushSubscriptionState {
@@ -29,6 +30,7 @@ export function usePushSubscription() {
     if (isSupported) {
       checkSubscriptionStatus()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const checkSubscriptionStatus = useCallback(async () => {

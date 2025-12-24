@@ -4,6 +4,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 let _adminClient: SupabaseClient | null = null
 let _anonClient: SupabaseClient | null = null
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const supabaseAdmin = new Proxy({} as any, {
   get: (target, prop) => {
     if (!_adminClient) {
@@ -28,10 +29,12 @@ export const supabaseAdmin = new Proxy({} as any, {
         }
       })
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (_adminClient as any)[prop]
   }
 }) as SupabaseClient
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const supabaseAnon = new Proxy({} as any, {
   get: (target, prop) => {
     if (!_anonClient) {
@@ -43,6 +46,7 @@ export const supabaseAnon = new Proxy({} as any, {
       }
       _anonClient = createClient(url, key)
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (_anonClient as any)[prop]
   }
 }) as SupabaseClient

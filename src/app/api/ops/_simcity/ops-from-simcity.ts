@@ -179,7 +179,7 @@ export function simcityToHealth(
 
 export function simcityToSLOs(
   metrics: SimMetrics,
-  _violations: InvariantViolation[]
+  __violations: InvariantViolation[]
 ): SLOStatus[] {
   const completed = metrics.completedBookings ?? 0
   const cancelled = metrics.cancelledBookings ?? 0

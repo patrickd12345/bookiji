@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js'
 
 // Initialize Supabase client
@@ -16,9 +17,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Store signals in resilience_metrics table
-    const { data, error } = await supabase
+    const { data: _data, error } = await supabase
       .from('resilience_metrics')
       .insert(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         signals.map((signal: any) => ({
           id: signal.id,
           ts: new Date(signal.timestamp).toISOString(),

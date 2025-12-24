@@ -9,10 +9,10 @@ const supabase = createClient(config.url, config.secretKey!);
  * Lightweight observability endpoint for KB crawler status
  * Returns: last crawl time, article count, chunk count
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     // Get last crawl timestamp (most recent last_crawled_at)
-    const { data: lastCrawl, error: crawlError } = await supabase
+    const { data: lastCrawl, error: _crawlError } = await supabase
       .from('kb_articles')
       .select('last_crawled_at')
       .order('last_crawled_at', { ascending: false })
@@ -20,22 +20,22 @@ export async function GET(req: NextRequest) {
       .single();
 
     // Get article count
-    const { count: articleCount, error: countError } = await supabase
+    const { count: articleCount, error: _countError } = await supabase
       .from('kb_articles')
       .select('*', { count: 'exact', head: true });
 
     // Get chunk count
-    const { count: chunkCount, error: chunkCountError } = await supabase
+    const { count: chunkCount, error: _chunkCountError } = await supabase
       .from('kb_article_chunks')
       .select('*', { count: 'exact', head: true });
 
     // Get embeddings count (to verify vectorization)
-    const { count: embeddingCount, error: embeddingCountError } = await supabase
+    const { count: embeddingCount, error: _embeddingCountError } = await supabase
       .from('kb_embeddings')
       .select('*', { count: 'exact', head: true });
 
     // Get last RAG usage timestamp
-    const { data: lastRagUsage, error: ragError } = await supabase
+    const { data: lastRagUsage, error: _ragError } = await supabase
       .from('kb_rag_usage')
       .select('used_at')
       .order('used_at', { ascending: false })

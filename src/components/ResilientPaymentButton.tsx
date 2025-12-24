@@ -51,20 +51,20 @@ export function ResilientPaymentButton({
       const result = await response.json()
       return result.paymentId
     },
-    onOptimistic: (details: PaymentDetails) => {
+    onOptimistic: (_details: PaymentDetails) => {
       setPaymentStatus('processing')
       setPaymentId(null)
     },
-    onSuccess: (paymentId: string, details: PaymentDetails) => {
+    onSuccess: (paymentId: string, _details: PaymentDetails) => {
       setPaymentStatus('success')
       setPaymentId(paymentId)
       onPaymentSuccessAction(paymentId)
     },
-    onError: (error: Error, details: PaymentDetails) => {
+    onError: (error: Error, _details: PaymentDetails) => {
       setPaymentStatus('failed')
       onPaymentErrorAction(error)
     },
-    onRollback: (details: PaymentDetails) => {
+    onRollback: (_details: PaymentDetails) => {
       setPaymentStatus('idle')
       setPaymentId(null)
     },

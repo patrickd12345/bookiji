@@ -12,7 +12,7 @@ type TableResult = {
 
 const TARGET_TABLES = ['bookings', 'profiles', 'sessions', 'analytics_events', 'events'] as const
 
-async function resolveAdmin(request: NextRequest) {
+async function resolveAdmin(_request: NextRequest) {
   const config = getSupabaseConfig()
   const cookieStore = await cookies()
   const supabase = createServerClient(config.url, config.publishableKey, {
@@ -25,7 +25,7 @@ async function resolveAdmin(request: NextRequest) {
           cookiesToSet.forEach(({ name, value, options }) => {
             cookieStore.set(name, value, options)
           })
-        } catch (error) {
+        } catch (_error) {
           // The `setAll` method was called from a Server Component or Route Handler.
           // This can be ignored if you have middleware refreshing user sessions.
         }
@@ -54,6 +54,7 @@ async function authenticate(request: NextRequest) {
   return Boolean(admin)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function countSynthetic(client: any, table: string): Promise<TableResult> {
   try {
     const { count, error } = await client.from(table).select('*', { count: 'exact', head: true }).eq('synthetic_source', 'simcity')
@@ -64,6 +65,7 @@ async function countSynthetic(client: any, table: string): Promise<TableResult> 
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function purgeSynthetic(client: any, table: string): Promise<TableResult> {
   const countResult = await countSynthetic(client, table)
   if (countResult.error) return countResult

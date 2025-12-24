@@ -9,8 +9,10 @@ export async function GET() {
   
   try {
     const { getServerSupabase } = await import('@/lib/supabaseServer')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const checks: Record<string, any> = {}
     const recommendations: string[] = []
     let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy'

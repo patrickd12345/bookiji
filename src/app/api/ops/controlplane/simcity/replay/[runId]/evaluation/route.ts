@@ -5,6 +5,7 @@ import { DEFAULT_DIALS } from '@/app/api/ops/controlplane/_lib/simcity-dials'
 import { evaluateReplayVariant, computeMetricDeltas, evalDials } from '@/app/api/ops/controlplane/_lib/simcity-evaluator'
 import { computeMetricsFromEvents } from '@/app/api/ops/controlplane/_lib/simcity-metric-extractors'
 import { stableHash } from '@/app/api/ops/controlplane/_lib/simcity-hash'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { MetricDelta, EvaluationResult } from '@/app/api/ops/controlplane/_lib/simcity-types'
 
 /**

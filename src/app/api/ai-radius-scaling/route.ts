@@ -72,6 +72,7 @@ export async function POST(request: Request) {
     const isAborted = error instanceof Error && 
       (error.name === 'AbortError' || 
        error.message.includes('aborted') || 
+       // eslint-disable-next-line @typescript-eslint/no-explicit-any
        (error as any).code === 'ECONNRESET');
 
     if (process.env.NODE_ENV === 'development' && !ADSENSE_APPROVAL_MODE) {

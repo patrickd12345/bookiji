@@ -2,6 +2,7 @@ import type { Incident } from '@/types/incidents'
 import type { AgentDescriptor } from './types'
 
 type BuildAgentsInput = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   summary: any
   incidents: Incident[]
   predictions: {

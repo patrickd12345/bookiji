@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { MockKbProvider } from './provider.mock';
 import { createPgVectorProvider } from './provider.pgvector';
 

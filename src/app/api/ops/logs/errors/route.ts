@@ -99,6 +99,7 @@ export async function GET(request: Request) {
     // Get error logs
     const allLogs = aggregateLogs(start.toISOString(), end.toISOString())
     const errorLogs = allLogs.filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (log: any) => log.category === 'error' || 
                (log.severity === 'error' || log.severity === 'critical')
     )
@@ -120,8 +121,11 @@ export async function GET(request: Request) {
     const insights = generateInsights(errorLogs, patterns, correlations)
     
     // Calculate statistics
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const errorCount = errorLogs.filter((l: any) => l.severity === 'error').length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const criticalCount = errorLogs.filter((l: any) => l.severity === 'critical').length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const warningCount = errorLogs.filter((l: any) => l.severity === 'warning').length
     
     const analysis: LogAnalysis = {

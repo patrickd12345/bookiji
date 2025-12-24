@@ -7,6 +7,7 @@ import { User, Mail, Phone, Calendar, Edit } from 'lucide-react';
 
 export default function ProfileSettingsPage() {
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -17,6 +18,7 @@ export default function ProfileSettingsPage() {
 
   useEffect(() => {
     loadProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadProfile = async () => {

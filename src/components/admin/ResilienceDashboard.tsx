@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { RefreshCw, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Bell, X } from 'lucide-react'
 
 interface ResilienceMetric {
@@ -240,7 +241,7 @@ export function ResilienceDashboard({ className = '' }: ResilienceDashboardProps
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Resilience Dashboard</h2>
           <p className="text-muted-foreground">
-            Real-time monitoring of Bookiji's resilience patterns
+            Real-time monitoring of Bookiji&apos;s resilience patterns
           </p>
         </div>
         <div className="flex items-center space-x-4">

@@ -9,6 +9,7 @@ import path from 'node:path'
 import { randomUUID } from 'node:crypto'
 import type { LogEntry, LogPattern, LogCategory, LogSeverity } from '../types/logs'
 import { loadEvents } from './ops-events-store'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { loadIncidents } from './incidents-store'
 import type { OpsEvent } from '../types/opsEvents'
 

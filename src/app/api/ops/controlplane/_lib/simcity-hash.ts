@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return Boolean(value) && typeof value === 'object' && (value as any).constructor === Object
 }
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get real-time metrics for the last hour
-    const { data: realtimeMetrics, error: realtimeError } = await supabase
+    const { data: _realtimeMetrics, error: realtimeError } = await supabase
       .from('performance_metrics')
       .select('*')
       .gte('created_at', new Date(now.getTime() - 60 * 60 * 1000).toISOString())

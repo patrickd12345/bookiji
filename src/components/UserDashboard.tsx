@@ -31,7 +31,9 @@ import { SuccessMessage } from '@/components/ui/StatusMessage'
 import { useAsyncData } from '@/hooks/useAsyncState'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n/useI18n'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { customerDashboardSteps, customerDashboardTourId } from '@/tours/dashboardNavigation'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 

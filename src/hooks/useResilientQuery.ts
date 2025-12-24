@@ -28,6 +28,7 @@ interface CacheEntry<T> {
   isStale: boolean
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const queryCache = new Map<string, CacheEntry<any>>()
 
 export function useResilientQuery<T>({
@@ -117,6 +118,7 @@ export function useResilientQuery<T>({
     } finally {
       setIsLoading(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, fetcher, retry, staleTime, cacheTime, enabled, attempts, cacheKey, calculateDelay])
 
   const refetch = useCallback(async (): Promise<void> => {

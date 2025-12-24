@@ -13,6 +13,7 @@ export async function GET(
     async start(controller) {
       const encoder = new TextEncoder()
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const send = (event: string, data: any) => {
         controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`))
       }
@@ -32,6 +33,7 @@ export async function GET(
             filter: `run_id=eq.${runId}`,
           },
           (payload) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data = payload.new as any
             send('heartbeat', {
               run_id: data.run_id,
@@ -60,6 +62,7 @@ export async function GET(
             filter: `run_id=eq.${runId}`,
           },
           (payload) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data = payload.new as any
             send('event', {
               event_index: data.event_index,
@@ -82,6 +85,7 @@ export async function GET(
             filter: `run_id=eq.${runId}`,
           },
           (payload) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const data = payload.new as any
             send('snapshot', {
               event_index: data.event_index,

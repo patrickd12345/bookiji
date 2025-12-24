@@ -117,6 +117,7 @@ export class ProviderMatchingService {
         `)
         .in('id', providerIds)
         .eq('role', 'provider')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .eq('is_active', true) as { data: ProviderProfile[] | null; error: any };
 
       if (providerError) {
@@ -135,6 +136,7 @@ export class ProviderMatchingService {
           is_active
         `)
         .in('provider_id', providerIds)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .eq('is_active', true) as { data: ServiceData[] | null; error: any };
 
       if (serviceError) {
@@ -150,6 +152,7 @@ export class ProviderMatchingService {
           overall_quality
         `)
         .in('provider_id', providerIds)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .eq('status', 'published') as { data: ReviewData[] | null; error: any };
 
       if (ratingError) {
@@ -275,6 +278,7 @@ export class ProviderMatchingService {
         .eq('is_active', true)
         .eq('profiles.role', 'provider')
         .eq('profiles.is_active', true)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .limit(10) as { data: ServiceWithProfile[] | null; error: any };
 
       if (error || !services) {

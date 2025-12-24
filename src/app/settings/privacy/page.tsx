@@ -11,6 +11,7 @@ export default function PrivacySettingsPage() {
     dataSharing: false,
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdate = async (key: string, value: any) => {
     setSettings({ ...settings, [key]: value });
     // TODO: Save to backend

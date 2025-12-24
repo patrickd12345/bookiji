@@ -51,8 +51,10 @@ class ErrorBoundaryClass extends React.Component<ErrorBoundaryProps, ErrorBounda
     }
 
     // Send to Sentry if available
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof window !== 'undefined' && (window as any).Sentry) {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ;(window as any).Sentry.captureException(error, {
           contexts: {
             react: {

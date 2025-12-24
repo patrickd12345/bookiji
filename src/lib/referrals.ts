@@ -1,5 +1,6 @@
 import { getServerSupabase } from './supabaseServer'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 import { addCredits } from './database'
 

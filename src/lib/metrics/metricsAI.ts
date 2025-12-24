@@ -299,12 +299,14 @@ export class MetricsAI {
 
   // Private helper methods
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static calculateAverage(metrics: any[], field: string): number {
     const values = metrics.map(m => m[field]).filter(v => v != null && !isNaN(v))
     if (values.length === 0) return 0
     return values.reduce((sum, v) => sum + v, 0) / values.length
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static getTimeRange(metrics: any[]): string {
     if (metrics.length === 0) return 'N/A'
     const first = metrics[0].timestamp || metrics[0].created_at || metrics[0].bucket
@@ -449,7 +451,7 @@ export class MetricsAI {
 
   private static generateSystemChecks(
     anomalies: MetricsSummary['anomalies'],
-    latest: SystemMetrics
+    _latest: SystemMetrics
   ): string[] {
     const checks: string[] = []
     
@@ -569,8 +571,8 @@ export class MetricsAI {
 
   private static generateBookingChecks(
     anomalies: MetricsSummary['anomalies'],
-    conversionRate: number,
-    cancellationRate: number
+    _conversionRate: number,
+    _cancellationRate: number
   ): string[] {
     const checks: string[] = []
     
@@ -738,7 +740,7 @@ export class MetricsAI {
   private static generateLatencyChecks(
     anomalies: MetricsSummary['anomalies'],
     slowEndpoints: Array<{ endpoint: string; method: string; avgP95: number; requestCount: number }>,
-    avgP95: number
+    _avgP95: number
   ): string[] {
     const checks: string[] = []
     

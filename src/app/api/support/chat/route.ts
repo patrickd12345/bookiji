@@ -147,6 +147,7 @@ async function handleRequest(req: Request) {
       });
     }
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let chunks: any[] = [];
     let top = 0;
     
@@ -173,6 +174,7 @@ async function handleRequest(req: Request) {
         console.log('✅ KB search results:', { 
           chunks: chunks.length, 
           topScore: top, 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           scores: chunks.map((c: any) => c.score),
           firstChunkTitle: chunks[0]?.title 
         });
@@ -193,6 +195,7 @@ async function handleRequest(req: Request) {
 
     // Apply similarity threshold guardrail (lowered to 0.3 for better recall since KB might not have all content)
     const SIMILARITY_THRESHOLD = parseFloat(process.env.SUPPORT_KB_SIMILARITY_THRESHOLD || '0.3');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const validChunks = chunks.filter((c: any) => c.score >= SIMILARITY_THRESHOLD);
     
     // Debug logging
@@ -267,6 +270,7 @@ Be concise, helpful, and friendly.`;
 
     if (!shouldEscalate && validChunks.length > 0) {
       // Construct context from valid chunks
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const contextText = validChunks.map((c: any) => c.snippet).join('\n---\n');
       
       // For onboarding queries or low confidence, allow LLM to use its knowledge
@@ -365,12 +369,15 @@ ${contextText}
 
       // Get sources for citation
       const sources = validChunks
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((c: any) => ({
           title: c.title,
           url: c.url || null,
           score: c.score
         }))
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((s: any, i: number, arr: any[]) => 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           arr.findIndex((x: any) => x.url === s.url) === i // Dedupe by URL
         );
 

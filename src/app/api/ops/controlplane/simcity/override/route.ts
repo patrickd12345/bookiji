@@ -8,6 +8,7 @@ import { evaluateProposal } from '@/app/api/ops/controlplane/_lib/simcity-govern
 import { hashOverrideRecord } from '@/app/api/ops/controlplane/_lib/simcity-governance-hash'
 import { validateOverride, convertToOverrideVerdict } from '@/app/api/ops/controlplane/_lib/simcity-overrides'
 import { appendOverride } from '@/app/api/ops/controlplane/_lib/simcity-overrides-store'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { GovernanceContext, OverrideRecord, OverrideVerdict } from '@/app/api/ops/controlplane/_lib/simcity-types'
 import { randomUUID } from 'node:crypto'
 

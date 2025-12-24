@@ -53,6 +53,7 @@ export class SimTelemetry {
     this.calculateDerivedMetrics();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private processAgentResult(result: any): void {
     if (!result.success) {
       this.metrics.errorCount++;

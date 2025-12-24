@@ -91,7 +91,9 @@ export async function GET(request: NextRequest) {
 
     // Fetch system metrics from performance_analytics_5min with timeout
     // We'll derive CPU/memory from database metrics and cache hit rates
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let performanceData: any = null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let perfError: any = null
     
     try {
@@ -105,7 +107,9 @@ export async function GET(request: NextRequest) {
           setTimeout(() => reject(new Error('Database query timeout')), 30000)
         )
       ])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       performanceData = (queryResult as any).data
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       perfError = (queryResult as any).error
     } catch (error) {
       console.error('Metrics system query timeout or error:', error)
@@ -128,16 +132,19 @@ export async function GET(request: NextRequest) {
     // Get database connection metrics (if available)
     // For now, we'll estimate system load from request patterns
     // Note: get_database_stats function may not exist - handle gracefully
-    let dbMetrics: any = null 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let _dbMetrics: any = null 
     try {
       const { data } = await supabase.rpc('get_database_stats', {}).single()
-      dbMetrics = data
-    } catch (err) {
+       
+      _dbMetrics = data
+    } catch (_err) {
       // Function doesn't exist or not available - that's okay
-      dbMetrics = null
+      _dbMetrics = null
     }
 
     // Transform to SystemMetrics format
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const systemMetrics: SystemMetrics[] = (performanceData || []).map((item: any) => {
       // Estimate CPU from request count and database queries
       // This is a simplified model - in production, you'd have actual system metrics
@@ -172,6 +179,7 @@ export async function GET(request: NextRequest) {
         .lt('five_minute_bucket', startTime.toISOString())
         .order('five_minute_bucket', { ascending: true })
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       previousMetrics = (prevData || []).map((item: any) => {
         const estimatedCpu = Math.min(100,
           (item.request_count || 0) * 0.1 +

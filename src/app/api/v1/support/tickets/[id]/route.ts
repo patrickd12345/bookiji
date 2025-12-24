@@ -23,6 +23,7 @@ export async function GET(
   return NextResponse.json(data);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function buildTranscript(admin: any, ticketId: string) {
   const { data: conv } = await admin
     .from('support_conversations')
@@ -35,6 +36,7 @@ async function buildTranscript(admin: any, ticketId: string) {
     .select('sender_type,content')
     .eq('conversation_id', conv.id)
     .order('created_at', { ascending: true });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (msgs ?? []).map((m: any) => ({ 
     role: (m.sender_type === 'user' ? 'user' : 'agent') as 'user' | 'agent' | 'assistant',
     text: String(m.content || '')
@@ -42,6 +44,7 @@ async function buildTranscript(admin: any, ticketId: string) {
 }
 
 async function maybeCreateKbSuggestion(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   admin: any, ticketId: string, intent?: string) {
   
   // Enable by default in non-production unless explicitly disabled

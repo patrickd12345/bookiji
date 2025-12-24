@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const file = `backup-${new Date().toISOString().split('T')[0]}.sql`
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     execSync(`pg_dump ${url} > ${file}`, { stdio: 'inherit', shell: true } as any)
     
     console.log(`Daily backup completed: ${file}`)

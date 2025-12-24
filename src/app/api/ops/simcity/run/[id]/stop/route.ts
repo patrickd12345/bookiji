@@ -29,6 +29,7 @@ export async function POST(
     const containerName = `simcity-run-${id}`
     try {
       await execAsync(`docker stop ${containerName}`)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (dockerErr: any) {
       // It's okay if it fails (e.g. container already stopped or not found)
       console.warn(`Could not stop container ${containerName}:`, dockerErr.message)
@@ -41,6 +42,7 @@ export async function POST(
         seed: data.seed ? data.seed.toString() : null
       }
     })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }

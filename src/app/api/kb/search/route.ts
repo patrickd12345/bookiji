@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
   const q = searchParams.get('q');
   if (!q) return withCommonHeaders(new Response(JSON.stringify({ error: 'Missing q', code: 'BAD_REQUEST' }), { status: 400, headers: cors }));
   const locale = (searchParams.get('locale') ?? 'en') as 'en' | 'fr';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const section = searchParams.get('section') as any;
   const limitParam = Number(searchParams.get('limit') ?? 5);
 

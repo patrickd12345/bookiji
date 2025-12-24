@@ -29,7 +29,7 @@ export class SimOrchestrator extends EventEmitter {
   private violations: InvariantViolation[] = [];
   private rng: () => number = Math.random;
 
-  constructor(_baseURL: string = 'http://localhost:3000') {
+  constructor(__baseURL: string = 'http://localhost:3000') {
     super();
     this.telemetry = new SimTelemetry();
     this.state = {
@@ -274,10 +274,12 @@ export class SimOrchestrator extends EventEmitter {
     this.emitEvent('reset', { timestamp: new Date().toISOString() });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   emitSimEvent(type: SimEventType, data: any): void {
     this.emitEvent(type, data);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private emitEvent(type: SimEventType, data: any): void {
     const runInfo = this.getRunInfo();
     const event: SimEventPayload = {

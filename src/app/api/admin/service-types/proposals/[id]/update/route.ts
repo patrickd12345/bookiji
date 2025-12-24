@@ -5,6 +5,7 @@ import { z } from 'zod'
 const schema = z.object({ action: z.enum(['approve', 'reject']), reviewerId: z.string().uuid().optional(), notes: z.string().optional() })
 
 export async function POST(req: Request) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
   const urlParts = new URL(req.url).pathname.split('/')
   const id = urlParts[urlParts.length - 2] // path ends with /[id]/update/route

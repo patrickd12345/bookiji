@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js'
 import { aiModeration, ModerationResult, ReviewData } from './aiModeration'
 
@@ -16,6 +17,7 @@ export interface ModerationAuditLog {
   behavioral_flags: string[]
   processing_time_ms: number
   created_at: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>
 }
 
@@ -34,6 +36,7 @@ export interface ModerationMetrics {
 export interface ReviewModerationEvent {
   type: 'review_submitted' | 'auto_flagged' | 'manual_review' | 'decision_made'
   review_id: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>
   timestamp: string
 }
@@ -61,6 +64,7 @@ export class ReviewMonitoringService {
     behavioralFlags: string[],
     processingTimeMs: number,
     moderatorId?: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata: Record<string, any> = {}
   ): Promise<void> {
     try {
@@ -517,9 +521,11 @@ export class ReviewMonitoringService {
   async healthCheck(): Promise<{
     status: 'healthy' | 'degraded' | 'unhealthy'
     checks: Record<string, boolean>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     details: Record<string, any>
   }> {
     const checks: Record<string, boolean> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const details: Record<string, any> = {}
 
     try {

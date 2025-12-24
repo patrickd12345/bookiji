@@ -8,6 +8,7 @@ import { useFeatureFlag } from '@/config/featureFlags'
 interface ProviderMapProps {
   className?: string
   onProviderSelect?: (providerId: string) => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onBoundsChange?: (bounds: any) => void
 }
 
@@ -49,10 +50,11 @@ export default function ProviderMap({
 
   // Convert quote candidates to map markers
   // Note: We need to fetch provider locations separately since quote API doesn't return lat/lng
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const convertCandidatesToMarkers = useCallback(async (candidates: any[], centerLat: number, centerLng: number): Promise<ProviderMarker[]> => {
     // For now, use center location with jitter for visualization
     // In production, you'd fetch actual provider_locations from Supabase
-    return candidates.map((candidate, index) => {
+    return candidates.map((candidate, _index) => {
       // Add small random offset for visualization (in production, use real location)
       const jitter = 0.01 * (Math.random() - 0.5)
       return {
@@ -70,6 +72,7 @@ export default function ProviderMap({
   }, [])
 
   // Fetch providers from quote API
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fetchProviders = useCallback(async (bounds?: any) => {
     if (!mapAbstractionEnabled) return
 
@@ -130,6 +133,7 @@ export default function ProviderMap({
   }, [onProviderSelect])
 
   // Handle bounds change
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleBoundsChange = useCallback((bounds: any) => {
     onBoundsChange?.(bounds)
     

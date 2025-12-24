@@ -121,6 +121,7 @@ export interface SimEventPayload {
   timestamp: string;
   runId?: string | null;
   scenario?: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any;
 }
 
@@ -131,6 +132,7 @@ export interface InvariantViolation {
   message: string;
   severity: InvariantSeverity;
   timestamp: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: Record<string, any>;
 }
 
@@ -325,6 +327,7 @@ export interface ScenarioOverride {
   metricsBoost?: Partial<EngineMetrics>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface SimCityEvent<T = any> {
   type:
     | 'connected'

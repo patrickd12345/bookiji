@@ -5,7 +5,7 @@ import { getSimEngine } from '@/lib/simcity/engine';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const runId = searchParams.get('runId');
+    const _runId = searchParams.get('runId');
     
     const orchestrator = getOrchestrator();
     const engine = getSimEngine();

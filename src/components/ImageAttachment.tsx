@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -163,6 +162,7 @@ export function ImageAttachment({
 
   // Get file type icon
   const getFileTypeIcon = (type: string) => {
+    // eslint-disable-next-line jsx-a11y/alt-text
     if (type.startsWith('image/')) return <Image className="h-4 w-4" />
     return <FileText className="h-4 w-4" />
   }
@@ -242,6 +242,7 @@ export function ImageAttachment({
                 <CardContent className="p-0">
                   {/* Image Preview */}
                   <div className="relative aspect-square bg-gray-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={URL.createObjectURL(image)}
                       alt={image.name}

@@ -115,6 +115,7 @@ export default function ReviewAnalytics({ providerId }: { providerId: string }) 
         </div>
         <select
           value={timeRange}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onChange={(e) => setTimeRange(e.target.value as any)}
           className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >

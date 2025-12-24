@@ -348,7 +348,7 @@ export class AIModerationService {
   /**
    * Suggest moderation action based on confidence and categories
    */
-  private suggestAction(confidence: number, categories: ModerationResult['categories']): ModerationResult['suggestedAction'] {
+  private suggestAction(confidence: number, _categories: ModerationResult['categories']): ModerationResult['suggestedAction'] {
     if (confidence > 0.9) {
       return 'reject'
     } else if (confidence > 0.7) {

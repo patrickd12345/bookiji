@@ -25,10 +25,13 @@ export interface AnomalySignal {
   type: string
   description: string
   timestamp: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value?: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   baseline?: any
   deviation?: number
   affectedServices?: string[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>
 }
 
@@ -105,6 +108,7 @@ export class AnomalyAI {
   /**
    * Detect anomalies from health signals
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static detectHealthAnomalies(healthData: any): AnomalySignal[] {
     const anomalies: AnomalySignal[] = []
     const timestamp = new Date().toISOString()
@@ -140,6 +144,7 @@ export class AnomalyAI {
     // Check individual subsystems
     const subsystems = healthData.subsystems || {}
     for (const [subsystem, data] of Object.entries(subsystems)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const subData = data as any
       if (subData.status === 'unhealthy') {
         anomalies.push({
@@ -171,6 +176,7 @@ export class AnomalyAI {
   /**
    * Detect anomalies from metrics signals
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static detectMetricsAnomalies(metricsData: any, endpoint: string): AnomalySignal[] {
     const anomalies: AnomalySignal[] = []
     const timestamp = new Date().toISOString()
@@ -274,6 +280,7 @@ export class AnomalyAI {
   /**
    * Detect anomalies from SLO signals
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static detectSLOAnomalies(sloData: any): AnomalySignal[] {
     const anomalies: AnomalySignal[] = []
     const timestamp = new Date().toISOString()
@@ -341,6 +348,7 @@ export class AnomalyAI {
   /**
    * Detect anomalies from incidents signals
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static detectIncidentAnomalies(incidentsData: any): AnomalySignal[] {
     const anomalies: AnomalySignal[] = []
     const timestamp = new Date().toISOString()
@@ -363,6 +371,7 @@ export class AnomalyAI {
         value: data.criticalCount,
         metadata: {
           openIncidents: data.openIncidentsCount,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           summaries: data.summaries?.filter((s: any) => s.severity === 'critical') || []
         }
       })
@@ -400,6 +409,7 @@ export class AnomalyAI {
   /**
    * Detect anomalies from log signals
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static detectLogAnomalies(logData: any, endpoint: string): AnomalySignal[] {
     const anomalies: AnomalySignal[] = []
     const timestamp = new Date().toISOString()
@@ -551,6 +561,7 @@ export class AnomalyAI {
   /**
    * Detect anomalies from event signals
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static detectEventAnomalies(eventsData: any, endpoint: string): AnomalySignal[] {
     const anomalies: AnomalySignal[] = []
     const timestamp = new Date().toISOString()
@@ -563,6 +574,7 @@ export class AnomalyAI {
     const eventCount = events.length
 
     // Critical events detected
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const criticalEvents = events.filter((e: any) => e.severity === 'critical' || e.severity === 'error')
     if (criticalEvents.length >= this.ANOMALY_THRESHOLDS.criticalEventThreshold) {
       anomalies.push({
@@ -575,6 +587,7 @@ export class AnomalyAI {
         value: criticalEvents.length,
         metadata: {
           totalEvents: eventCount,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           criticalEvents: criticalEvents.slice(0, 5).map((e: any) => ({
             type: e.type,
             title: e.title,
@@ -598,12 +611,14 @@ export class AnomalyAI {
     }
 
     // Deployment-related events
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const deployEvents = events.filter((e: any) => 
       e.type === 'deploy' || 
       e.type === 'deployment' ||
       (e.title && e.title.toLowerCase().includes('deploy'))
     )
     if (deployEvents.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const failedDeploys = deployEvents.filter((e: any) => 
         e.severity === 'error' || 
         e.severity === 'critical' ||
@@ -626,10 +641,12 @@ export class AnomalyAI {
     }
 
     // Health check events
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const healthEvents = events.filter((e: any) => 
       e.type === 'health-check' || 
       (e.title && e.title.toLowerCase().includes('health'))
     )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const failedHealthChecks = healthEvents.filter((e: any) => 
       e.severity === 'error' || e.severity === 'critical'
     )
@@ -643,7 +660,9 @@ export class AnomalyAI {
         timestamp,
         value: failedHealthChecks.length,
         affectedServices: failedHealthChecks
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .map((e: any) => e.service)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .filter((s: any) => s)
           .slice(0, 5)
       })
@@ -673,10 +692,11 @@ export class AnomalyAI {
 
     const unified: UnifiedAnomaly[] = []
 
-    for (const [key, groupSignals] of grouped.entries()) {
+    for (const [_key, groupSignals] of grouped.entries()) {
       // Determine overall severity (highest in group)
       const severities = groupSignals.map(s => s.severity)
       const severityOrder = ['critical', 'high', 'medium', 'low']
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const maxSeverity = severityOrder.find(s => severities.includes(s as any)) || 'low'
 
       // Collect all affected services
@@ -697,6 +717,7 @@ export class AnomalyAI {
 
       unified.push({
         id: `${groupSignals[0].type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         severity: maxSeverity as any,
         title,
         description,

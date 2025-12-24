@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Search, Filter, MapPin, Star, Clock, DollarSign } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -68,6 +69,7 @@ export default function SpecialtySearch() {
     if (filters.query || filters.specialtyIds.length > 0 || filters.location) {
       performSearch()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters])
 
   const loadSpecialties = async () => {

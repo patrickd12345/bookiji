@@ -193,7 +193,8 @@ export function formatAlertMessage(
 }
 
 // Export default configuration
-export default {
+ 
+const performanceConfig = {
   getPerformanceConfig,
   getAlertConfig,
   getAlertSeverity,
@@ -201,6 +202,8 @@ export default {
   CRITICAL_THRESHOLDS,
   AlertSeverity
 }
+
+export default performanceConfig
 
 
 

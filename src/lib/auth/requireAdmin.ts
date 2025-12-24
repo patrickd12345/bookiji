@@ -7,6 +7,7 @@ export interface AdminUser {
   organization_id?: string
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function requireAdmin(session: any): Promise<AdminUser> {
   if (!session?.user?.id) {
     throw new Error('unauthenticated')

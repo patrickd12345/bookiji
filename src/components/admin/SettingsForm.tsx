@@ -27,6 +27,7 @@ export default function SettingsForm() {
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSettingChange = (key: keyof AdminSettings, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }))
   }
@@ -44,7 +45,7 @@ export default function SettingsForm() {
       
       setSaveStatus('success')
       setTimeout(() => setSaveStatus('idle'), 3000)
-    } catch (error) {
+    } catch (_error) {
       setSaveStatus('error')
       setTimeout(() => setSaveStatus('idle'), 3000)
     } finally {

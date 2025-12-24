@@ -24,7 +24,9 @@ export type ControlPlaneOverview = {
   timestamp: string
   health: { overall?: string; services?: Array<{ name: string; status: string }> }
   metrics: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     bookings?: any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     system?: any
   }
   deployments: DeploymentRecord[]
@@ -47,6 +49,7 @@ export type ControlPlaneEvent = {
 
 export type CommandRequest = {
   command: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args?: Record<string, any>
 }
 
@@ -54,6 +57,7 @@ export type CommandResponse = {
   accepted: boolean
   message: string
   executedAt: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result?: any
 }
 

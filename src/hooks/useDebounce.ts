@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useDebounce<T extends (...args: any[]) => any>(
   callback: T,
   delay: number
@@ -48,6 +49,7 @@ export function useDebouncedClick(
 }
 
 // Hook for form submissions
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useDebouncedSubmit<T extends Record<string, any>>(
   onSubmit: (data: T) => Promise<void>,
   delay: number = 500

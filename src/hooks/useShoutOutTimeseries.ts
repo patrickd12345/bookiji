@@ -30,7 +30,7 @@ export function useShoutOutTimeseries(timeRange: '7d' | '30d' | '90d' = '7d'): U
         throw new Error('Invalid Supabase configuration')
       }
 
-      const supabase = createClient(config.url, config.publishableKey)
+      const _supabase = createClient(config.url, config.publishableKey)
       
       // Calculate date range
       const now = new Date()
@@ -71,6 +71,7 @@ export function useShoutOutTimeseries(timeRange: '7d' | '30d' | '90d' = '7d'): U
 
   useEffect(() => {
     fetchData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange])
 
   return {

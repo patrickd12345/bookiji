@@ -7,6 +7,7 @@ import { recommendActions } from '../../../../../../packages/opsai-helpdesk/src/
 import { createEvent } from '@/scripts/ops-events-store'
 import type { CommandRequest, CommandResponse } from './types'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CommandHandler = (args: Record<string, any>) => Promise<CommandResponse>
 
 function normalize(command: string) {

@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
     
     return withCommonHeaders(res);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     console.error('Feedback API error:', e);
     return withCommonHeaders(new Response(JSON.stringify({ error: 'Server error', code: 'SERVER' }), { status: 500, headers: cors }));

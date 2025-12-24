@@ -10,7 +10,7 @@ import { sloai } from '@/lib/observability/sloai'
  * Evaluates whether Bookiji is inside or outside error budgets,
  * provides risk assessment, and explains customer impact.
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Create Supabase client inside handler with safety checks
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Get all SLO configs for context with timeout
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let sloConfigs: any = null
     try {
       const configResult = await Promise.race([
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
           setTimeout(() => reject(new Error('Database query timeout')), 30000)
         )
       ])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       sloConfigs = (configResult as any).data
     } catch (error) {
       console.error('SLOAI config query timeout or error:', error)
@@ -60,6 +62,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get violation summary with timeout
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let violations: any = null
     try {
       const violationsResult = await Promise.race([
@@ -72,13 +75,16 @@ export async function GET(request: NextRequest) {
           setTimeout(() => reject(new Error('Database query timeout')), 30000)
         )
       ])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       violations = (violationsResult as any).data
     } catch (error) {
       console.error('SLOAI violations query timeout or error:', error)
       violations = null
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const criticalCount = (violations || []).filter((v: any) => v.severity === 'critical').length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const warningCount = (violations || []).filter((v: any) => v.severity === 'warning').length
 
     // Calculate compliance rate
@@ -110,6 +116,7 @@ export async function GET(request: NextRequest) {
       customerImpact: assessment.customerImpact,
       humanAttentionNeeded: assessment.humanAttentionNeeded,
       recommendations: assessment.recommendations,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       sloConfigs: sloConfigs?.map((c: any) => ({
         metricName: c.metric_name,
         targetP95: c.target_p95_ms,

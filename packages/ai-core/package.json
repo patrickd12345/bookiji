@@ -1,0 +1,7 @@
+{
+  "name": "@bookiji/ai-core",
+  "version": "0.0.1",
+  "main": "index.ts",
+  "types": "index.ts"
+}
+

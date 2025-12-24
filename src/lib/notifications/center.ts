@@ -120,6 +120,7 @@ export async function notifyUser(
   return results
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function logNotification(userId: string, type: string, recipient: string, template: string, result: any) {
   try {
     await supabase.from('notification_logs').insert({
@@ -137,7 +138,7 @@ async function logNotification(userId: string, type: string, recipient: string, 
 }
 
 // Helper to format titles for in-app notifications
-function formatTitle(template: string, data: Record<string, unknown>): string {
+function formatTitle(template: string, _data: Record<string, unknown>): string {
   const titles: Record<string, string> = {
     booking_confirmation: 'Booking Confirmed',
     booking_cancelled: 'Booking Cancelled',

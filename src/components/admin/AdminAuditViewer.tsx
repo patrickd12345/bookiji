@@ -17,7 +17,9 @@ interface AuditLog {
   action: string
   resource_type: string
   resource_id: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   old_values: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   new_values: any
   ip_address: string
   user_agent: string
@@ -113,7 +115,7 @@ function AdminAuditViewerContent() {
 
       setAuditLogs(data.data)
       setPagination(data.pagination)
-    } catch (err) {
+    } catch (_err) {
       setError('Network error occurred')
       setErrorHint('Check network connection and try again')
     } finally {
@@ -123,6 +125,7 @@ function AdminAuditViewerContent() {
 
   useEffect(() => {
     fetchAuditLogs()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleFilterChange = (key: string, value: string) => {

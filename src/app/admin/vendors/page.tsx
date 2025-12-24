@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import DataTable from '@/components/admin/DataTable'
@@ -11,7 +12,7 @@ import { X } from 'lucide-react'
 
 export default function VendorsPage() {
   const router = useRouter()
-  const [showAddModal, setShowAddModal] = useState(false)
+  const [_showAddModal, _setShowAddModal] = useState(false)
   const [showBulkModal, setShowBulkModal] = useState(false)
   const [showNewsletterModal, setShowNewsletterModal] = useState(false)
   const [selectedVendors, setSelectedVendors] = useState<Set<string>>(new Set())

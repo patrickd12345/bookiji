@@ -115,6 +115,7 @@ export async function GET(request: NextRequest) {
       ]).catch((error) => {
         console.warn('RegressionAI: P95 query timeout or error:', error)
         return { data: null, error: { message: error instanceof Error ? error.message : 'Query timeout' } }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }) as { data: any; error: any }
 
       if (p95Error && !apiMetrics) {
@@ -123,6 +124,7 @@ export async function GET(request: NextRequest) {
       }
 
       if (apiMetrics && apiMetrics.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         currentMetrics.p95 = apiMetrics.map((item: any) => ({
           timestamp: item.bucket,
           endpoint: item.endpoint || 'unknown',
@@ -147,6 +149,7 @@ export async function GET(request: NextRequest) {
         const { data: fallbackData } = await fallbackQuery
 
         if (fallbackData && fallbackData.length > 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           currentMetrics.p95 = fallbackData.map((item: any) => ({
             timestamp: item.five_minute_bucket,
             endpoint: item.endpoint || 'unknown',
@@ -174,6 +177,7 @@ export async function GET(request: NextRequest) {
       ]).catch((error) => {
         console.warn('RegressionAI: Booking query timeout or error:', error)
         return { data: null, error: { message: error instanceof Error ? error.message : 'Query timeout' } }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }) as { data: any; error: any }
 
       if (bookingError) {
@@ -258,6 +262,7 @@ export async function GET(request: NextRequest) {
       ]).catch((error) => {
         console.warn('RegressionAI: Error query timeout or error:', error)
         return { data: null, error: { message: error instanceof Error ? error.message : 'Query timeout' } }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }) as { data: any; error: any }
 
       const { count: totalRequests } = await Promise.race([
@@ -323,7 +328,7 @@ export async function GET(request: NextRequest) {
 
             const topErrorEndpoints = Array.from(data.endpoint_errors.entries())
               .map(([endpointKey, info]) => {
-                const [method, ...endpointParts] = endpointKey.split(' ')
+                const [_method, ...endpointParts] = endpointKey.split(' ')
                 const endpoint = endpointParts.join(' ')
                 return {
                   endpoint,
@@ -364,6 +369,7 @@ export async function GET(request: NextRequest) {
       ]).catch((error) => {
         console.warn('RegressionAI: System query timeout or error:', error)
         return { data: null, error: { message: error instanceof Error ? error.message : 'Query timeout' } }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }) as { data: any; error: any }
 
       if (systemError) {
@@ -371,6 +377,7 @@ export async function GET(request: NextRequest) {
       }
 
       if (performanceData && performanceData.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         currentMetrics.system = performanceData.map((item: any) => {
           const estimatedCpu = Math.min(100,
             (item.request_count || 0) * 0.1 +

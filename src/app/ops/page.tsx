@@ -10,6 +10,7 @@ type HealthCardProps = {
   title: string
   description: string
   status: 'ok' | 'degraded' | 'down' | 'unknown' | string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 }
 
@@ -55,8 +56,10 @@ export default async function OpsDashboardPage() {
     (a, b) => b.createdAt.localeCompare(a.createdAt)
   )
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const slo = readJsonFile<Record<string, any>>('slo/slo-summary.json') ?? {}
   const regression =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     readJsonFile<Record<string, any>>('regressions/regression-report.json') ?? {
       status: 'ok'
     }

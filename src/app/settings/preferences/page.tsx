@@ -18,6 +18,7 @@ export default function PreferencesSettingsPage() {
     setMounted(true);
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdate = async (key: string, value: any) => {
     setPreferences({ ...preferences, [key]: value });
     // TODO: Save to backend

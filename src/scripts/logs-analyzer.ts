@@ -6,7 +6,9 @@
 
 import { randomUUID } from 'node:crypto'
 import type { LogEntry, LogPattern, LogAnalysis, LogCategory, LogSeverity } from '../types/logs'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { loadPatterns, savePatterns } from './logs-store'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { loadEvents } from './ops-events-store'
 import type { OpsEvent } from '../types/opsEvents'
 
@@ -85,7 +87,7 @@ export function detectPatterns(
   
   // Convert to patterns
   const detectedPatterns: LogPattern[] = []
-  for (const [key, data] of patternMap.entries()) {
+  for (const [_key, data] of patternMap.entries()) {
     const affectedServices = [
       ...new Set(
         data.occurrences

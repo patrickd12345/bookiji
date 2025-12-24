@@ -8,14 +8,17 @@ interface Column {
   key: string
   label: string
   sortable?: boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   render?: (value: any, row: any) => React.ReactNode
 }
 
 interface DataTableProps {
   columns: Column[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any[]
   title: string
   expandable?: boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   expandedContent?: (row: any) => React.ReactNode
 }
 

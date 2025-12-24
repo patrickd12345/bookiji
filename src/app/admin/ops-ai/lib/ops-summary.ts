@@ -117,7 +117,9 @@ export async function getFusedOpsState(): Promise<FusedOpsState> {
     opsGet<DeployReadiness>('/ops/deployments/readiness')
   ])
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const runInfo = (summary as any)?.runInfo || null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const scenario = (summary as any)?.scenario ?? runInfo?.scenario ?? null
   const runId = runInfo?.runId ?? null
   const seed = runInfo?.seed ?? null

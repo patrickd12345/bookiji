@@ -78,7 +78,7 @@ function generateCacheKey(request: NextRequest): string {
 /**
  * Check if a response is cached (placeholder implementation)
  */
-async function checkCache(cacheKey: string): Promise<{ ttl: number } | null> {
+async function checkCache(_cacheKey: string): Promise<{ ttl: number } | null> {
   // This would integrate with your actual caching system
   // For now, return null to indicate no cache hit
   return null;
@@ -87,6 +87,7 @@ async function checkCache(cacheKey: string): Promise<{ ttl: number } | null> {
 /**
  * Higher-order function to wrap API route handlers with cache metrics
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withCacheMonitoring<T extends any[], R>(
   handler: (...args: T) => R | Promise<R>,
   queryType: string,
@@ -133,9 +134,11 @@ export function withCacheMonitoring<T extends any[], R>(
  * Decorator for class methods to add cache monitoring
  */
 export function CacheMonitored(queryType: string, tags: string[] = []) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     descriptor.value = async function (...args: any[]) {
       const startTime = Date.now();
       const cacheHit = false;

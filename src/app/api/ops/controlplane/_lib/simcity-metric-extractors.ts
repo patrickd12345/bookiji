@@ -6,6 +6,7 @@
  */
 
 import type { SimCityEventEnvelope, MetricId } from './simcity-types'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { METRICS_REGISTRY } from './simcity-metrics'
 
 /**

@@ -7,6 +7,7 @@ interface UseDebouncedClickWithTelemetryOptions {
   component: string // Required for telemetry
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useDebouncedClickWithTelemetry<T extends (...args: any[]) => any>(
   callback: T,
   options: UseDebouncedClickWithTelemetryOptions

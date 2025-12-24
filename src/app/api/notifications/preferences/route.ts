@@ -20,7 +20,7 @@ export async function GET() {
               cookiesToSet.forEach(({ name, value, options }) => {
                 cookieStore.set(name, value, options)
               })
-            } catch (error) {
+            } catch (_error) {
               // The `setAll` method was called from a Server Component or Route Handler.
               // This can be ignored if you have middleware refreshing user sessions.
             }
@@ -77,7 +77,7 @@ export async function PATCH(request: NextRequest) {
               cookiesToSet.forEach(({ name, value, options }) => {
                 cookieStore.set(name, value, options)
               })
-            } catch (error) {
+            } catch (_error) {
               // The `setAll` method was called from a Server Component or Route Handler.
               // This can be ignored if you have middleware refreshing user sessions.
             }
@@ -100,6 +100,7 @@ export async function PATCH(request: NextRequest) {
       'booking_updates', 'reminders', 'phone_number'
     ]
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: Record<string, any> = {}
     for (const field of allowedFields) {
       if (field in body) {

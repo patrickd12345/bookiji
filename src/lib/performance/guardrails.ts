@@ -247,9 +247,10 @@ export class PerformanceGuardrails {
 export const performanceGuardrails = new PerformanceGuardrails()
 
 // Performance monitoring middleware
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withPerformanceMonitoring<T extends any[], R>(
   fn: (...args: T) => R | Promise<R>,
-  operationName: string
+  _operationName: string
 ): (...args: T) => Promise<R> {
   return async (...args: T): Promise<R> => {
     const startTime = Date.now()

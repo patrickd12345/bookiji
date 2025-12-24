@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js';
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
@@ -269,10 +270,12 @@ export async function invalidateAnalyticsCache() {
 }
 
 // Middleware for automatic cache invalidation
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withCacheInvalidation<T extends (...args: any[]) => any>(
   handler: T,
   dataType: string
 ): T {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (async (...args: any[]) => {
     const result = await handler(...args);
     

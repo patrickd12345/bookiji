@@ -11,6 +11,7 @@ export interface CreditsTransaction {
   description: string;
   reference_type?: string;
   reference_id?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
   created_at: string;
   created_by?: string;
@@ -20,6 +21,7 @@ export interface CreditsEarningRule {
   id: string;
   rule_name: string;
   rule_type: 'percentage' | 'fixed' | 'tiered';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rule_config: Record<string, any>;
   is_active: boolean;
   priority: number;
@@ -31,6 +33,7 @@ export interface CreditsRedemptionRule {
   id: string;
   rule_name: string;
   rule_type: 'percentage' | 'fixed' | 'minimum_balance';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rule_config: Record<string, any>;
   is_active: boolean;
   applies_to: string[];
@@ -46,6 +49,7 @@ export interface CreditsTier {
   max_credits_earned?: number;
   bonus_multiplier: number;
   discount_percentage: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   benefits: Record<string, any>;
   created_at: string;
 }
@@ -72,6 +76,7 @@ export interface UserCreditsSummary {
   tier_level: number;
   bonus_multiplier: number;
   discount_percentage: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   benefits: Record<string, any>;
   total_referrals: number;
   completed_referrals: number;
@@ -111,6 +116,7 @@ export interface AddCreditsRequest {
   description: string;
   reference_type?: string;
   reference_id?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }
 
@@ -120,6 +126,7 @@ export interface SpendCreditsRequest {
   description: string;
   reference_type?: string;
   reference_id?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }
 
@@ -164,6 +171,7 @@ export interface UpdateTierRequest {
 // API Response Types
 export interface CreditsResponse {
   success: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any;
   error?: string;
   message?: string;

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
           getAll() {
             return request.cookies.getAll()
           },
-          setAll(cookiesToSet) {
+          setAll(_cookiesToSet) {
             // API routes typically don't set cookies
           }
         }

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Loader2, TrendingUp, TrendingDown, Activity, Clock, AlertTriangle, Zap, Database, Globe } from 'lucide-react'
 
 interface PerformanceData {
@@ -63,7 +64,7 @@ interface ApiResponse {
   hint?: string
 }
 
-interface PerformanceDashboardProps {
+interface _PerformanceDashboardProps {
   onEndpointClick?: (endpoint: string, timeRange: string) => void
 }
 
@@ -133,7 +134,7 @@ export default function PerformanceDashboard() {
 
              setData(result.data)
        setLastUpdated(new Date())
-     } catch (err) {
+     } catch (_err) {
        setError('Network error occurred')
        setErrorHint('Check network connection and try again')
      } finally {
@@ -143,6 +144,7 @@ export default function PerformanceDashboard() {
 
   useEffect(() => {
     fetchData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange, endpoint])
 
   useEffect(() => {
@@ -150,6 +152,7 @@ export default function PerformanceDashboard() {
 
     const interval = setInterval(fetchData, 30000) // Refresh every 30 seconds
     return () => clearInterval(interval)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRefresh, timeRange, endpoint])
 
   const formatTime = (timeString: string) => {

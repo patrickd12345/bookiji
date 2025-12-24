@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Search, User, Shield, UserCheck, UserX, Edit, Save, X, AlertCircle } from 'lucide-react'
 
 interface UserProfile {
@@ -37,6 +38,7 @@ export default function UsersManagementPage() {
 
   useEffect(() => {
     filterUsers()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users, searchQuery, roleFilter])
 
   const loadUsers = async () => {

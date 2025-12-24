@@ -85,6 +85,7 @@ export class PgVectorProvider implements KBProvider {
         return await this.fallbackTextSearch(query, locale, sectionBias, limit);
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (data || []).map((item: any) => ({
         id: item.article_id,
         title: item.title,
@@ -122,6 +123,7 @@ export class PgVectorProvider implements KBProvider {
       return [];
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data || []).map((item: any) => ({
       id: item.id,
       title: item.title,

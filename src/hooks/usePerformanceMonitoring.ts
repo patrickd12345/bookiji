@@ -46,6 +46,7 @@ export function usePerformanceMonitoring(options: UsePerformanceMonitoringOption
     })
   }, [enabled, trackMemory, trackCpu])
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const monitorFunction = useCallback(<T extends any[], R>(
     fn: (...args: T) => R | Promise<R>
   ): ((...args: T) => Promise<R>) => {
@@ -75,6 +76,7 @@ export function usePerformanceMonitoring(options: UsePerformanceMonitoringOption
 export function useApiPerformanceMonitoring(operationName: string) {
   const { monitorFunction } = usePerformanceMonitoring({ operationName })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const monitorApiCall = useCallback(<T extends any[], R>(
     apiFunction: (...args: T) => Promise<R>
   ) => {

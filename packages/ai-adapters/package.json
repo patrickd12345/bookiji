@@ -1,0 +1,12 @@
+{
+  "name": "@bookiji/ai-adapters",
+  "version": "0.0.1",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@bookiji/ai-core": "workspace:*",
+    "@langchain/openai": "^0.3.0",
+    "@langchain/community": "^0.3.0",
+    "langchain": "^0.3.0"
+  }
+}

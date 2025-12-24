@@ -349,7 +349,9 @@ export default async function ProposalDetailPage({
               <tbody>
                 {Object.entries(METRICS_REGISTRY).map(([metricId, metricDef]) => {
                   const value = metrics[metricId] ?? 0
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const dialStatus = dialStatusMap.get(metricId as any)
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const dial = dialMap.get(metricId as any)
                   
                   const zoneColor = dialStatus

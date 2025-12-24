@@ -16,7 +16,7 @@ import type { ShadowEvent } from './simcity-types'
  * @param window Time window specification (e.g., "1h", "5m", ISO date range)
  * @returns Array of shadow events from production
  */
-export function collectShadowEvents(window: string): ShadowEvent[] {
+export function collectShadowEvents(_window: string): ShadowEvent[] {
   // Phase 10: Stub - not connected to production yet
   // Future implementation will:
   // 1. Parse window parameter (time range or duration)

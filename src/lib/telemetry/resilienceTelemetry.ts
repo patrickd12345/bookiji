@@ -8,6 +8,7 @@ export interface ResilienceSignal {
   session_id: string
   component: string
   signal_type: ResilienceSignalType
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>
 }
 

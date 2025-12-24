@@ -73,6 +73,7 @@ export default function CustomerProfilePage() {
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
             {profile.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={profile.avatar_url}
                 alt={profile.name || 'Profile'}

@@ -1,9 +1,7 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ReasoningSynthesis, Disagreement } from "@/reasoning/orchestration";
 import {
-  DeploymentEnvironment,
-  DeploymentEnvironmentClassification,
   DeploymentFingerprint,
-  ReasoningConfigHash,
 } from "./deploymentFingerprint";
 import { ExternalAdapterPolicy } from "../adapters/policy";
 

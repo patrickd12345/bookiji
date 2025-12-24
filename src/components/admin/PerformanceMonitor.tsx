@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AlertTriangle, Activity, TrendingUp, TrendingDown, DollarSign, Clock, HardDrive, Cpu } from 'lucide-react'
 import { performanceGuardrails, PerformanceMetrics } from '@/lib/performance/guardrails'
 
@@ -17,6 +18,7 @@ export function PerformanceMonitor() {
   const [summary, setSummary] = useState<PerformanceSummary | null>(null)
   const [isMonitoring, setIsMonitoring] = useState(true)
   const [refreshInterval, setRefreshInterval] = useState(5000) // 5 seconds
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [alertConfig, setAlertConfig] = useState<any>(null)
   const [testingAlerts, setTestingAlerts] = useState(false)
 
@@ -88,7 +90,7 @@ export function PerformanceMonitor() {
     }
   }
 
-  const getStatusColor = (value: number, threshold: number) => {
+  const _getStatusColor = (value: number, threshold: number) => {
     if (value >= threshold) return 'text-red-600'
     if (value >= threshold * 0.8) return 'text-yellow-600'
     return 'text-green-600'

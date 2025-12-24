@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AnalyticsEnvelope } from "@/contracts/analytics/AnalyticsEnvelope";
 import { AuditFrame, AuditTimeline, DiffExplanation, TimelineDiff } from "./types";
 import {

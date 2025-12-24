@@ -2,6 +2,7 @@ import Stripe from 'stripe'
 import { loadStripe } from '@stripe/stripe-js'
 import { getServerSupabase } from '@/lib/supabaseServer'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 
 // Create a function to get Stripe instance instead of creating it at module load

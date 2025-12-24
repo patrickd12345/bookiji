@@ -28,7 +28,7 @@ export function useOptimisticActionWithTelemetry<T, P = void>({
 }: UseOptimisticActionWithTelemetryOptions<T, P>): UseOptimisticActionWithTelemetryReturn<T, P> {
   const [status, setStatus] = useState<'idle' | 'optimistic' | 'loading' | 'success' | 'error'>('idle')
   const [error, setError] = useState<Error | null>(null)
-  const [actionStartTime, setActionStartTime] = useState<number>(0)
+  const [_actionStartTime, setActionStartTime] = useState<number>(0)
 
   const execute = useCallback(async (params: P): Promise<T | null> => {
     const actionId = `${component}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`

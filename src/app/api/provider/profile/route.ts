@@ -6,6 +6,7 @@ import { RichProviderProfile, ProviderProfileUpdate } from '@/types/provider';
 
 export const GET = withRateLimit(apiRateLimiter, async (request: NextRequest) => {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>;
     
     // Check authentication
@@ -95,6 +96,7 @@ export const GET = withRateLimit(apiRateLimiter, async (request: NextRequest) =>
 
 export const PUT = withRateLimit(apiRateLimiter, async (request: NextRequest) => {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>;
     
     // Check authentication
@@ -166,6 +168,7 @@ export const PUT = withRateLimit(apiRateLimiter, async (request: NextRequest) =>
 
 export const PATCH = withRateLimit(apiRateLimiter, async (request: NextRequest) => {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>;
     
     // Check authentication

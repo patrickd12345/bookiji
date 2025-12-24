@@ -58,6 +58,7 @@ export async function POST(request: Request) {
     const customerEmail = 'customer@test.dev'
     const expectationText = 'Arrive 10 minutes early'
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const body = await request.json().catch(() => ({} as any))
     const seedIdRaw = typeof body?.seedId === 'string' ? body.seedId : typeof body?.runId === 'string' ? body.runId : 'default'
     const seedId = seedIdRaw && seedIdRaw.length > 0 ? seedIdRaw : 'default'

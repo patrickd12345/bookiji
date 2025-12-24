@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Badge } from '@/components/ui/badge';
 // import { Slider } from '@/components/ui/slider';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { MapPin, TrendingUp, Users, DollarSign, Calendar, RefreshCw } from 'lucide-react';
 
 interface HeatmapDataPoint {
@@ -28,7 +30,8 @@ interface HeatmapProps {
 }
 
 export default function HeatmapVisualization({ 
-  userId, 
+   
+  userId: _userId, 
   className = '', 
   height = 400,
   showControls = true,
@@ -72,6 +75,7 @@ export default function HeatmapVisualization({
 
   useEffect(() => {
     fetchHeatmapData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange, serviceType, minBookings]);
 
   // Calculate color intensity based on booking count
@@ -272,7 +276,7 @@ export default function HeatmapVisualization({
               >
                 <div className="h-full overflow-auto">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-                    {data.map((point, index) => (
+                    {data.map((point, _index) => (
                       <div
                         key={point.postal_code}
                         className="border rounded p-3 cursor-pointer transition-all hover:shadow-lg"

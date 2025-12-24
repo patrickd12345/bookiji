@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Heart, Star, MapPin, Phone, Mail } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'

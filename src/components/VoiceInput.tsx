@@ -23,9 +23,13 @@ interface SpeechRecognition extends EventTarget {
   start(): void
   stop(): void
   abort(): void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onend: ((this: SpeechRecognition, ev: Event) => any) | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onstart: ((this: SpeechRecognition, ev: Event) => any) | null
 }
 
@@ -186,6 +190,7 @@ export default function VoiceInput({
         clearTimeout(timeoutRef.current)
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSupported, onError])
 
   // Start listening

@@ -33,29 +33,41 @@ function LoginFormContent() {
     console.log('Attempting login with Supabase URL:', supabaseUrl?.split(/\s+/)[0] || 'not set')
 
     // Check if input is email or username
-    let loginEmail = email;
+    let loginEmail = email.trim();
     
     // Simple email regex validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(loginEmail)) {
       // Input is likely a username, try to find associated email
       try {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('email')
-          .eq('username', email)
+          .eq('username', loginEmail)
           .single();
         
-        if (profileError || !profile) {
-          // If username not found, let it fail with original input or show specific error
-          console.warn('Username lookup failed:', profileError);
-          // We continue with original input, Supabase will likely reject it as invalid email
-        } else if (profile.email) {
-          loginEmail = profile.email;
+        if (profileError || !profile || !profile.email) {
+          // Username not found or has no email - show specific error
+          setError('Username not found. Please check your username or try logging in with your email address.');
+          setIsLoading(false);
+          return;
         }
+        
+        // Use the email from the profile
+        loginEmail = profile.email;
       } catch (err) {
         console.error('Error looking up username:', err);
+        setError('Unable to verify username. Please try logging in with your email address.');
+        setIsLoading(false);
+        return;
       }
+    }
+
+    // Final validation: ensure we have a valid email before attempting login
+    if (!emailRegex.test(loginEmail)) {
+      setError('Please enter a valid email address or username.');
+      setIsLoading(false);
+      return;
     }
 
     try {

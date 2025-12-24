@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { DomainRegistry, DomainRegistryEntry } from "@/governance/DomainRegistry";
 import { DeprecationPolicy } from "@/governance/DeprecationPolicy";
 import {

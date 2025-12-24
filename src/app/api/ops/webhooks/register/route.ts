@@ -8,6 +8,7 @@ const DEFAULT_EVENTS: WebhookEvent[] = [
 ]
 
 export async function POST(req: NextRequest) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let body: any
   try {
     body = await req.json()

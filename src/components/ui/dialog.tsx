@@ -40,6 +40,7 @@ export function DialogTrigger({ asChild, children }: DialogTriggerProps) {
   if (asChild) {
     return React.cloneElement(children as React.ReactElement, {
       onClick: () => context.onOpenChange(true)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
   }
 

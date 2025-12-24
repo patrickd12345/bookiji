@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
 
     const geographicDistribution: Record<string, number> = {}
     geoData?.forEach(event => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const country = (event.properties as any)?.country
       if (country && country !== 'unknown') {
         geographicDistribution[country] = (geographicDistribution[country] || 0) + 1
@@ -78,6 +79,7 @@ export async function GET(request: NextRequest) {
 
     const deviceBreakdown: Record<string, number> = {}
     deviceData?.forEach(event => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const device = (event.properties as any)?.device_type
       if (device) {
         deviceBreakdown[device] = (deviceBreakdown[device] || 0) + 1
@@ -130,6 +132,7 @@ export async function GET(request: NextRequest) {
       .not('properties->user_id', 'is', null)
       .gte('created_at', startDate.toISOString())
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const uniqueUsers = new Set(userData?.map(event => (event.properties as any)?.user_id).filter(Boolean))
     const activeUsers = uniqueUsers.size
 

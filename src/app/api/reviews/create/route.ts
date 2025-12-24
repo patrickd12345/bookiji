@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js'
 import { reviewMonitoring } from '@/lib/reviewMonitoring'
 

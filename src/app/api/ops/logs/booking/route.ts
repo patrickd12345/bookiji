@@ -117,8 +117,11 @@ export async function GET(request: Request) {
     const insights = generateInsights(bookingLogs, patterns, correlations)
     
     // Calculate statistics
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const errorCount = bookingLogs.filter((l: any) => l.severity === 'error').length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const criticalCount = bookingLogs.filter((l: any) => l.severity === 'critical').length
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const warningCount = bookingLogs.filter((l: any) => l.severity === 'warning').length
     
     const analysis: LogAnalysis = {

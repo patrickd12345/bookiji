@@ -6,7 +6,6 @@
  */
 
 import type {
-  OverrideRecord,
   PromotionDecision,
   SimCityProposal,
   OverrideActor,

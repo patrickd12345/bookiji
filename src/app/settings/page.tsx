@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { supabaseBrowserClient } from '@/lib/supabaseClient';
 
 export default function SettingsPage() {

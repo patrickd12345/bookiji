@@ -50,6 +50,7 @@ function applyTrustSafetySignals(state: RiskAccumulator, signals: readonly strin
 function applyEventAdjustments(state: RiskAccumulator, eventType: string, metadata: Record<string, unknown> | undefined): RiskAccumulator {
   const next = { ...state };
   const severity = (() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const maybeSeverity = (metadata as any)?.severity ?? (metadata as any)?.anomalySeverity ?? (metadata as any)?.simcity?.severity;
     if (typeof maybeSeverity === "string") {
       const value = maybeSeverity.toLowerCase();

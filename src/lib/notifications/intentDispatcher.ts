@@ -269,6 +269,7 @@ export async function dispatchIntentToRecipient(input: {
     {
       type: input.channel,
       recipient: pushRecipient,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       template: input.template as any,
       data: input.data,
       priority

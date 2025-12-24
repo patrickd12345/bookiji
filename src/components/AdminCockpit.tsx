@@ -238,6 +238,7 @@ export default function AdminCockpit() {
     if (activeTab === 'overview' && !kbStatus) {
       fetchKbStatus();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   // Helper to format last crawl time

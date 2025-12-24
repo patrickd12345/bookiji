@@ -18,6 +18,7 @@ export async function GET() {
     
     // Check webhook endpoint availability (Stripe webhook)
     const { getServerSupabase } = await import('@/lib/supabaseServer')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
     
     // Check recent webhook processing (if we have a webhook_log table)

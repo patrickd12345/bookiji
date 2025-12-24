@@ -131,6 +131,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Transform fallback data
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const p95Metrics: P95Metrics[] = (fallbackData || []).map((item: any) => ({
         timestamp: item.five_minute_bucket,
         endpoint: item.endpoint || 'unknown',
@@ -157,6 +158,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform to P95Metrics format
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const p95Metrics: P95Metrics[] = (apiMetrics || []).map((item: any) => ({
       timestamp: item.bucket,
       endpoint: item.endpoint || 'unknown',
@@ -183,6 +185,7 @@ export async function GET(request: NextRequest) {
 
       const { data: prevData } = await prevQuery
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       previousMetrics = (prevData || []).map((item: any) => ({
         timestamp: item.bucket,
         endpoint: item.endpoint || 'unknown',

@@ -178,6 +178,7 @@ export const useFeatureFlag = (flag: string, orgId?: string): boolean => {
   // Handle nested properties
   if (flag.includes('.')) {
     const [category, subFlag] = flag.split('.')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (devFlags[category as keyof FeatureFlags] as any)?.[subFlag] || (flags[category as keyof FeatureFlags] as any)?.[subFlag] || false
   }
   
@@ -201,6 +202,7 @@ export const requireFeatureFlag = (flag: string, orgId?: string): boolean => {
   // Handle nested properties
   if (flag.includes('.')) {
     const [category, subFlag] = flag.split('.')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (devFlags[category as keyof FeatureFlags] as any)?.[subFlag] || (flags[category as keyof FeatureFlags] as any)?.[subFlag] || false
   }
   

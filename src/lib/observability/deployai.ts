@@ -1,6 +1,7 @@
 import { getServerSupabase } from '@/lib/supabaseServer'
 import { sloai } from './sloai'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 
 export interface Deployment {
@@ -13,6 +14,7 @@ export interface Deployment {
   deployed_at: string
   status: 'deploying' | 'active' | 'promoted' | 'rolled_back' | 'failed'
   url?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>
   promoted_at?: string
   rolled_back_at?: string
@@ -202,7 +204,7 @@ export class DeployAI {
   /**
    * Fetch live metrics from metrics endpoints
    */
-  private async fetchLiveMetrics(deploymentId: string): Promise<Partial<DeploymentMetrics>> {
+  private async fetchLiveMetrics(_deploymentId: string): Promise<Partial<DeploymentMetrics>> {
     // This would fetch from /ops/metrics/* endpoints
     // For now, return defaults - in production, this would make HTTP requests
     return {
@@ -294,7 +296,7 @@ export class DeployAI {
       }
     }
 
-    const { canary, baseline, metrics, comparison: comp, slo_alignment } = comparison
+    const { canary: _canary, baseline, metrics, comparison: comp, slo_alignment } = comparison
 
     // Thresholds (conservative - fact-based, not optimistic)
     const ERROR_RATE_THRESHOLD = 0.01 // 1% error rate
@@ -423,6 +425,7 @@ export class DeployAI {
   /**
    * Get deployment events
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getDeploymentEvents(deploymentId?: string, limit: number = 50): Promise<any[]> {
     let query = supabase
       .from('deployment_events')

@@ -18,7 +18,7 @@ const navItems = [
 
 export function CustomerNavigation() {
   const pathname = usePathname()
-  const [isCustomer, setIsCustomer] = useState(false)
+  const [_isCustomer, setIsCustomer] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {

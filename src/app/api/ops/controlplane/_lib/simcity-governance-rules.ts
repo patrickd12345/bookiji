@@ -10,8 +10,8 @@ import type {
   GovernanceVerdict,
   GovernanceReason,
   OverrideRequirement,
-  MetricDelta,
 } from './simcity-types'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { METRICS_REGISTRY } from './simcity-metrics'
 
 export type GovernanceRuleResult = {

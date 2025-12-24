@@ -79,6 +79,7 @@ export async function GET(request: NextRequest) {
   try {
     const res = await fetch(target, { cache: 'no-store' })
     const raw = await res.text()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let data: any
     try {
       data = JSON.parse(raw)

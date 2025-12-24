@@ -2,6 +2,7 @@
  * Utility functions for exporting admin data to CSV/JSON
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function exportToCSV(data: any[], filename: string) {
   if (!data || data.length === 0) {
     alert('No data to export')
@@ -35,6 +36,7 @@ export function exportToCSV(data: any[], filename: string) {
   URL.revokeObjectURL(url)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function exportToJSON(data: any[], filename: string) {
   if (!data || data.length === 0) {
     alert('No data to export')

@@ -5,6 +5,7 @@ import { getSupabaseConfig } from '@/config/supabase'
 import { z } from 'zod'
 
 // Helper to get or create a conversation for a ticket
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function ensureConversationId(supabase: any, ticketId: string, userId: string) {
   // Try to find existing conversation
   const { data: existing } = await supabase
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
               cookiesToSet.forEach(({ name, value, options }) => {
                 cookieStore.set(name, value, options)
               })
-            } catch (error) {
+            } catch (_error) {
               // The `setAll` method was called from a Server Component or Route Handler.
               // This can be ignored if you have middleware refreshing user sessions.
             }
@@ -95,6 +96,7 @@ export async function GET(req: NextRequest) {
     })) || []
 
     return NextResponse.json({ ok: true, data: transformed })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('Error fetching ticket messages:', error);
     return NextResponse.json(
@@ -129,7 +131,7 @@ export async function POST(req: NextRequest) {
               cookiesToSet.forEach(({ name, value, options }) => {
                 cookieStore.set(name, value, options)
               })
-            } catch (error) {
+            } catch (_error) {
               // The `setAll` method was called from a Server Component or Route Handler.
               // This can be ignored if you have middleware refreshing user sessions.
             }
@@ -178,6 +180,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true, data: transformed })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('Error creating ticket message:', error);
     return NextResponse.json(
