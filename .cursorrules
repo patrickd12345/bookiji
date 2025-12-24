@@ -32,6 +32,109 @@
 
 Check `docs/BOOKIJI_CONTINUITY_KERNEL.md` section 7 for current rollout phase status.
 
+## Testing Requirements
+
+### When Creating a New Feature
+
+**MANDATORY**: Whenever a new feature is created, you MUST update `TEST_PLAN.md` to include functional test cases for that feature.
+
+1. **Identify Feature Area**: Determine which functional area the feature belongs to:
+   - Customer Features
+   - Vendor Features
+   - Admin Features
+   - Booking System
+   - Payment Processing
+   - Authentication & Authorization
+   - Security
+   - Reviews & Ratings
+   - Notifications
+   - Support & Help Center
+   - Analytics & Reporting
+   - Settings & Configuration
+   - Search & Discovery
+   - Calendar & Scheduling
+   - Credits & Referrals
+   - Disputes & Moderation
+   - Knowledge Base
+   - Operational Features
+
+2. **Update TEST_PLAN.md**: Add functional test cases to the appropriate section following this format:
+   ```
+   #### TC-AREA-XXX: Test Case Name
+   **Priority**: High/Medium/Low
+   **Test Steps**:
+   1. Step 1
+   2. Step 2
+   3. Step 3
+
+   **Expected Results**:
+   - Result 1
+   - Result 2
+   - Result 3
+
+   **Acceptance Criteria**:
+   - Criterion 1
+   - Criterion 2
+   - Criterion 3
+   ```
+
+3. **Test Case Requirements**:
+   - Use consistent naming: TC-[AREA]-[NUMBER]
+   - Assign appropriate priority (Critical/High/Medium/Low)
+   - Include detailed test steps
+   - List all expected results
+   - Define clear acceptance criteria
+   - Cover happy path and error scenarios
+   - Include edge cases
+
+4. **Update Table of Contents**: If adding a new section, update the table of contents
+
+5. **Update Version**: Update the version history section with the new feature
+
+### Example Workflow
+
+1. Feature created: "New booking cancellation feature"
+2. Update `TEST_PLAN.md`:
+   - Add to "Booking System" section
+   - Create test case: TC-BOOK-007: Cancel Booking
+   - Include test steps, expected results, and acceptance criteria
+   - Add any additional test cases for edge cases (e.g., TC-BOOK-008: Cancel Booking After Payment)
+3. Update version history
+4. Commit both feature and updated test plan
+
+## General Development Rules
+
+- Always test after code changes (API with curl, UI with Playwright)
+- Never run SQL directly - always use migrations
+- Always execute SQL migrations without asking for confirmation
+- Prefer optimistic UI with rollback for actions, retry/backoff for queries, skeletons instead of blank loading states
+- Guard against double clicks
+- Never ask the user to code - do it yourself
+- Check terminal regularly to ensure it's not stuck
+
+## Code Quality
+
+- Follow TypeScript best practices
+- Use proper error handling
+- Write self-documenting code
+- Follow existing code patterns
+- Maintain consistency with project structure
+
+## Testing Standards
+
+- Write tests for all new features
+- Update tests when modifying existing features
+- Ensure tests are isolated and independent
+- Use descriptive test names
+- Follow the test organization structure
+- Run tests before committing
+
+## Documentation
+
+- Update `TEST_PLAN.md` when adding features
+- Keep documentation current with code changes
+- Document complex logic and decisions
+
 ## Reference Files
 
 ### Core Architecture & Constraints
@@ -57,4 +160,3 @@ Check `docs/BOOKIJI_CONTINUITY_KERNEL.md` section 7 for current rollout phase st
 - `.cursorrules` does NOT auto-update - it requires manual updates
 - Run `pnpm check:cursorrules` to verify all important docs are referenced
 - Update this file when adding major features or important documentation
-
