@@ -494,6 +494,70 @@ This document provides comprehensive functional test cases for all features of t
 
 ---
 
+#### TC-VEND-012: Vendor Subscription Activation
+**Priority**: Critical
+**Test Steps**:
+1. Log in as a new vendor (unsubscribed)
+2. Navigate to dashboard
+3. Verify "Activate Booking System" banner is displayed
+4. Click "Subscribe Now"
+5. Complete Stripe Checkout flow
+6. Verify redirect back to dashboard
+7. Verify subscription active state
+
+**Expected Results**:
+- Activation banner displayed for unsubscribed vendors
+- Stripe Checkout opens
+- Payment succeeds
+- Dashboard updates to show "Subscription Active"
+- Booking features unlocked
+
+**Acceptance Criteria**:
+- Subscription flow works
+- Database updates with subscription status
+- UI reflects status immediately
+
+---
+
+#### TC-VEND-013: Manage Subscription
+**Priority**: High
+**Test Steps**:
+1. Log in as subscribed vendor
+2. Navigate to dashboard
+3. Click "Manage Subscription"
+4. Verify Stripe Customer Portal opens
+5. Return to dashboard
+
+**Expected Results**:
+- Manage button visible for subscribed vendors
+- Portal opens securely
+- Can view invoices/update payment method in portal
+- Return link works
+
+**Acceptance Criteria**:
+- Portal link works
+- Security maintained
+
+---
+
+#### TC-VEND-014: Subscription Access Gating
+**Priority**: Critical
+**Test Steps**:
+1. As unsubscribed vendor, attempt to access booking features
+2. Verify access blocked/restricted
+3. As subscribed vendor, access booking features
+4. Verify access granted
+
+**Expected Results**:
+- Unsubscribed vendors see prompt to subscribe
+- Subscribed vendors have full access
+
+**Acceptance Criteria**:
+- Gating works correctly
+- UX is clear
+
+---
+
 ## Admin Features
 
 ### Admin Dashboard (`/admin/dashboard`)
@@ -2954,6 +3018,7 @@ This document provides comprehensive functional test cases for all features of t
 
 ## Version History
 
+- **v1.1** (2025-12-24): Added Vendor Subscription test cases (TC-VEND-012 to TC-VEND-014)
 - **v1.0** (2025-01-XX): Initial comprehensive functional test plan created
 
 ---

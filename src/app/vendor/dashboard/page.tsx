@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { VendorCalendar, VendorAnalytics, GuidedTourManager } from '@/components'
+import { SubscriptionManager } from '@/components/SubscriptionManager'
 import { registerTour } from '@/lib/guidedTourRegistry'
 import { useAutoTour } from '@/lib/useAutoTour'
 
@@ -209,6 +210,7 @@ export default function VendorDashboard() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 pb-8">
+        <SubscriptionManager />
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* Stats Grid */}

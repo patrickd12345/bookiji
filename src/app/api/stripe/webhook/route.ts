@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { StripeService } from '@/lib/services/stripe'
 
 export const config = {
   api: {
@@ -81,6 +82,10 @@ export async function POST(req: Request) {
     }
 
     console.log('Booking confirmed:', paymentIntentId)
+  } else if (event.type === 'checkout.session.completed') {
+    await StripeService.handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session)
+  } else if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+    await StripeService.handleSubscriptionChange(event.data.object as Stripe.Subscription)
   }
 
   return NextResponse.json({ received: true })

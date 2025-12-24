@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { createSupabaseServerClient } from '@/lib/supabaseServerClient';
 
 let _stripe: Stripe | null = null;
 let _isMockMode: boolean | null = null;
@@ -404,5 +405,130 @@ export class StripeService {
       console.error('Error creating customer:', error);
       throw new Error(`Failed to create customer: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  /**
+   * Create a checkout session for subscription
+   */
+  static async createSubscriptionCheckoutSession(
+    priceId: string,
+    providerId: string,
+    email: string,
+    successUrl: string,
+    cancelUrl: string,
+    customerId?: string
+  ): Promise<string | null> {
+    if (getIsMockMode()) {
+       return `https://mock.checkout.session/${priceId}`;
+    }
+    const stripe = getStripe();
+    if (!stripe) throw new Error('Stripe client not initialized');
+
+    const params: Stripe.Checkout.SessionCreateParams = {
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      client_reference_id: providerId,
+      customer_email: customerId ? undefined : email,
+      customer: customerId,
+      metadata: {
+          providerId,
+      }
+    };
+
+    const session = await stripe.checkout.sessions.create(params);
+    return session.url;
+  }
+
+  /**
+   * Create a billing portal session
+   */
+  static async createBillingPortalSession(
+    customerId: string,
+    returnUrl: string
+  ): Promise<string | null> {
+    if (getIsMockMode()) {
+        return `https://mock.billing.portal/${customerId}`;
+    }
+    const stripe = getStripe();
+    if (!stripe) throw new Error('Stripe client not initialized');
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: returnUrl,
+    });
+    return session.url;
+  }
+
+  /**
+   * Handle checkout session completed
+   */
+  static async handleCheckoutSessionCompleted(session: Stripe.Checkout.Session): Promise<void> {
+      const providerId = session.client_reference_id;
+      const customerId = session.customer as string;
+      const subscriptionId = session.subscription as string;
+      
+      if (!providerId || !customerId || !subscriptionId) {
+          console.error('Missing data in checkout session', { providerId, customerId, subscriptionId });
+          return;
+      }
+
+      const supabase = createSupabaseServerClient();
+      
+      // Get subscription details to get status and current_period_end
+      let status = 'active';
+      let currentPeriodEnd = new Date().toISOString();
+      let planId = '';
+
+      const stripe = getStripe();
+      if (stripe) {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId);
+          status = sub.status;
+          currentPeriodEnd = new Date(sub.current_period_end * 1000).toISOString();
+          planId = sub.items.data[0]?.price.id;
+      }
+
+      await supabase.from('vendor_subscriptions').upsert({
+          provider_id: providerId,
+          stripe_customer_id: customerId,
+          stripe_subscription_id: subscriptionId,
+          subscription_status: status,
+          current_period_end: currentPeriodEnd,
+          plan_id: planId,
+          updated_at: new Date().toISOString()
+      }, { onConflict: 'provider_id' });
+  }
+
+  /**
+   * Handle subscription updated/deleted
+   */
+  static async handleSubscriptionChange(subscription: Stripe.Subscription): Promise<void> {
+      const supabase = createSupabaseServerClient();
+      const customerId = subscription.customer as string;
+      
+      // Find subscription by stripe_customer_id
+      const { data: existing } = await supabase.from('vendor_subscriptions')
+        .select('provider_id')
+        .eq('stripe_customer_id', customerId)
+        .single();
+        
+      if (!existing) {
+          console.error('Subscription update for unknown customer', customerId);
+          return;
+      }
+
+      await supabase.from('vendor_subscriptions').update({
+          subscription_status: subscription.status,
+          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          plan_id: subscription.items.data[0]?.price.id,
+          updated_at: new Date().toISOString()
+      }).eq('stripe_customer_id', customerId);
   }
 }
