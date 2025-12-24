@@ -77,3 +77,4 @@ Groq doesn't offer embeddings, so you can't use it for both. But mixing provider
 
 
 
+

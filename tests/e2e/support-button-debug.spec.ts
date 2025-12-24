@@ -167,15 +167,14 @@ test.describe('Magenta Support Button Debug', () => {
     console.log('\n=== Step 4: Checking for chat widget ===')
     
     // Wait for widget to appear (AnimatePresence might delay it)
-    let chatWidget
+    let chatWidget: Locator
     try {
-      chatWidget = await page.waitForSelector(
-        '[class*="SupportChat"], [class*="support-chat"], [class*="Support"], [data-testid*="support"], [data-testid*="chat"]',
-        { timeout: 5000, state: 'visible' }
-      )
-      console.log('✓ Chat widget found via waitForSelector')
+      // Use locator instead of waitForSelector to ensure consistent type
+      chatWidget = page.locator('[class*="SupportChat"], [class*="support-chat"], [class*="Support"], [data-testid*="support"], [data-testid*="chat"]').first()
+      await chatWidget.waitFor({ timeout: 5000, state: 'visible' })
+      console.log('✓ Chat widget found via locator.waitFor')
     } catch (e) {
-      console.log('✗ Chat widget not found via waitForSelector')
+      console.log('✗ Chat widget not found via locator.waitFor')
       chatWidget = page.locator('[class*="SupportChat"], [class*="support-chat"], [class*="Support"]').first()
     }
     
