@@ -167,68 +167,87 @@ export default function UserDashboard() {
         }
 
         // Helper to add timeout to queries - Supabase queries return { data, error }
-        const withTimeout = <T,>(promise: Promise<{ data: T | null; error: unknown }>, timeoutMs = 10000): Promise<{ data: T | null; error: unknown }> => {
+        const withTimeout = <T,>(promise: Promise<T>, timeoutMs = 10000): Promise<T> => {
           return Promise.race([
             promise,
-            new Promise<{ data: null; error: { message: string } }>((_, reject) =>
+            new Promise<T>((_, reject) =>
               setTimeout(() => reject(new Error('Query timeout')), timeoutMs)
             )
-          ]).catch(() => ({ data: null, error: { message: 'Query timeout' } }))
+          ]).catch(() => ({ data: null, error: { message: 'Query timeout' } } as T))
         }
 
         // Load all data in parallel with timeouts - query profiles directly (user_role_summary view doesn't exist)
         const [profileResult, bookingsResult, creditsResult, favoritesResult] = await Promise.allSettled([
           withTimeout(
-            supabase
-              .from('profiles')
-              .select('id, full_name, email, phone, avatar_url, role, created_at, verified_at')
-              .eq('id', session.user.id)
-              .maybeSingle(),
+            Promise.resolve(
+              supabase
+                .from('profiles')
+                .select('id, full_name, email, phone, avatar_url, role, created_at, verified_at')
+                .eq('id', session.user.id)
+                .maybeSingle()
+                .then(result => ({ data: result.data, error: result.error }))
+            ),
             10000
           ),
           withTimeout(
-            supabase
-              .from('bookings')
-              .select('*')
-              .eq('customer_id', session.user.id)
-              .order('created_at', { ascending: false }),
+            Promise.resolve(
+              supabase
+                .from('bookings')
+                .select('*')
+                .eq('customer_id', session.user.id)
+                .order('created_at', { ascending: false })
+                .then(result => ({ data: result.data, error: result.error }))
+            ),
             10000
           ),
           withTimeout(
             fetch('/api/credits/balance', {
               headers: { Authorization: `Bearer ${session.access_token}` }
-            }).then(res => res.ok ? res.json() : null).catch(() => null),
+            }).then(res => res.ok ? res.json() : { success: false, credits: 0 }).catch(() => ({ success: false, credits: 0 })),
             10000
           ),
           withTimeout(
-            supabase
-              .from('favorite_providers')
-              .select('provider_id, providers(*)')
-              .eq('user_id', session.user.id),
+            Promise.resolve(
+              supabase
+                .from('favorite_providers')
+                .select('provider_id, providers(*)')
+                .eq('user_id', session.user.id)
+                .then(result => ({ data: result.data, error: result.error }))
+            ),
             10000
           )
         ])
 
         // Handle bookings first (needed for stats calculation)
         let bookingsData: Booking[] = []
-        if (bookingsResult.status === 'fulfilled' && bookingsResult.value.data) {
+        if (bookingsResult.status === 'fulfilled' && 'data' in bookingsResult.value && bookingsResult.value.data) {
           bookingsData = bookingsResult.value.data as Booking[]
           setBookings(bookingsData)
         }
 
         // Handle favorites (needed for stats calculation)
         let favoritesData: Provider[] = []
-        if (favoritesResult.status === 'fulfilled' && favoritesResult.value.data) {
-          favoritesData = favoritesResult.value.data
-            .map((fp: { providers: Provider }) => fp.providers)
-            .filter(Boolean) as Provider[]
+        if (favoritesResult.status === 'fulfilled' && 'data' in favoritesResult.value && favoritesResult.value.data) {
+          const favorites = favoritesResult.value.data as Array<{ providers: Provider | Provider[] }>
+          favoritesData = favorites
+            .map((fp) => Array.isArray(fp.providers) ? fp.providers[0] : fp.providers)
+            .filter((p): p is Provider => p !== null && typeof p === 'object' && 'id' in p)
           setFavoriteProviders(favoritesData)
         }
 
         // Handle profile - query profiles table directly (user_role_summary doesn't exist)
         let profileData: UserProfile | null = null
-        if (profileResult.status === 'fulfilled' && profileResult.value.data) {
-          const profile = profileResult.value.data
+        if (profileResult.status === 'fulfilled' && 'data' in profileResult.value && profileResult.value.data) {
+          const profile = profileResult.value.data as {
+            id: string
+            full_name: string | null
+            email: string
+            phone: string | null
+            avatar_url: string | null
+            role: string
+            created_at: string
+            verified_at: string | null
+          }
           // Calculate stats from actual data
           const totalSpent = bookingsData.reduce((sum, b) => sum + (b.price_cents || 0), 0)
           const completedBookings = bookingsData.filter(b => b.status === 'completed')
@@ -292,8 +311,15 @@ export default function UserDashboard() {
         }
 
         // Handle credits
-        if (creditsResult.status === 'fulfilled' && creditsResult.value?.success) {
-          setCredits(creditsResult.value.credits)
+        if (creditsResult.status === 'fulfilled' && creditsResult.value && 'success' in creditsResult.value) {
+          const creditsData = creditsResult.value as { success?: boolean; credits?: number }
+          if (creditsData.success && typeof creditsData.credits === 'number') {
+            setCredits({
+              balance_cents: creditsData.credits,
+              balance_dollars: creditsData.credits / 100,
+              recent_transactions: []
+            })
+          }
         }
 
         // Load notifications

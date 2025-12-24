@@ -105,11 +105,16 @@ export default function VendorDashboard() {
         }
 
         // Get review count separately
-        const { count: reviewCount } = await supabase
-          .from('reviews')
-          .select('*', { count: 'exact', head: true })
-          .eq('vendor_id', data.id)
-          .catch(() => ({ count: 0 }))
+        let reviewCount = 0
+        try {
+          const { count } = await supabase
+            .from('reviews')
+            .select('*', { count: 'exact', head: true })
+            .eq('vendor_id', data.id)
+          reviewCount = count ?? 0
+        } catch {
+          reviewCount = 0
+        }
 
         return {
           id: data.id,
