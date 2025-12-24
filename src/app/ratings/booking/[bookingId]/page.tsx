@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import StarRating from '@/components/ui/StarRating'
 import { useI18n } from '@/lib/i18n/useI18n'
@@ -19,8 +19,9 @@ interface RatingRecord {
 export default function BookingRatingPage({
   params
 }: {
-  params: { bookingId: string }
+  params: Promise<{ bookingId: string }>
 }) {
+  const { bookingId } = use(params)
   const { t, locale } = useI18n()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -74,7 +75,7 @@ export default function BookingRatingPage({
         setDashboardPath(profile.role === 'vendor' ? '/vendor/dashboard' : '/customer/dashboard')
       }
 
-      const response = await fetch(`/api/ratings/booking/${params.bookingId}`, {
+      const response = await fetch(`/api/ratings/booking/${bookingId}`, {
         headers: {
           'Accept-Language': locale
         }
@@ -106,7 +107,7 @@ export default function BookingRatingPage({
     return () => {
       active = false
     }
-  }, [locale, params.bookingId, t])
+  }, [locale, bookingId, t])
 
   const handleSubmit = async () => {
     if (submitting) return
@@ -127,7 +128,7 @@ export default function BookingRatingPage({
           'Accept-Language': locale
         },
         body: JSON.stringify({
-          booking_id: params.bookingId,
+          booking_id: bookingId,
           stars,
           comment: comment.trim() || undefined
         })
@@ -140,7 +141,7 @@ export default function BookingRatingPage({
       }
 
       setExistingRating({
-        id: payload.rating?.id || params.bookingId,
+        id: payload.rating?.id || bookingId,
         rater_user_id: '',
         stars: payload.rating?.stars ?? stars,
         comment: payload.rating?.comment ?? comment
