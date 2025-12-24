@@ -186,7 +186,7 @@ export default function MainNavigation() {
 
                       {isAdmin && (
                         <Link
-                          href="/admin"
+                          href="/admin/simcity/cockpit"
                           className={`px-3 py-2 rounded-md text-sm font-medium ${
                             pathname.startsWith('/admin')
                               ? 'bg-primary/10 text-primary'
@@ -358,7 +358,7 @@ export default function MainNavigation() {
             {!SHOW_NAV_ITEMS && isLoggedIn && isAdmin && (
               <div className="hidden sm:flex items-center gap-2">
                 <Link
-                  href="/admin"
+                  href="/admin/simcity/cockpit"
                   className={`px-3 py-2 rounded-md text-sm font-medium ${
                     pathname.startsWith('/admin')
                       ? 'bg-primary/10 text-primary'
@@ -402,7 +402,7 @@ export default function MainNavigation() {
 
                   {isAdmin && (
                     <Link
-                      href="/admin"
+                      href="/admin/simcity/cockpit"
                       className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
                       onClick={() => setMobileOpen(false)}
                     >
