@@ -74,9 +74,9 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* For Providers */}
+          {/* For Professionals */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">For Providers</h3>
+            <h3 className="text-lg font-semibold mb-4">For Professionals</h3>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>
                 <Link href="/vendor/onboarding" className="hover:text-white transition-colors">
@@ -85,17 +85,12 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/vendor/help" className="hover:text-white transition-colors">
-                  Provider Help
+                  Professional Help
                 </Link>
               </li>
               <li>
-                <Link href="/provider/profile" className="hover:text-white transition-colors">
-                  Provider Profile
-                </Link>
-              </li>
-              <li>
-                <Link href="/provider/analytics" className="hover:text-white transition-colors">
-                  Analytics
+                <Link href="/vendor/dashboard" className="hover:text-white transition-colors">
+                  Professional Dashboard
                 </Link>
               </li>
             </ul>

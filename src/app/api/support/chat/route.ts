@@ -293,7 +293,7 @@ Answer the user's question helpfully. ${contextText ? 'Use the context above whe
 
 CRITICAL RULES:
 - When mentioning pages, use markdown link format: [Page Name](/path) so they become clickable
-- Available pages: [Get Started](/get-started), [Help Center](/help), [How It Works](/how-it-works), [Register](/register), [Login](/login), [Admin Dashboard](/admin), [Customer Dashboard](/customer/dashboard), [Vendor Dashboard](/vendor/dashboard), [About](/about), [Contact](/contact), [FAQ](/faq), [Privacy Policy](/privacy), [Terms of Service](/terms)
+- Available pages: [Get Started](/get-started), [Help Center](/help), [How It Works](/how-it-works), [Register](/register), [Login](/login), [Admin Dashboard](/admin), [Customer Dashboard](/customer/dashboard), [Professional Dashboard](/vendor/dashboard), [About](/about), [Contact](/contact), [FAQ](/faq), [Privacy Policy](/privacy), [Terms of Service](/terms)
 - Do NOT include bare paths without markdown links (like /get-started alone)
 - Use natural language with clickable links (e.g., "visit the [Get Started page](/get-started)")
 - Relevant links will also be shown in the Sources section below your answer
@@ -307,7 +307,7 @@ CRITICAL RULES:
 - If the answer is NOT in the context, respond EXACTLY: "I don't have enough information to answer that based on the current documentation."
 - Do NOT make up information, speculate, or use knowledge outside the provided context.
 - When mentioning pages, use markdown link format: [Page Name](/path) so they become clickable
-- Available pages: [Get Started](/get-started), [Help Center](/help), [How It Works](/how-it-works), [Register](/register), [Login](/login), [Admin Dashboard](/admin), [Customer Dashboard](/customer/dashboard), [Vendor Dashboard](/vendor/dashboard), [About](/about), [Contact](/contact), [FAQ](/faq), [Privacy Policy](/privacy), [Terms of Service](/terms)
+- Available pages: [Get Started](/get-started), [Help Center](/help), [How It Works](/how-it-works), [Register](/register), [Login](/login), [Admin Dashboard](/admin), [Customer Dashboard](/customer/dashboard), [Professional Dashboard](/vendor/dashboard), [About](/about), [Contact](/contact), [FAQ](/faq), [Privacy Policy](/privacy), [Terms of Service](/terms)
 - Do NOT include bare paths without markdown links (like /get-started alone)
 - Use natural language with clickable links (e.g., "visit the [Help Center](/help)")
 - Relevant links will also be shown in the Sources section below your answer

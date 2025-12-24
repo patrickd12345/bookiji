@@ -5,6 +5,7 @@ import React, { ReactNode, Suspense } from 'react'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { LogoutButton } from '@/components/LogoutButton'
 
 // Dynamically import to defer Supabase initialization
 // Use explicit default import to avoid chunk loading errors
@@ -70,6 +71,8 @@ export default function RootLayoutWrapper({ children }: RootLayoutWrapperProps) 
           <Suspense fallback={null}>
             <ConsentManager />
           </Suspense>
+          {/* Floating logout button - always visible when logged in */}
+          <LogoutButton variant="floating" showLabel={false} />
         </GuidedTourProvider>
       </ThemeProvider>
     </ErrorBoundary>

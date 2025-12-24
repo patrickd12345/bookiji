@@ -14,7 +14,7 @@ interface TourStep {
 export const vendorDashboardSteps: TourStep[] = [
   {
     id: 'welcome',
-    text: 'Welcome to your vendor dashboard!',
+    text: 'Welcome to your professional dashboard!',
     helpArticleSlug: 'vendor-dashboard',
     buttons: [{ text: 'Next', action: () => Shepherd.activeTour?.next() }]
   },

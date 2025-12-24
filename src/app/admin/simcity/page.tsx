@@ -18,10 +18,41 @@ import {
   Square,
   TrendingUp,
   Users,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import { SimEventPayload, SimPolicies, SimRunInfo, SimState } from '@/lib/simcity/types';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 
 const STATUS_POLL_INTERVAL_MS = 3000;
+
+interface CompiledScenario {
+  id: string;
+  label: string;
+  seed: number;
+  perturbations?: Array<{
+    type: string;
+    domain: string;
+    magnitude: number;
+    description: string;
+  }>;
+  assumptions: string[];
+  confidence: number;
+}
+
+interface ScenarioOverride {
+  id: string;
+  label: string;
+  description?: string;
+  spawnRate?: number;
+  cancelRate?: number;
+  confirmRate?: number;
+  priceMultiplier?: number;
+  tags?: string[];
+  clockMultiplier?: number;
+}
 
 export default function SimCityDashboard() {
   const [state, setState] = useState<SimState | null>(null);
@@ -31,6 +62,14 @@ export default function SimCityDashboard() {
   const [runInfo, setRunInfo] = useState<SimRunInfo | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  
+  // Scenario creation state
+  const [scenarioDescription, setScenarioDescription] = useState('');
+  const [isCreatingScenario, setIsCreatingScenario] = useState(false);
+  const [compiledScenario, setCompiledScenario] = useState<CompiledScenario | null>(null);
+  const [scenarioOverride, setScenarioOverride] = useState<ScenarioOverride | null>(null);
+  const [scenarioSuggestions, setScenarioSuggestions] = useState<string[]>([]);
+  const [scenarioError, setScenarioError] = useState<string | null>(null);
 
   const activeRunInfo = runInfo ?? state?.runInfo ?? null;
 
@@ -98,6 +137,85 @@ export default function SimCityDashboard() {
       console.error('EventSource error:', error);
       setFetchError('Live events connection lost — attempting to reconnect.');
     };
+  };
+
+  const handleCreateScenario = async () => {
+    if (!scenarioDescription.trim()) {
+      setScenarioError('Please enter a scenario description');
+      return;
+    }
+
+    setIsCreatingScenario(true);
+    setScenarioError(null);
+    setCompiledScenario(null);
+    setScenarioSuggestions([]);
+
+    try {
+      const response = await fetch('/api/simcity/scenario/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: scenarioDescription }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setCompiledScenario(data.scenario);
+        setScenarioOverride(data.scenarioOverride || null);
+        setScenarioSuggestions(data.suggestions || []);
+        setScenarioError(null);
+      } else {
+        setScenarioError(data.error || 'Failed to create scenario');
+        setScenarioSuggestions(data.suggestions || []);
+      }
+    } catch (error) {
+      console.error('Failed to create scenario:', error);
+      setScenarioError('Failed to create scenario — check server logs.');
+    } finally {
+      setIsCreatingScenario(false);
+    }
+  };
+
+  const handleStartWithScenario = async () => {
+    if (!compiledScenario || !scenarioOverride) {
+      setScenarioError('Please create a scenario first');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/simcity/scenario/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scenarioId: compiledScenario.id,
+          scenarioOverride: scenarioOverride,
+          seed: compiledScenario.seed,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setIsRunning(true);
+        setRunInfo({
+          runId: data.data.runId ?? null,
+          seed: data.data.seed ?? null,
+          scenario: data.data.scenario ?? null,
+          startedAt: data.data.startTime,
+        });
+        setFetchError(null);
+        setCompiledScenario(null);
+        setScenarioOverride(null);
+        setScenarioDescription('');
+        setScenarioSuggestions([]);
+        fetchStatus();
+      } else {
+        setFetchError(data.error || 'Failed to start simulation');
+      }
+    } catch (error) {
+      console.error('Failed to start simulation:', error);
+      setFetchError('SimCity backend unreachable — check server logs.');
+    }
   };
 
   const handleStart = async () => {
@@ -235,6 +353,140 @@ export default function SimCityDashboard() {
           <AlertDescription>{fetchError}</AlertDescription>
         </Alert>
       )}
+
+      {/* Natural Language Scenario Creation */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Sparkles className="w-5 h-5 mr-2" />
+            Create Scenario from Natural Language
+          </CardTitle>
+          <CardDescription>
+            Describe your test scenario in plain English. SimCity will compile it and suggest improvements.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="scenario-description">Scenario Description</Label>
+            <Textarea
+              id="scenario-description"
+              placeholder="e.g., 'Simulate a demand spike with provider outages and high cancellation rates for 2 hours'"
+              value={scenarioDescription}
+              onChange={(e) => setScenarioDescription(e.target.value)}
+              disabled={isCreatingScenario || isRunning}
+              className="min-h-[100px]"
+            />
+            <p className="text-xs text-muted-foreground">
+              Examples: "demand spike", "provider outage", "high cancellation rate", "latency issues", "trust and safety concerns"
+            </p>
+          </div>
+
+          <Button
+            onClick={handleCreateScenario}
+            disabled={isCreatingScenario || isRunning || !scenarioDescription.trim()}
+            className="w-full"
+          >
+            {isCreatingScenario ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Creating Scenario...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Create & Review Scenario
+              </>
+            )}
+          </Button>
+
+          {scenarioError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{scenarioError}</AlertDescription>
+            </Alert>
+          )}
+
+          {compiledScenario && (
+            <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-semibold text-lg flex items-center">
+                    <CheckCircle2 className="w-5 h-5 mr-2 text-green-600" />
+                    Scenario Compiled Successfully
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {compiledScenario.label} • Seed: {compiledScenario.seed}
+                  </p>
+                </div>
+                <Badge variant="outline">
+                  Confidence: {Math.round(compiledScenario.confidence * 100)}%
+                </Badge>
+              </div>
+
+              {compiledScenario.perturbations && compiledScenario.perturbations.length > 0 && (
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Detected Perturbations:</Label>
+                  <div className="space-y-2">
+                    {compiledScenario.perturbations.map((p, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 bg-white dark:bg-slate-800 rounded">
+                        <div>
+                          <span className="font-medium">{p.type}</span>
+                          <span className="text-xs text-muted-foreground ml-2">({p.domain})</span>
+                        </div>
+                        <Badge variant="secondary">Magnitude: {p.magnitude}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {compiledScenario.assumptions && compiledScenario.assumptions.length > 0 && (
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Assumptions:</Label>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                    {compiledScenario.assumptions.map((assumption, idx) => (
+                      <li key={idx}>{assumption}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {scenarioSuggestions.length > 0 && (
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Suggestions:</Label>
+                  <ul className="list-disc list-inside space-y-1 text-sm">
+                    {scenarioSuggestions.map((suggestion, idx) => (
+                      <li key={idx} className="text-blue-600 dark:text-blue-400">{suggestion}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  onClick={handleStartWithScenario}
+                  disabled={isRunning}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Start Simulation with This Scenario
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setCompiledScenario(null);
+                    setScenarioOverride(null);
+                    setScenarioSuggestions([]);
+                  }}
+                >
+                  Create Another
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Controls */}
       <Card>

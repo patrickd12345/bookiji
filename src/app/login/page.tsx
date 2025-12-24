@@ -14,7 +14,7 @@ function LoginFormContent() {
   const [isLoading, setIsLoading] = useState(false);
   
   // Get the redirect destination from query params
-  const nextUrl = searchParams.get('next') || '/get-started';
+  const nextUrl = searchParams.get('next') || '/customer/dashboard';
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();

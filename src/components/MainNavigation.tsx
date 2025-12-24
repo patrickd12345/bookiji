@@ -8,7 +8,7 @@ import { useI18n } from '@/lib/i18n/useI18n';
 import NotificationBell from '@/components/NotificationBell';
 import { useRouter } from 'next/navigation';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
-import { Menu, X } from 'lucide-react'
+import { Menu, X, LogOut } from 'lucide-react'
 
 // Toggle full navigation with NEXT_PUBLIC_ENABLE_NAV (defaults to false)
 const SHOW_NAV_ITEMS = process.env.NEXT_PUBLIC_ENABLE_NAV === 'true';
@@ -25,7 +25,7 @@ export default function MainNavigation() {
   const router = useRouter();
 
   // Hide MainNavigation on customer pages (CustomerNavigation handles those)
-  const shouldHide = pathname.startsWith('/customer/') || pathname.startsWith('/vendor/') || pathname.startsWith('/provider/');
+  const shouldHide = pathname.startsWith('/customer/') || pathname.startsWith('/vendor/');
 
   // Define checkAuth BEFORE any conditional returns to ensure hooks are consistent
   const checkAuth = useCallback(async () => {
@@ -74,9 +74,7 @@ export default function MainNavigation() {
             rolesArray = ['customer'];
           }
 
-          const r = rolesArray.map((role: string) =>
-            role === 'provider' ? 'vendor' : role
-          );
+          const r = rolesArray;
           setRoles(r);
           const defaultRole = r.includes('customer') ? 'customer' : r[0] || null;
           setUserRole(defaultRole);
@@ -119,6 +117,14 @@ export default function MainNavigation() {
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  const handleSignOut = async () => {
+    const supabase = supabaseBrowserClient()
+    if (supabase) {
+      await supabase.auth.signOut()
+      router.push('/login')
+    }
+  }
 
   useEffect(() => {
     // Close the mobile menu on route changes.
@@ -256,6 +262,15 @@ export default function MainNavigation() {
                       >
                         {t('nav.settings')} {isBetaUser && <span className="ml-1">⚡</span>}
                       </Link>
+
+                      <button
+                        onClick={handleSignOut}
+                        className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted flex items-center gap-2"
+                        data-test="nav-logout"
+                      >
+                        <LogOut size={16} />
+                        {t('nav.log_out')}
+                      </button>
                     </>
                   ) : (
                     <>
@@ -290,11 +305,11 @@ export default function MainNavigation() {
                           }
                         }}
                         className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted flex flex-col items-start"
-                        aria-label="Offer your services as a provider"
+                        aria-label="Offer your services as a professional"
                         data-test="nav-offer-services"
                       >
                         <span>Offer Your Services</span>
-                        <span className="text-xs text-gray-500">(Provider)</span>
+                        <span className="text-xs text-gray-500">(Professional)</span>
                       </button>
                       <Link
                         href="/help"
@@ -459,6 +474,18 @@ export default function MainNavigation() {
                   >
                     {t('nav.settings')} {isBetaUser && <span className="ml-1">⚡</span>}
                   </Link>
+
+                  <button
+                    onClick={() => {
+                      setMobileOpen(false)
+                      handleSignOut()
+                    }}
+                    className="px-3 py-2 rounded-md text-sm font-medium text-left text-foreground hover:bg-muted flex items-center gap-2"
+                    data-test="nav-logout-mobile"
+                  >
+                    <LogOut size={16} />
+                    {t('nav.log_out')}
+                  </button>
                 </>
               ) : (
                 <>
@@ -487,7 +514,7 @@ export default function MainNavigation() {
                     className="px-3 py-2 rounded-md text-sm font-medium text-left text-foreground hover:bg-muted"
                   >
                     <div>Offer Your Services</div>
-                    <div className="text-xs text-gray-500">(Provider)</div>
+                    <div className="text-xs text-gray-500">(Professional)</div>
                   </button>
                   <Link
                     href="/help"

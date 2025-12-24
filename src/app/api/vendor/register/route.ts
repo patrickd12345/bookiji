@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
         'Email verification required',
         'Business documents review (1-2 business days)',
         'Profile approval notification',
-        'Access to vendor dashboard'
+        'Access to professional dashboard'
       ],
       estimated_approval_time: '24-48 hours'
     })

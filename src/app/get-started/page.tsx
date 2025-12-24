@@ -1,9 +1,25 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AuthEntry from '@/components/AuthEntry';
 import { theme, combineClasses } from '@/config/theme';
+import { useAuthReady } from '@/hooks/useAuthReady';
 
 export default function GetStartedPage() {
+  const router = useRouter();
+  const { ready, session } = useAuthReady();
+
+  useEffect(() => {
+    if (ready && session) {
+      router.replace('/customer/dashboard');
+    }
+  }, [ready, session, router]);
+
+  if (ready && session) {
+    return null; // Don't render anything while redirecting
+  }
+
   return (
     <div className={combineClasses(
       'min-h-screen',

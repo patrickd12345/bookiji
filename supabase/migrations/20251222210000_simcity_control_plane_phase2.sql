@@ -38,3 +38,4 @@ CREATE POLICY "authenticated_read" ON simcity_run_requests FOR SELECT TO authent
 
 
 
+

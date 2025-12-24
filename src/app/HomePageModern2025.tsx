@@ -250,7 +250,7 @@ export default function HomePageModern2025() {
                 {canOfferServices && (
                   <Link href="/vendor/dashboard">
                     <Button size="lg" variant="outline" className="h-16 px-10 text-lg">
-                      Provider Portal
+                      Professional Portal
                     </Button>
                   </Link>
                 )}

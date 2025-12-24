@@ -166,72 +166,109 @@ export default function UserDashboard() {
           return
         }
 
-        // Load all data in parallel
+        // Helper to add timeout to queries - Supabase queries return { data, error }
+        const withTimeout = <T,>(promise: Promise<{ data: T | null; error: unknown }>, timeoutMs = 10000): Promise<{ data: T | null; error: unknown }> => {
+          return Promise.race([
+            promise,
+            new Promise<{ data: null; error: { message: string } }>((_, reject) =>
+              setTimeout(() => reject(new Error('Query timeout')), timeoutMs)
+            )
+          ]).catch(() => ({ data: null, error: { message: 'Query timeout' } }))
+        }
+
+        // Load all data in parallel with timeouts - query profiles directly (user_role_summary view doesn't exist)
         const [profileResult, bookingsResult, creditsResult, favoritesResult] = await Promise.allSettled([
-          supabase
-            .from('user_role_summary')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .maybeSingle(),
-          supabase
-            .from('bookings')
-            .select('*')
-            .eq('customer_id', session.user.id)
-            .order('created_at', { ascending: false }),
-          fetch('/api/credits/balance', {
-            headers: { Authorization: `Bearer ${session.access_token}` }
-          }).then(res => res.ok ? res.json() : null).catch(() => null),
-          supabase
-            .from('favorite_providers')
-            .select('provider_id, providers(*)')
-            .eq('user_id', session.user.id)
+          withTimeout(
+            supabase
+              .from('profiles')
+              .select('id, full_name, email, phone, avatar_url, role, created_at, verified_at')
+              .eq('id', session.user.id)
+              .maybeSingle(),
+            10000
+          ),
+          withTimeout(
+            supabase
+              .from('bookings')
+              .select('*')
+              .eq('customer_id', session.user.id)
+              .order('created_at', { ascending: false }),
+            10000
+          ),
+          withTimeout(
+            fetch('/api/credits/balance', {
+              headers: { Authorization: `Bearer ${session.access_token}` }
+            }).then(res => res.ok ? res.json() : null).catch(() => null),
+            10000
+          ),
+          withTimeout(
+            supabase
+              .from('favorite_providers')
+              .select('provider_id, providers(*)')
+              .eq('user_id', session.user.id),
+            10000
+          )
         ])
 
-        // Handle profile - with fallback to profiles table if user_role_summary fails
+        // Handle bookings first (needed for stats calculation)
+        let bookingsData: Booking[] = []
+        if (bookingsResult.status === 'fulfilled' && bookingsResult.value.data) {
+          bookingsData = bookingsResult.value.data as Booking[]
+          setBookings(bookingsData)
+        }
+
+        // Handle favorites (needed for stats calculation)
+        let favoritesData: Provider[] = []
+        if (favoritesResult.status === 'fulfilled' && favoritesResult.value.data) {
+          favoritesData = favoritesResult.value.data
+            .map((fp: { providers: Provider }) => fp.providers)
+            .filter(Boolean) as Provider[]
+          setFavoriteProviders(favoritesData)
+        }
+
+        // Handle profile - query profiles table directly (user_role_summary doesn't exist)
         let profileData: UserProfile | null = null
         if (profileResult.status === 'fulfilled' && profileResult.value.data) {
-          profileData = profileResult.value.data as UserProfile
-        } else if (profileResult.status === 'rejected' || !profileResult.value?.data) {
-          // Fallback: query profiles table directly
-          try {
-            const { data: fallbackProfile } = await supabase
-              .from('profiles')
-              .select('id, full_name, email, role, created_at, updated_at')
-              .eq('id', session.user.id)
-              .single()
-            
-            if (fallbackProfile) {
-              // Map profiles table data to UserProfile format
-              profileData = {
-                id: fallbackProfile.id,
-                name: fallbackProfile.full_name || fallbackProfile.email || 'User',
-                email: fallbackProfile.email || '',
-                phone: undefined,
-                avatar_url: undefined,
-                member_since: fallbackProfile.created_at || new Date().toISOString(),
-                verification_status: 'unverified' as const,
-                preferences: {
-                  notifications: true,
-                  marketing_emails: false,
-                  sms_alerts: false
-                },
-                stats: {
-                  total_bookings: 0,
-                  total_spent_cents: 0,
-                  favorite_providers: 0,
-                  average_rating_given: 0
-                }
-              }
+          const profile = profileResult.value.data
+          // Calculate stats from actual data
+          const totalSpent = bookingsData.reduce((sum, b) => sum + (b.price_cents || 0), 0)
+          const completedBookings = bookingsData.filter(b => b.status === 'completed')
+          const averageRating = completedBookings.length > 0
+            ? completedBookings.reduce((sum, b) => sum + (b.rating || 0), 0) / completedBookings.length
+            : 0
+
+          profileData = {
+            id: profile.id,
+            name: profile.full_name || profile.email || 'User',
+            email: profile.email || '',
+            phone: profile.phone || undefined,
+            avatar_url: profile.avatar_url || undefined,
+            member_since: profile.created_at || new Date().toISOString(),
+            verification_status: profile.verified_at ? 'verified' as const : 'unverified' as const,
+            preferences: {
+              notifications: true,
+              marketing_emails: false,
+              sms_alerts: false
+            },
+            stats: {
+              total_bookings: bookingsData.length,
+              total_spent_cents: totalSpent,
+              favorite_providers: favoritesData.length,
+              average_rating_given: averageRating
             }
-          } catch (fallbackError) {
-            console.error('Fallback profile query failed:', fallbackError)
           }
         }
         
+        // Always set a profile to prevent infinite loading - use minimal profile if queries fail
         if (profileData) {
           setUserProfile(profileData)
         } else {
-          // Create minimal profile if all queries fail to prevent infinite loading
+          // Create minimal profile if query fails - calculate stats from loaded data
+          const totalSpent = bookingsData.reduce((sum, b) => sum + (b.price_cents || 0), 0)
+          const completedBookings = bookingsData.filter(b => b.status === 'completed')
+          const averageRating = completedBookings.length > 0
+            ? completedBookings.reduce((sum, b) => sum + (b.rating || 0), 0) / completedBookings.length
+            : 0
+
           setUserProfile({
             id: session.user.id,
             name: session.user.email?.split('@')[0] || 'User',
@@ -246,30 +283,17 @@ export default function UserDashboard() {
               sms_alerts: false
             },
             stats: {
-              total_bookings: 0,
-              total_spent_cents: 0,
-              favorite_providers: 0,
-              average_rating_given: 0
+              total_bookings: bookingsData.length,
+              total_spent_cents: totalSpent,
+              favorite_providers: favoritesData.length,
+              average_rating_given: averageRating
             }
           })
-        }
-
-        // Handle bookings
-        if (bookingsResult.status === 'fulfilled' && bookingsResult.value.data) {
-          setBookings(bookingsResult.value.data as Booking[])
         }
 
         // Handle credits
         if (creditsResult.status === 'fulfilled' && creditsResult.value?.success) {
           setCredits(creditsResult.value.credits)
-        }
-
-        // Handle favorites
-        if (favoritesResult.status === 'fulfilled' && favoritesResult.value.data) {
-          const providers = favoritesResult.value.data
-            .map(fp => fp.providers)
-            .filter(Boolean) as unknown as Provider[]
-          setFavoriteProviders(providers)
         }
 
         // Load notifications

@@ -19,6 +19,8 @@ yarn.lock
 venv/
 env/
 
+*.png
+
 # testing
 /coverage
 

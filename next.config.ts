@@ -35,8 +35,8 @@ const nextConfig = {
   },
 
   webpack: (config: any, { dev, isServer }: { dev: boolean; isServer: boolean }) => {
-    // Improve file watching for hot reload on Windows
-    if (dev && !isServer) {
+    // Improve file watching for hot reload on Windows (apply to both client and server)
+    if (dev) {
       config.watchOptions = {
         poll: 1000, // Check for changes every second
         aggregateTimeout: 300, // Delay before rebuilding once the first file changed

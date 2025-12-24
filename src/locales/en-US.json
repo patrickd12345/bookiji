@@ -14,6 +14,7 @@
   "nav.start_booking": "Start Booking",
   "nav.list_business": "List Your Business",
   "nav.log_in": "Log In",
+  "nav.log_out": "Log Out",
   "home.beta_banner": "🌍 Global Beta Launch - Available in {{count}} countries",
   "home.headline": "Universal Booking Platform",
   "home.tagline": "Book any service, anywhere, instantly. One-click booking with AI assistance and {{fee}} commitment fee guarantee.",

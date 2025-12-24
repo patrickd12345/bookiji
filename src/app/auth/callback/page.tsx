@@ -44,8 +44,8 @@ export default function AuthCallbackPage() {
           // Continue with normal redirect
         }
         
-        // Successful login - redirect to get-started for non-admins
-        router.push('/get-started');
+        // Successful login - redirect to customer dashboard for non-admins
+        router.push('/customer/dashboard');
       } else {
         // No session found
         router.push('/login');

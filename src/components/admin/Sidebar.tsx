@@ -25,7 +25,8 @@ import {
   TrendingUp,
   Shield,
   Wrench,
-  Ticket
+  Ticket,
+  Clock
 } from 'lucide-react'
 
 const navItems = [
@@ -41,6 +42,7 @@ const navItems = [
   { href: '/admin/performance', icon: TrendingUp, label: 'Performance' },
   { href: '/admin/resilience', icon: Shield, label: 'Resilience' },
   { href: '/admin/operational-insights', icon: BarChart3, label: 'Operational Insights' },
+  { href: '/admin/cron', icon: Clock, label: 'Cron Jobs' },
   
   // User Management
   { href: '/admin/users', icon: Users, label: 'Users' },

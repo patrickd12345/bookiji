@@ -32,7 +32,24 @@ export const SCENARIO_OVERRIDES: Record<string, ScenarioOverride> = {
   },
 }
 
+// In-memory store for dynamically created scenarios (from natural language)
+const dynamicScenarios = new Map<string, ScenarioOverride>()
+
+export function registerDynamicScenario(override: ScenarioOverride): void {
+  dynamicScenarios.set(override.id, override)
+}
+
+export function getDynamicScenario(id: string): ScenarioOverride | undefined {
+  return dynamicScenarios.get(id)
+}
+
 export const resolveScenarioOverride = (scenario?: string | null): ScenarioOverride => {
   if (!scenario) return SCENARIO_OVERRIDES.baseline
+  
+  // Check dynamic scenarios first
+  const dynamic = dynamicScenarios.get(scenario)
+  if (dynamic) return dynamic
+  
+  // Then check static overrides
   return SCENARIO_OVERRIDES[scenario] ?? SCENARIO_OVERRIDES.baseline
 }

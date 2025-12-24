@@ -91,27 +91,38 @@ export default function VendorDashboard() {
           throw new Error('No authenticated user')
         }
 
+        // Query profiles table directly (user_role_summary view doesn't exist)
         const { data, error } = await supabase
-          .from('user_role_summary')
-          .select('*, profiles(*)')
-          .eq('user_id', session.user.id)
+          .from('profiles')
+          .select('id, full_name, email, phone, avatar_url, role, rating, specializations, service_area_radius, verified_at, created_at')
+          .eq('id', session.user.id)
           .eq('role', 'vendor')
-          .single()
+          .maybeSingle()
 
         if (error) throw error
+        if (!data) {
+          throw new Error('Vendor profile not found')
+        }
+
+        // Get review count separately
+        const { count: reviewCount } = await supabase
+          .from('reviews')
+          .select('*', { count: 'exact', head: true })
+          .eq('vendor_id', data.id)
+          .catch(() => ({ count: 0 }))
 
         return {
-          id: data.user_id,
-          business_name: data.profiles?.business_name || 'My Business',
-          email: data.profiles?.email || session.user.email || '',
-          phone: data.profiles?.phone,
-          avatar_url: data.profiles?.avatar_url,
-          rating: data.profiles?.rating || 0,
-          total_reviews: data.profiles?.total_reviews || 0,
-          specialties: data.profiles?.specialties || [],
-          location: data.profiles?.location || { lat: 0, lng: 0 },
-          is_verified: data.profiles?.is_verified || false,
-          member_since: data.profiles?.created_at || new Date().toISOString()
+          id: data.id,
+          business_name: data.full_name || 'My Business',
+          email: data.email || session.user.email || '',
+          phone: data.phone,
+          avatar_url: data.avatar_url,
+          rating: data.rating || 0,
+          total_reviews: reviewCount || 0,
+          specialties: data.specializations || [],
+          location: { lat: 0, lng: 0 }, // TODO: Get from provider_locations table
+          is_verified: !!data.verified_at,
+          member_since: data.created_at || new Date().toISOString()
         }
       })
 

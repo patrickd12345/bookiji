@@ -17,3 +17,4 @@ export type SupportContext = {
   history?: Array<{ role: 'user' | 'assistant'; content: string }>
 }
 
+
