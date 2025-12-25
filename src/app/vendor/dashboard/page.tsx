@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { VendorCalendar, VendorAnalytics, GuidedTourManager } from '@/components'
 import { SubscriptionManager } from '@/components/SubscriptionManager'
+import VendorMetricsDashboard from '@/components/VendorMetricsDashboard'
 import { registerTour } from '@/lib/guidedTourRegistry'
 import { useAutoTour } from '@/lib/useAutoTour'
 
@@ -37,8 +38,7 @@ export default function VendorDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'calendar' | 'analytics'>('overview')
   const [pendingServiceTypes, setPendingServiceTypes] = useState<number>(0)
 
-  // Mock vendor ID - in real app, get from auth
-  const vendorId = 'vendor_1'
+  const [vendorId, setVendorId] = useState<string>('')
 
   useEffect(() => {
     fetchDashboardData()
@@ -62,6 +62,29 @@ export default function VendorDashboard() {
     try {
       setLoading(true)
       
+      // Get authenticated user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setLoading(false)
+        return
+      }
+      
+      // Get vendor profile ID
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .eq('role', 'vendor')
+        .single()
+      
+      if (!profile) {
+        setLoading(false)
+        return
+      }
+      
+      const currentVendorId = profile.id
+      setVendorId(currentVendorId)
+      
       // Fetch booking statistics
       const { data: bookings } = await supabase
         .from('bookings')
@@ -70,7 +93,7 @@ export default function VendorDashboard() {
           customers!bookings_customer_id_fkey(full_name),
           services!bookings_service_id_fkey(name)
         `)
-        .eq('vendor_id', vendorId)
+        .eq('vendor_id', currentVendorId)
 
       if (bookings) {
         const now = new Date()
@@ -119,7 +142,7 @@ export default function VendorDashboard() {
       const { data, error } = await supabase
         .from('service_type_proposals')
         .select('id')
-        .eq('vendor_id', vendorId)
+        .eq('vendor_id', vendorId || '')
         .eq('status', 'pending')
 
       if (!error) setPendingServiceTypes(data.length)
@@ -213,6 +236,9 @@ export default function VendorDashboard() {
         <SubscriptionManager />
         {activeTab === 'overview' && (
           <div className="space-y-6">
+            {/* Decision-Informing Metrics */}
+            {vendorId && <VendorMetricsDashboard vendorId={vendorId} />}
+            
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-tour="booking-stats">
               <StatCard

@@ -237,7 +237,9 @@ async function runSinglePlan(plan, config) {
         // Resolve templates in endpoint and payload before sending
         const resolvedEndpoint = resolveTemplateDeep(intent.endpoint, runtimeContext)
         const resolvedPayload = resolveTemplateDeep(intent.payload, runtimeContext)
-        await kernel.sendRequest(intent.intentId, resolvedEndpoint, resolvedPayload)
+        await kernel.sendRequest(intent.intentId, resolvedEndpoint, resolvedPayload, {
+          transport: intent.transport
+        })
       }
     } else if (action.type === 'restart_process') {
       restartCount++
@@ -718,11 +720,14 @@ function resolveIntents(plan, fixtures, config, runtimeContext) {
     const resolvedIntentId = resolveTemplateDeep(spec.intentId, runtimeContext)
     const endpoint = resolveTemplateDeep(spec.endpoint, runtimeContext)
     const payload = resolveTemplateDeep(spec.payloadTemplate, runtimeContext)
+    // Transport is optional - defaults to 'http' in kernel
+    const transport = spec.transport || undefined
 
     intents[key] = {
       intentId: resolvedIntentId,
       endpoint,
-      payload
+      payload,
+      transport
     }
   }
 

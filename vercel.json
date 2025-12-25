@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/kb-auto-dedupe",
-      "schedule": "0 * * * *"
+      "schedule": "0 2 * * *"
     },
     {
       "path": "/api/cron/kb-crawl",
@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/kb-ensure-embeddings",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 4 * * *"
     },
     {
       "path": "/api/cron/sitemap-refresh",

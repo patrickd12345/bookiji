@@ -63,6 +63,17 @@ function getClientIP(request: NextRequest): string {
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
+  const hostname = request.headers.get('host') || ''
+
+  // Subdomain routing: sched.bookiji.com -> scheduling pages
+  const isSchedSubdomain = hostname.startsWith('sched.')
+  
+  if (isSchedSubdomain && pathname === '/') {
+    // Show scheduling landing page instead of redirecting
+    const url = request.nextUrl.clone()
+    url.pathname = '/sched'
+    return NextResponse.rewrite(url)
+  }
 
   if (request.headers.get(SYNTHETIC_HEADER) === 'simcity') {
     const syntheticTrace = request.headers.get(SYNTHETIC_TRACE_HEADER)
