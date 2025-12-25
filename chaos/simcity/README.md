@@ -6,11 +6,12 @@ Run chaos engineering tests using natural language commands. The CLI uses an LLM
 
 ### 1. Set Environment Variables
 
+**Option A: Manual setup**
 ```bash
 # For LLM planner (recommended)
 export SIMCITY_PLANNER=llm
 export GEMINI_API_KEY=your_key_here
-export GEMINI_API_MODEL=gemini-1.5-flash  # Optional, defaults to gemini-1.5-flash
+export SIMCITY_PLANNER_MODEL=gemini-1.5-flash  # Optional, defaults to gemini-1.5-flash
 
 # For stub planner (no API key needed, uses hardcoded plans)
 export SIMCITY_PLANNER=stub
@@ -19,6 +20,12 @@ export SIMCITY_PLANNER=stub
 export SUPABASE_URL=your_supabase_url
 export SUPABASE_SERVICE_ROLE_KEY=your_service_key
 export TARGET_URL=http://localhost:3000  # Optional, defaults to localhost:3000
+```
+
+**Option B: Use setup script**
+```bash
+source chaos/simcity/setup-env.sh
+# Then set any missing variables as shown
 ```
 
 ### 2. Run a 30-Minute Soak Test
