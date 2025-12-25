@@ -30,6 +30,17 @@ export const SCENARIO_OVERRIDES: Record<string, ScenarioOverride> = {
     tags: ['warp'],
     description: 'Accelerate synthetic time to validate speed controls.',
   },
+  vendor_sla: {
+    id: 'vendor_sla',
+    label: 'Vendor SLA (30m)',
+    durationMinutes: 30,
+    spawnRate: 1.2,
+    confirmRate: 0.9,
+    cancelRate: 0.05,
+    priceMultiplier: 1.05,
+    tags: ['vendor', 'sla'],
+    description: 'Prioritize vendor interactions and responsiveness for a 30-minute burn-in.',
+  },
 }
 
 // In-memory store for dynamically created scenarios (from natural language)

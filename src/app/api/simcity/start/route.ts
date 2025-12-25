@@ -6,7 +6,7 @@ import { resolveScenarioOverride } from '@/lib/simcity/scenarios';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { seed, scenario, policies } = body;
+    const { seed, scenario, policies, durationMinutes } = body;
 
     const orchestrator = getOrchestrator();
     const engine = getSimEngine();
@@ -25,11 +25,12 @@ export async function POST(request: NextRequest) {
       speed: policies?.speed,
       minutesPerTick: policies?.minutesPerTick,
       baseTickMs: policies?.tickSpeedMs,
+      durationMinutes: durationMinutes ?? override.durationMinutes,
     });
 
     // Start legacy orchestrator for existing dashboards when possible
     try {
-      await orchestrator.start({ seed, scenario, policies });
+      await orchestrator.start({ seed, scenario, policies, durationMinutes: durationMinutes ?? override.durationMinutes });
     } catch (error) {
       console.warn('Legacy orchestrator could not start; continuing with live engine only', error);
     }
