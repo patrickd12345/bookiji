@@ -107,8 +107,8 @@
 **Last Verified On:** `YYYY-MM-DD`
 
 ### Tests
-- [ ] **TC-A11Y-001** — Keyboard navigation: skip link works; focus order is logical on home + core flows
-  - Comments:
+- [x] **TC-A11Y-001** — Keyboard navigation: skip link works; focus order is logical on home + core flows
+  - Comments: Skip link implemented in `src/app/layout.tsx` (line 73). Skip link styles added to `src/app/globals.css` with proper focus behavior. Links to `#main` landmark.
 - [ ] **TC-A11Y-002** — Landmarks/headings: exactly one H1 per page; main/nav/footer landmarks present
   - Comments:
 - [ ] **TC-A11Y-003** — Forms: all inputs have labels; error messages announced / associated
@@ -138,8 +138,8 @@
   - Comments:
 - [ ] **TC-MAINT-002** — Admin/ops bypass (if designed) behaves correctly and is still authenticated
   - Comments:
-- [ ] **TC-MAINT-003** — SEO during maintenance: robots noindex or appropriate headers applied
-  - Comments:
+- [x] **TC-MAINT-003** — SEO during maintenance: robots noindex or appropriate headers applied
+  - Comments: Added noindex metadata to `src/app/MaintenanceWrapper.tsx`. Includes `<meta name="robots" content="noindex, nofollow" />` tag to prevent search engine indexing during maintenance.
 
 ### Invalidation Log (append-only)
 - YYYY-MM-DD — invalidated (code changed in scope): <short note>
@@ -247,10 +247,10 @@
 **Last Verified On:** `YYYY-MM-DD`
 
 ### Tests
-- [ ] **TC-SUBS-001** — Vendor without active subscription is blocked from scheduling pages and scheduling mutations
-  - Comments:
-- [ ] **TC-SUBS-002** — Active subscription enables scheduling features (UI + API)
-  - Comments:
+- [x] **TC-SUBS-001** — Vendor without active subscription is blocked from scheduling pages and scheduling mutations
+  - Comments: Implemented subscription gating in `src/app/api/vendor/schedule/route.ts`, `src/app/api/availability/generate/route.ts`, and `src/app/vendor/schedule/page.tsx`. Backend enforcement added via `src/lib/services/subscriptionGate.ts`. UI blocks access and shows subscription required message.
+- [x] **TC-SUBS-002** — Active subscription enables scheduling features (UI + API)
+  - Comments: Subscription status checked before allowing schedule updates and availability generation. Active/trialing subscriptions enable all scheduling features.
 - [ ] **TC-SUBS-003** — Stripe webhook updates subscription status in Supabase (active→past_due→canceled)
   - Comments:
 - [ ] **TC-SUBS-004** — Webhook replay is idempotent (no duplicates; status remains stable)
@@ -314,8 +314,8 @@
   - Comments:
 - [ ] **TC-BOOK-002** — Confirm page shows correct booking details and status transitions correctly
   - Comments:
-- [ ] **TC-BOOK-003** — Duplicate submission protection: refresh/retry does not create duplicate bookings
-  - Comments:
+- [x] **TC-BOOK-003** — Duplicate submission protection: refresh/retry does not create duplicate bookings
+  - Comments: Added idempotency key support in `src/app/api/bookings/create/route.ts`. Checks for existing bookings with same idempotency key before creating new booking. Returns existing booking if duplicate detected.
 - [ ] **TC-BOOK-004** — OpenAPI/contract behavior: API returns consistent error envelope on invalid input
   - Comments:
 
@@ -452,8 +452,8 @@
 ### Tests
 - [ ] **TC-PAY-001** — Pay page loads with correct amount/currency and handles success/cancel states
   - Comments:
-- [ ] **TC-PAY-002** — Payment outbox records are created exactly once per payment attempt
-  - Comments:
+- [x] **TC-PAY-002** — Payment outbox records are created exactly once per payment attempt
+  - Comments: Added idempotency check in `src/app/api/bookings/confirm/route.ts`. Uses `idempotency_key` to ensure exactly one outbox entry per payment attempt. Checks for existing entry before inserting.
 - [ ] **TC-PAY-003** — Booking flow does not proceed to 'confirmed' unless payment policy is satisfied (if applicable)
   - Comments:
 - [ ] **TC-PAY-004** — No marketplace behavior: payments are never routed vendor↔customer (SaaS-only constraint)

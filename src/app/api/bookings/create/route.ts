@@ -61,10 +61,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 })
   }
 
-  const { providerId, serviceId, startTime, endTime, amountUSD } = body
+  const { providerId, serviceId, startTime, endTime, amountUSD, idempotency_key } = body
 
   if (!providerId || !serviceId || !startTime || !endTime || amountUSD === undefined) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+  }
+
+  // Generate idempotency key if not provided (for duplicate protection)
+  const idempotencyKey = idempotency_key || `booking_${user.id}_${providerId}_${startTime}_${Date.now()}`
+
+  if (!config.secretKey) {
+    return NextResponse.json({ error: 'Supabase service key not configured' }, { status: 500 })
+  }
+
+  // Supabase insert (service role) - check for duplicate first
+  const supabase = createClient(config.url, config.secretKey, {
+    auth: { autoRefreshToken: false, persistSession: false }
+  })
+
+  // Check if booking with same idempotency key already exists
+  const { data: existingBooking } = await supabase
+    .from('bookings')
+    .select('id, status, stripe_payment_intent_id')
+    .eq('idempotency_key', idempotencyKey)
+    .single()
+
+  if (existingBooking) {
+    // Duplicate request - return existing booking
+    return NextResponse.json({
+      booking: existingBooking,
+      clientSecret: null, // Payment intent already exists
+      duplicate: true,
+      message: 'This booking was already created'
+    })
   }
 
   const amountNumber = Number(amountUSD)
@@ -81,17 +110,9 @@ export async function POST(req: NextRequest) {
     metadata: {
       providerId: String(providerId),
       serviceId: String(serviceId),
-      userId: user.id
+      userId: user.id,
+      idempotency_key: idempotencyKey
     }
-  })
-
-  if (!config.secretKey) {
-    return NextResponse.json({ error: 'Supabase service key not configured' }, { status: 500 })
-  }
-
-  // Supabase insert (service role)
-  const supabase = createClient(config.url, config.secretKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
   })
 
   const { data: booking, error } = await supabase
@@ -103,6 +124,7 @@ export async function POST(req: NextRequest) {
       start_time: startTime,
       end_time: endTime,
       stripe_payment_intent_id: intent.id,
+      idempotency_key: idempotencyKey,
       status: 'pending'
     })
     .select()

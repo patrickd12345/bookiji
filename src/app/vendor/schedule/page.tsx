@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { Clock, PlusCircle, Trash2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
+import { SubscriptionManager } from '@/components/SubscriptionManager'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { GoogleCalendarConnection } from '@/components'
 
@@ -140,6 +141,8 @@ export default function SchedulePage() {
   const [generationStatus, setGenerationStatus] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
   const [urlMessage, setUrlMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean | null>(null);
+  const [checkingSubscription, setCheckingSubscription] = useState<boolean>(true);
 
   const hasErrors = useMemo(() => Object.values(errors).some(e => e !== null), [errors]);
 
@@ -219,10 +222,28 @@ export default function SchedulePage() {
       if (error || !data) {
         console.error('Error fetching provider profile:', error);
         setSaveStatus('error');
-      } else {
-        setProviderId(data.id);
-        setAvailabilityMode(data.availability_mode || 'subtractive');
+        setIsLoading(false);
+        return;
       }
+      
+      setProviderId(data.id);
+      setAvailabilityMode(data.availability_mode || 'subtractive');
+      
+      // Check subscription status
+      const { data: subscription, error: subError } = await supabase
+        .from('vendor_subscriptions')
+        .select('subscription_status')
+        .eq('provider_id', data.id)
+        .single();
+      
+      if (!subError && subscription) {
+        const isActive = subscription.subscription_status === 'active' || subscription.subscription_status === 'trialing';
+        setHasActiveSubscription(isActive);
+      } else {
+        setHasActiveSubscription(false);
+      }
+      
+      setCheckingSubscription(false);
       setIsLoading(false);
     };
 
@@ -311,7 +332,19 @@ export default function SchedulePage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ providerId, schedule }),
         });
-        if (!response.ok) throw new Error('Failed to save schedule');
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            if (errorData.requiresSubscription) {
+                // Subscription required - update state and show message
+                setHasActiveSubscription(false);
+                alert(errorData.message || 'Active subscription required to manage your schedule.');
+                setSaveStatus('error');
+                return;
+            }
+            throw new Error(errorData.error || 'Failed to save schedule');
+        }
+        
         setSaveStatus('success');
         saveSuccess = true;
     } catch (error: unknown) {
@@ -334,7 +367,13 @@ export default function SchedulePage() {
             body: JSON.stringify({ providerId }),
         });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Failed to generate availability');
+        if (!response.ok) {
+            if (result.requiresSubscription) {
+                setHasActiveSubscription(false);
+                throw new Error(result.message || 'Active subscription required to generate availability.');
+            }
+            throw new Error(result.error || 'Failed to generate availability');
+        }
         setGenerationStatus(result.message);
 
     } catch (error: unknown) {
@@ -346,6 +385,73 @@ export default function SchedulePage() {
     }
   }
 
+  // Show subscription gate if no active subscription
+  if (checkingSubscription || isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasActiveSubscription === false) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 shadow-md">
+            <div className="text-center">
+              <AlertTriangle className="w-16 h-16 text-yellow-600 mx-auto mb-4" />
+              <h1 className="text-3xl font-bold text-yellow-900 mb-4">Subscription Required</h1>
+              <p className="text-lg text-yellow-700 mb-6">
+                You need an active subscription to manage your schedule and generate availability slots.
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={async () => {
+                    try {
+                      const priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID;
+                      if (!priceId) {
+                        alert('Configuration error: Missing Price ID');
+                        return;
+                      }
+                      const res = await fetch('/api/billing/create-checkout-session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          priceId,
+                          successUrl: window.location.href,
+                          cancelUrl: window.location.href,
+                        }),
+                      });
+                      if (!res.ok) throw new Error('Failed to create session');
+                      const { url } = await res.json();
+                      if (url) window.location.href = url;
+                    } catch (err) {
+                      console.error(err);
+                      alert('Failed to start subscription process');
+                    }
+                  }}
+                  className="bg-purple-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  Subscribe Now
+                </button>
+                <button
+                  onClick={() => window.location.href = '/vendor/dashboard'}
+                  className="bg-gray-200 text-gray-700 font-bold py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Back to Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-4xl mx-auto">
@@ -353,6 +459,11 @@ export default function SchedulePage() {
           <div className="flex items-center mb-6">
             <Clock className="w-8 h-8 text-purple-600 mr-3" />
             <h1 className="text-3xl font-bold text-gray-800">Set Your Weekly Hours</h1>
+          </div>
+
+          {/* Subscription Status Banner */}
+          <div className="mb-6">
+            <SubscriptionManager />
           </div>
 
           {/* URL Message Display */}

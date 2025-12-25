@@ -113,27 +113,43 @@ async function confirmHandler(req: NextRequest): Promise<NextResponse> {
       )
     }
 
-    // Insert into payments outbox for async processing
-    const { error: outboxError } = await supabase
+    // Insert into payments outbox for async processing (with idempotency check)
+    // Use idempotency_key to ensure exactly one outbox entry per payment attempt
+    const outboxIdempotencyKey = `outbox_${body.idempotency_key}_${body.stripe_payment_intent_id}`
+    
+    // Check if outbox entry already exists for this idempotency key
+    const { data: existingOutbox } = await supabase
       .from('payments_outbox')
-      .insert({
-        id: crypto.randomUUID(),
-        event_type: 'hold_created',
-        event_data: {
-          booking_id: booking.id,
-          payment_intent_id: body.stripe_payment_intent_id,
-          amount_cents: featureFlags.payments.hold_amount_cents,
-          provider_id: body.provider_id,
-          quote_id: body.quote_id
-        },
-        status: 'pending',
-        retry_count: 0,
-        created_at: new Date().toISOString()
-      })
+      .select('id, status')
+      .eq('idempotency_key', outboxIdempotencyKey)
+      .single()
 
-    if (outboxError) {
-      console.error('Failed to insert into payments outbox:', outboxError)
-      // Don't fail the request - the booking was created successfully
+    if (!existingOutbox) {
+      // Only insert if it doesn't exist (exactly once per payment attempt)
+      const { error: outboxError } = await supabase
+        .from('payments_outbox')
+        .insert({
+          id: crypto.randomUUID(),
+          event_type: 'hold_created',
+          event_data: {
+            booking_id: booking.id,
+            payment_intent_id: body.stripe_payment_intent_id,
+            amount_cents: featureFlags.payments.hold_amount_cents,
+            provider_id: body.provider_id,
+            quote_id: body.quote_id
+          },
+          idempotency_key: outboxIdempotencyKey,
+          status: 'pending',
+          retry_count: 0,
+          created_at: new Date().toISOString()
+        })
+
+      if (outboxError) {
+        console.error('Failed to insert into payments outbox:', outboxError)
+        // Don't fail the request - the booking was created successfully
+      }
+    } else {
+      console.log(`Outbox entry already exists for idempotency key: ${outboxIdempotencyKey}`)
     }
 
     // Log the state transition

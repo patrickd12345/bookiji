@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/supabaseServer';
+import { hasActiveSubscription } from '@/lib/services/subscriptionGate';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
@@ -184,6 +185,19 @@ export async function POST(req: NextRequest) {
 
         if (!providerId) {
             return NextResponse.json({ error: 'Missing providerId' }, { status: 400 });
+        }
+
+        // CRITICAL: Enforce subscription gating - vendors must have active subscription to generate availability
+        const hasSubscription = await hasActiveSubscription(providerId);
+        if (!hasSubscription) {
+            return NextResponse.json(
+                {
+                    error: 'Active subscription required',
+                    message: 'You must have an active subscription to generate availability slots. Please subscribe to continue.',
+                    requiresSubscription: true
+                },
+                { status: 403 }
+            );
         }
 
         const result = await generateAvailability(providerId);

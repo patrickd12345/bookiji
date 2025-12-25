@@ -1,4 +1,5 @@
 import { getServerSupabase } from '@/lib/supabaseServer';
+import { hasActiveSubscription } from '@/lib/services/subscriptionGate';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
@@ -52,6 +53,19 @@ export async function POST(req: NextRequest) {
 
     if (!providerId || !schedule) {
       return NextResponse.json({ error: 'Missing providerId or schedule' }, { status: 400 });
+    }
+
+    // CRITICAL: Enforce subscription gating - vendors must have active subscription to schedule
+    const hasSubscription = await hasActiveSubscription(providerId);
+    if (!hasSubscription) {
+      return NextResponse.json(
+        { 
+          error: 'Active subscription required',
+          message: 'You must have an active subscription to manage your schedule. Please subscribe to continue.',
+          requiresSubscription: true
+        },
+        { status: 403 }
+      );
     }
 
     // Validate the schedule for overlaps before proceeding
