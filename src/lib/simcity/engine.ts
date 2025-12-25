@@ -18,6 +18,7 @@ import { SimulationStartOptions } from './types';
 class SimCityEngine {
   private timer: NodeJS.Timeout | null = null;
   private keepAlive: NodeJS.Timeout | null = null;
+  private stopTimer: NodeJS.Timeout | null = null;
 
   start(options?: SimulationStartOptions) {
     const current = getSimState();
@@ -26,6 +27,7 @@ class SimCityEngine {
     }
 
     const override = resolveScenarioOverride(options?.scenario ?? current.scenario);
+    const runDurationMinutes = options?.durationMinutes ?? override.durationMinutes;
 
     resetSimState({
       speed: options?.speed ?? current.speed,
@@ -51,6 +53,7 @@ class SimCityEngine {
     });
 
     this.scheduleTick(override);
+    this.scheduleStop(override, runDurationMinutes);
     this.scheduleKeepAlive();
   }
 
@@ -64,7 +67,12 @@ class SimCityEngine {
     publishEvent({ type: 'pause', timestamp: new Date().toISOString() });
   }
 
-  reset() {
+  reset(reason?: Record<string, unknown>) {
+    if (this.stopTimer) {
+      clearTimeout(this.stopTimer);
+      this.stopTimer = null;
+    }
+
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
@@ -76,7 +84,7 @@ class SimCityEngine {
     }
 
     resetSimState({ metrics: createEmptyEngineMetrics() });
-    publishEvent({ type: 'reset', timestamp: new Date().toISOString() });
+    publishEvent({ type: 'reset', timestamp: new Date().toISOString(), data: reason });
   }
 
   setSpeed(multiplier: number) {
@@ -97,6 +105,25 @@ class SimCityEngine {
     const tickMs = (state.baseTickMs / Math.max(0.1, state.speed)) / (override.clockMultiplier ?? 1);
 
     this.timer = setInterval(() => this.tick(), tickMs);
+  }
+
+  private scheduleStop(override: ReturnType<typeof resolveScenarioOverride>, durationMinutes?: number) {
+    if (this.stopTimer) {
+      clearTimeout(this.stopTimer);
+      this.stopTimer = null;
+    }
+
+    const minutes = durationMinutes ?? override?.durationMinutes;
+    if (minutes) {
+      const durationMs = minutes * 60 * 1000;
+      this.stopTimer = setTimeout(() => {
+        this.reset({
+          reason: 'auto_stop',
+          scenario: override.id,
+          durationMinutes: minutes,
+        });
+      }, durationMs);
+    }
   }
 
   private scheduleKeepAlive() {

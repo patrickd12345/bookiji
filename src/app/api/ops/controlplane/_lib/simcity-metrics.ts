@@ -50,6 +50,34 @@ export const METRICS_REGISTRY: Record<MetricId, MetricDefinition> = {
     unit: 'ratio',
     direction: 'lower-is-better',
   },
+  'llm.expected_rejection_rate': {
+    id: 'llm.expected_rejection_rate',
+    domain: 'llm',
+    description: 'Rate of LLM events that were expected to be rejected (edge/impossible cases)',
+    unit: 'ratio',
+    direction: 'neutral', // Expected rejections are intentional
+  },
+  'llm.unexpected_error_rate': {
+    id: 'llm.unexpected_error_rate',
+    domain: 'llm',
+    description: 'Rate of LLM events that failed with unexpected errors (not clean rejections)',
+    unit: 'ratio',
+    direction: 'lower-is-better',
+  },
+  'llm.invariant_violation_rate': {
+    id: 'llm.invariant_violation_rate',
+    domain: 'llm',
+    description: 'Rate of LLM events that violated system invariants',
+    unit: 'ratio',
+    direction: 'lower-is-better',
+  },
+  'llm.silent_failure_rate': {
+    id: 'llm.silent_failure_rate',
+    domain: 'llm',
+    description: 'Rate of LLM events that failed silently (must be zero)',
+    unit: 'ratio',
+    direction: 'lower-is-better',
+  },
 }
 
 /**
