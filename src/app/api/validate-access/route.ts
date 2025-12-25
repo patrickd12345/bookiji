@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { getCookieOptions } from '@/lib/cookieHelpers'
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,8 +9,6 @@ export async function POST(request: NextRequest) {
 
     if (key === secretKey) {
       const cookieStore = await cookies()
-import { getCookieOptions } from '@/lib/cookieHelpers'
-
       cookieStore.set('bookiji_access', 'true', getCookieOptions({
         maxAge: 60 * 60 * 24 * 30, // 30 days
         httpOnly: false
