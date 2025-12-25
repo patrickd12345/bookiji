@@ -177,6 +177,66 @@ function extractTrustViolationRate(events: SimCityEventEnvelope[]): number {
 }
 
 /**
+ * Extract LLM event metrics from events.
+ */
+function extractLLMMetrics(events: SimCityEventEnvelope[]): {
+  expectedRejectionRate: number
+  unexpectedErrorRate: number
+  invariantViolationRate: number
+  silentFailureRate: number
+} {
+  let totalLLMEvents = 0
+  let expectedRejections = 0
+  let unexpectedErrors = 0
+  let invariantViolations = 0
+  let silentFailures = 0
+
+  for (const envelope of events) {
+    const { domain, type, payload } = envelope.event
+
+    if (domain === 'llm' && type === 'event.processed') {
+      totalLLMEvents++
+
+      // Check classification (EXPECTED_REJECTION means it was classified as edge/impossible)
+      if (payload.classification === 'EXPECTED_REJECTION' && payload.execution_rejected === true) {
+        expectedRejections++
+      }
+
+      // Unexpected errors: execution failed but wasn't rejected cleanly
+      if (payload.execution_success === false && payload.execution_rejected === false) {
+        unexpectedErrors++
+      }
+
+      // Invariant violations
+      if (payload.invariant_status === 'violated') {
+        invariantViolations++
+      }
+
+      // Silent failures: success=true but invariant violated (should never happen)
+      if (payload.execution_success === true && payload.invariant_status === 'violated') {
+        silentFailures++
+      }
+    }
+  }
+
+  if (totalLLMEvents === 0) {
+    return {
+      expectedRejectionRate: 0,
+      unexpectedErrorRate: 0,
+      invariantViolationRate: 0,
+      silentFailureRate: 0,
+    }
+  }
+
+  return {
+    expectedRejectionRate: expectedRejections / totalLLMEvents,
+    unexpectedErrorRate: unexpectedErrors / totalLLMEvents,
+    invariantViolationRate: invariantViolations / totalLLMEvents,
+    silentFailureRate: silentFailures / totalLLMEvents,
+  }
+}
+
+/**
  * Compute all metrics from an event stream.
  * Returns a record with all metric IDs and their computed values.
  * Missing signals return explicit defaults (0 or neutral values).
@@ -206,6 +266,13 @@ export function computeMetricsFromEvents(
   // Extract trust violation rate
   metrics['trust.violation_rate'] = extractTrustViolationRate(events)
 
+  // Extract LLM event metrics
+  const llmMetrics = extractLLMMetrics(events)
+  metrics['llm.expected_rejection_rate'] = llmMetrics.expectedRejectionRate
+  metrics['llm.unexpected_error_rate'] = llmMetrics.unexpectedErrorRate
+  metrics['llm.invariant_violation_rate'] = llmMetrics.invariantViolationRate
+  metrics['llm.silent_failure_rate'] = llmMetrics.silentFailureRate
+
   // Ensure all metrics are present (fill missing with 0)
   const allMetrics: Record<MetricId, number> = {
     'booking.success_rate': metrics['booking.success_rate'] ?? 0,
@@ -214,6 +281,10 @@ export function computeMetricsFromEvents(
     'trust.violation_rate': metrics['trust.violation_rate'] ?? 0,
     'latency.p95': metrics['latency.p95'] ?? 0,
     'error.rate': metrics['error.rate'] ?? 0,
+    'llm.expected_rejection_rate': metrics['llm.expected_rejection_rate'] ?? 0,
+    'llm.unexpected_error_rate': metrics['llm.unexpected_error_rate'] ?? 0,
+    'llm.invariant_violation_rate': metrics['llm.invariant_violation_rate'] ?? 0,
+    'llm.silent_failure_rate': metrics['llm.silent_failure_rate'] ?? 0,
   }
 
   return allMetrics

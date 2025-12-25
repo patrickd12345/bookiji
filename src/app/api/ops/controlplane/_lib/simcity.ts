@@ -7,8 +7,14 @@ import type {
   SimCityProposalConfig,
   ProposalMode,
   SimCityProposal,
+  SimCityLLMEventConfig,
 } from './simcity-types'
 import { generateProposals } from './simcity-proposals'
+import { generateLLMEvents } from './simcity-llm-generator'
+import { generateWorldSnapshot, classifyEventFeasibility, validateLLMEventSchema } from './simcity-llm-events'
+import { executeLLMEvent } from './simcity-llm-executor'
+import { checkInvariants } from './simcity-llm-invariants'
+import { recordLLMEvent } from './simcity-llm-recorder'
 
 type SimCityLatencyConfig = {
   p50Ms: number
@@ -24,6 +30,7 @@ export type SimCityConfig = {
   enabledDomains?: string[]
   domains?: Record<string, unknown>
   proposals?: SimCityProposalConfig
+  llmEvents?: SimCityLLMEventConfig
 }
 
 export type SimCityStatus = {
@@ -146,9 +153,40 @@ function normalizeProposalConfig(
   }
 }
 
+function normalizeLLMEventConfig(
+  llmEvents: SimCityLLMEventConfig | undefined,
+  deployEnv: string
+): SimCityLLMEventConfig | undefined {
+  // Fail-closed: invalid config or production → LLM events OFF
+  if (!llmEvents || !llmEvents.enabled) {
+    return undefined
+  }
+
+  const deployEnvLower = deployEnv.toLowerCase()
+  if (deployEnvLower === 'production') {
+    return undefined
+  }
+
+  const maxEventsPerTick = typeof llmEvents.maxEventsPerTick === 'number' && Number.isFinite(llmEvents.maxEventsPerTick)
+    ? Math.max(1, Math.min(5, Math.floor(llmEvents.maxEventsPerTick)))
+    : 1
+
+  const probability = typeof llmEvents.probability === 'number' && Number.isFinite(llmEvents.probability)
+    ? clampProbability(llmEvents.probability)
+    : 0.5 // 50% chance per tick by default
+
+  return {
+    enabled: true,
+    maxEventsPerTick,
+    probability,
+    runId: typeof llmEvents.runId === 'string' ? llmEvents.runId : undefined,
+  }
+}
+
 function normalizeConfig(config: SimCityConfig): SimCityConfig {
   const deployEnv = process.env.DEPLOY_ENV?.trim() ?? ''
   const proposals = normalizeProposalConfig(config.proposals, deployEnv)
+  const llmEvents = normalizeLLMEventConfig(config.llmEvents, deployEnv)
 
   return {
     seed: Number.isFinite(config.seed) ? config.seed : 1,
@@ -171,6 +209,7 @@ function normalizeConfig(config: SimCityConfig): SimCityConfig {
     enabledDomains: Array.isArray(config.enabledDomains) ? config.enabledDomains.filter(Boolean) : undefined,
     domains: config.domains && typeof config.domains === 'object' ? config.domains : undefined,
     proposals,
+    llmEvents,
   }
 }
 
@@ -186,6 +225,7 @@ type EngineState = {
   events: SimCityEventEnvelope[]
   lastInjectedFault?: SimCityStatus['lastInjectedFault']
   lastEvent?: SimCityEventEnvelope
+  llmEventIndex: number // Counter for LLM event recording
 }
 
 const state: EngineState = {
@@ -193,6 +233,7 @@ const state: EngineState = {
   tick: 0,
   timer: null,
   events: [],
+  llmEventIndex: 0,
 }
 
 function pushEvent(event: SimCityEvent) {
@@ -218,6 +259,7 @@ export function simCityStart(config: SimCityConfig): SimCityStatus {
   state.lastInjectedFault = undefined
   state.events = []
   state.lastEvent = undefined
+  state.llmEventIndex = 0
   state.running = true
 
   if (state.timer) {
@@ -334,6 +376,108 @@ export async function simCityTick(): Promise<SimCityEventEnvelope[]> {
       // Fail closed: if proposal generation fails, continue without proposals
       // Log error but don't throw (proposals are advisory only)
       console.warn('SimCity proposal generation failed:', error)
+    }
+  }
+
+  // LLM-Driven Event Source: Generate and execute LLM events
+  if (state.config.llmEvents && state.config.llmEvents.enabled && state.rng) {
+    try {
+      const shouldGenerate = state.rng() < (state.config.llmEvents.probability ?? 0.5)
+      if (shouldGenerate) {
+        const currentStatus = simCityStatus()
+        const worldSnapshot = generateWorldSnapshot(currentStatus, state.config)
+
+        // Generate proposed events from LLM
+        const proposedEvents = await generateLLMEvents(
+          worldSnapshot,
+          state.config.llmEvents.maxEventsPerTick ?? 1
+        )
+
+        // Process each proposed event
+        for (const proposedEvent of proposedEvents) {
+          // Validate schema
+          const validation = validateLLMEventSchema(proposedEvent)
+          if (!validation.valid || !validation.event) {
+            // Invalid schema - record as rejected but continue
+            const invalidEvent = emitEvent({
+              domain: 'llm',
+              type: 'event.rejected',
+              payload: {
+                reason: validation.error || 'Invalid schema',
+                proposed_event: proposedEvent,
+              },
+            })
+            pushEvent(invalidEvent)
+            emitted.push(wrapEnvelope(invalidEvent))
+            continue
+          }
+
+          const validEvent = validation.event
+
+          // Classify feasibility
+          const classification = classifyEventFeasibility(validEvent, worldSnapshot)
+
+          // Execute event (through real code paths)
+          const executionResult = await executeLLMEvent(validEvent)
+
+          // Check invariants
+          const invariantCheck = await checkInvariants(validEvent, executionResult)
+
+          // Record event (if runId is provided)
+          if (state.config.llmEvents.runId) {
+            try {
+              await recordLLMEvent(
+                state.config.llmEvents.runId,
+                state.llmEventIndex++,
+                validEvent,
+                classification,
+                executionResult,
+                invariantCheck,
+                state.tick
+              )
+            } catch (error) {
+              // Recording failure shouldn't stop the run
+              console.warn('Failed to record LLM event:', error)
+            }
+          }
+
+          // Emit event about LLM event processing
+          const llmEventProcessed = emitEvent({
+            domain: 'llm',
+            type: 'event.processed',
+            payload: {
+              event_id: validEvent.event_id,
+              event_type: validEvent.event_type,
+              classification,
+              execution_success: executionResult.success,
+              execution_rejected: executionResult.rejected,
+              invariant_status: invariantCheck.status,
+              latency_ms: executionResult.latency_ms,
+            },
+          })
+          pushEvent(llmEventProcessed)
+          emitted.push(wrapEnvelope(llmEventProcessed))
+
+          // If invariant violated, mark run as failed (but continue)
+          if (invariantCheck.status === 'violated') {
+            const violationEvent = emitEvent({
+              domain: 'engine',
+              type: 'invariant.violated',
+              payload: {
+                event_id: validEvent.event_id,
+                violations: invariantCheck.violations,
+                forensic_data: invariantCheck.forensic_data,
+              },
+            })
+            pushEvent(violationEvent)
+            emitted.push(wrapEnvelope(violationEvent))
+          }
+        }
+      }
+    } catch (error) {
+      // Fail closed: if LLM event generation fails, continue without LLM events
+      // Log error but don't throw (LLM events are exploratory)
+      console.warn('SimCity LLM event generation failed:', error)
     }
   }
 
