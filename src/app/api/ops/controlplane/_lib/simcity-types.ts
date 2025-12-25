@@ -40,6 +40,14 @@ export type SimCityProposalConfig = {
   minConfidence?: number
 }
 
+// LLM-Driven Event Source Configuration
+export type SimCityLLMEventConfig = {
+  enabled: boolean
+  maxEventsPerTick?: number
+  probability?: number // Probability of generating LLM events per tick (0-1)
+  runId?: string // Optional run ID for recording events
+}
+
 // Phase 5: Replay types
 export type SimCityProposalAction = {
   proposalId: string
@@ -140,6 +148,10 @@ export type MetricId =
   | 'trust.violation_rate'
   | 'latency.p95'
   | 'error.rate'
+  | 'llm.expected_rejection_rate'
+  | 'llm.unexpected_error_rate'
+  | 'llm.invariant_violation_rate'
+  | 'llm.silent_failure_rate'
 
 export type MetricDirection = 'higher-is-better' | 'lower-is-better'
 
