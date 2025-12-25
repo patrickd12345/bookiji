@@ -54,6 +54,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing providerId or schedule' }, { status: 400 });
     }
 
+    // Invariant III-1: Server-side subscription gating
+    try {
+      await assertVendorHasActiveSubscription(providerId);
+    } catch (error) {
+      if (error instanceof SubscriptionRequiredError) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 403 }
+        );
+      }
+      throw error;
+    }
+
     // Validate the schedule for overlaps before proceeding
     for (const daySchedule of Object.values(schedule)) {
         if (daySchedule.isEnabled && checkForOverlaps(daySchedule.timeRanges)) {

@@ -137,6 +137,7 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/README.md`
 - `docs/development/ROADMAP.md`
 - `docs/development/SCHEDULING_INVARIANTS.md`
+- `docs/development/INVARIANT_COVERAGE_MATRIX.md`
 - `docs/development/SEO_MANAGER_SYSTEM.md`
 - `docs/development/SHADCN_UI_MIGRATION_SUCCESS.md`
 - `docs/development/SIMCITY_RUNBOOK.md`

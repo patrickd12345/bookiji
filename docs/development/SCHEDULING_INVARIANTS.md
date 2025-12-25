@@ -243,6 +243,7 @@ LLM may:
 
 ## Related Documentation
 
+- [Invariant Coverage Matrix](./INVARIANT_COVERAGE_MATRIX.md) - **See this for enforcement status and gaps**
 - [SimCity LLM Events](./simcity-llm-events.md)
 - [Database Management Policy](./DATABASE_MANAGEMENT_POLICY.md)
 - [SimCity Phase 3](../simcity-phase3.md)

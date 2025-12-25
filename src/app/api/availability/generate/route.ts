@@ -186,6 +186,19 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing providerId' }, { status: 400 });
         }
 
+        // Invariant III-1: Server-side subscription gating
+        try {
+            await assertVendorHasActiveSubscription(providerId);
+        } catch (error) {
+            if (error instanceof SubscriptionRequiredError) {
+                return NextResponse.json(
+                    { error: error.message },
+                    { status: 403 }
+                );
+            }
+            throw error;
+        }
+
         const result = await generateAvailability(providerId);
 
         return NextResponse.json(result);

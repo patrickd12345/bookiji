@@ -130,6 +130,16 @@ export class BookingEngine {
   // Create booking record in database
   private static async createBookingRecord(request: BookingRequest, slot: BookingSlot): Promise<string | null> {
     try {
+      // Invariant VI-1: No Past Booking
+      // Validate that slot start time is in the future (strict: start_time > now())
+      const now = new Date()
+      const slotStart = new Date(slot.start_time)
+      
+      if (slotStart <= now) {
+        console.error('Cannot create booking in the past:', { slotStart, now })
+        return null
+      }
+
       const { data, error } = await supabase
         .from('bookings')
         .insert({

@@ -5,6 +5,7 @@ import { withSLOProbe } from '@/middleware/sloProbe'
 import { featureFlags } from '@/config/featureFlags'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
+import { assertVendorHasActiveSubscription, SubscriptionRequiredError } from '@/lib/guards/subscriptionGuard';
 
 interface BookingConfirmRequest {
   quote_id: string
@@ -87,6 +88,33 @@ async function confirmHandler(req: NextRequest): Promise<NextResponse> {
         { error: 'Selected provider not found in quote candidates' },
         { status: 400 }
       )
+    }
+
+    // Invariant III-1: Server-side subscription gating (vendor must have active subscription to confirm bookings)
+    try {
+      await assertVendorHasActiveSubscription(body.provider_id);
+    } catch (error) {
+      if (error instanceof SubscriptionRequiredError) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 403 }
+        );
+      }
+      throw error;
+    }
+
+    // Invariant VI-1: No Past Booking
+    // Validate quote start time is in the future (if quote has start_time)
+    if (quote.start_time) {
+      const now = new Date()
+      const quoteStart = new Date(quote.start_time)
+      
+      if (quoteStart <= now) {
+        return NextResponse.json(
+          { error: 'Cannot confirm booking in the past' },
+          { status: 400 }
+        )
+      }
     }
 
     // Create booking with hold_placed state

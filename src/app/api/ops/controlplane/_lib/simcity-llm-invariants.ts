@@ -59,6 +59,7 @@ export async function checkInvariants(
   switch (event.event_type) {
     case 'CUSTOMER_BOOK':
       await checkBookingInvariants(event, violations, forensic_data)
+      await checkPastBookingInvariant(event, violations, forensic_data)
       break
     case 'VENDOR_CONFIRM_BOOKING':
     case 'VENDOR_CANCEL_BOOKING':
@@ -171,22 +172,89 @@ async function checkBookingOwnershipInvariants(
 }
 
 /**
- * Check subscription gate invariants
+ * Check subscription gate invariants (Invariant III-1)
  */
 async function checkSubscriptionInvariants(
   event: LLMProposedEvent,
-  _violations: string[],
-  _forensic_data: Record<string, unknown>
+  violations: string[],
+  forensic_data: Record<string, unknown>
 ): Promise<void> {
   // If scheduling requires subscription and event succeeded,
   // verify vendor has active subscription
-  // (This is a simplified check - real implementation would query subscription status)
   if (event.event_type === 'VENDOR_CREATE_AVAILABILITY') {
-    // In a real implementation, would check:
-    // const hasSubscription = await checkVendorSubscription(event.actor.ref)
-    // if (!hasSubscription && executionResult.success) {
-    //   violations.push('Vendor created availability without subscription')
-    // }
+    const config = getSupabaseConfig()
+    const supabase = createClient(config.url, config.secretKey || config.publishableKey)
+    
+    const { data: subscription, error } = await supabase
+      .from('vendor_subscriptions')
+      .select('subscription_status')
+      .eq('provider_id', event.actor.ref)
+      .single()
+
+    // If event succeeded but vendor has no active subscription, violation
+    if (!error && subscription) {
+      const activeStates = ['active', 'trialing']
+      if (!activeStates.includes(subscription.subscription_status)) {
+        violations.push(`Vendor ${event.actor.ref} created availability without active subscription (status: ${subscription.subscription_status})`)
+        forensic_data.subscription_status = subscription.subscription_status
+        forensic_data.vendor_id = event.actor.ref
+      }
+    } else if (error && error.code === 'PGRST116') {
+      // No subscription record found
+      violations.push(`Vendor ${event.actor.ref} created availability without subscription record`)
+      forensic_data.vendor_id = event.actor.ref
+      forensic_data.subscription_check_error = error
+    }
+  }
+}
+
+/**
+ * Check past booking invariant (Invariant VI-1)
+ * Bookings cannot be created in the past
+ */
+async function checkPastBookingInvariant(
+  event: LLMProposedEvent,
+  violations: string[],
+  forensic_data: Record<string, unknown>
+): Promise<void> {
+  if (event.event_type !== 'CUSTOMER_BOOK') {
+    return
+  }
+
+  const slotId = event.params.slot_id as string
+  if (!slotId) {
+    return // Invalid event, but not an invariant violation
+  }
+
+  const config = getSupabaseConfig()
+  const supabase = createClient(config.url, config.secretKey || config.publishableKey)
+
+  // Fetch slot to check start_time
+  const { data: slot, error } = await supabase
+    .from('availability_slots')
+    .select('start_time')
+    .eq('id', slotId)
+    .single()
+
+  if (error) {
+    // Slot not found or error - not a past booking violation
+    return
+  }
+
+  if (slot && slot.start_time) {
+    const slotStart = new Date(slot.start_time)
+    const now = new Date()
+
+    // Invariant VI-1: start_time must be > now()
+    if (slotStart <= now) {
+      violations.push(`Booking created for past slot: start_time=${slot.start_time}, now=${now.toISOString()}`)
+      forensic_data.past_booking_violation = {
+        slot_id: slotId,
+        slot_start_time: slot.start_time,
+        server_time: now.toISOString(),
+        time_difference_ms: now.getTime() - slotStart.getTime(),
+      }
+    }
   }
 }
 
