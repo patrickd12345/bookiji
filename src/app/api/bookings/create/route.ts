@@ -4,13 +4,20 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Stripe from 'stripe'
 import { getSupabaseConfig } from '@/config/supabase'
+import { createErrorResponse, createSuccessResponse, ErrorCodes } from '@/lib/api/errorEnvelope'
 
 export async function POST(req: NextRequest) {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY
 
   if (!stripeSecretKey) {
     console.error('STRIPE_SECRET_KEY is not configured')
-    return NextResponse.json({ error: 'Payment configuration error' }, { status: 500 })
+    return createErrorResponse(
+      ErrorCodes.INTERNAL_ERROR,
+      'Payment configuration error',
+      500,
+      { service: 'stripe' },
+      req.nextUrl.pathname
+    )
   }
 
   const stripe = new Stripe(stripeSecretKey, {
@@ -46,7 +53,13 @@ export async function POST(req: NextRequest) {
   const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
 
   if (authError || !user) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    return createErrorResponse(
+      ErrorCodes.AUTHENTICATION_ERROR,
+      'Not authenticated',
+      401,
+      undefined,
+      req.nextUrl.pathname
+    )
   }
 
   interface BookingRequestBody {
@@ -58,20 +71,45 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 })
+    return createErrorResponse(
+      ErrorCodes.VALIDATION_ERROR,
+      'Invalid JSON payload',
+      400,
+      { field: 'body' },
+      req.nextUrl.pathname
+    )
   }
 
   const { providerId, serviceId, startTime, endTime, amountUSD, idempotency_key } = body
 
   if (!providerId || !serviceId || !startTime || !endTime || amountUSD === undefined) {
-    return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+    const missingFields = []
+    if (!providerId) missingFields.push('providerId')
+    if (!serviceId) missingFields.push('serviceId')
+    if (!startTime) missingFields.push('startTime')
+    if (!endTime) missingFields.push('endTime')
+    if (amountUSD === undefined) missingFields.push('amountUSD')
+    
+    return createErrorResponse(
+      ErrorCodes.VALIDATION_ERROR,
+      'Missing required fields',
+      400,
+      { missingFields },
+      req.nextUrl.pathname
+    )
   }
 
   // Generate idempotency key if not provided (for duplicate protection)
   const idempotencyKey = idempotency_key || `booking_${user.id}_${providerId}_${startTime}_${Date.now()}`
 
   if (!config.secretKey) {
-    return NextResponse.json({ error: 'Supabase service key not configured' }, { status: 500 })
+    return createErrorResponse(
+      ErrorCodes.INTERNAL_ERROR,
+      'Supabase service key not configured',
+      500,
+      { service: 'supabase' },
+      req.nextUrl.pathname
+    )
   }
 
   // Supabase insert (service role) - check for duplicate first
@@ -88,17 +126,22 @@ export async function POST(req: NextRequest) {
 
   if (existingBooking) {
     // Duplicate request - return existing booking
-    return NextResponse.json({
+    return createSuccessResponse({
       booking: existingBooking,
       clientSecret: null, // Payment intent already exists
       duplicate: true,
-      message: 'This booking was already created'
     })
   }
 
   const amountNumber = Number(amountUSD)
   if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
-    return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
+    return createErrorResponse(
+      ErrorCodes.VALIDATION_ERROR,
+      'Invalid amount',
+      400,
+      { field: 'amountUSD', value: amountUSD },
+      req.nextUrl.pathname
+    )
   }
 
   const amountCents = Math.round(amountNumber * 100)
@@ -131,11 +174,17 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return createErrorResponse(
+      ErrorCodes.INTERNAL_ERROR,
+      'Failed to create booking',
+      500,
+      { databaseError: error.message },
+      req.nextUrl.pathname
+    )
   }
 
-  return NextResponse.json({
+  return createSuccessResponse({
     booking,
-    clientSecret: intent.client_secret
+    clientSecret: intent.client_secret,
   })
 }

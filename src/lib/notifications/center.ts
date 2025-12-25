@@ -1,5 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 import { sendEmail, sendSMS, sendPushNotification } from './providers'
+import {
+  generateNotificationKey,
+  isNotificationSent,
+  markNotificationSent,
+} from './idempotency'
+import { logNotificationFailure } from './dlq'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -20,10 +26,28 @@ export interface NotificationResult {
 export async function notifyUser(
   userId: string, 
   template: string, 
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  eventId?: string // Optional event ID for idempotency
 ): Promise<NotificationResult[]> {
   
   console.log(`🔔 Notification Center: Sending '${template}' to user ${userId}`)
+
+  // Idempotency check - prevent duplicate notifications
+  const idempotencyKey = generateNotificationKey({
+    userId,
+    template,
+    eventId: eventId || (data.booking_id as string) || (data.event_id as string),
+  })
+
+  const alreadySent = await isNotificationSent(idempotencyKey)
+  if (alreadySent) {
+    console.log(`⏭️ Notification already sent (idempotency): ${idempotencyKey}`)
+    return [
+      { type: 'email', success: true },
+      { type: 'sms', success: true },
+      { type: 'push', success: true },
+    ]
+  }
 
   // 1. Get preferences
   const { data: prefs, error: prefError } = await supabase
@@ -59,16 +83,66 @@ export async function notifyUser(
 
   // 3. Send Email
   if (preferences.email_enabled && email) {
-    const res = await sendEmail(email, template, data)
-    results.push({ type: 'email', ...res })
-    await logNotification(userId, 'email', email, template, res)
+    try {
+      const res = await sendEmail(email, template, data)
+      results.push({ type: 'email', ...res })
+      await logNotification(userId, 'email', email, template, res)
+      await markNotificationSent(idempotencyKey, userId, template, 'email', email, res.success)
+      
+      if (!res.success && res.error) {
+        await logNotificationFailure({
+          userId,
+          template,
+          channel: 'email',
+          recipient: email,
+          error: res.error,
+          context: data,
+        })
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      results.push({ type: 'email', success: false, error: errorMsg })
+      await logNotificationFailure({
+        userId,
+        template,
+        channel: 'email',
+        recipient: email || 'unknown',
+        error: errorMsg,
+        context: data,
+      })
+    }
   }
 
   // 4. Send SMS
   if (preferences.sms_enabled && phone) {
-    const res = await sendSMS(phone, template, data)
-    results.push({ type: 'sms', ...res })
-    await logNotification(userId, 'sms', phone, template, res)
+    try {
+      const res = await sendSMS(phone, template, data)
+      results.push({ type: 'sms', ...res })
+      await logNotification(userId, 'sms', phone, template, res)
+      await markNotificationSent(idempotencyKey, userId, template, 'sms', phone, res.success)
+      
+      if (!res.success && res.error) {
+        await logNotificationFailure({
+          userId,
+          template,
+          channel: 'sms',
+          recipient: phone,
+          error: res.error,
+          context: data,
+        })
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      results.push({ type: 'sms', success: false, error: errorMsg })
+      await logNotificationFailure({
+        userId,
+        template,
+        channel: 'sms',
+        recipient: phone || 'unknown',
+        error: errorMsg,
+        context: data,
+      })
+    }
   }
 
   // 5. Send Push Notification (if enabled and user has subscription)
@@ -95,9 +169,34 @@ export async function notifyUser(
         })
       } else {
         // Send immediately
-        const res = await sendPushNotification(subscriptions[0].endpoint, template, data)
-        results.push({ type: 'push', ...res })
-        await logNotification(userId, 'push', subscriptions[0].endpoint, template, res)
+        try {
+          const res = await sendPushNotification(subscriptions[0].endpoint, template, data)
+          results.push({ type: 'push', ...res })
+          await logNotification(userId, 'push', subscriptions[0].endpoint, template, res)
+          await markNotificationSent(idempotencyKey, userId, template, 'push', subscriptions[0].endpoint, res.success)
+          
+          if (!res.success && res.error) {
+            await logNotificationFailure({
+              userId,
+              template,
+              channel: 'push',
+              recipient: subscriptions[0].endpoint,
+              error: res.error,
+              context: data,
+            })
+          }
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+          results.push({ type: 'push', success: false, error: errorMsg })
+          await logNotificationFailure({
+            userId,
+            template,
+            channel: 'push',
+            recipient: subscriptions[0]?.endpoint || 'unknown',
+            error: errorMsg,
+            context: data,
+          })
+        }
       }
     }
   }

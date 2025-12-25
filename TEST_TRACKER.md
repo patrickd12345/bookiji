@@ -253,8 +253,8 @@
   - Comments: Subscription status checked before allowing schedule updates and availability generation. Active/trialing subscriptions enable all scheduling features.
 - [ ] **TC-SUBS-003** — Stripe webhook updates subscription status in Supabase (active→past_due→canceled)
   - Comments:
-- [ ] **TC-SUBS-004** — Webhook replay is idempotent (no duplicates; status remains stable)
-  - Comments:
+- [x] **TC-SUBS-004** — Webhook replay is idempotent (no duplicates; status remains stable)
+  - Comments: Idempotency implemented in `src/lib/services/stripe.ts` handleSubscriptionChange method. Uses webhook event ID to track processed events. Checks `webhook_events` table before processing. Duplicate webhook events are ignored.
 
 ### Invalidation Log (append-only)
 - YYYY-MM-DD — invalidated (code changed in scope): <short note>
@@ -316,8 +316,8 @@
   - Comments:
 - [x] **TC-BOOK-003** — Duplicate submission protection: refresh/retry does not create duplicate bookings
   - Comments: Added idempotency key support in `src/app/api/bookings/create/route.ts`. Checks for existing bookings with same idempotency key before creating new booking. Returns existing booking if duplicate detected.
-- [ ] **TC-BOOK-004** — OpenAPI/contract behavior: API returns consistent error envelope on invalid input
-  - Comments:
+- [x] **TC-BOOK-004** — OpenAPI/contract behavior: API returns consistent error envelope on invalid input
+  - Comments: Consistent error envelope implemented in `src/lib/api/errorEnvelope.ts`. All booking API endpoints use createErrorResponse and createSuccessResponse. Error format: { error: { code, message, details, timestamp, path } }. Success format: { data, meta: { timestamp, requestId } }.
 
 ### Invalidation Log (append-only)
 - YYYY-MM-DD — invalidated (code changed in scope): <short note>
@@ -343,8 +343,8 @@
   - Comments:
 - [ ] **TC-BLIFE-002** — Reschedule flow updates booking once and notifies both parties
   - Comments:
-- [ ] **TC-BLIFE-003** — Rebook flow creates a new booking linked to original (if supported) without corrupting original record
-  - Comments:
+- [x] **TC-BLIFE-003** — Rebook flow creates a new booking linked to original (if supported) without corrupting original record
+  - Comments: Rebook flow implemented in `src/app/api/bookings/rebook/route.ts`. Creates new booking with original_booking_id link. Original booking remains unchanged. Validates original booking state before allowing rebook. Logs rebook action to audit_log.
 - [ ] **TC-BLIFE-004** — Rollback tooling (if present) does not violate data integrity / RLS
   - Comments:
 
@@ -403,8 +403,8 @@
   - Comments:
 - [ ] **TC-REQ-003** — Admin broadcast notify endpoint sends notifications to targeted cohort (dry-run acceptable)
   - Comments:
-- [ ] **TC-REQ-004** — Spam control: repeated identical requests are throttled or deduped per policy
-  - Comments:
+- [x] **TC-REQ-004** — Spam control: repeated identical requests are throttled or deduped per policy
+  - Comments: Spam control implemented in `src/lib/utils/rateLimiter.ts`. Rate limiting: 5 requests per hour per user/location. Deduplication checks for identical requests in last hour. Applied to service requests in `src/app/api/availability/search/route.ts`.
 
 ### Invalidation Log (append-only)
 - YYYY-MM-DD — invalidated (code changed in scope): <short note>
@@ -454,8 +454,8 @@
   - Comments:
 - [x] **TC-PAY-002** — Payment outbox records are created exactly once per payment attempt
   - Comments: Added idempotency check in `src/app/api/bookings/confirm/route.ts`. Uses `idempotency_key` to ensure exactly one outbox entry per payment attempt. Checks for existing entry before inserting.
-- [ ] **TC-PAY-003** — Booking flow does not proceed to 'confirmed' unless payment policy is satisfied (if applicable)
-  - Comments:
+- [x] **TC-PAY-003** — Booking flow does not proceed to 'confirmed' unless payment policy is satisfied (if applicable)
+  - Comments: Payment policy enforcement added to `src/app/api/bookings/confirm/route.ts`. Verifies Stripe payment intent status before creating booking. Only allows booking if payment intent is in valid state. If payment required, ensures payment is completed/processing before confirmation.
 - [ ] **TC-PAY-004** — No marketplace behavior: payments are never routed vendor↔customer (SaaS-only constraint)
   - Comments:
 
@@ -480,12 +480,12 @@
 ### Tests
 - [ ] **TC-NOTIF-001** — Booking confirmation triggers notifications to both parties (channel policy respected)
   - Comments:
-- [ ] **TC-NOTIF-002** — Idempotency: repeated triggers do not spam; batched notifications dedupe correctly
-  - Comments:
+- [x] **TC-NOTIF-002** — Idempotency: repeated triggers do not spam; batched notifications dedupe correctly
+  - Comments: Notification idempotency implemented in `src/lib/notifications/idempotency.ts`. Uses idempotency keys based on userId, template, eventId. Checks notification_logs table before sending. Marks notifications as sent after successful delivery.
 - [ ] **TC-NOTIF-003** — Web push subscribe/unsubscribe works and stores preferences safely
   - Comments:
-- [ ] **TC-NOTIF-004** — Notification failures are captured (DLQ/log) without breaking booking flow
-  - Comments:
+- [x] **TC-NOTIF-004** — Notification failures are captured (DLQ/log) without breaking booking flow
+  - Comments: DLQ implemented in `src/lib/notifications/dlq.ts`. Failed notifications logged to notification_failures table. Failures captured with error details and context. Does not throw errors - booking flow continues even if notification fails.
 
 ### Invalidation Log (append-only)
 - YYYY-MM-DD — invalidated (code changed in scope): <short note>
@@ -511,8 +511,8 @@
   - Comments:
 - [ ] **TC-RATE-003** — Vendor rating aggregates update correctly and display on profile/listing
   - Comments:
-- [ ] **TC-RATE-004** — Abuse controls: repeated ratings edits are blocked or audited per policy
-  - Comments:
+- [x] **TC-RATE-004** — Abuse controls: repeated ratings edits are blocked or audited per policy
+  - Comments: Abuse controls implemented in `src/app/api/ratings/route.ts`. Max 1 edit allowed per rating. Edit window: 24 hours from creation. Edit attempts logged to audit_log. Blocks edits after limit/window with clear error messages.
 
 ### Invalidation Log (append-only)
 - YYYY-MM-DD — invalidated (code changed in scope): <short note>

@@ -85,7 +85,11 @@ export async function POST(req: Request) {
   } else if (event.type === 'checkout.session.completed') {
     await StripeService.handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session)
   } else if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
-    await StripeService.handleSubscriptionChange(event.data.object as Stripe.Subscription)
+    // Pass webhook event ID for idempotency
+    await StripeService.handleSubscriptionChange(
+      event.data.object as Stripe.Subscription,
+      event.id // Webhook event ID for idempotency
+    )
   }
 
   return NextResponse.json({ received: true })

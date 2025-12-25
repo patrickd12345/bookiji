@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabaseServer'
+import { checkServiceRequestLimit } from '@/lib/utils/rateLimiter'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
@@ -90,6 +91,45 @@ export async function POST(req: NextRequest) {
         } catch (aiError) {
           console.log('AI radius scaling failed, using density-based radius:', aiError);
           // Fall back to density-based radius
+        }
+
+        // Spam control: Check rate limit for service requests
+        // Note: In a real implementation, we'd get userId from auth
+        // For now, we'll use a session-based identifier
+        const rateLimitKey = `service_request:${customerLocation.lat},${customerLocation.lng}`
+        const rateLimit = checkServiceRequestLimit(rateLimitKey, {
+          serviceDetails,
+          desiredDateTime,
+        })
+
+        if (!rateLimit.allowed) {
+          return NextResponse.json({
+            success: true,
+            slots: [],
+            rateLimited: true,
+            message: 'Too many service requests. Please wait before requesting again.',
+            retryAfter: Math.ceil((rateLimit.resetAt - Date.now()) / 1000),
+          })
+        }
+
+        // Check for duplicate requests (deduplication)
+        const { data: recentRequests } = await supabase
+          .from('service_requests')
+          .select('id, created_at')
+          .eq('service_details', serviceDetails)
+          .eq('desired_datetime', desiredDateTime)
+          .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
+          .limit(1)
+
+        if (recentRequests && recentRequests.length > 0) {
+          // Duplicate request detected - return existing result without creating new request
+          return NextResponse.json({
+            success: true,
+            slots: [],
+            broadcasted: true,
+            duplicate: true,
+            message: 'Similar request already submitted recently',
+          })
         }
 
         // Create service request

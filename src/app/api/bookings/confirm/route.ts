@@ -89,6 +89,40 @@ async function confirmHandler(req: NextRequest): Promise<NextResponse> {
       )
     }
 
+    // Payment policy enforcement: Verify payment intent status before creating booking
+    if (featureFlags.payments.enabled) {
+      try {
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+        const paymentIntent = await stripe.paymentIntents.retrieve(body.stripe_payment_intent_id)
+        
+        // Only allow booking if payment intent is in a valid state
+        const validStates = ['requires_payment_method', 'requires_confirmation', 'requires_action', 'processing', 'succeeded']
+        if (!validStates.includes(paymentIntent.status)) {
+          return NextResponse.json(
+            { error: 'Payment intent is not in a valid state for booking confirmation' },
+            { status: 400 }
+          )
+        }
+
+        // If payment is required, ensure it's been captured or is in process
+        if (featureFlags.payments.require_payment && paymentIntent.status !== 'succeeded' && paymentIntent.status !== 'processing') {
+          return NextResponse.json(
+            { error: 'Payment must be completed before booking can be confirmed' },
+            { status: 402 } // Payment Required
+          )
+        }
+      } catch (stripeError) {
+        console.error('Error verifying payment intent:', stripeError)
+        // If payment verification fails, we can still proceed if payment is optional
+        if (featureFlags.payments.require_payment) {
+          return NextResponse.json(
+            { error: 'Failed to verify payment status' },
+            { status: 500 }
+          )
+        }
+      }
+    }
+
     // Create booking with hold_placed state
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')

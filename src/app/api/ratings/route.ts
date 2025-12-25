@@ -115,13 +115,79 @@ export async function POST(request: NextRequest) {
 
     const { data: existingRating } = await supabase
       .from('ratings')
-      .select('id')
+      .select('id, stars, comment, created_at, updated_at, edit_count')
       .eq('booking_id', bookingId)
       .eq('rater_role', raterRole)
       .maybeSingle()
 
+    // Abuse control: Block repeated edits (max 1 edit allowed, within 24 hours)
     if (existingRating?.id) {
-      return NextResponse.json({ error: t(locale, 'error.rating_duplicate') }, { status: 409 })
+      const editCount = existingRating.edit_count || 0
+      const createdAt = new Date(existingRating.created_at || existingRating.updated_at || Date.now())
+      const hoursSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60)
+      
+      // Allow one edit within 24 hours, block after that
+      if (editCount >= 1 || hoursSinceCreation > 24) {
+        // Log abuse attempt
+        await supabase.from('audit_log').insert({
+          action: 'rating_edit_blocked',
+          actor_id: profile.id,
+          booking_id: bookingId,
+          reason: editCount >= 1 ? 'max_edits_exceeded' : 'edit_window_expired',
+          meta: {
+            existing_rating_id: existingRating.id,
+            edit_count: editCount,
+            hours_since_creation: hoursSinceCreation,
+          },
+          created_at: new Date().toISOString(),
+        })
+
+        return NextResponse.json(
+          { 
+            error: editCount >= 1 
+              ? t(locale, 'error.rating_edit_limit_exceeded') || 'Rating can only be edited once'
+              : t(locale, 'error.rating_edit_window_expired') || 'Rating edit window has expired (24 hours)'
+          },
+          { status: 403 }
+        )
+      }
+
+      // Allow edit - update existing rating
+      const { data: updatedRating, error: updateError } = await supabase
+        .from('ratings')
+        .update({
+          stars,
+          comment,
+          updated_at: new Date().toISOString(),
+          edit_count: editCount + 1,
+        })
+        .eq('id', existingRating.id)
+        .select('id, booking_id, stars, comment, created_at, updated_at, edit_count')
+        .single()
+
+      if (updateError || !updatedRating) {
+        return NextResponse.json({ error: t(locale, 'error.rating_update_failed') }, { status: 500 })
+      }
+
+      // Log edit action
+      await supabase.from('audit_log').insert({
+        action: 'rating_edited',
+        actor_id: profile.id,
+        booking_id: bookingId,
+        meta: {
+          rating_id: updatedRating.id,
+          old_stars: existingRating.stars,
+          new_stars: stars,
+          edit_count: updatedRating.edit_count,
+        },
+        created_at: new Date().toISOString(),
+      })
+
+      return NextResponse.json({
+        success: true,
+        rating: updatedRating,
+        edited: true,
+      })
     }
 
     const { data: rating, error: ratingError } = await supabase

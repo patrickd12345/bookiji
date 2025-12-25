@@ -508,14 +508,32 @@ export class StripeService {
 
   /**
    * Handle subscription updated/deleted
+   * Idempotent: Uses webhook event ID to prevent duplicate processing
    */
-  static async handleSubscriptionChange(subscription: Stripe.Subscription): Promise<void> {
+  static async handleSubscriptionChange(
+    subscription: Stripe.Subscription,
+    webhookEventId?: string
+  ): Promise<void> {
       const supabase = createSupabaseServerClient();
       const customerId = subscription.customer as string;
       
+      // Idempotency check: If webhook event ID provided, check if already processed
+      if (webhookEventId) {
+          const { data: processed } = await supabase
+              .from('webhook_events')
+              .select('id')
+              .eq('stripe_event_id', webhookEventId)
+              .single();
+              
+          if (processed) {
+              console.log(`Webhook event ${webhookEventId} already processed, skipping`);
+              return; // Already processed - idempotent
+          }
+      }
+      
       // Find subscription by stripe_customer_id
       const { data: existing } = await supabase.from('vendor_subscriptions')
-        .select('provider_id')
+        .select('provider_id, subscription_status')
         .eq('stripe_customer_id', customerId)
         .single();
         
@@ -524,11 +542,46 @@ export class StripeService {
           return;
       }
 
-      await supabase.from('vendor_subscriptions').update({
-          subscription_status: subscription.status,
+      // Store previous status for audit
+      const previousStatus = existing.subscription_status;
+      const newStatus = subscription.status;
+
+      // Update subscription
+      const { error: updateError } = await supabase.from('vendor_subscriptions').update({
+          subscription_status: newStatus,
           current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           plan_id: subscription.items.data[0]?.price.id,
           updated_at: new Date().toISOString()
       }).eq('stripe_customer_id', customerId);
+
+      if (updateError) {
+          console.error('Error updating subscription:', updateError);
+          return;
+      }
+
+      // Mark webhook event as processed (idempotency)
+      if (webhookEventId) {
+          await supabase.from('webhook_events').insert({
+              stripe_event_id: webhookEventId,
+              event_type: 'subscription.updated',
+              processed_at: new Date().toISOString(),
+              status: 'processed',
+          }).onConflict('stripe_event_id').ignore(); // Ignore if duplicate
+      }
+
+      // Log status change for audit
+      if (previousStatus !== newStatus) {
+          await supabase.from('audit_log').insert({
+              action: 'subscription_status_changed',
+              meta: {
+                  customer_id: customerId,
+                  provider_id: existing.provider_id,
+                  previous_status: previousStatus,
+                  new_status: newStatus,
+                  webhook_event_id: webhookEventId,
+              },
+              created_at: new Date().toISOString(),
+          });
+      }
   }
 }
