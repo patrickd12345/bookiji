@@ -1,15 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 /**
  * Scheduling-focused landing page for sched.bookiji.com
- * Redirects to vendor schedule if authenticated, otherwise shows scheduling info
+ * Shows scheduling-focused content and links
  */
 export default function SchedLandingPage() {
-  const router = useRouter()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">

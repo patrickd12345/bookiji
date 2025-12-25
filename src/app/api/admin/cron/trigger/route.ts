@@ -38,7 +38,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const cronSecret = process.env.VERCEL_CRON_SECRET || (process.env.NODE_ENV === 'development' ? 'local-dev-secret' : null)
 
     if (!cronSecret) {
@@ -49,6 +48,12 @@ export async function POST(request: NextRequest) {
     }
 
     const startTime = Date.now()
+
+    // Use request hostname for subdomain support, fallback to env
+    const host = request.headers.get('host')
+    const protocol = request.headers.get('x-forwarded-proto') || 
+                     (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+    const baseUrl = host ? `${protocol}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
 
     // Trigger the cron job
     const response = await fetch(`${baseUrl}${path}`, {

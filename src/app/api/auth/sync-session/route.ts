@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { getSupabaseConfig } from '@/config/supabase'
 import { cookies } from 'next/headers'
+import { getSupabaseCookieOptions } from '@/lib/supabaseCookieConfig'
 
 /**
  * Sync Supabase session from Authorization header to cookies
@@ -29,7 +30,9 @@ export async function POST(request: NextRequest) {
           setAll(cookiesToSet) {
             try {
               cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, options)
+                // Merge with subdomain-aware cookie options
+                const mergedOptions = { ...getSupabaseCookieOptions(), ...options }
+                cookieStore.set(name, value, mergedOptions)
               })
             } catch (_error) {
               // The `setAll` method was called from a Server Component or Route Handler.

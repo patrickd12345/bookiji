@@ -30,7 +30,11 @@ export async function POST(request: NextRequest) {
         SIMCITY_PLANNER: 'stub',
         SUPABASE_URL: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
         SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-        TARGET_URL: process.env.TARGET_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        // Use request hostname for subdomain support, fallback to env
+        TARGET_URL: process.env.TARGET_URL || 
+                    (request ? `https://${request.headers.get('host') || 'bookiji.com'}` : null) ||
+                    process.env.NEXT_PUBLIC_APP_URL || 
+                    'http://localhost:3000'
       },
       timeout: 360000 // 6 minutes max
     })

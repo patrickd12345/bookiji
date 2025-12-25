@@ -66,13 +66,18 @@ export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
 
   // Subdomain routing: sched.bookiji.com -> scheduling pages
-  const isSchedSubdomain = hostname.startsWith('sched.')
+  // Check for sched subdomain (handles both sched.bookiji.com and sched.bookiji.com:port)
+  const isSchedSubdomain = hostname.split(':')[0].startsWith('sched.')
   
-  if (isSchedSubdomain && pathname === '/') {
-    // Show scheduling landing page instead of redirecting
-    const url = request.nextUrl.clone()
-    url.pathname = '/sched'
-    return NextResponse.rewrite(url)
+  if (isSchedSubdomain) {
+    // For root path, rewrite to /sched page
+    if (pathname === '/') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/sched'
+      return NextResponse.rewrite(url)
+    }
+    // For all other paths on sched subdomain, allow normal routing
+    // (this ensures /vendor/*, /api/*, etc. still work)
   }
 
   if (request.headers.get(SYNTHETIC_HEADER) === 'simcity') {
@@ -188,6 +193,13 @@ function addSecurityHeaders(response: NextResponse) {
 export const config = {
   matcher: [
     '/api/:path*',
-    '/((?!_next/static|_next/image|favicon.ico).*)'
-  ]
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 }

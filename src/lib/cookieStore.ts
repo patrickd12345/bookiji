@@ -1,11 +1,14 @@
 import { cookies } from 'next/headers'
+import { getCookieOptions } from './cookieHelpers'
 
 export function getCookieStore() {
   return cookies()
 }
 
-export const cookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax'
-} as const 
+/**
+ * Default cookie options with subdomain support
+ * Use getCookieOptions() from cookieHelpers for more control
+ */
+export const cookieOptions = getCookieOptions({
+  httpOnly: true
+}) as const 

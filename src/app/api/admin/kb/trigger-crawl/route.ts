@@ -25,8 +25,12 @@ export async function POST(request: NextRequest) {
     // Check admin status
     await requireAdmin({ user });
 
-    // Call the cron endpoint internally
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bookiji.com';
+    // Use request hostname for subdomain support
+    const host = request.headers.get('host')
+    const protocol = request.headers.get('x-forwarded-proto') || 
+                     (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+    const baseUrl = host ? `${protocol}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'https://bookiji.com')
+    
     const cronSecret = process.env.VERCEL_CRON_SECRET;
     
     if (!cronSecret) {

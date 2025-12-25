@@ -8,13 +8,12 @@ export async function POST(request: NextRequest) {
 
     if (key === secretKey) {
       const cookieStore = await cookies()
-      cookieStore.set('bookiji_access', 'true', {
-        path: '/',
+import { getCookieOptions } from '@/lib/cookieHelpers'
+
+      cookieStore.set('bookiji_access', 'true', getCookieOptions({
         maxAge: 60 * 60 * 24 * 30, // 30 days
-        httpOnly: false,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-      })
+        httpOnly: false
+      }))
       return NextResponse.json({ valid: true })
     }
 

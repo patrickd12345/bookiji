@@ -9,9 +9,18 @@ interface EmailTemplate {
 
 import { t } from '@/lib/i18n/server'
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+import { getBaseUrl } from '@/lib/getBaseUrl'
 
-export function getEmailTemplate(template: string, data: TemplateData): EmailTemplate {
+// Get base URL - supports subdomain awareness via request context
+function getBaseUrlForEmail(request?: Request): string {
+  return getBaseUrl(request) || 
+         process.env.NEXT_PUBLIC_BASE_URL || 
+         process.env.NEXT_PUBLIC_APP_URL || 
+         'http://localhost:3000'
+}
+
+export function getEmailTemplate(template: string, data: TemplateData, request?: Request): EmailTemplate {
+  const BASE_URL = getBaseUrlForEmail(request)
   const locale = typeof data.locale === 'string' ? data.locale : undefined
   const name = typeof data.name === 'string' ? data.name : ''
   const service = typeof data.service === 'string' ? data.service : ''

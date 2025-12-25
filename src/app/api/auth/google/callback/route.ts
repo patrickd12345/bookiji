@@ -5,10 +5,24 @@ import { google } from 'googleapis'
 import { CalendarProvider } from '@/lib/calendar-adapters/types'
 import { getSupabaseConfig } from '@/config/supabase'
 
+// OAuth redirect URI - supports both main domain and subdomains
+function getGoogleRedirectUri(request?: Request): string {
+  if (request) {
+    const host = request.headers.get('host')
+    const protocol = request.headers.get('x-forwarded-proto') || 
+                     (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+    if (host) {
+      return `${protocol}://${host}/api/auth/google/callback`
+    }
+  }
+  return process.env.GOOGLE_REDIRECT_URI || 
+         `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/google/callback`
+}
+
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`
+  process.env.GOOGLE_REDIRECT_URI || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/google/callback`
 )
 
 export async function GET(request: NextRequest) {

@@ -170,7 +170,8 @@ async function executeVendorRegister(
     }
 
     // Then create vendor profile via API
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/vendor/register`, {
+    // Use relative URL for internal API calls (works on any subdomain)
+    const response = await fetch('/api/vendor/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -221,8 +222,9 @@ async function executeCustomerSearch(
   startTime: number
 ): Promise<EventExecutionResult> {
   try {
+    // Use relative URL for internal API calls
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/search/providers`,
+      '/api/search/providers',
       {
         method: 'POST',
         headers: {
@@ -274,7 +276,8 @@ async function executeCustomerBook(
   startTime: number
 ): Promise<EventExecutionResult> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/bookings/create`, {
+    // Use relative URL for internal API calls
+    const response = await fetch('/api/bookings/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -339,7 +342,8 @@ async function executeVendorConfirmBooking(
     }
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/bookings/confirm`,
+      // Use relative URL for internal API calls
+      '/api/bookings/confirm',
       {
         method: 'POST',
         headers: {
@@ -402,7 +406,8 @@ async function executeVendorCancelBooking(
     }
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/bookings/cancel`,
+      // Use relative URL for internal API calls
+      '/api/bookings/cancel',
       {
         method: 'POST',
         headers: {
@@ -468,7 +473,8 @@ async function executeCustomerRateVendor(
     }
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ratings/booking/${bookingId}`,
+      // Use relative URL for internal API calls
+      `/api/ratings/booking/${bookingId}`,
       {
         method: 'POST',
         headers: {
@@ -521,7 +527,8 @@ async function executeVendorCreateAvailability(
 ): Promise<EventExecutionResult> {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/availability/generate`,
+      // Use relative URL for internal API calls
+      '/api/availability/generate',
       {
         method: 'POST',
         headers: {
@@ -575,7 +582,8 @@ async function executeVendorSubscribe(
 ): Promise<EventExecutionResult> {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/billing/create-checkout-session`,
+      // Use relative URL for internal API calls
+      '/api/billing/create-checkout-session',
       {
         method: 'POST',
         headers: {

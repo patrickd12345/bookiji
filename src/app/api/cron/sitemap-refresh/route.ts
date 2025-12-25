@@ -19,7 +19,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bookiji.com';
+    // Use request hostname for subdomain support
+    const host = request.headers.get('host')
+    const protocol = request.headers.get('x-forwarded-proto') || 
+                     (process.env.NODE_ENV === 'production' ? 'https' : 'http')
+    const baseUrl = host ? `${protocol}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'https://bookiji.com')
     const sitemapUrl = `${baseUrl}/sitemap.xml`;
     
     console.log(`[Sitemap Refresh] Starting sitemap refresh at ${new Date().toISOString()}`);

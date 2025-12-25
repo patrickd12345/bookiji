@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { getSupabaseConfig } from '@/config/supabase'
+import { getSupabaseCookieOptions } from '@/lib/supabaseCookieConfig'
 
 /**
  * Creates a Supabase server client with proper cookie handling using getAll/setAll
@@ -21,7 +22,9 @@ export async function createSupabaseServerClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
+              // Merge with subdomain-aware cookie options
+              const mergedOptions = { ...getSupabaseCookieOptions(), ...options }
+              cookieStore.set(name, value, mergedOptions)
             })
           } catch (_error) {
             // The `setAll` method was called from a Server Component or Route Handler.

@@ -59,7 +59,8 @@ export async function POST(request: Request) {
       priority: normalizedPriority,
       intentType: notification.intent_type,
       idempotencyKey: notification.idempotency_key,
-      userId: notification.user_id || (type === 'push' ? recipient : undefined)
+      userId: notification.user_id || (type === 'push' ? recipient : undefined),
+      request: request // Pass request for subdomain-aware email links
     })
 
     if (process.env.NODE_ENV === 'development') {

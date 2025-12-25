@@ -11,9 +11,14 @@ export interface NotificationResult {
 }
 
 // Email notification handler
-export async function sendEmail(recipient: string, template: string, data: Record<string, unknown>): Promise<NotificationResult> {
+export async function sendEmail(
+  recipient: string, 
+  template: string, 
+  data: Record<string, unknown>,
+  request?: Request
+): Promise<NotificationResult> {
   try {
-    const { subject, html } = getEmailTemplate(template, data)
+    const { subject, html } = getEmailTemplate(template, data, request)
 
     if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM) {
       const response = await fetch('https://api.sendgrid.com/v3/mail/send', {

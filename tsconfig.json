@@ -27,5 +27,5 @@
     "baseUrl": "."
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "tests/**/*.ts", "packages/**/*.ts"],
-  "exclude": ["node_modules", "supabase/functions/**/*", "apps/opsai-control-plane/**/*"]
+  "exclude": ["node_modules", "supabase/functions/**/*", "apps/opsai-control-plane/**/*", "scripts/**/*"]
 }

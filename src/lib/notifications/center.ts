@@ -20,7 +20,8 @@ export interface NotificationResult {
 export async function notifyUser(
   userId: string, 
   template: string, 
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  request?: Request
 ): Promise<NotificationResult[]> {
   
   console.log(`🔔 Notification Center: Sending '${template}' to user ${userId}`)
@@ -59,7 +60,7 @@ export async function notifyUser(
 
   // 3. Send Email
   if (preferences.email_enabled && email) {
-    const res = await sendEmail(email, template, data)
+    const res = await sendEmail(email, template, data, request)
     results.push({ type: 'email', ...res })
     await logNotification(userId, 'email', email, template, res)
   }

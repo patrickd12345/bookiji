@@ -190,6 +190,7 @@ export async function dispatchIntentToRecipient(input: {
   intentType?: string
   idempotencyKey?: string
   userId?: string
+  request?: Request
 }): Promise<{ intentId: string; deliveryId: string; queued: boolean }> {
   const intentType = input.intentType || input.template
   const priority = input.priority || 'normal'
@@ -259,7 +260,7 @@ export async function dispatchIntentToRecipient(input: {
   const attemptResult = await retryNotification(
     () => {
       if (input.channel === 'email') {
-        return sendEmail(input.recipient, input.template, input.data)
+        return sendEmail(input.recipient, input.template, input.data, input.request)
       }
       if (input.channel === 'sms') {
         return sendSMS(input.recipient, input.template, input.data)

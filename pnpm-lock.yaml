@@ -246,6 +246,9 @@ importers:
       '@types/nodemailer':
         specifier: ^6.4.17
         version: 6.4.17
+      '@types/pg':
+        specifier: ^8.11.10
+        version: 8.16.0
       '@types/react':
         specifier: ^18.3.12
         version: 18.3.23
@@ -2857,6 +2860,9 @@ packages:
 
   '@types/pg-pool@2.0.6':
     resolution: {integrity: sha512-TaAUE5rq2VQYxab5Ts7WZhKNmuN78Q6PiFonTDdpbx8a1H0M1vhy3rhiMjl+e2iHmogyMw7jZF4FrE6eJUy5HQ==}
+
+  '@types/pg@8.16.0':
+    resolution: {integrity: sha512-RmhMd/wD+CF8Dfo+cVIy3RR5cl8CyfXQ0tGgW6XBL8L4LM/UTEbNXYRbLwU6w+CgrKBNbrQWt4FUtTfaU5jSYQ==}
 
   '@types/pg@8.6.1':
     resolution: {integrity: sha512-1Kc4oAGzAl7uqUStZCDvaLFqZrW9qWSjXOmBfdgyBP5La7Us6Mg4GBvRlSoaZMhQF/zSj1C8CtKMBkoiT8eL8w==}
@@ -7619,7 +7625,7 @@ snapshots:
 
   '@jest/pattern@30.0.1':
     dependencies:
-      '@types/node': 20.19.4
+      '@types/node': 20.19.27
       jest-regex-util: 30.0.1
 
   '@jest/schemas@30.0.1':
@@ -7632,7 +7638,7 @@ snapshots:
       '@jest/schemas': 30.0.1
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 20.19.4
+      '@types/node': 20.19.27
       '@types/yargs': 17.0.33
       chalk: 4.1.2
 
@@ -8984,7 +8990,7 @@ snapshots:
 
   '@types/connect@3.4.36':
     dependencies:
-      '@types/node': 20.19.4
+      '@types/node': 20.19.27
 
   '@types/cookie@0.6.0': {}
 
@@ -9083,7 +9089,7 @@ snapshots:
 
   '@types/mysql@2.15.26':
     dependencies:
-      '@types/node': 20.19.4
+      '@types/node': 20.19.27
 
   '@types/node-cron@3.0.11': {}
 
@@ -9112,11 +9118,17 @@ snapshots:
 
   '@types/pg-pool@2.0.6':
     dependencies:
-      '@types/pg': 8.6.1
+      '@types/pg': 8.16.0
+
+  '@types/pg@8.16.0':
+    dependencies:
+      '@types/node': 20.19.27
+      pg-protocol: 1.10.3
+      pg-types: 2.2.0
 
   '@types/pg@8.6.1':
     dependencies:
-      '@types/node': 20.19.4
+      '@types/node': 20.19.27
       pg-protocol: 1.10.3
       pg-types: 2.2.0
 
@@ -9166,7 +9178,7 @@ snapshots:
 
   '@types/tedious@4.0.14':
     dependencies:
-      '@types/node': 20.19.4
+      '@types/node': 20.19.27
 
   '@types/tough-cookie@4.0.5': {}
 
@@ -9182,7 +9194,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 20.19.4
+      '@types/node': 20.19.27
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -11344,7 +11356,7 @@ snapshots:
   jest-mock@30.0.2:
     dependencies:
       '@jest/types': 30.0.1
-      '@types/node': 20.19.4
+      '@types/node': 20.19.27
       jest-util: 30.0.2
 
   jest-regex-util@30.0.1: {}
@@ -11352,7 +11364,7 @@ snapshots:
   jest-util@30.0.2:
     dependencies:
       '@jest/types': 30.0.1
-      '@types/node': 20.19.4
+      '@types/node': 20.19.27
       chalk: 4.1.2
       ci-info: 4.2.0
       graceful-fs: 4.2.11
