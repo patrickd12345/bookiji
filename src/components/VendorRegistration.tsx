@@ -48,6 +48,7 @@ export default function VendorRegistration({ onSuccess }: VendorRegistrationProp
     specialties: []
   })
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const router = useRouter()
 
@@ -74,13 +75,32 @@ export default function VendorRegistration({ onSuccess }: VendorRegistrationProp
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    if (!data.business_name || !data.email) { 
-      setError('Business name and email are required'); 
-      return 
+    setFieldErrors({})
+    
+    // Inline validation with field-specific errors
+    const newFieldErrors: Record<string, string> = {}
+    
+    if (!data.business_name?.trim()) {
+      newFieldErrors.business_name = 'Business name is required'
     }
+    
+    if (!data.email?.trim()) {
+      newFieldErrors.email = 'Email is required'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      newFieldErrors.email = 'Please enter a valid email address'
+    }
+    
+    if (!data.contact_name?.trim()) {
+      newFieldErrors.contact_name = 'Contact name is required'
+    }
+    
     if (data.specialties.length === 0) {
-      setError('Please select at least one specialty'); 
-      return 
+      newFieldErrors.specialties = 'Please select at least one specialty'
+    }
+    
+    if (Object.keys(newFieldErrors).length > 0) {
+      setFieldErrors(newFieldErrors)
+      return
     }
     
     setBusy(true)
@@ -126,6 +146,12 @@ export default function VendorRegistration({ onSuccess }: VendorRegistrationProp
 
       if (specialtyError) throw specialtyError
 
+      // Mark onboarding as completed
+      await supabase.from('profiles').update({
+        onboarding_completed: true,
+        updated_at: new Date().toISOString()
+      }).eq('id', user.id)
+
       setBusy(false)
       onSuccess?.()
       router.replace('/vendor/dashboard')
@@ -157,29 +183,68 @@ export default function VendorRegistration({ onSuccess }: VendorRegistrationProp
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Business Name *</label>
+                <label htmlFor="business_name" className="block text-sm font-medium mb-2">
+                  Business Name <span className="text-red-500">*</span>
+                </label>
                 <input 
-                  className="border p-3 w-full rounded-lg" 
+                  id="business_name"
+                  className={`border p-3 w-full rounded-lg ${fieldErrors.business_name ? 'border-red-500' : ''}`}
                   placeholder="Your business name" 
                   value={data.business_name} 
-                  onChange={e=>set('business_name', e.target.value)} 
+                  onChange={e => {
+                    set('business_name', e.target.value)
+                    if (fieldErrors.business_name) {
+                      setFieldErrors(prev => {
+                        const next = { ...prev }
+                        delete next.business_name
+                        return next
+                      })
+                    }
+                  }}
+                  aria-invalid={!!fieldErrors.business_name}
+                  aria-describedby={fieldErrors.business_name ? 'business_name-error' : undefined}
                 />
+                {fieldErrors.business_name && (
+                  <p id="business_name-error" className="text-red-600 text-sm mt-1" role="alert">
+                    {fieldErrors.business_name}
+                  </p>
+                )}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Contact Name *</label>
+                <label htmlFor="contact_name" className="block text-sm font-medium mb-2">
+                  Contact Name <span className="text-red-500">*</span>
+                </label>
                 <input 
-                  className="border p-3 w-full rounded-lg" 
+                  id="contact_name"
+                  className={`border p-3 w-full rounded-lg ${fieldErrors.contact_name ? 'border-red-500' : ''}`}
                   placeholder="Your full name" 
                   value={data.contact_name} 
-                  onChange={e=>set('contact_name', e.target.value)} 
+                  onChange={e => {
+                    set('contact_name', e.target.value)
+                    if (fieldErrors.contact_name) {
+                      setFieldErrors(prev => {
+                        const next = { ...prev }
+                        delete next.contact_name
+                        return next
+                      })
+                    }
+                  }}
+                  aria-invalid={!!fieldErrors.contact_name}
+                  aria-describedby={fieldErrors.contact_name ? 'contact_name-error' : undefined}
                 />
+                {fieldErrors.contact_name && (
+                  <p id="contact_name-error" className="text-red-600 text-sm mt-1" role="alert">
+                    {fieldErrors.contact_name}
+                  </p>
+                )}
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Phone</label>
+                <label htmlFor="phone" className="block text-sm font-medium mb-2">Phone</label>
                 <input 
+                  id="phone"
                   className="border p-3 w-full rounded-lg" 
                   placeholder="Phone number" 
                   value={data.phone} 
@@ -187,14 +252,33 @@ export default function VendorRegistration({ onSuccess }: VendorRegistrationProp
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Email *</label>
+                <label htmlFor="email" className="block text-sm font-medium mb-2">
+                  Email <span className="text-red-500">*</span>
+                </label>
                 <input 
-                  className="border p-3 w-full rounded-lg" 
+                  id="email"
+                  className={`border p-3 w-full rounded-lg ${fieldErrors.email ? 'border-red-500' : ''}`}
                   type="email" 
                   placeholder="Email address" 
                   value={data.email} 
-                  onChange={e=>set('email', e.target.value)} 
+                  onChange={e => {
+                    set('email', e.target.value)
+                    if (fieldErrors.email) {
+                      setFieldErrors(prev => {
+                        const next = { ...prev }
+                        delete next.email
+                        return next
+                      })
+                    }
+                  }}
+                  aria-invalid={!!fieldErrors.email}
+                  aria-describedby={fieldErrors.email ? 'email-error' : undefined}
                 />
+                {fieldErrors.email && (
+                  <p id="email-error" className="text-red-600 text-sm mt-1" role="alert">
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -228,12 +312,19 @@ export default function VendorRegistration({ onSuccess }: VendorRegistrationProp
             <p className="text-sm text-gray-600">Select the services you provide. You can choose multiple specialties.</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <SpecialtyTreeSelect
-              value=""
-              onChangeAction={addSpecialty}
-              placeholder="Search and select specialties..."
-              className="w-full"
-            />
+            <div>
+              <SpecialtyTreeSelect
+                value=""
+                onChangeAction={addSpecialty}
+                placeholder="Search and select specialties..."
+                className={`w-full ${fieldErrors.specialties ? 'border-red-500' : ''}`}
+              />
+              {fieldErrors.specialties && (
+                <p id="specialties-error" className="text-red-600 text-sm mt-1" role="alert">
+                  {fieldErrors.specialties}
+                </p>
+              )}
+            </div>
             
             {data.specialties.length > 0 && (
               <div className="space-y-2">

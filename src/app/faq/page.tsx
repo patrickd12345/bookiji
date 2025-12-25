@@ -3,19 +3,13 @@ import SmartFAQ from '@/components/SmartFAQ'
 import Link from 'next/link'
 import { canonicalUrl } from '@/lib/seo'
 import { JsonLd } from '@/lib/seo'
+import { generatePageMetadata } from '@/lib/seo/metadata'
 
-export const metadata: Metadata = {
-  title: 'Frequently Asked Questions',
+export const metadata: Metadata = generatePageMetadata({
+  title: 'Frequently Asked Questions | Bookiji',
   description: 'Find answers to common questions about Bookiji, our booking process, services, and how to get started.',
-  alternates: {
-    canonical: canonicalUrl('/faq'),
-  },
-  openGraph: {
-    title: 'FAQ - Bookiji',
-    description: 'Frequently asked questions about Bookiji booking platform.',
-    url: '/faq',
-  },
-}
+  path: '/faq',
+})
 
 const faqJsonLd = {
   '@context': 'https://schema.org',

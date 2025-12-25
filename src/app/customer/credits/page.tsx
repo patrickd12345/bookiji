@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { CreditCard, Plus, Minus, DollarSign, History } from 'lucide-react'
 import Link from 'next/link'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 
 interface CreditBalance {
   balance_cents: number
@@ -22,10 +24,39 @@ export default function CustomerCreditsPage() {
   const [balance, setBalance] = useState<CreditBalance | null>(null)
   const [transactions, setTransactions] = useState<CreditTransaction[]>([])
   const [loading, setLoading] = useState(true)
+  const [accessDenied, setAccessDenied] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
-    const loadCredits = async () => {
+    const checkAccess = async () => {
       try {
+        const supabase = supabaseBrowserClient()
+        if (!supabase) {
+          setAccessDenied(true)
+          setLoading(false)
+          return
+        }
+
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/login?next=/customer/credits')
+          return
+        }
+
+        // Check if user has customer role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        if (profile?.role !== 'customer') {
+          setAccessDenied(true)
+          setLoading(false)
+          return
+        }
+
+        // Load credits
         const response = await fetch('/api/credits/balance')
         if (response.ok) {
           const data = await response.json()
@@ -36,18 +67,46 @@ export default function CustomerCreditsPage() {
         }
       } catch (error) {
         console.error('Error loading credits:', error)
+        setAccessDenied(true)
       } finally {
         setLoading(false)
       }
     }
 
-    loadCredits()
-  }, [])
+    checkAccess()
+  }, [router])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+      </div>
+    )
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
+          <h1 className="text-2xl font-bold text-yellow-900 mb-4">Access Denied</h1>
+          <p className="text-yellow-700 mb-6">
+            You must be logged in as a customer to access the credits page.
+          </p>
+          <div className="space-x-4">
+            <Link
+              href="/login"
+              className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/"
+              className="inline-block px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Go Home
+            </Link>
+          </div>
+        </div>
       </div>
     )
   }

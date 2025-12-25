@@ -1,4 +1,12 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+import { generatePageMetadata } from '@/lib/seo/metadata'
+
+export const metadata: Metadata = generatePageMetadata({
+  title: 'How It Works | Bookiji',
+  description: 'Discover how Bookiji makes finding and booking services easier, safer, and more reliable than ever before.',
+  path: '/how-it-works',
+})
 
 export default function HowItWorksPage() {
   return (

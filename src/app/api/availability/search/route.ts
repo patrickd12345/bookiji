@@ -180,6 +180,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Graceful empty result state with suggestions
+    if (!slots || slots.length === 0) {
+      return NextResponse.json({
+        success: true,
+        slots: [],
+        empty: true,
+        suggestions: {
+          message: 'No available slots found for your search criteria.',
+          actions: [
+            'Try adjusting your date range',
+            'Expand your search radius',
+            'Create a service request to be notified when slots become available',
+          ],
+          createRequestUrl: '/requests',
+        },
+      })
+    }
+
     return NextResponse.json({ success: true, slots: slots || [] })
   } catch (err) {
     console.error('availability search error:', err)

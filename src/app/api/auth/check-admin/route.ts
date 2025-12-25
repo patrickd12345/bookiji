@@ -1,58 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { getSupabaseConfig } from '@/config/supabase'
 import { cookies } from 'next/headers'
+import { getSupabaseConfig } from '@/config/supabase'
 
-// Optional: Admin org IDs via environment variable (for organization-based admin access)
-const ADMIN_ORG_IDS = process.env.ADMIN_ORG_IDS?.split(',').filter(Boolean) || []
-
-export async function GET(_request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const config = getSupabaseConfig()
     const cookieStore = await cookies()
-    
-    // Use createServerClient to properly read Supabase session cookies
-    const supabase = createServerClient(
-      config.url,
-      config.publishableKey,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, options)
-              })
-            } catch (_error) {
-              // The `setAll` method was called from a Server Component or Route Handler.
-              // This can be ignored if you have middleware refreshing user sessions.
-            }
+    const config = getSupabaseConfig()
+    const supabase = createServerClient(config.url, config.publishableKey, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch (_error) {
+            // Ignore cookie setting errors
           }
         }
       }
-    )
+    })
 
-    // Get user from session
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return NextResponse.json({ isAdmin: false, error: authError?.message }, { status: 200 })
+      return NextResponse.json({ isAdmin: false })
     }
 
-    // Check profiles table for admin role (primary role source)
+    // Check if user has admin role
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, role, org_id')
+      .select('role')
       .eq('id', user.id)
-      .maybeSingle()
-    
+      .single()
+
     if (profile?.role === 'admin') {
-      return NextResponse.json({ isAdmin: true, userId: user.id, email: user.email, reason: 'profile_role' })
+      return NextResponse.json({ isAdmin: true })
     }
 
-    // Check user_roles table (flexible role management)
-    // user_roles.app_user_id references app_users.id, so we need to join through app_users
+    // Check user_roles table
     const { data: appUser } = await supabase
       .from('app_users')
       .select('id')
@@ -68,18 +56,13 @@ export async function GET(_request: NextRequest) {
         .maybeSingle()
 
       if (userRole?.role === 'admin') {
-        return NextResponse.json({ isAdmin: true, userId: user.id, email: user.email, reason: 'user_roles' })
+        return NextResponse.json({ isAdmin: true })
       }
     }
 
-    // Optional: Check if user is admin via org_id (only if ADMIN_ORG_IDS is configured)
-    if (ADMIN_ORG_IDS.length > 0 && profile?.org_id && ADMIN_ORG_IDS.includes(profile.org_id)) {
-      return NextResponse.json({ isAdmin: true, userId: user.id, email: user.email, reason: 'org_id' })
-    }
-
-    return NextResponse.json({ isAdmin: false, userId: user.id, email: user.email })
+    return NextResponse.json({ isAdmin: false })
   } catch (error) {
     console.error('Admin check error:', error)
-    return NextResponse.json({ isAdmin: false }, { status: 200 })
+    return NextResponse.json({ isAdmin: false })
   }
 }

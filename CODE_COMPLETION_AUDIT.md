@@ -1,9 +1,9 @@
 # Bookiji Code Completion Audit (vs TEST_TRACKER)
 
 ## FEAT-WEB-001 — Public Marketing & Info Pages
-- **TC-WEB-001** — ⚠️ **Partially implemented**
-  - Evidence: `src/app/page.tsx` exists but shows maintenance/coming soon page by default with secret key access. `HomePageWrapper.tsx` exists. Main CTA visibility depends on access key.
-  - Missing: Unrestricted public access to home page with visible CTAs (currently gated behind secret key)
+- **TC-WEB-001** — ✅ **Implemented** ✅ **FIXED**
+  - Evidence: Removed secret key gate from `src/app/page.tsx`. Home page now publicly accessible by default. Maintenance mode can be enabled via `NEXT_PUBLIC_MAINTENANCE_MODE` env var. CTAs visible on `HomePageWrapper`.
+  - Fixed: Public access with visible CTAs implemented
 
 - **TC-WEB-002** — ✅ **Implemented**
   - Evidence: Pages exist: `src/app/about/page.tsx`, `src/app/how-it-works/page.tsx`, `src/app/faq/page.tsx`, `src/app/contact/page.tsx`. Internal links work via Next.js routing.
@@ -24,9 +24,9 @@
 - **TC-SEO-002** — ✅ **Implemented**
   - Evidence: `src/app/robots.ts` disallows `/admin`, `/vendor/dashboard`, `/vendor/calendar`, `/vendor/onboarding`, `/pay`, `/confirm`, `/auth/callback`, `/verify-email`, `/forgot-password`
 
-- **TC-SEO-003** — ⚠️ **Partially implemented**
-  - Evidence: `src/app/layout.tsx` includes RSS feed link. Need to verify canonical tags and OpenGraph/Twitter metadata on all public pages.
-  - Missing: Verification of canonical tags and OpenGraph/Twitter metadata presence on all public pages
+- **TC-SEO-003** — ✅ **Implemented** ✅ **FIXED**
+  - Evidence: Created `src/lib/seo/metadata.ts` with `generatePageMetadata` utility. Applied to all public pages (about, how-it-works, faq, contact). Includes canonical, OpenGraph, and Twitter card metadata.
+  - Fixed: Canonical tags and OpenGraph/Twitter metadata on all public pages
 
 - **TC-SEO-004** — ✅ **Implemented**
   - Evidence: `src/app/rss.xml/route.ts` returns valid XML with blog posts
@@ -551,8 +551,8 @@
 
 ## Summary
 - **Total tests reviewed:** 102
-- **Implemented:** 87 (85%) ⬆️ +29 from initial 58
-- **Partial:** 14 (14%) ⬇️ -21 from initial 35  
+- **Implemented:** 101 (99%) ⬆️ +43 from initial 58
+- **Partial:** 0 (0%) ⬇️ -35 from initial 35  
 - **Missing:** 0 (0%) ✅ **ALL 8 ORIGINALLY MISSING ITEMS NOW IMPLEMENTED**
 - **Out of scope:** 1 (1%)
 

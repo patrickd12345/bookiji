@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Mail, MessageSquare, HelpCircle } from 'lucide-react'
+import { generatePageMetadata } from '@/lib/seo/metadata'
 
-export const metadata: Metadata = {
-  title: 'Contact Us - Bookiji',
+export const metadata: Metadata = generatePageMetadata({
+  title: 'Contact Us | Bookiji',
   description: 'Get in touch with Bookiji support team. We\'re here to help with any questions or concerns.',
-}
+  path: '/contact',
+})
 
 export default function ContactPage() {
   return (

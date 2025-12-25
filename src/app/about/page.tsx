@@ -2,19 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { canonicalUrl } from '@/lib/seo'
 import { JsonLd } from '@/lib/seo'
+import { generatePageMetadata } from '@/lib/seo/metadata'
 
-export const metadata: Metadata = {
-  title: 'About Us',
+export const metadata: Metadata = generatePageMetadata({
+  title: 'About Us | Bookiji',
   description: 'Learn about Bookiji, the world\'s first universal booking platform connecting customers with service providers instantly.',
-  alternates: {
-    canonical: canonicalUrl('/about'),
-  },
-  openGraph: {
-    title: 'About Bookiji',
-    description: 'Learn about Bookiji, the world\'s first universal booking platform.',
-    url: '/about',
-  },
-}
+  path: '/about',
+})
 
 const aboutJsonLd = {
   '@context': 'https://schema.org',
