@@ -179,7 +179,7 @@ export class AlertService {
     }
 
     try {
-      const { title, message } = formatAlertMessage(
+      const { title, message: _message } = formatAlertMessage(
         payload.violations,
         payload.severity,
         payload.environment

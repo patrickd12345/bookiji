@@ -4,9 +4,15 @@ import { useState, useEffect } from 'react'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
 
+interface VendorSubscription {
+  subscription_status: string
+  current_period_end: string
+  [key: string]: unknown
+}
+
 export function SubscriptionManager() {
   const [loading, setLoading] = useState(true)
-  const [subscription, setSubscription] = useState<any>(null)
+  const [subscription, setSubscription] = useState<VendorSubscription | null>(null)
 
   useEffect(() => {
     fetchSubscription()
