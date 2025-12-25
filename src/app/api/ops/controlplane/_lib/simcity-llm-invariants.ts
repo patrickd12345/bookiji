@@ -8,6 +8,8 @@
  * - Vendor/customer isolation not violated
  * - Subscription gates not bypassed
  * - System never lies about state
+ *
+ * @see docs/development/SCHEDULING_INVARIANTS.md for the complete invariant specification
  */
 
 import type { LLMProposedEvent, EventExecutionResult } from './simcity-llm-events'
