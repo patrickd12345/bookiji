@@ -40,9 +40,10 @@ export async function generateLLMEvents(
     const prompt = buildLLMPrompt(snapshot, maxEvents)
 
     // Use Gemini (same as rest of Bookiji codebase)
-    const geminiApiKey = process.env.GEMINI_API_KEY
+    // Check for GEMINI_API_KEY first, then fallback to GOOGLE_API_KEY
+    const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
     if (!geminiApiKey) {
-      console.warn('GEMINI_API_KEY not set, cannot generate LLM events')
+      console.warn('GEMINI_API_KEY or GOOGLE_API_KEY not set, cannot generate LLM events')
       return []
     }
 
