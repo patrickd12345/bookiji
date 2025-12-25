@@ -362,7 +362,7 @@ export function ImageAttachment({
       {images.length === 0 && (
         <Card className="border-dashed">
           <CardContent className="p-4 text-center text-muted-foreground">
-            <Image className="h-8 w-8 mx-auto mb-2 text-gray-400" alt="" />
+            <Image className="h-8 w-8 mx-auto mb-2 text-gray-400" />
             <p>No images attached yet</p>
             <p className="text-sm mt-1">
               Attach images to help providers understand your service request better

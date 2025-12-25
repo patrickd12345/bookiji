@@ -11,4 +11,4 @@ export function getCookieStore() {
  */
 export const cookieOptions = getCookieOptions({
   httpOnly: true
-}) as const 
+}) 

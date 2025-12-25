@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
   // Invariant VI-1: No Past Booking
   // Validate that start time is in the future (strict: start_time > now())
   const now = new Date()
-  const bookingStart = new Date(startTime)
+  const bookingStart = new Date(startTime as string)
   
   if (bookingStart <= now) {
     return NextResponse.json(

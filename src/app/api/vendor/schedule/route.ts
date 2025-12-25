@@ -1,4 +1,5 @@
 import { getServerSupabase } from '@/lib/supabaseServer';
+import { assertVendorHasActiveSubscription, SubscriptionRequiredError } from '@/lib/guards/subscriptionGuard';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
     // Invariant III-1: Server-side subscription gating
     try {
       await assertVendorHasActiveSubscription(providerId);
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof SubscriptionRequiredError) {
         return NextResponse.json(
           { error: error.message },
