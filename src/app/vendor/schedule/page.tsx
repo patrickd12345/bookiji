@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Clock, PlusCircle, Trash2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
+import { Clock, PlusCircle, Trash2, CheckCircle, XCircle, AlertTriangle, Download, Play } from 'lucide-react'
 import { SubscriptionManager } from '@/components/SubscriptionManager'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { GoogleCalendarConnection } from '@/components'
+import { generateICS, downloadICS, type CalendarEvent } from '@/lib/utils/icsExport'
+import { useTour } from '@/tours/TourProvider'
+import { vendorScheduleTour } from '@/tours/vendorScheduleTour'
 
 //
 // Component to manage a single day's schedule
@@ -129,6 +132,7 @@ const checkForOverlaps = (timeRanges: { start: string; end: string }[]): boolean
 };
 
 export default function SchedulePage() {
+  const { startTour } = useTour()
   const [schedule, setSchedule] = useState<Schedule>(initialSchedule)
   const [providerId, setProviderId] = useState<string | null>(null)
   const [availabilityMode, setAvailabilityMode] = useState<'subtractive' | 'additive'>('subtractive');
@@ -385,6 +389,62 @@ export default function SchedulePage() {
     }
   }
 
+  const handleExportICS = async () => {
+    if (!providerId) {
+      alert('Could not determine the provider. Please refresh and try again.')
+      return
+    }
+
+    try {
+      // Fetch availability slots from the database
+      const supabase = supabaseBrowserClient()
+      if (!supabase) {
+        alert('Unable to connect to database')
+        return
+      }
+
+      const { data: slots, error } = await supabase
+        .from('availability_slots')
+        .select('start_time, end_time, is_booked')
+        .eq('provider_id', providerId)
+        .gte('start_time', new Date().toISOString())
+        .order('start_time')
+
+      if (error) {
+        console.error('Error fetching slots:', error)
+        alert('Failed to fetch schedule data')
+        return
+      }
+
+      if (!slots || slots.length === 0) {
+        alert('No availability slots found to export')
+        return
+      }
+
+      // Convert schedule to calendar events
+      const events: CalendarEvent[] = slots
+        .filter(slot => !slot.is_booked)
+        .map((slot, index) => ({
+          uid: `bookiji-slot-${providerId}-${index}-${Date.now()}`,
+          summary: 'Available for Booking',
+          description: 'Available time slot for service booking',
+          start: new Date(slot.start_time),
+          end: new Date(slot.end_time),
+          allDay: false,
+        }))
+
+      // Generate ICS content
+      const icsContent = generateICS(events, 'Bookiji Schedule')
+
+      // Download the file
+      const filename = `bookiji-schedule-${new Date().toISOString().split('T')[0]}.ics`
+      downloadICS(icsContent, filename)
+    } catch (error) {
+      console.error('Error exporting ICS:', error)
+      alert('Failed to export schedule')
+    }
+  }
+
   // Show subscription gate if no active subscription
   if (checkingSubscription || isLoading) {
     return (
@@ -456,9 +516,19 @@ export default function SchedulePage() {
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white p-8 rounded-xl shadow-md">
-          <div className="flex items-center mb-6">
-            <Clock className="w-8 h-8 text-purple-600 mr-3" />
-            <h1 className="text-3xl font-bold text-gray-800">Set Your Weekly Hours</h1>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <Clock className="w-8 h-8 text-purple-600 mr-3" />
+              <h1 className="text-3xl font-bold text-gray-800">Set Your Weekly Hours</h1>
+            </div>
+            <button
+              onClick={() => startTour(vendorScheduleTour)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+              title="Start guided tour"
+            >
+              <Play size={16} />
+              Take Tour
+            </button>
           </div>
 
           {/* Subscription Status Banner */}
@@ -485,7 +555,7 @@ export default function SchedulePage() {
           )}
 
           {/* --- Availability Mode Toggle --- */}
-          <div className="mb-8 p-4 border rounded-lg bg-gray-50">
+          <div className="mb-8 p-4 border rounded-lg bg-gray-50" data-schedule-editor>
             <h2 className="font-bold text-lg mb-2">Availability Mode</h2>
             <div className="flex items-center space-x-4">
                 <label className="flex items-center cursor-pointer">
@@ -537,7 +607,7 @@ export default function SchedulePage() {
 
           {/* Google Calendar Integration */}
           {providerId && (
-            <div className="mb-8">
+            <div className="mb-8" data-google-calendar-connection>
               <GoogleCalendarConnection 
                 profileId={providerId}
                 onConnectionChange={(isConnected) => {
@@ -591,6 +661,15 @@ export default function SchedulePage() {
                         <span>Failed to save.</span>
                     </div>
                 )}
+                <button
+                  onClick={handleExportICS}
+                  disabled={isLoading || !providerId}
+                  className="bg-gray-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+                  title="Export schedule as ICS calendar file"
+                >
+                  <Download size={18} />
+                  Export ICS
+                </button>
                 <button
                   onClick={handleSaveAndGenerate}
                   disabled={isSaving || isLoading || !providerId || hasErrors || isGenerating}

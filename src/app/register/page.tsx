@@ -127,11 +127,17 @@ function RegisterForm() {
           )}
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit} suppressHydrationWarning>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit} suppressHydrationWarning aria-label="Registration form">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-3" role="alert" id="register-error" aria-live="polite">
+              <p className="text-red-800 text-sm font-medium">{error}</p>
+            </div>
+          )}
+
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email address <span className="text-red-500">*</span>
+                Email address <span className="text-red-500" aria-label="required">*</span>
               </label>
               <input
                 id="email"
@@ -140,6 +146,8 @@ function RegisterForm() {
                 autoComplete="email"
                 required
                 aria-required="true"
+                aria-invalid={error ? 'true' : 'false'}
+                aria-describedby={error ? 'register-error email-error' : undefined}
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="you@example.com"
                 value={email}
@@ -152,7 +160,7 @@ function RegisterForm() {
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password <span className="text-red-500">*</span>
+                Password <span className="text-red-500" aria-label="required">*</span>
               </label>
               <input
                 id="password"
@@ -161,6 +169,8 @@ function RegisterForm() {
                 autoComplete="new-password"
                 required
                 aria-required="true"
+                aria-invalid={error ? 'true' : 'false'}
+                aria-describedby={error ? 'register-error password-error' : undefined}
                 minLength={8}
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="At least 8 characters"
@@ -171,15 +181,9 @@ function RegisterForm() {
                 }}
                 disabled={isSubmitting}
               />
-              <p className="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
+              <p className="mt-1 text-xs text-gray-500" id="password-help">Must be at least 8 characters</p>
             </div>
           </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-3" role="alert">
-              <p className="text-red-800 text-sm font-medium">{error}</p>
-            </div>
-          )}
 
           <div>
             <button

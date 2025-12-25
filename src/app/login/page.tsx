@@ -175,9 +175,9 @@ function LoginFormContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+        <h1 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
           Sign in to your account
-        </h2>
+        </h1>
         <p className="mt-2 text-center text-sm text-gray-600">
           Or{' '}
           <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
@@ -188,13 +188,13 @@ function LoginFormContent() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
-              {error}
-            </div>
-          )}
+          <form className="space-y-6" onSubmit={handleEmailLogin} aria-label="Sign in form">
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm" role="alert" id="login-error">
+                {error}
+              </div>
+            )}
 
-          <form className="space-y-6" onSubmit={handleEmailLogin}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address or Username
@@ -208,6 +208,8 @@ function LoginFormContent() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  aria-invalid={error ? 'true' : 'false'}
+                  aria-describedby={error ? 'login-error email-error' : undefined}
                   className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
                 />
               </div>
@@ -226,6 +228,8 @@ function LoginFormContent() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={error ? 'true' : 'false'}
+                  aria-describedby={error ? 'login-error password-error' : undefined}
                   className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
                 />
               </div>
