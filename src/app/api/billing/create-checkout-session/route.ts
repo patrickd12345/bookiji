@@ -19,11 +19,6 @@ export async function POST(req: Request) {
 
     // Check for existing customer ID
     const supabase = createSupabaseServerClient();
-    const { data: subscription } = await supabase
-      .from('vendor_subscriptions')
-      .select('stripe_customer_id')
-      .eq('provider_id', user.id) // Assuming user.id maps to provider_id (profiles.id). Wait.
-      .single();
 
     // NOTE: user.id is auth.users.id. provider_id in vendor_subscriptions is profiles.id.
     // We need to fetch profiles.id first.
@@ -63,4 +58,5 @@ export async function POST(req: Request) {
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
+
 

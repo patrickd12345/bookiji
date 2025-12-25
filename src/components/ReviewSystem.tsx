@@ -386,9 +386,11 @@ export default function ReviewSystem({
                 <div className="mt-3 flex flex-wrap gap-2">
                   {photos.map((photo, index) => (
                     <div key={index} className="relative">
-                      <img
+                      <Image
                         src={photo}
                         alt={`Review photo ${index + 1}`}
+                        width={80}
+                        height={80}
                         className="w-20 h-20 object-cover rounded-lg"
                       />
                       <button
@@ -586,10 +588,12 @@ export default function ReviewSystem({
                   {review.photos && review.photos.length > 0 && (
                     <div className="mt-3 flex gap-2">
                       {review.photos.map((photo, index) => (
-                        <img
+                        <Image
                           key={index}
                           src={photo}
                           alt={`Review photo ${index + 1}`}
+                          width={64}
+                          height={64}
                           className="w-16 h-16 object-cover rounded-lg"
                         />
                       ))}

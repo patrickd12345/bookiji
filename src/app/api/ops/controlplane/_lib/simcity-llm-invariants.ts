@@ -86,7 +86,7 @@ export async function checkInvariants(
 /**
  * Check for data corruption after failed execution
  */
-async function checkForCorruption(event: LLMProposedEvent): Promise<InvariantCheckResult> {
+async function checkForCorruption(_event: LLMProposedEvent): Promise<InvariantCheckResult> {
   const violations: string[] = []
   const forensic_data: Record<string, unknown> = {}
 
@@ -115,9 +115,9 @@ async function checkBookingInvariants(
   const supabase = createClient(config.url, config.secretKey || config.publishableKey)
 
   // Check: booking must reference valid vendor
-  const vendorId = event.params.vendor_id as string
-  if (vendorId) {
-    const { data: vendor, error } = await supabase.from('profiles').select('id').eq('id', vendorId).eq('role', 'vendor').single()
+    const vendorId = event.params.vendor_id as string
+    if (vendorId) {
+      const { data: _vendor, error } = await supabase.from('profiles').select('id').eq('id', vendorId).eq('role', 'vendor').single()
     if (error && error.code !== 'PGRST116') {
       // PGRST116 = not found, which is OK (might be expected rejection)
       // Other errors might indicate corruption
@@ -173,8 +173,8 @@ async function checkBookingOwnershipInvariants(
  */
 async function checkSubscriptionInvariants(
   event: LLMProposedEvent,
-  violations: string[],
-  forensic_data: Record<string, unknown>
+  _violations: string[],
+  _forensic_data: Record<string, unknown>
 ): Promise<void> {
   // If scheduling requires subscription and event succeeded,
   // verify vendor has active subscription

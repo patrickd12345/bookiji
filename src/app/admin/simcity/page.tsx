@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { SimEventPayload, SimPolicies, SimRunInfo, SimState } from '@/lib/simcity/types';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 
 const STATUS_POLL_INTERVAL_MS = 3000;
 
@@ -377,7 +376,7 @@ export default function SimCityDashboard() {
               className="min-h-[100px]"
             />
             <p className="text-xs text-muted-foreground">
-              Examples: "demand spike", "provider outage", "high cancellation rate", "latency issues", "trust and safety concerns"
+              Examples: &quot;demand spike&quot;, &quot;provider outage&quot;, &quot;high cancellation rate&quot;, &quot;latency issues&quot;, &quot;trust and safety concerns&quot;
             </p>
           </div>
 

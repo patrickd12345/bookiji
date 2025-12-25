@@ -6,8 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
   Play, 
-  Pause, 
-  RefreshCw, 
   Clock, 
   CheckCircle, 
   XCircle, 
@@ -94,6 +92,7 @@ export default function CronManagementPage() {
   useEffect(() => {
     loadCronStatus()
     loadExecutionHistory()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const loadCronStatus = async () => {
@@ -153,7 +152,7 @@ export default function CronManagementPage() {
       } else {
         alert(data.error || 'Failed to trigger job')
       }
-    } catch (error) {
+    } catch (_error) {
       alert('Failed to trigger job')
     } finally {
       setTriggering(null)
@@ -165,7 +164,7 @@ export default function CronManagementPage() {
     const parts = schedule.split(' ')
     if (parts.length !== 5) return schedule
 
-    const [minute, hour, day, month, weekday] = parts
+    const [_minute, _hour, _day, _month, _weekday] = parts
 
     if (schedule === '0 * * * *') return 'Every hour'
     if (schedule === '0 */6 * * *') return 'Every 6 hours'

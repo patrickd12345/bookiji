@@ -13,7 +13,6 @@
  */
 
 import type { SimCityConfig, SimCityStatus } from './simcity'
-import type { SimCityEventEnvelope } from './simcity-types'
 
 /**
  * Strict event schema that LLM must output

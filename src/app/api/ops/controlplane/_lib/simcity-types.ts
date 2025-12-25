@@ -153,7 +153,7 @@ export type MetricId =
   | 'llm.invariant_violation_rate'
   | 'llm.silent_failure_rate'
 
-export type MetricDirection = 'higher-is-better' | 'lower-is-better'
+export type MetricDirection = 'higher-is-better' | 'lower-is-better' | 'neutral'
 
 export type MetricDefinition = {
   id: MetricId

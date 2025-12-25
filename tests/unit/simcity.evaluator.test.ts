@@ -33,6 +33,10 @@ describe('SimCity evaluator (unit)', () => {
       'trust.violation_rate': 0.01,
       'latency.p95': 200,
       'error.rate': 0.02,
+      'llm.expected_rejection_rate': 0,
+      'llm.unexpected_error_rate': 0,
+      'llm.invariant_violation_rate': 0,
+      'llm.silent_failure_rate': 0,
     }
 
     const variantMetrics: Record<MetricId, number> = {
@@ -58,6 +62,10 @@ describe('SimCity evaluator (unit)', () => {
       'trust.violation_rate': 0.01,
       'latency.p95': 200,
       'error.rate': 0.02,
+      'llm.expected_rejection_rate': 0,
+      'llm.unexpected_error_rate': 0,
+      'llm.invariant_violation_rate': 0,
+      'llm.silent_failure_rate': 0,
     }
 
     const variantMetrics: Record<MetricId, number> = {
@@ -136,6 +144,10 @@ describe('SimCity evaluator (unit)', () => {
       'trust.violation_rate': 0.01,
       'latency.p95': 200,
       'error.rate': 0.02,
+      'llm.expected_rejection_rate': 0,
+      'llm.unexpected_error_rate': 0,
+      'llm.invariant_violation_rate': 0,
+      'llm.silent_failure_rate': 0,
     }
 
     const variantMetrics: Record<MetricId, number> = {
@@ -157,6 +169,10 @@ describe('SimCity evaluator (unit)', () => {
       'trust.violation_rate': 0.0,
       'latency.p95': 100,
       'error.rate': 0.005,
+      'llm.expected_rejection_rate': 0,
+      'llm.unexpected_error_rate': 0,
+      'llm.invariant_violation_rate': 0,
+      'llm.silent_failure_rate': 0,
     }
 
     const statuses = evalDials(metrics, DEFAULT_DIALS)
@@ -171,6 +187,7 @@ describe('SimCity evaluator (unit)', () => {
     expect(utilStatus?.zone).toBe('red')
   })
 })
+
 
 
 

@@ -89,3 +89,5 @@ CREATE POLICY "authenticated_read_live" ON simcity_run_live FOR SELECT TO authen
 
 
 
+
+

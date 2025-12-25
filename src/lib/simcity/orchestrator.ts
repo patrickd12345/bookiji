@@ -34,6 +34,16 @@ export class SimOrchestrator extends EventEmitter {
   constructor(__baseURL: string = 'http://localhost:3000') {
     super();
     this.telemetry = new SimTelemetry();
+    this.state = {
+      running: false,
+      tick: 0,
+      nowISO: new Date().toISOString(),
+      liveAgents: 0,
+      metrics: { ...DEFAULT_METRICS },
+      policies: { ...DEFAULT_POLICIES },
+      scenario: null,
+      runInfo: null,
+    };
     this.resetState();
   }
 

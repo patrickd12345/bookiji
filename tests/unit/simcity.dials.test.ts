@@ -65,6 +65,10 @@ describe('SimCity dials (unit)', () => {
       'trust.violation_rate': 0,
       'latency.p95': 0,
       'error.rate': 0,
+      'llm.expected_rejection_rate': 0,
+      'llm.unexpected_error_rate': 0,
+      'llm.invariant_violation_rate': 0,
+      'llm.silent_failure_rate': 0,
     }
 
     const statuses = evalDials(metrics, [dial])
@@ -90,6 +94,10 @@ describe('SimCity dials (unit)', () => {
       'trust.violation_rate': 0,
       'latency.p95': 0,
       'error.rate': 0.005, // In green range
+      'llm.expected_rejection_rate': 0,
+      'llm.unexpected_error_rate': 0,
+      'llm.invariant_violation_rate': 0,
+      'llm.silent_failure_rate': 0,
     }
 
     const statuses = evalDials(metrics, [dial])
@@ -108,6 +116,7 @@ describe('SimCity dials (unit)', () => {
     }
   })
 })
+
 
 
 
