@@ -74,7 +74,10 @@ export async function middleware(request: NextRequest) {
     if (pathname === '/') {
       const url = request.nextUrl.clone()
       url.pathname = '/sched'
-      return NextResponse.rewrite(url)
+      // Add debug header to verify rewrite is happening
+      const response = NextResponse.rewrite(url)
+      response.headers.set('X-Subdomain-Rewrite', 'sched->/sched')
+      return response
     }
     // For all other paths on sched subdomain, allow normal routing
     // (this ensures /vendor/*, /api/*, etc. still work)
@@ -199,7 +202,10 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * 
+     * Note: The pattern uses (.*)? to match zero or more characters,
+     * ensuring the root path '/' is included.
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)?',
   ],
 }
