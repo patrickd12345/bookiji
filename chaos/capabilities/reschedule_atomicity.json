@@ -1,0 +1,184 @@
+{
+  "id": "reschedule_atomicity",
+  "name": "Reschedule Atomicity",
+  "description": "Proves atomic reschedule correctness under at-least-once delivery",
+  "fixtureSpecs": {
+    "vendor": {
+      "type": "auth_user",
+      "required": true,
+      "template": {
+        "email": "vendor-{{seed}}@test.bookiji.local",
+        "fullName": "Vendor {{seed}}",
+        "role": "vendor"
+      }
+    },
+    "customer": {
+      "type": "auth_user",
+      "required": true,
+      "template": {
+        "email": "customer-{{seed}}@test.bookiji.local",
+        "fullName": "Customer {{seed}}",
+        "role": "customer"
+      }
+    },
+    "vendorProfile": {
+      "type": "profile",
+      "required": true,
+      "dependsOn": ["vendor"],
+      "template": {
+        "id": "{{vendor.id}}",
+        "auth_user_id": "{{vendor.id}}",
+        "email": "vendor-{{seed}}@test.bookiji.local",
+        "full_name": "Vendor {{seed}}",
+        "role": "vendor"
+      }
+    },
+    "customerProfile": {
+      "type": "profile",
+      "required": true,
+      "dependsOn": ["customer"],
+      "template": {
+        "id": "{{customer.id}}",
+        "auth_user_id": "{{customer.id}}",
+        "email": "customer-{{seed}}@test.bookiji.local",
+        "full_name": "Customer {{seed}}",
+        "role": "customer"
+      }
+    },
+    "service": {
+      "type": "service",
+      "required": true,
+      "dependsOn": ["vendor"],
+      "template": {
+        "id": "{{serviceId}}",
+        "provider_id": "{{vendorId}}",
+        "name": "Test Service",
+        "category": "test",
+        "price": 10.00,
+        "duration_minutes": 60,
+        "is_active": true
+      }
+    },
+    "slotA": {
+      "type": "slot",
+      "required": true,
+      "dependsOn": ["vendor"],
+      "template": {
+        "id": "{{slotAId}}",
+        "provider_id": "{{vendorId}}",
+        "start_time": "{{slotAStart}}",
+        "end_time": "{{slotAEnd}}",
+        "is_available": false,
+        "slot_type": "regular"
+      }
+    },
+    "slotB": {
+      "type": "slot",
+      "required": true,
+      "dependsOn": ["vendor"],
+      "template": {
+        "id": "{{slotBId}}",
+        "provider_id": "{{vendorId}}",
+        "start_time": "{{slotBStart}}",
+        "end_time": "{{slotBEnd}}",
+        "is_available": true,
+        "slot_type": "regular"
+      }
+    },
+    "booking": {
+      "type": "booking",
+      "required": true,
+      "dependsOn": ["customer", "vendor", "service", "slotA"],
+      "template": {
+        "id": "{{bookingId}}",
+        "customer_id": "{{customerId}}",
+        "provider_id": "{{vendorId}}",
+        "service_id": "{{serviceId}}",
+        "start_time": "{{slotAStart}}",
+        "end_time": "{{slotAEnd}}",
+        "status": "confirmed",
+        "total_amount": 10.00
+      }
+    }
+  },
+  "intentSpecs": {
+    "reschedule": {
+      "intentId": "{{intentId}}",
+      "endpoint": "/api/test/bookings/{{bookingId}}/reschedule",
+      "payloadTemplate": {
+        "new_slot_id": "{{slotBId}}",
+        "slot_start": "{{slotBStart}}",
+        "slot_end": "{{slotBEnd}}"
+      }
+    }
+  },
+  "invariantSpecs": {
+    "booking_existence": {
+      "type": "cardinality",
+      "query": {
+        "type": "bookings",
+        "filters": {
+          "provider_id": "{{vendorId}}",
+          "start_time": "{{slotAStart}}",
+          "end_time": "{{slotAEnd}}"
+        }
+      },
+      "expectation": {
+        "type": "cardinality",
+        "field": "bookings",
+        "min": 1,
+        "max": 1
+      }
+    },
+    "slot_exclusivity": {
+      "type": "coherence",
+      "query": {
+        "type": "multi",
+        "queries": {
+          "slotA": { "type": "slot", "id": "{{slotAId}}" },
+          "slotB": { "type": "slot", "id": "{{slotBId}}" }
+        }
+      },
+      "expectation": {
+        "type": "coherence",
+        "condition": {
+          "field": "slotA.is_available",
+          "operator": "===",
+          "value": false
+        },
+        "then": {
+          "slotB.is_available": true
+        }
+      }
+    },
+    "booking_coherence": {
+      "type": "coherence",
+      "query": {
+        "type": "multi",
+        "queries": {
+          "booking": { "type": "booking", "id": "{{bookingId}}" },
+          "slotA": { "type": "slot", "id": "{{slotAId}}" },
+          "slotB": { "type": "slot", "id": "{{slotBId}}" }
+        }
+      },
+      "expectation": {
+        "type": "coherence",
+        "condition": {
+          "field": "booking.start_time",
+          "operator": "===",
+          "value": "{{slotAStart}}"
+        },
+        "then": {
+          "slotA.is_available": false
+        }
+      }
+    }
+  },
+  "chaosProfile": {
+    "send_request": 0.40,
+    "retry_request": 0.30,
+    "restart_process": 0.20,
+    "no_op": 0.10
+  }
+}
+

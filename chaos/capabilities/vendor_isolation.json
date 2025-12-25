@@ -1,0 +1,235 @@
+{
+  "id": "vendor_isolation",
+  "name": "Vendor Isolation",
+  "description": "Proves tenant isolation - no cross-vendor references or data bleed",
+  "fixtureSpecs": {
+    "vendorA": {
+      "type": "auth_user",
+      "required": true,
+      "template": {
+        "email": "vendor-a-{{seed}}@test.bookiji.local",
+        "fullName": "Vendor A {{seed}}",
+        "role": "vendor"
+      }
+    },
+    "vendorB": {
+      "type": "auth_user",
+      "required": true,
+      "template": {
+        "email": "vendor-b-{{seed}}@test.bookiji.local",
+        "fullName": "Vendor B {{seed}}",
+        "role": "vendor"
+      }
+    },
+    "customer": {
+      "type": "auth_user",
+      "required": true,
+      "template": {
+        "email": "customer-{{seed}}@test.bookiji.local",
+        "fullName": "Customer {{seed}}",
+        "role": "customer"
+      }
+    },
+    "vendorAProfile": {
+      "type": "profile",
+      "required": true,
+      "dependsOn": ["vendorA"],
+      "template": {
+        "id": "{{vendorAId}}",
+        "auth_user_id": "{{vendorAId}}",
+        "email": "vendor-a-{{seed}}@test.bookiji.local",
+        "full_name": "Vendor A {{seed}}",
+        "role": "vendor"
+      }
+    },
+    "vendorBProfile": {
+      "type": "profile",
+      "required": true,
+      "dependsOn": ["vendorB"],
+      "template": {
+        "id": "{{vendorBId}}",
+        "auth_user_id": "{{vendorBId}}",
+        "email": "vendor-b-{{seed}}@test.bookiji.local",
+        "full_name": "Vendor B {{seed}}",
+        "role": "vendor"
+      }
+    },
+    "customerProfile": {
+      "type": "profile",
+      "required": true,
+      "dependsOn": ["customer"],
+      "template": {
+        "id": "{{customerId}}",
+        "auth_user_id": "{{customerId}}",
+        "email": "customer-{{seed}}@test.bookiji.local",
+        "full_name": "Customer {{seed}}",
+        "role": "customer"
+      }
+    },
+    "serviceA": {
+      "type": "service",
+      "required": true,
+      "dependsOn": ["vendorA"],
+      "template": {
+        "id": "{{serviceAId}}",
+        "provider_id": "{{vendorAId}}",
+        "name": "Service A",
+        "category": "test",
+        "price": 10.00,
+        "duration_minutes": 60,
+        "is_active": true
+      }
+    },
+    "serviceB": {
+      "type": "service",
+      "required": true,
+      "dependsOn": ["vendorB"],
+      "template": {
+        "id": "{{serviceBId}}",
+        "provider_id": "{{vendorBId}}",
+        "name": "Service B",
+        "category": "test",
+        "price": 10.00,
+        "duration_minutes": 60,
+        "is_active": true
+      }
+    },
+    "slotA": {
+      "type": "slot",
+      "required": true,
+      "dependsOn": ["vendorA"],
+      "template": {
+        "id": "{{slotAId}}",
+        "provider_id": "{{vendorAId}}",
+        "start_time": "{{slotStart}}",
+        "end_time": "{{slotEnd}}",
+        "is_available": true,
+        "slot_type": "regular"
+      }
+    },
+    "slotB": {
+      "type": "slot",
+      "required": true,
+      "dependsOn": ["vendorB"],
+      "template": {
+        "id": "{{slotBId}}",
+        "provider_id": "{{vendorBId}}",
+        "start_time": "{{slotStart}}",
+        "end_time": "{{slotEnd}}",
+        "is_available": true,
+        "slot_type": "regular"
+      }
+    }
+  },
+  "intentSpecs": {
+    "bookVendorA": {
+      "intentId": "{{intentAId}}",
+      "endpoint": "/rpc/claim_slot_and_create_booking",
+      "payloadTemplate": {
+        "p_slot_id": "{{slotAId}}",
+        "p_booking_id": "{{bookingAId}}",
+        "p_customer_id": "{{customerId}}",
+        "p_provider_id": "{{vendorAId}}",
+        "p_service_id": "{{serviceAId}}",
+        "p_total_amount": 10.00
+      }
+    },
+    "bookVendorB": {
+      "intentId": "{{intentBId}}",
+      "endpoint": "/rpc/claim_slot_and_create_booking",
+      "payloadTemplate": {
+        "p_slot_id": "{{slotBId}}",
+        "p_booking_id": "{{bookingBId}}",
+        "p_customer_id": "{{customerId}}",
+        "p_provider_id": "{{vendorBId}}",
+        "p_service_id": "{{serviceBId}}",
+        "p_total_amount": 10.00
+      }
+    },
+    "crossVendorAttempt": {
+      "intentId": "{{crossIntentId}}",
+      "endpoint": "/rpc/claim_slot_and_create_booking",
+      "payloadTemplate": {
+        "p_slot_id": "{{slotAId}}",
+        "p_booking_id": "{{crossBookingId}}",
+        "p_customer_id": "{{customerId}}",
+        "p_provider_id": "{{vendorBId}}",
+        "p_service_id": "{{serviceBId}}",
+        "p_total_amount": 10.00
+      }
+    }
+  },
+  "invariantSpecs": {
+    "tenant_isolation": {
+      "type": "coherence",
+      "query": {
+        "type": "bookings",
+        "filters": {
+          "exclude_status": ["cancelled", "no_show"]
+        }
+      },
+      "expectation": {
+        "type": "coherence",
+        "condition": {
+          "field": "bookings.length",
+          "operator": ">",
+          "value": 0
+        },
+        "then": {
+          "bookings[0].provider_id === bookings[0].service.provider_id": true
+        }
+      }
+    },
+    "vendor_a_isolation": {
+      "type": "coherence",
+      "query": {
+        "type": "bookings",
+        "filters": {
+          "provider_id": "{{vendorAId}}",
+          "exclude_status": ["cancelled", "no_show"]
+        }
+      },
+      "expectation": {
+        "type": "coherence",
+        "condition": {
+          "field": "bookings.length",
+          "operator": ">",
+          "value": 0
+        },
+        "then": {
+          "bookings[0].provider_id": "{{vendorAId}}"
+        }
+      }
+    },
+    "vendor_b_isolation": {
+      "type": "coherence",
+      "query": {
+        "type": "bookings",
+        "filters": {
+          "provider_id": "{{vendorBId}}",
+          "exclude_status": ["cancelled", "no_show"]
+        }
+      },
+      "expectation": {
+        "type": "coherence",
+        "condition": {
+          "field": "bookings.length",
+          "operator": ">",
+          "value": 0
+        },
+        "then": {
+          "bookings[0].provider_id": "{{vendorBId}}"
+        }
+      }
+    }
+  },
+  "chaosProfile": {
+    "send_request_A": 0.20,
+    "send_request_B": 0.20,
+    "send_request_C": 0.20,
+    "retry_request_A": 0.15,
+    "retry_request_B": 0.15,
+    "restart_process": 0.10
+  }
+}
+

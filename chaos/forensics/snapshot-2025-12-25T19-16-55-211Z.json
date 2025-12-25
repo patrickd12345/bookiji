@@ -1,0 +1,17 @@
+{
+  "timestamp": "2025-12-25T19-16-55-211Z",
+  "metadata": {
+    "step": 0,
+    "action": {
+      "type": "initial"
+    },
+    "capabilityId": "reschedule_atomicity",
+    "seed": "sc4rescheduleat-mjltqko0"
+  },
+  "state": {
+    "bookings": [],
+    "slotA": null,
+    "slotB": null,
+    "booking": null
+  }
+}

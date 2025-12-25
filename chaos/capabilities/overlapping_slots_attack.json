@@ -1,0 +1,182 @@
+{
+  "id": "overlapping_slots_attack",
+  "name": "Overlapping Slots Attack",
+  "description": "Proves temporal exclusivity - no overlapping bookings for same provider",
+  "fixtureSpecs": {
+    "vendor": {
+      "type": "auth_user",
+      "required": true,
+      "template": {
+        "email": "vendor-{{seed}}@test.bookiji.local",
+        "fullName": "Vendor {{seed}}",
+        "role": "vendor"
+      }
+    },
+    "customer1": {
+      "type": "auth_user",
+      "required": true,
+      "template": {
+        "email": "customer1-{{seed}}@test.bookiji.local",
+        "fullName": "Customer 1 {{seed}}",
+        "role": "customer"
+      }
+    },
+    "customer2": {
+      "type": "auth_user",
+      "required": true,
+      "template": {
+        "email": "customer2-{{seed}}@test.bookiji.local",
+        "fullName": "Customer 2 {{seed}}",
+        "role": "customer"
+      }
+    },
+    "vendorProfile": {
+      "type": "profile",
+      "required": true,
+      "dependsOn": ["vendor"],
+      "template": {
+        "id": "{{vendorId}}",
+        "auth_user_id": "{{vendorId}}",
+        "email": "vendor-{{seed}}@test.bookiji.local",
+        "full_name": "Vendor {{seed}}",
+        "role": "vendor"
+      }
+    },
+    "customer1Profile": {
+      "type": "profile",
+      "required": true,
+      "dependsOn": ["customer1"],
+      "template": {
+        "id": "{{customer1Id}}",
+        "auth_user_id": "{{customer1Id}}",
+        "email": "customer1-{{seed}}@test.bookiji.local",
+        "full_name": "Customer 1 {{seed}}",
+        "role": "customer"
+      }
+    },
+    "customer2Profile": {
+      "type": "profile",
+      "required": true,
+      "dependsOn": ["customer2"],
+      "template": {
+        "id": "{{customer2Id}}",
+        "auth_user_id": "{{customer2Id}}",
+        "email": "customer2-{{seed}}@test.bookiji.local",
+        "full_name": "Customer 2 {{seed}}",
+        "role": "customer"
+      }
+    },
+    "service": {
+      "type": "service",
+      "required": true,
+      "dependsOn": ["vendor"],
+      "template": {
+        "id": "{{serviceId}}",
+        "provider_id": "{{vendorId}}",
+        "name": "Test Service",
+        "category": "test",
+        "price": 10.00,
+        "duration_minutes": 60,
+        "is_active": true
+      }
+    },
+    "slot1": {
+      "type": "slot",
+      "required": true,
+      "dependsOn": ["vendor"],
+      "template": {
+        "id": "{{slot1Id}}",
+        "provider_id": "{{vendorId}}",
+        "start_time": "{{slotStart}}",
+        "end_time": "{{slotEnd}}",
+        "is_available": true,
+        "slot_type": "regular"
+      }
+    },
+    "slot2": {
+      "type": "slot",
+      "required": true,
+      "dependsOn": ["vendor"],
+      "template": {
+        "id": "{{slot2Id}}",
+        "provider_id": "{{vendorId}}",
+        "start_time": "{{slot2Start}}",
+        "end_time": "{{slot2End}}",
+        "is_available": true,
+        "slot_type": "regular"
+      }
+    }
+  },
+  "intentSpecs": {
+    "bookSlot1": {
+      "intentId": "{{intent1Id}}",
+      "endpoint": "/rpc/claim_slot_and_create_booking",
+      "payloadTemplate": {
+        "p_slot_id": "{{slot1Id}}",
+        "p_booking_id": "{{booking1Id}}",
+        "p_customer_id": "{{customer1Id}}",
+        "p_provider_id": "{{vendorId}}",
+        "p_service_id": "{{serviceId}}",
+        "p_total_amount": 10.00
+      }
+    },
+    "bookSlot2": {
+      "intentId": "{{intent2Id}}",
+      "endpoint": "/rpc/claim_slot_and_create_booking",
+      "payloadTemplate": {
+        "p_slot_id": "{{slot2Id}}",
+        "p_booking_id": "{{booking2Id}}",
+        "p_customer_id": "{{customer2Id}}",
+        "p_provider_id": "{{vendorId}}",
+        "p_service_id": "{{serviceId}}",
+        "p_total_amount": 10.00
+      }
+    }
+  },
+  "invariantSpecs": {
+    "temporal_exclusivity": {
+      "type": "coherence",
+      "query": {
+        "type": "bookings",
+        "filters": {
+          "provider_id": "{{vendorId}}",
+          "exclude_status": ["cancelled", "no_show"]
+        }
+      },
+      "expectation": {
+        "type": "coherence",
+        "condition": {
+          "field": "bookings.length",
+          "operator": ">",
+          "value": 1
+        },
+        "then": {
+          "bookings[0].end_time <= bookings[1].start_time OR bookings[1].end_time <= bookings[0].start_time": true
+        }
+      }
+    },
+    "booking_cardinality": {
+      "type": "cardinality",
+      "query": {
+        "type": "bookings",
+        "filters": {
+          "provider_id": "{{vendorId}}",
+          "exclude_status": ["cancelled", "no_show"]
+        }
+      },
+      "expectation": {
+        "type": "cardinality",
+        "field": "bookings",
+        "max": 2
+      }
+    }
+  },
+  "chaosProfile": {
+    "send_request_A": 0.25,
+    "send_request_B": 0.25,
+    "retry_request_A": 0.20,
+    "retry_request_B": 0.20,
+    "restart_process": 0.10
+  }
+}
+

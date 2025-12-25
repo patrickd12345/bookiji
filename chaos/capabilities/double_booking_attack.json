@@ -1,0 +1,203 @@
+{
+  "id": "double_booking_attack",
+  "name": "Double-Booking Attack",
+  "description": "Proves slot exclusivity under concurrent demand",
+  "fixtureSpecs": {
+    "vendor": {
+      "type": "auth_user",
+      "required": true,
+      "template": {
+        "email": "vendor-{{seed}}@test.bookiji.local",
+        "fullName": "Vendor {{seed}}",
+        "role": "vendor"
+      }
+    },
+    "customer1": {
+      "type": "auth_user",
+      "required": true,
+      "template": {
+        "email": "customer1-{{seed}}@test.bookiji.local",
+        "fullName": "Customer 1 {{seed}}",
+        "role": "customer"
+      }
+    },
+    "customer2": {
+      "type": "auth_user",
+      "required": true,
+      "template": {
+        "email": "customer2-{{seed}}@test.bookiji.local",
+        "fullName": "Customer 2 {{seed}}",
+        "role": "customer"
+      }
+    },
+    "vendorProfile": {
+      "type": "profile",
+      "required": true,
+      "dependsOn": ["vendor"],
+      "template": {
+        "id": "{{vendor.id}}",
+        "auth_user_id": "{{vendor.id}}",
+        "email": "vendor-{{seed}}@test.bookiji.local",
+        "full_name": "Vendor {{seed}}",
+        "role": "vendor"
+      }
+    },
+    "customer1Profile": {
+      "type": "profile",
+      "required": true,
+      "dependsOn": ["customer1"],
+      "template": {
+        "id": "{{customer1.id}}",
+        "auth_user_id": "{{customer1.id}}",
+        "email": "customer1-{{seed}}@test.bookiji.local",
+        "full_name": "Customer 1 {{seed}}",
+        "role": "customer"
+      }
+    },
+    "customer2Profile": {
+      "type": "profile",
+      "required": true,
+      "dependsOn": ["customer2"],
+      "template": {
+        "id": "{{customer2.id}}",
+        "auth_user_id": "{{customer2.id}}",
+        "email": "customer2-{{seed}}@test.bookiji.local",
+        "full_name": "Customer 2 {{seed}}",
+        "role": "customer"
+      }
+    },
+    "service": {
+      "type": "service",
+      "required": true,
+      "dependsOn": ["vendor"],
+      "template": {
+        "id": "{{serviceId}}",
+        "provider_id": "{{vendor.id}}",
+        "name": "Test Service",
+        "category": "test",
+        "price": 10.00,
+        "duration_minutes": 60,
+        "is_active": true
+      }
+    },
+    "slot": {
+      "type": "slot",
+      "required": true,
+      "dependsOn": ["vendor"],
+      "template": {
+        "id": "{{slotId}}",
+        "provider_id": "{{vendor.id}}",
+        "start_time": "{{slotStart}}",
+        "end_time": "{{slotEnd}}",
+        "is_available": true,
+        "slot_type": "regular"
+      }
+    }
+  },
+  "intentSpecs": {
+    "intentA": {
+      "intentId": "{{intentAId}}",
+      "endpoint": "/rpc/claim_slot_and_create_booking",
+      "payloadTemplate": {
+        "p_slot_id": "{{slotId}}",
+        "p_booking_id": "{{bookingAId}}",
+        "p_customer_id": "{{customer1.id}}",
+        "p_provider_id": "{{vendor.id}}",
+        "p_service_id": "{{serviceId}}",
+        "p_total_amount": 10.00
+      }
+    },
+    "intentB": {
+      "intentId": "{{intentBId}}",
+      "endpoint": "/rpc/claim_slot_and_create_booking",
+      "payloadTemplate": {
+        "p_slot_id": "{{slotId}}",
+        "p_booking_id": "{{bookingBId}}",
+        "p_customer_id": "{{customer2.id}}",
+        "p_provider_id": "{{vendor.id}}",
+        "p_service_id": "{{serviceId}}",
+        "p_total_amount": 10.00
+      }
+    }
+  },
+  "invariantSpecs": {
+    "cardinality": {
+      "type": "cardinality",
+      "query": {
+        "type": "bookings",
+        "filters": {
+          "provider_id": "{{vendorId}}",
+          "start_time": "{{slotStart}}",
+          "end_time": "{{slotEnd}}",
+          "exclude_status": ["cancelled", "no_show"]
+        }
+      },
+      "expectation": {
+        "type": "cardinality",
+        "field": "bookings",
+        "max": 1
+      }
+    },
+    "slot_coherence": {
+      "type": "coherence",
+      "query": {
+        "type": "multi",
+        "queries": {
+          "slot": { "type": "slot", "id": "{{slotId}}" },
+          "bookings": {
+            "type": "bookings",
+            "filters": {
+              "provider_id": "{{vendorId}}",
+              "start_time": "{{slot.data.start_time}}",
+              "end_time": "{{slot.data.end_time}}",
+              "exclude_status": ["cancelled", "no_show"]
+            }
+          }
+        }
+      },
+      "expectation": {
+        "type": "coherence",
+        "condition": {
+          "field": "bookings.length",
+          "operator": "===",
+          "value": 1
+        },
+        "then": {
+          "slot.is_available": false
+        }
+      }
+    },
+    "booking_coherence": {
+      "type": "coherence",
+      "query": {
+        "type": "bookings",
+        "filters": {
+          "provider_id": "{{vendorId}}",
+          "start_time": "{{slotStart}}",
+          "end_time": "{{slotEnd}}",
+          "exclude_status": ["cancelled", "no_show"]
+        }
+      },
+      "expectation": {
+        "type": "coherence",
+        "condition": {
+          "field": "bookings.length",
+          "operator": ">",
+          "value": 0
+        },
+        "then": {
+          "bookings[0].customer_id": "{{customer1.id}} OR {{customer2.id}}"
+        }
+      }
+    }
+  },
+  "chaosProfile": {
+    "send_request_A": 0.25,
+    "send_request_B": 0.25,
+    "retry_request_A": 0.15,
+    "retry_request_B": 0.15,
+    "restart_process": 0.10,
+    "no_op": 0.10
+  }
+}
+
