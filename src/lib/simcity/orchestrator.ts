@@ -12,6 +12,7 @@ import {
 } from './types';
 import { InvariantViolation } from './types';
 import { InvariantChecker } from './invariants';
+import { resolveScenarioOverride } from './scenarios';
 
 export class SimOrchestrator extends EventEmitter {
   private state: SimState;
@@ -28,32 +29,34 @@ export class SimOrchestrator extends EventEmitter {
   private lastTickAt: Date | null = null;
   private violations: InvariantViolation[] = [];
   private rng: () => number = Math.random;
+  private stopTimer: NodeJS.Timeout | null = null;
 
   constructor(__baseURL: string = 'http://localhost:3000') {
     super();
     this.telemetry = new SimTelemetry();
-    this.state = {
-      running: false,
-      tick: 0,
-      nowISO: new Date().toISOString(),
-      liveAgents: 0,
-      metrics: { ...DEFAULT_METRICS },
-      policies: { ...DEFAULT_POLICIES },
-      scenario: null,
-      runInfo: null,
-    };
+    this.resetState();
   }
 
-  async start(options?: { seed?: number; scenario?: string; policies?: Partial<SimPolicies> }): Promise<void> {
+  async start(options?: { seed?: number; scenario?: string; policies?: Partial<SimPolicies>; durationMinutes?: number }): Promise<void> {
     if (this.running) {
       throw new Error('Simulation is already running');
     }
+
+    if (this.stopTimer) {
+      clearTimeout(this.stopTimer);
+      this.stopTimer = null;
+    }
+
+    this.resetState();
+
+    const override = resolveScenarioOverride(options?.scenario ?? this.currentScenario);
+    const runDurationMinutes = options?.durationMinutes ?? override.durationMinutes;
 
     // Generate run ID and seed
     this.currentSeed = options?.seed || Math.floor(Math.random() * 1000000);
     this.rng = this.createRng(this.currentSeed);
     this.currentRunId = `simcity_${Date.now()}_${this.rng().toString(36).substr(2, 9)}`;
-    this.currentScenario = options?.scenario || null;
+    this.currentScenario = options?.scenario || override.id || null;
     this.startedAt = new Date();
     this.finishedAt = null;
     this.lastTickAt = null;
@@ -74,23 +77,50 @@ export class SimOrchestrator extends EventEmitter {
     this.state.nowISO = new Date().toISOString();
     this.state.scenario = this.currentScenario;
     this.state.runInfo = this.getRunInfo();
-    
+
     this.telemetry.start();
-    this.emitEvent('start', { 
+    this.emitEvent('start', {
       startTime: this.state.startTime,
       runId: this.currentRunId,
       seed: this.currentSeed,
       scenario: this.currentScenario || 'manual'
     });
-    
+
     this.tickInterval = setInterval(() => {
       this.tick();
     }, this.state.policies.tickSpeedMs);
+
+    if (runDurationMinutes) {
+      const durationMs = runDurationMinutes * 60 * 1000;
+      this.stopTimer = setTimeout(() => {
+        this.stop().catch((error) => console.error('Failed to auto-stop orchestrator:', error));
+      }, durationMs);
+    }
+  }
+
+  private resetState(): void {
+    this.state = {
+      running: false,
+      tick: 0,
+      nowISO: new Date().toISOString(),
+      liveAgents: 0,
+      metrics: { ...DEFAULT_METRICS },
+      policies: { ...DEFAULT_POLICIES },
+      scenario: null,
+      runInfo: null,
+    };
+
+    this.agentCounter = 0;
   }
 
   async stop(): Promise<void> {
     if (!this.running) {
       throw new Error('Simulation is not running');
+    }
+
+    if (this.stopTimer) {
+      clearTimeout(this.stopTimer);
+      this.stopTimer = null;
     }
 
     this.running = false;

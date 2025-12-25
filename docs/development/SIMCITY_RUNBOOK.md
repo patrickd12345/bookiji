@@ -54,9 +54,12 @@ curl -X POST /api/simcity/start \
     "policies": {
       "customerSpawnRate": 0.3,
       "maxConcurrentAgents": 50
-    }
+    },
+    "durationMinutes": 15
   }'
 ```
+
+*Tip:* Provide `durationMinutes` to auto-stop timed drills (e.g., `30` for the vendor SLA run) even when overriding scenario defaults.
 
 ### Adjust Policies
 
@@ -165,6 +168,21 @@ curl /api/simcity/summary?runId=latest
     { type: 'RLS_MISCONFIG', triggerAt: 180, duration: 30, parameters: { misconfigType: 'admin_access' } }
   ],
   invariants: ['api_error_rate', 'cache_hit_rate', 'cache_invalidation_spike', 'orchestrator_tick_drift', 'memory_usage']
+}
+```
+
+### Vendor SLA Drill (Vendor Responsiveness)
+```typescript
+{
+  duration: { realMinutes: 30, simHours: 50 },
+  policies: {
+    customerSpawnRate: 0.4,
+    vendorSpawnRate: 0.25,
+    maxConcurrentAgents: 60,
+  },
+  events: [],
+  invariants: ['vendor_sla_response', 'booking_funnel_success', 'api_p95_response_time'],
+  scenarioOverride: 'vendor_sla'
 }
 ```
 

@@ -312,12 +312,14 @@ export interface SimulationStartOptions {
   startTime?: number;
   minutesPerTick?: number;
   baseTickMs?: number;
+  durationMinutes?: number;
 }
 
 export interface ScenarioOverride {
   id: string;
   label: string;
   description?: string;
+  durationMinutes?: number;
   spawnRate?: number;
   cancelRate?: number;
   confirmRate?: number;
