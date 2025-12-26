@@ -14,6 +14,18 @@ export interface SupabaseConfig {
   secretKey?: string;
 }
 
+function isJwtLike(key: string | undefined): boolean {
+  return !!key && key.startsWith('eyJ');
+}
+
+function isCliSecretLike(key: string | undefined): boolean {
+  return !!key && key.startsWith('sb_secret__');
+}
+
+function isPublishableNonJwtLike(key: string | undefined): boolean {
+  return !!key && (key.startsWith('sb_publishable_') || key.startsWith('sb_')) && !isJwtLike(key);
+}
+
 /**
  * Get Supabase configuration with backward compatibility
  */
@@ -39,21 +51,37 @@ export function getSupabaseConfig(): SupabaseConfig {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   // Prefer JWT format (SUPABASE_SERVICE_ROLE_KEY) over CLI format (SUPABASE_SECRET_KEY)
   // The JS client requires JWT format (starts with eyJ...), not CLI format (sb_secret__...)
-  const secretKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const rawSecretKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  const secretKey = isCliSecretLike(rawSecretKey) && !isJwtLike(rawSecretKey) ? undefined : rawSecretKey;
+
+  // Prefer ANON_KEY. Some deployments set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to "sb_publishable_*"
+  // which is NOT accepted by supabase-js auth endpoints (will produce 401 "Invalid API key").
+  // Only accept publishable key if it looks like a JWT (starts with "eyJ").
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const publishableFallback = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const publishableKey =
+    anonKey || (isJwtLike(publishableFallback) ? publishableFallback : undefined);
   
   // Validate key format for JS client (must be JWT, not CLI format)
-  if (secretKey && !secretKey.startsWith('eyJ') && secretKey.startsWith('sb_secret__')) {
+  if (rawSecretKey && !rawSecretKey.startsWith('eyJ') && rawSecretKey.startsWith('sb_secret__')) {
     console.warn('⚠️ SUPABASE_SECRET_KEY appears to be CLI format (sb_secret__...). The JS client requires JWT format (eyJ...). Use SUPABASE_SERVICE_ROLE_KEY instead.');
+  }
+  if (!anonKey && isPublishableNonJwtLike(publishableFallback)) {
+    console.warn(
+      '⚠️ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY appears to be a non-JWT "sb_publishable_*" key. ' +
+        'supabase-js auth requires NEXT_PUBLIC_SUPABASE_ANON_KEY (JWT-like, starts with "eyJ").'
+    );
   }
 
   if (!url || !publishableKey) {
-    console.warn('⚠️ Missing Supabase environment variables, using fallback configuration');
-    return {
-      url: 'https://dummy.supabase.co',
-      publishableKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
-      secretKey: secretKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
-    };
+    const hints: string[] = [];
+    if (!url) hints.push('NEXT_PUBLIC_SUPABASE_URL');
+    if (!publishableKey) hints.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    const hint = hints.length ? ` Missing: ${hints.join(', ')}.` : '';
+    throw new Error(
+      `Supabase authentication misconfigured.${hint} ` +
+        'Set Vercel env vars NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY, then redeploy.'
+    );
   }
 
   return { url, secretKey, publishableKey };
@@ -63,7 +91,7 @@ export function getSupabaseConfig(): SupabaseConfig {
  * Check if the new key model is being used
  */
 export function isUsingNewKeyModel(): boolean {
-  return !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  return isJwtLike(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 }
 
 /**
@@ -73,13 +101,13 @@ export function getEnvironmentVariableNames() {
   return {
     current: {
       url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL' : 'MISSING',
-      publishableKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY' : 'MISSING',
+      publishableKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ? 'NEXT_PUBLIC_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY' : 'MISSING',
       secretKey: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY' : 'MISSING'
     },
     recommended: {
       url: 'SUPABASE_URL',
-      publishableKey: 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
-      secretKey: 'SUPABASE_SECRET_KEY'
+      publishableKey: 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+      secretKey: 'SUPABASE_SERVICE_ROLE_KEY'
     }
   };
 }
