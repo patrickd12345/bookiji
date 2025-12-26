@@ -44,10 +44,39 @@ export async function POST(request: NextRequest) {
     )
 
     // Set the session using the provided tokens
-    const { data: { session }, error } = await supabase.auth.setSession({
-      access_token,
-      refresh_token: refresh_token || ''
-    })
+    // Only include refresh_token if it's provided and not empty
+    const sessionParams: { access_token: string; refresh_token?: string } = {
+      access_token
+    }
+    
+    if (refresh_token && refresh_token.trim() !== '') {
+      sessionParams.refresh_token = refresh_token
+    }
+
+    const { data: { session }, error } = await supabase.auth.setSession(sessionParams)
+
+    // Handle refresh_token_not_found errors gracefully
+    // This can happen if the refresh token is invalid, expired, or already used
+    // In such cases, we'll try to use just the access token
+    if (error && error.code === 'refresh_token_not_found') {
+      // Try setting session with just access token
+      const { data: { session: fallbackSession }, error: fallbackError } = 
+        await supabase.auth.setSession({ access_token })
+      
+      if (!fallbackError && fallbackSession) {
+        // Successfully set session with just access token
+        // This is acceptable for short-lived sessions
+        return NextResponse.json({ 
+          success: true, 
+          user: fallbackSession.user 
+        })
+      }
+      
+      // If that also fails, return the original error
+      return NextResponse.json({ 
+        error: 'Session expired. Please log in again.' 
+      }, { status: 401 })
+    }
 
     if (error || !session) {
       return NextResponse.json({ error: error?.message || 'Failed to set session' }, { status: 400 })
