@@ -7,16 +7,26 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 function getBrowserEnv() {
   // Get the first valid URL (in case multiple are set)
   const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').split(/\s+/)[0].trim()
+  // Prefer ANON_KEY, fallback to PUBLISHABLE_KEY for backward compatibility
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   
   return { url, key }
 }
 
+// Global singleton instance to prevent multiple GoTrueClient instances
+let browserInstance: SupabaseClient | null = null
+
 // ---------- Browser client (auth, sessions) ----------
+// This function now always returns the singleton to prevent multiple instances
 export function getBrowserSupabase(): SupabaseClient | null {
   if (typeof window === 'undefined') {
     // Prevent server-side execution
     return null
+  }
+
+  // Return existing instance if available
+  if (browserInstance) {
+    return browserInstance
   }
 
   const { url, key } = getBrowserEnv()
@@ -31,25 +41,25 @@ export function getBrowserSupabase(): SupabaseClient | null {
   }
 
   try {
-    return createClient(url, key, {
+    // Create client with single options object (not deprecated parameters)
+    // Use a unique storage key to prevent conflicts with other instances
+    browserInstance = createClient(url, key, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storageKey: 'bookiji-supabase-auth',
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
       },
     })
+    return browserInstance
   } catch (error) {
     console.error('Failed to create Supabase client:', error)
     return null
   }
 }
 
-// Lazy singleton for convenience
-let browserInstance: SupabaseClient | null = null
-
+// Lazy singleton for convenience (now just calls getBrowserSupabase which is also a singleton)
 export function supabaseBrowserClient() {
-  if (!browserInstance) {
-    browserInstance = getBrowserSupabase()
-  }
-  return browserInstance
+  return getBrowserSupabase()
 }
