@@ -8,10 +8,7 @@ const execAsync = promisify(exec)
 export async function POST(request: NextRequest) {
   try {
     // Get authenticated user
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
@@ -23,7 +20,7 @@ export async function POST(request: NextRequest) {
     const projectRoot = process.cwd()
     const command = `node ${projectRoot}/chaos/simcity/cli.mjs "Run all scheduling attacks in sequence for 5 minutes. Escalate retries and restarts. Stop on invariant violation."`
     
-    const { stdout, stderr } = await execAsync(command, {
+    const { stdout } = await execAsync(command, {
       cwd: projectRoot,
       env: {
         ...process.env,

@@ -7,8 +7,14 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 function getBrowserEnv() {
   // Get the first valid URL (in case multiple are set)
   const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').split(/\s+/)[0].trim()
-  // Prefer ANON_KEY, fallback to PUBLISHABLE_KEY for backward compatibility
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  // Prefer ANON_KEY. Some deployments set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to "sb_publishable_*"
+  // which is NOT accepted by supabase-js auth endpoints (will produce 401 "Invalid API key").
+  // Only use the fallback if it looks like a JWT (starts with "eyJ").
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const publishableFallback = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  const key =
+    anonKey ||
+    (publishableFallback && publishableFallback.startsWith('eyJ') ? publishableFallback : undefined)
   
   return { url, key }
 }

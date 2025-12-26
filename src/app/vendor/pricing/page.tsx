@@ -2,11 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 
 export default function VendorPricingPage() {
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitting] = useState(false)
 
   const handleGetStarted = () => {
     router.push('/vendor/onboarding')
@@ -18,7 +17,7 @@ export default function VendorPricingPage() {
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
-            A booking system that doesn't break under pressure—and proves it.
+            A booking system that doesn&apos;t break under pressure—and proves it.
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-600">
             One plan. One price. Monthly.

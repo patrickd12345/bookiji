@@ -24,6 +24,7 @@ export default function VendorMetricsDashboard({ vendorId }: VendorMetricsDashbo
 
   useEffect(() => {
     loadMetrics()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendorId])
 
   const loadMetrics = async () => {

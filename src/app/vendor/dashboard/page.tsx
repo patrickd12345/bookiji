@@ -51,6 +51,7 @@ export default function VendorDashboard() {
         { target: '[data-tour="pending-service-badge"]', content: 'This badge shows how many of your custom service type proposals are awaiting approval.' }
       ]
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useAutoTour()

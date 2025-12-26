@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import SchedulingHealthBadge from '@/components/SchedulingHealthBadge'
 import CertificationResultSummary from '@/components/CertificationResultSummary'
 
@@ -15,7 +14,6 @@ interface CertificationResult {
 }
 
 export default function CertificationPage() {
-  const router = useRouter()
   const [isRunning, setIsRunning] = useState(false)
   const [result, setResult] = useState<CertificationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -51,7 +49,7 @@ export default function CertificationPage() {
           Scheduling Certification
         </h1>
         <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-          Run a 5-minute reliability test to certify your booking system's resilience.
+          Run a 5-minute reliability test to certify your booking system&apos;s resilience.
         </p>
 
         {/* Health Badge */}
@@ -70,7 +68,7 @@ export default function CertificationPage() {
           </button>
           {isRunning && (
             <p className="text-xs sm:text-sm text-gray-500 mt-2">
-              This will take approximately 5 minutes. Please don't close this page.
+              This will take approximately 5 minutes. Please don&apos;t close this page.
             </p>
           )}
         </div>

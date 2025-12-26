@@ -17,7 +17,7 @@ export default function SchedLandingPage() {
             Bookiji Scheduling
           </h1>
           <p className="text-lg sm:text-xl text-gray-600 mb-8">
-            Reliable booking system that doesn't break under pressure
+            Reliable booking system that doesn&apos;t break under pressure
           </p>
         </div>
 

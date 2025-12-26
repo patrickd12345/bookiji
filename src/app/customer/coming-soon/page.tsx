@@ -38,12 +38,12 @@ export default function CustomerComingSoonPage() {
           Coming Soon
         </h1>
         <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
-          We're preparing something special. Be the first to know when we launch.
+          We&apos;re preparing something special. Be the first to know when we launch.
         </p>
 
         {submitted ? (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 sm:p-5">
-            <p className="text-sm sm:text-base text-green-800 font-medium">Thanks! We'll notify you soon.</p>
+            <p className="text-sm sm:text-base text-green-800 font-medium">Thanks! We&apos;ll notify you soon.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">

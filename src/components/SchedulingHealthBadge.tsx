@@ -25,6 +25,7 @@ export default function SchedulingHealthBadge({ vendorId, className = '' }: Sche
   useEffect(() => {
     if (!vendorId) return
     loadHealthStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendorId])
 
   const loadHealthStatus = async () => {

@@ -107,13 +107,13 @@ export async function getVendorMetrics(vendorId: string): Promise<VendorMetrics>
   }
 }
 
-export async function trackActivation(vendorId: string) {
+export async function trackActivation(_vendorId: string) {
   // Track when vendor creates first availability
   // This can be called from the availability creation endpoint
   // For now, it's calculated on-demand in getVendorMetrics
 }
 
-export async function trackCertificationRun(vendorId: string, result: { status: 'pass' | 'fail', timestamp: string }) {
+export async function trackCertificationRun(_vendorId: string, _result: { status: 'pass' | 'fail', timestamp: string }) {
   // Store certification run in vendor_certifications table
   // TODO: Create table if it doesn't exist
   // await supabase.from('vendor_certifications').insert({
