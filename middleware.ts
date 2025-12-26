@@ -65,34 +65,22 @@ export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
   const hostname = request.headers.get('host') || ''
 
-  // Subdomain routing: sched.bookiji.com -> scheduling pages
+  // Rewrite sched.bookiji.com to show /sched page content (same as www.bookiji.com/sched)
   // Check for sched subdomain (handles both sched.bookiji.com and sched.bookiji.com:port)
   const hostnameWithoutPort = hostname.split(':')[0]
   const isSchedSubdomain = hostnameWithoutPort === 'sched.bookiji.com' || hostnameWithoutPort.startsWith('sched.')
   
   if (isSchedSubdomain) {
-    // For root path, rewrite to /sched page
+    // For root path on sched subdomain, rewrite to /sched page
     if (pathname === '/') {
       const url = request.nextUrl.clone()
       url.pathname = '/sched'
-      // Add debug header to verify rewrite is happening
       const response = NextResponse.rewrite(url)
       response.headers.set('X-Subdomain-Rewrite', 'sched-root->/sched')
-      response.headers.set('X-Subdomain-Host', hostnameWithoutPort)
-      response.headers.set('X-Subdomain-Pathname', pathname)
       addSecurityHeaders(response)
       return response
     }
-    // For /sched path on sched subdomain, let Next.js handle it naturally
-    // The route exists at src/app/sched/page.tsx and should be accessible
-    // We add headers to verify middleware is running for this path
-    if (pathname === '/sched') {
-      const response = NextResponse.next()
-      response.headers.set('X-Subdomain-Detected', hostnameWithoutPort)
-      response.headers.set('X-Subdomain-Pathname', pathname)
-      addSecurityHeaders(response)
-      return response
-    }
+    // For /sched path on sched subdomain, let it pass through normally
     // For all other paths on sched subdomain, allow normal routing
     // (this ensures /vendor/*, /api/*, etc. still work)
   }
