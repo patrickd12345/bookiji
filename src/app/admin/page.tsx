@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import DashboardCards from '@/components/admin/DashboardCards'
+import { Loader2, RefreshCw } from 'lucide-react'
 
 // Hardcode stats for now to avoid import issues
 const dashboardStats = {
@@ -13,6 +15,43 @@ const dashboardStats = {
 }
 
 export default function AdminDashboard() {
+  const [refreshingSitemap, setRefreshingSitemap] = useState(false)
+
+  const handleRefreshSitemap = async () => {
+    setRefreshingSitemap(true)
+    try {
+      const response = await fetch('/api/admin/cron/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId: 'sitemap-refresh',
+          path: '/api/cron/sitemap-refresh'
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        const result = data.result || {}
+        const urlCount = result.sitemap?.urlCount || 'N/A'
+        const successfulSubmissions = result.searchEngineSubmissions?.successful || 0
+        const totalSubmissions = result.searchEngineSubmissions?.total || 0
+        
+        alert(
+          `Sitemap refreshed successfully!\n\n` +
+          `URLs in sitemap: ${urlCount}\n` +
+          `Search engine submissions: ${successfulSubmissions}/${totalSubmissions} successful`
+        )
+      } else {
+        alert(data.error || 'Failed to refresh sitemap')
+      }
+    } catch (error) {
+      console.error('Error refreshing sitemap:', error)
+      alert('Error refreshing sitemap. Please try again.')
+    } finally {
+      setRefreshingSitemap(false)
+    }
+  }
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -74,6 +113,26 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </Link>
+            
+            <button
+              onClick={handleRefreshSitemap}
+              disabled={refreshingSitemap}
+              className="block w-full text-left p-3 rounded-xl hover:bg-orange-50 transition-colors duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center group-hover:bg-orange-200 transition-colors duration-200">
+                  {refreshingSitemap ? (
+                    <Loader2 className="h-4 w-4 text-orange-600 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 text-orange-600" />
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Refresh Sitemap</p>
+                  <p className="text-sm text-gray-600">Regenerate and submit sitemap to search engines</p>
+                </div>
+              </div>
+            </button>
           </div>
         </div>
 

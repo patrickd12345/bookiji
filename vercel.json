@@ -5,16 +5,8 @@
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/cron/kb-crawl",
-      "schedule": "0 2 * * 1"
-    },
-    {
       "path": "/api/cron/kb-ensure-embeddings",
       "schedule": "0 4 * * *"
-    },
-    {
-      "path": "/api/cron/sitemap-refresh",
-      "schedule": "0 3 * * 1"
     }
   ]
 }
