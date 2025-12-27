@@ -152,6 +152,7 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/MIGRATION_TESTING_STRATEGY.md`
 - `docs/development/MODERN_NEXTJS_SETUP.md`
 - `docs/development/NEXT_STEPS_IMPLEMENTATION.md`
+- `docs/development/PRE_COMMIT_CHECKS.md` - Pre-commit check guide
 - `docs/development/NOTIFICATIONS_2_0_AND_I18N_COMPLETION.md`
 - `docs/development/NOTIFICATIONS_2_0_I18N_FINAL_SUMMARY.md`
 - `docs/development/README.md`
@@ -160,6 +161,7 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/INVARIANT_COVERAGE_MATRIX.md`
 - `docs/development/JARVIS_DEPLOYMENT_CHECKLIST.md` - Jarvis deployment checklist and verification steps
 - `docs/development/JARVIS_INCIDENT_COMMANDER.md` - Jarvis incident commander system (3AM mode)
+- `docs/development/JARVIS_PHASE5_ENABLEMENT.md` - Phase 5 enablement gates and rollout plan
 - `docs/development/SEO_MANAGER_SYSTEM.md`
 - `docs/development/SHADCN_UI_MIGRATION_SUCCESS.md`
 - `docs/development/SIMCITY_RUNBOOK.md`

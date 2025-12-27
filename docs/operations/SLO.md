@@ -9,6 +9,47 @@ Bookiji defines Service Level Objectives (SLOs) to measure and maintain platform
 
 ## SLO Definitions
 
+### 🧠 Jarvis Incident Commander SLOs
+
+#### Jarvis Decision Latency
+- **Definition:** Time from incident event → escalation decision emitted
+- **Target:** 99% < 250ms
+- **Alert:** p99 > 500ms for 5 minutes
+- **Why:** Jarvis must be reflex-fast. Slow decisions mean delayed notifications.
+
+#### Escalation Correctness
+- **Definition:** % of decisions violating invariants
+- **Target:** 0% (zero tolerance)
+- **Measurement:** CI + runtime invariant counters
+- **Alert:** Any non-zero value (immediate)
+- **Why:** Jarvis correctness is binary, not statistical. One violation is one too many.
+
+#### ACK Responsiveness
+- **Definition:** Time from first notification → ACK received
+- **Target:** 90% < 5 minutes
+- **Observation-only:** No alert initially (data collection phase)
+- **Why:** This becomes the input to Phase 5 policy suggestions later. We need baseline data.
+
+### 📅 Booking Engine SLOs
+
+#### Booking Success Rate
+- **Definition:** Confirmed bookings / booking attempts
+- **Target:** ≥ 99.5%
+- **Alert:** < 99% over 10 minute window
+- **Why:** Booking failures directly impact revenue and user trust.
+
+#### Booking Latency
+- **Definition:** API request → booking confirmation response
+- **Target:** p95 < 400ms
+- **Alert:** p95 > 700ms
+- **Why:** Slow bookings create poor user experience and increase abandonment.
+
+#### Payment Integrity
+- **Definition:** Stripe-confirmed bookings without reconciliation error
+- **Target:** 100% (zero tolerance)
+- **Alert:** Any mismatch (immediate)
+- **Why:** Money paths get no grace. Payment errors are critical.
+
 ### API Performance SLOs
 
 #### General API (`api_general`)
