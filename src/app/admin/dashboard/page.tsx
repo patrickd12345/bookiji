@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import DashboardCards from '@/components/admin/DashboardCards'
+import { logger } from '@/lib/logger'
 
 // Hardcode stats for now to avoid import issues
 const dashboardStats = {
@@ -14,7 +15,7 @@ const dashboardStats = {
 
 export default function AdminDashboard() {
   // Debug: Check if dashboardStats is defined
-  console.log('AdminDashboard: dashboardStats =', dashboardStats)
+  logger.debug('AdminDashboard: dashboardStats', { dashboardStats })
   
   return (
     <div className="space-y-6">

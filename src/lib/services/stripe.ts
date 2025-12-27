@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient';
+import { logger } from '@/lib/logger';
 
 let _stripe: Stripe | null = null;
 let _isMockMode: boolean | null = null;
@@ -19,7 +20,7 @@ function getStripe(): Stripe | null {
     const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) {
       // Should technically be covered by isMockMode check, but for type safety
-      console.warn('STRIPE_SECRET_KEY missing despite not being in mock mode. Defaulting to mock.');
+      logger.warn('STRIPE_SECRET_KEY missing despite not being in mock mode. Defaulting to mock.');
       _isMockMode = true;
       return null;
     }
@@ -130,7 +131,7 @@ export class StripeService {
 
       return paymentIntent;
     } catch (error) {
-      console.error('Error creating payment intent:', error);
+      logger.error('Error creating payment intent', error instanceof Error ? error : new Error(String(error)));
       throw new Error(`Failed to create payment intent: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -200,7 +201,7 @@ export class StripeService {
       };
 
     } catch (error) {
-      console.error('Error confirming payment:', error);
+      logger.error('Error confirming payment', error instanceof Error ? error : new Error(String(error)));
       return {
         success: false,
         payment_intent_id: paymentIntentId,
@@ -267,7 +268,7 @@ export class StripeService {
       const refund = await stripe.refunds.create(refundData);
       return refund;
     } catch (error) {
-      console.error('Error processing refund:', error);
+      logger.error('Error processing refund', error instanceof Error ? error : new Error(String(error)));
       throw new Error(`Failed to process refund: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -310,7 +311,7 @@ export class StripeService {
       if (!stripe) throw new Error('Stripe client not initialized');
       return stripe.webhooks.constructEvent(payload, signature, secret);
     } catch (error) {
-      console.error('Webhook signature verification failed:', error);
+      logger.error('Webhook signature verification failed', error instanceof Error ? error : new Error(String(error)));
       throw new Error('Webhook signature verification failed');
     }
   }
@@ -321,10 +322,7 @@ export class StripeService {
   static async handlePaymentSucceeded(event: Stripe.Event): Promise<void> {
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
     
-    console.log(`Payment succeeded for ${paymentIntent.id}`);
-    console.log(`Amount: ${paymentIntent.amount} ${paymentIntent.currency}`);
-    console.log(`Customer: ${paymentIntent.customer}`);
-    console.log(`Metadata:`, paymentIntent.metadata);
+    logger.info('Payment succeeded', { payment_intent_id: paymentIntent.id, amount: paymentIntent.amount, currency: paymentIntent.currency, customer: paymentIntent.customer, metadata: paymentIntent.metadata });
 
     // TODO: Update booking status, send notifications, etc.
     // This would integrate with the outbox pattern
@@ -336,8 +334,7 @@ export class StripeService {
   static async handlePaymentFailed(event: Stripe.Event): Promise<void> {
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
     
-    console.log(`Payment failed for ${paymentIntent.id}`);
-    console.log(`Last payment error:`, paymentIntent.last_payment_error);
+    logger.warn('Payment failed', { payment_intent_id: paymentIntent.id, last_payment_error: paymentIntent.last_payment_error });
 
     // TODO: Update booking status, send failure notifications, etc.
   }
@@ -366,7 +363,7 @@ export class StripeService {
       if (!stripe) throw new Error('Stripe client not initialized');
       return await stripe.customers.retrieve(customerId) as Stripe.Customer;
     } catch (error) {
-      console.error('Error retrieving customer:', error);
+      logger.error('Error retrieving customer', error instanceof Error ? error : new Error(String(error)), { customer_id: customerId });
       return null;
     }
   }
@@ -402,7 +399,7 @@ export class StripeService {
         },
       });
     } catch (error) {
-      console.error('Error creating customer:', error);
+      logger.error('Error creating customer', error instanceof Error ? error : new Error(String(error)), { email, name });
       throw new Error(`Failed to create customer: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -476,7 +473,7 @@ export class StripeService {
       const subscriptionId = session.subscription as string;
       
       if (!providerId || !customerId || !subscriptionId) {
-          console.error('Missing data in checkout session', { providerId, customerId, subscriptionId });
+          logger.error('Missing data in checkout session', undefined, { providerId, customerId, subscriptionId });
           return;
       }
 
@@ -520,7 +517,7 @@ export class StripeService {
         .single();
         
       if (!existing) {
-          console.error('Subscription update for unknown customer', customerId);
+          logger.error('Subscription update for unknown customer', undefined, { customer_id: customerId });
           return;
       }
 

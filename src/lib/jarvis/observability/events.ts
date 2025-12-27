@@ -17,6 +17,7 @@
  */
 
 import { getServerSupabase } from '@/lib/supabaseServer'
+import { logger } from '@/lib/logger'
 import type { DecisionTrace } from '../escalation/decideNextAction'
 
 /**
@@ -57,7 +58,7 @@ export async function storeIncidentEvent(params: {
     })
   } catch (error) {
     // Event storage failure should not break execution, but log it
-    console.error('[Jarvis] Error storing incident event:', error)
+    logger.error('[Jarvis] Error storing incident event', error instanceof Error ? error : new Error(String(error)), { incident_id: params.incidentId, event_type: params.eventType })
   }
 }
 

@@ -6,6 +6,7 @@
  */
 
 import { getSleepPolicy, isInQuietHours, minutesUntilQuietHoursEnd } from './sleepPolicy'
+import { logger } from '@/lib/logger'
 import type { Severity } from '../types'
 
 export type EscalationDecision =
@@ -97,7 +98,7 @@ export async function decideNextAction(
       }
     } catch (error) {
       // Fallback: metadata will be undefined (backward compatible)
-      console.warn('[Jarvis] Could not load policy metadata:', error)
+      logger.warn('[Jarvis] Could not load policy metadata', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 

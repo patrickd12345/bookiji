@@ -6,6 +6,7 @@
  */
 
 import { sendSMS } from '@/lib/notifications/providers'
+import { logger } from '@/lib/logger'
 import type { IncidentSMS, ParsedReply, JarvisAssessment, IncidentSnapshot } from './types'
 
 /**
@@ -59,7 +60,7 @@ export async function sendIncidentSMS(
     } else {
       // Development fallback - log instead of sending
       if (process.env.NODE_ENV === 'development') {
-        console.log('📱 [Jarvis Mock SMS]:', message)
+        logger.info('📱 [Jarvis Mock SMS]', { message, recipient: ownerPhone })
         return { success: true }
       }
 
@@ -157,7 +158,7 @@ export async function parseSMSReply(
         return llmParsed
       }
     } catch (error) {
-      console.error('LLM parsing failed, using regex fallback:', error)
+      logger.error('LLM parsing failed, using regex fallback', error instanceof Error ? error : new Error(String(error)), { reply_text_length: replyText.length })
     }
   }
 

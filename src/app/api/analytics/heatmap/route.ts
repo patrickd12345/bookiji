@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/supabaseServer';
 import { withQueryLogging } from '@/lib/performance/queryLogger';
+import { logger } from '@/lib/logger';
 
 interface HeatmapData {
   postal_code: string;
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
 
     // If the RPC doesn't exist, fall back to a regular query
     if (!heatmapData || heatmapData.length === 0) {
-      console.log('Falling back to direct query...');
+      logger.debug('Falling back to direct query for heatmap data');
       
       const fallbackData = await withQueryLogging(
         async () => {

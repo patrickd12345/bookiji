@@ -7,6 +7,7 @@
  */
 
 import { getServerSupabase } from '@/lib/supabaseServer'
+import { logger } from '@/lib/logger'
 import { decideNextAction } from '../escalation/decideNextAction'
 import { policyConfigToSleepPolicy } from '../policy/adapter'
 import { getPolicyByUuid } from '../policy/registry'
@@ -304,7 +305,7 @@ export async function simulateIncidents(
       const result = await simulateIncident(incidentId, candidatePolicyId)
       results.push(result)
     } catch (error) {
-      console.error(`[Jarvis] Error simulating incident ${incidentId}:`, error)
+      logger.error('[Jarvis] Error simulating incident', error instanceof Error ? error : new Error(String(error)), { incident_id: incidentId, candidate_policy_id: candidatePolicyId })
       // Continue with other incidents
     }
   }

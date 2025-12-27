@@ -5,6 +5,7 @@
  */
 
 import { getServerSupabase } from '@/lib/supabaseServer'
+import { logger } from '@/lib/logger'
 
 export interface IncidentSummary {
   incident_id: string
@@ -35,7 +36,7 @@ export async function generateAndStoreSummary(incidentId: string): Promise<void>
       .single()
 
     if (incidentError || !incident) {
-      console.error('[Jarvis] Error fetching incident for summary:', incidentError)
+      logger.error('[Jarvis] Error fetching incident for summary', new Error(incidentError?.message || 'Incident not found'), { incident_id: incidentId })
       return
     }
 
@@ -47,12 +48,12 @@ export async function generateAndStoreSummary(incidentId: string): Promise<void>
       .order('occurred_at', { ascending: true })
 
     if (eventsError) {
-      console.error('[Jarvis] Error fetching events for summary:', eventsError)
+      logger.error('[Jarvis] Error fetching events for summary', new Error(eventsError.message), { incident_id: incidentId })
       return
     }
 
     if (!events || events.length === 0) {
-      console.warn('[Jarvis] No events found for incident:', incidentId)
+      logger.warn('[Jarvis] No events found for incident', { incident_id: incidentId })
       return
     }
 
@@ -127,6 +128,6 @@ export async function generateAndStoreSummary(incidentId: string): Promise<void>
         onConflict: 'incident_id'
       })
   } catch (error) {
-    console.error('[Jarvis] Error generating summary:', error)
+    logger.error('[Jarvis] Error generating summary', error instanceof Error ? error : new Error(String(error)), { incident_id: incidentId })
   }
 }

@@ -1,95 +1,54 @@
 # Pre-Commit Checks
 
-**Last Updated:** January 27, 2025
+## Current Setup
 
-## Overview
+The pre-commit hook (`.husky/pre-commit`) runs:
 
-Before committing, always run the pre-commit checks to catch issues early. The pre-commit hook (via Husky) runs the same checks, but running them manually first saves time and avoids failed commits.
+1. **TypeScript Type Check** (`pnpm type-check`)
+   - Catches missing imports, type errors, undefined functions
+   - **BLOCKING** - Commit fails if type errors found
 
-## Quick Command
+2. **ESLint** (`pnpm eslint . --quiet`)
+   - Catches code quality issues
+   - **NON-BLOCKING** - Warnings don't block commit (due to memory issues)
 
-```bash
-pnpm pre-commit:check
-```
+3. **lint-staged** - Formats staged files
 
-This runs all the same checks as the Husky pre-commit hook.
+## Why Errors Are Caught at Deploy Time
 
-## What Gets Checked
+Previously, errors were only caught at deploy time because:
 
-The pre-commit hook runs three checks in sequence:
+1. **Pre-commit hook only ran ESLint** - Not TypeScript checking
+2. **ESLint was failing due to memory issues** - So we bypassed with `--no-verify`
+3. **No local build checks** - Developers weren't running `pnpm build` before pushing
+4. **TypeScript errors only caught during Next.js build** - Which only runs on Vercel
 
-### 1. TypeScript Type Check
-```bash
-pnpm type-check
-```
-- Runs `tsc --noEmit` to check for type errors
-- **Blocks commit if errors found**
+## Solution
 
-### 2. ESLint (Errors Only)
-```bash
-pnpm eslint . --quiet
-```
-- Checks for ESLint errors (not warnings)
-- **Non-blocking** (warnings are allowed)
-- Uses `--quiet` flag to show only errors
+Now the pre-commit hook:
+- ✅ Runs TypeScript type checking first (catches import errors)
+- ✅ Runs ESLint (non-blocking if memory issues)
+- ✅ Runs lint-staged for formatting
 
-### 3. Lint-Staged (Auto-fix)
-```bash
-pnpm lint-staged
-```
-- Runs `eslint --fix` on staged files
-- Auto-fixes fixable issues
-- **Blocks commit if unfixable errors remain**
+## Manual Checks Before Committing
 
-## Manual Check Sequence
-
-If you want to run checks individually:
+If you want to catch errors locally before committing:
 
 ```bash
-# 1. Type check
+# Type check only (fast)
 pnpm type-check
 
-# 2. ESLint (errors only)
-pnpm eslint . --quiet
-
-# 3. Lint-staged (on staged files)
-pnpm lint-staged
+# Full build (slower, but catches everything)
+pnpm build
 ```
 
-## Common Issues
+## Bypassing Pre-Commit (Not Recommended)
 
-### TypeScript Errors
-- Fix type errors before committing
-- Check `tsc --noEmit` output for details
-
-### ESLint Errors
-- Auto-fixable: Run `pnpm lint-staged` to fix
-- Manual fixes: Check ESLint output for specific rules
-
-### Lint-Staged Failures
-- Usually means ESLint found unfixable errors
-- Check the error output for specific file/line issues
-
-## Best Practice
-
-**Always run `pnpm pre-commit:check` before committing:**
+If you must bypass (e.g., for WIP commits):
 
 ```bash
-# Stage your changes
-git add .
-
-# Run pre-commit checks
-pnpm pre-commit:check
-
-# If checks pass, commit
-git commit -m "your message"
+git commit --no-verify -m "WIP: ..."
 ```
 
-This ensures you catch issues before the Husky hook runs, saving time and avoiding failed commits.
+**Warning**: This bypasses all checks. Only use for temporary commits that will be fixed before merging.
 
-## Related Files
-
-- `.husky/pre-commit` - Husky pre-commit hook script
-- `package.json` - Script definitions and lint-staged config
-- `tsconfig.json` - TypeScript configuration
-- `.eslintrc.*` - ESLint configuration

@@ -1,6 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js'
 import { featureFlags } from '@/config/featureFlags'
+import { logger } from '@/lib/logger'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
@@ -36,7 +37,7 @@ export class BookingWorker {
    */
   start(): void {
     if (this.isRunning) {
-      console.log('Booking worker already running')
+      logger.info('Booking worker already running')
       return
     }
 
@@ -45,7 +46,7 @@ export class BookingWorker {
       this.processPendingBookings()
     }, this.config.pollIntervalMs)
 
-    console.log(`Booking worker started - polling every ${this.config.pollIntervalMs}ms`)
+    logger.info('Booking worker started', { poll_interval_ms: this.config.pollIntervalMs })
   }
 
   /**
@@ -57,7 +58,7 @@ export class BookingWorker {
       this.pollInterval = undefined
     }
     this.isRunning = false
-    console.log('Booking worker stopped')
+    logger.info('Booking worker stopped')
   }
 
   /**
@@ -76,7 +77,7 @@ export class BookingWorker {
         .limit(10) // Process in batches
 
       if (error) {
-        console.error('Failed to fetch pending events:', error)
+        logger.error('Failed to fetch pending events', new Error(error.message))
         return
       }
 
@@ -84,19 +85,19 @@ export class BookingWorker {
         return // No pending events
       }
 
-      console.log(`Processing ${pendingEvents.length} pending booking events`)
+      logger.info('Processing pending booking events', { event_count: pendingEvents.length })
 
       for (const event of pendingEvents) {
         try {
           await this.processBookingEvent(event)
         } catch (eventError) {
-          console.error(`Failed to process event ${event.id}:`, eventError)
+          logger.error('Failed to process event', eventError instanceof Error ? eventError : new Error(String(eventError)), { event_id: event.id })
           await this.markEventFailed(event.id, eventError instanceof Error ? eventError.message : 'Unknown error')
         }
       }
 
     } catch (error) {
-      console.error('Error in processPendingBookings:', error)
+      logger.error('Error in processPendingBookings', error instanceof Error ? error : new Error(String(error)))
     }
   }
 
@@ -116,7 +117,7 @@ export class BookingWorker {
       .single()
 
     if (bookingError || !booking) {
-      console.log(`Booking ${booking_id} not found or not in hold_placed state, marking event as processed`)
+      logger.info('Booking not found or not in hold_placed state, marking event as processed', { booking_id })
       await this.markEventProcessed(event.id)
       return
     }
@@ -126,7 +127,7 @@ export class BookingWorker {
     const timeoutMs = this.config.timeoutMinutes * 60 * 1000
 
     if (timeSinceHold > timeoutMs) {
-      console.log(`Booking ${booking_id} exceeded ${this.config.timeoutMinutes}min timeout, auto-cancelling`)
+      logger.info('Booking exceeded timeout, auto-cancelling', { booking_id, timeout_minutes: this.config.timeoutMinutes })
       await this.autoCancelBooking(booking, event)
       await this.markEventProcessed(event.id)
       return
@@ -136,7 +137,7 @@ export class BookingWorker {
     const shouldConfirm = await this.simulateProviderConfirmation(provider_id, booking_id)
     
     if (shouldConfirm) {
-      console.log(`Provider ${provider_id} confirmed booking ${booking_id}`)
+      logger.info('Provider confirmed booking', { provider_id, booking_id })
       await this.confirmBooking(booking, event)
       await this.markEventProcessed(event.id)
     } else {
@@ -196,10 +197,10 @@ export class BookingWorker {
           }
         })
 
-      console.log(`Booking ${booking.id} confirmed successfully`)
+      logger.info('Booking confirmed successfully', { booking_id: booking.id })
 
     } catch (error) {
-      console.error(`Failed to confirm booking ${booking.id}:`, error)
+      logger.error('Failed to confirm booking', error instanceof Error ? error : new Error(String(error)), { booking_id: booking.id })
       throw error
     }
   }
@@ -244,10 +245,10 @@ export class BookingWorker {
         })
 
       // TODO: Implement automatic refund via Stripe
-      console.log(`Booking ${booking.id} auto-cancelled due to provider timeout`)
+      logger.info('Booking auto-cancelled due to provider timeout', { booking_id: booking.id })
 
     } catch (error) {
-      console.error(`Failed to auto-cancel booking ${booking.id}:`, error)
+      logger.error('Failed to auto-cancel booking', error instanceof Error ? error : new Error(String(error)), { booking_id: booking.id })
       throw error
     }
   }

@@ -4,6 +4,7 @@
  * Jarvis always replies to operator commands.
  */
 
+import { logger } from '@/lib/logger'
 import type { Environment } from '../types'
 
 /**
@@ -69,7 +70,7 @@ export async function sendFeedbackSMS(
     } else {
       // Development fallback
       if (process.env.NODE_ENV === 'development') {
-        console.log('📱 [Jarvis Feedback SMS]:', message)
+        logger.info('📱 [Jarvis Feedback SMS]', { message, recipient: ownerPhone })
         return { success: true }
       }
 

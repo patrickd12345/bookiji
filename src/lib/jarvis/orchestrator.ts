@@ -13,6 +13,7 @@ import { getIncidentSnapshot } from './incidentSnapshot'
 import { assessIncident } from './llmAssessment'
 import { parseSMSReply } from './smsHandler'
 import { executeAction } from './actionMatrix'
+import { logger } from '@/lib/logger'
 import {
   generateIncidentHash,
   wasRecentlySent,
@@ -278,7 +279,7 @@ export async function handleNoReplyDefaults(
                 }
               )
             } else if (process.env.NODE_ENV === 'development') {
-              console.log('📱 [Jarvis Mock SMS - No Reply]:', followUpMessage)
+              logger.info('📱 [Jarvis Mock SMS - No Reply]', { message: followUpMessage, incident_id: incident.incident_id })
             }
           } else {
             errors.push(`Failed to execute default action for ${incident.incident_id}: ${result.message}`)

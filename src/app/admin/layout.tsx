@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AccessDenied } from '@/components/ui/AccessDenied'
 import Sidebar from '@/components/admin/Sidebar'
 import Navbar from '@/components/admin/Navbar'
+import { logger } from '@/lib/logger'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -26,9 +27,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const response = await fetch('/api/auth/check-admin', { method: 'GET', credentials: 'include' })
       if (!response.ok) throw new Error('Admin check failed')
       const { isAdmin } = await response.json()
-      console.log('Admin check result:', { isAdmin, url: window.location.href })
+      logger.debug('Admin check result', { isAdmin, url: window.location.href })
       if (!isAdmin) {
-        console.log('Non-admin user - will show access denied message')
+        logger.debug('Non-admin user - will show access denied message')
         setIsAuthenticated(false)
         return
       }

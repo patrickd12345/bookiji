@@ -5,6 +5,7 @@
  */
 
 import { getServerSupabase } from '@/lib/supabaseServer'
+import { logger } from '@/lib/logger'
 import type { ActionResult, Environment, ParsedIntent, IncidentSnapshot, JarvisAssessment } from '../types'
 
 export interface AuditLogEntry {
@@ -75,7 +76,7 @@ export async function logJarvisAction(entry: AuditLogEntry): Promise<void> {
     })
 
     // Also log to console for immediate visibility
-    console.log('[Jarvis Audit]', {
+    logger.info('[Jarvis Audit]', {
       timestamp: entry.timestamp,
       sender: entry.sender_phone,
       action: entry.action_id || 'refused',
@@ -84,7 +85,7 @@ export async function logJarvisAction(entry: AuditLogEntry): Promise<void> {
     })
   } catch (error) {
     // Audit logging failure should not break execution
-    console.error('[Jarvis] Audit logging failed:', error)
+    logger.error('[Jarvis] Audit logging failed', error instanceof Error ? error : new Error(String(error)))
   }
 }
 

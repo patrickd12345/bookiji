@@ -224,3 +224,4 @@ supabase status
 - [Environment Model](../architecture/ENVIRONMENT_MODEL.md)
 - [Staging Setup](../operations/STAGING_SETUP.md)
 
+

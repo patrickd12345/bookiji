@@ -5,6 +5,8 @@
  * Deterministic. No user input at runtime.
  */
 
+import { logger } from '@/lib/logger'
+
 export interface SleepPolicy {
   id: string
   version: string
@@ -52,7 +54,7 @@ export async function getSleepPolicy(): Promise<SleepPolicy> {
       const config = await getActivePolicyConfig()
       return policyConfigToSleepPolicy(config)
     } catch (error) {
-      console.error('[Jarvis] Error loading active policy, falling back to default:', error)
+      logger.error('[Jarvis] Error loading active policy, falling back to default', error instanceof Error ? error : new Error(String(error)))
       return OWNER_DEFAULT_V1
     }
   }
@@ -88,7 +90,7 @@ export function isInQuietHours(policy: SleepPolicy): boolean {
     }
   } catch (error) {
     // If timezone check fails, assume not in quiet hours (fail open)
-    console.error('[Jarvis] Error checking quiet hours:', error)
+    logger.error('[Jarvis] Error checking quiet hours', error instanceof Error ? error : new Error(String(error)), { timezone: policy.quietHours.timezone })
     return false
   }
 }
@@ -121,7 +123,7 @@ export function minutesUntilQuietHoursEnd(policy: SleepPolicy): number | null {
     const diffMs = endTime.getTime() - currentTime.getTime()
     return Math.floor(diffMs / (1000 * 60))
   } catch (error) {
-    console.error('[Jarvis] Error calculating quiet hours end:', error)
+    logger.error('[Jarvis] Error calculating quiet hours end', error instanceof Error ? error : new Error(String(error)), { timezone: policy.quietHours.timezone })
     return null
   }
 }

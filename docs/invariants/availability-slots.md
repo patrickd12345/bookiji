@@ -123,3 +123,4 @@
 - Database unique constraint on `(provider_id, start_time, end_time)`
 - Idempotency check in generation logic
 
+

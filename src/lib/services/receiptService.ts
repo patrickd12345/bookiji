@@ -1,5 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
@@ -94,12 +95,12 @@ export class ReceiptService {
           }
         })
 
-      console.log(`Receipt generated for booking ${bookingId}: ${receiptUrl}`)
+      logger.info('Receipt generated for booking', { booking_id: bookingId, receipt_url: receiptUrl })
 
       return receiptUrl
 
     } catch (error) {
-      console.error(`Failed to generate receipt for booking ${bookingId}:`, error)
+      logger.error('Failed to generate receipt for booking', error instanceof Error ? error : new Error(String(error)), { booking_id: bookingId })
       throw error
     }
   }
@@ -162,7 +163,7 @@ export class ReceiptService {
       }
 
     } catch (error) {
-      console.error(`Failed to get receipt data for booking ${bookingId}:`, error)
+      logger.error('Failed to get receipt data for booking', error instanceof Error ? error : new Error(String(error)), { booking_id: bookingId })
       return null
     }
   }
@@ -187,13 +188,13 @@ export class ReceiptService {
       }
 
       // TODO: Implement email notification
-      console.log(`Would send email receipt to customer for booking ${bookingId}`)
+      logger.info('Would send email receipt to customer', { booking_id: bookingId })
       
       // TODO: Implement SMS notification
-      console.log(`Would send SMS receipt to customer for booking ${bookingId}`)
+      logger.info('Would send SMS receipt to customer', { booking_id: bookingId })
 
     } catch (error) {
-      console.error(`Failed to send receipt notifications for booking ${bookingId}:`, error)
+      logger.error('Failed to send receipt notifications for booking', error instanceof Error ? error : new Error(String(error)), { booking_id: bookingId })
       // Don't throw - notifications are not critical to the core flow
     }
   }
@@ -212,7 +213,7 @@ export class ReceiptService {
         .order('created_at', { ascending: true })
 
       if (error) {
-        console.error('Failed to fetch confirmed bookings:', error)
+        logger.error('Failed to fetch confirmed bookings', new Error(error.message))
         return
       }
 
@@ -220,19 +221,19 @@ export class ReceiptService {
         return // No confirmed bookings to process
       }
 
-      console.log(`Processing ${confirmedBookings.length} confirmed bookings for receipt generation`)
+      logger.info('Processing confirmed bookings for receipt generation', { booking_count: confirmedBookings.length })
 
       for (const booking of confirmedBookings) {
         try {
           await this.generateReceipt(booking.id)
           await this.sendReceiptNotifications(booking.id)
         } catch (receiptError) {
-          console.error(`Failed to process receipt for booking ${booking.id}:`, receiptError)
+          logger.error('Failed to process receipt for booking', receiptError instanceof Error ? receiptError : new Error(String(receiptError)), { booking_id: booking.id })
         }
       }
 
     } catch (error) {
-      console.error('Error in processConfirmedBookings:', error)
+      logger.error('Error in processConfirmedBookings', error instanceof Error ? error : new Error(String(error)))
     }
   }
 }

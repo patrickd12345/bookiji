@@ -11,3 +11,4 @@ SELECT EXISTS (
 -- Get scheduling_enabled flag
 SELECT * FROM system_flags WHERE key = 'scheduling_enabled';
 
+

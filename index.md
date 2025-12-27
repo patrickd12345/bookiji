@@ -69,6 +69,14 @@ This file contains an index of all markdown files in the repository, organized b
 
 ### docs/
 
+#### Marketing
+- `docs/marketing/PARTNER_STAKEHOLDER_PRESENTATION.md` - Partner and stakeholder presentation (Option C)
+
+#### Onboarding
+- `docs/onboarding/PILOT_USER_GUIDE.md` - Pilot user onboarding guide (Option C)
+
+### docs/
+
 #### API Documentation
 - `docs/api/API_GUIDE.md`
 - `docs/api/AVAILABILITY_SYSTEM_DESIGN.md`
@@ -134,6 +142,7 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/CI_GUARDS.md`
 - `docs/development/COMPREHENSIVE_UI_TESTING_STRATEGY.md`
 - `docs/development/CONDITIONAL_BUTTONS_IMPLEMENTATION.md`
+- `docs/development/CONSOLE_LOG_FOLLOWUPS.md` - Console.log migration follow-up tasks
 - `docs/development/CONTRACT_TESTS.md`
 - `docs/development/DATABASE_MANAGEMENT_POLICY.md`
 - `docs/development/DATA_POSTURE.md`
@@ -152,7 +161,6 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/MIGRATION_TESTING_STRATEGY.md`
 - `docs/development/MODERN_NEXTJS_SETUP.md`
 - `docs/development/NEXT_STEPS_IMPLEMENTATION.md`
-- `docs/development/PRE_COMMIT_CHECKS.md` - Pre-commit check guide
 - `docs/development/NOTIFICATIONS_2_0_AND_I18N_COMPLETION.md`
 - `docs/development/NOTIFICATIONS_2_0_I18N_FINAL_SUMMARY.md`
 - `docs/development/README.md`
@@ -161,7 +169,6 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/INVARIANT_COVERAGE_MATRIX.md`
 - `docs/development/JARVIS_DEPLOYMENT_CHECKLIST.md` - Jarvis deployment checklist and verification steps
 - `docs/development/JARVIS_INCIDENT_COMMANDER.md` - Jarvis incident commander system (3AM mode)
-- `docs/development/JARVIS_PHASE5_ENABLEMENT.md` - Phase 5 enablement gates and rollout plan
 - `docs/development/SEO_MANAGER_SYSTEM.md`
 - `docs/development/SHADCN_UI_MIGRATION_SUCCESS.md`
 - `docs/development/SIMCITY_RUNBOOK.md`
@@ -177,6 +184,7 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/TRANSLATION_COMPLETE.md`
 - `docs/development/TRANSLATION_GUIDE.md`
 - `docs/development/TRANSLATION_TEMPLATE.md`
+- `docs/development/TYPE_SAFETY_STRIKE.md` - Type safety strike plan for critical paths
 - `docs/development/WIREFRAMES.md`
 
 #### Features
@@ -203,6 +211,8 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/maintenance/UX_RESILIENCE_PATTERNS.md`
 
 #### Operations
+- `docs/operations/ENVIRONMENT_MODES.md` - Environment modes and operator guide (named execution modes)
+- `docs/operations/PRODUCTION_MONITORING_STRATEGY.md` - Production monitoring strategy (Option B)
 - `docs/operations/SCHEDULING_CHANGE_RULE.md`
 - `docs/operations/STAGING_SETUP.md` - Staging environment setup guide
 - `docs/operations/STAGING_SETUP_EXECUTION_REPORT.md` - Staging setup execution report

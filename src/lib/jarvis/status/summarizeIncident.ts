@@ -7,6 +7,7 @@
 
 import type { IncidentStatusSnapshot } from './getIncidentSnapshot'
 import type { SeverityExplanation } from './computeSeverity'
+import { logger } from '@/lib/logger'
 
 export type SummaryCommand = 'STATUS' | 'WHY' | 'CHANGES' | 'HELP'
 
@@ -48,7 +49,7 @@ Playbook: ${incident.active_playbook ? incident.active_playbook.playbook_id : 'N
       }
     }
   } catch (error) {
-    console.error('[Jarvis] LLM summarization failed:', error)
+    logger.error('[Jarvis] LLM summarization failed', error instanceof Error ? error : new Error(String(error)), { incident_id: incident.incident_id })
   }
 
   return {
@@ -105,7 +106,7 @@ ${severity.downgrade_reasons && severity.downgrade_reasons.length > 0
       }
     }
   } catch (error) {
-    console.error('[Jarvis] LLM summarization failed:', error)
+    logger.error('[Jarvis] LLM summarization failed', error instanceof Error ? error : new Error(String(error)), { incident_id: incident.incident_id })
   }
 
   return {

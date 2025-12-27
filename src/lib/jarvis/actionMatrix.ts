@@ -7,6 +7,7 @@
 
 import { getServerSupabase } from '@/lib/supabaseServer'
 import { isProduction } from '@/lib/env/assertAppEnv'
+import { logger } from '@/lib/logger'
 import type { AllowedAction, ActionResult, Environment } from './types'
 
 /**
@@ -168,7 +169,7 @@ async function captureSnapshot(): Promise<ActionResult> {
     const timestamp = new Date().toISOString()
     
     // TODO: Store in incident_logs table or similar
-    console.log(`[Jarvis] Forensic snapshot captured at ${timestamp}`)
+    logger.info('[Jarvis] Forensic snapshot captured', { timestamp })
 
     return {
       action_id: 'capture_snapshot',

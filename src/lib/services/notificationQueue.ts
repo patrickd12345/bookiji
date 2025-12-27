@@ -1,6 +1,7 @@
 import type { NotificationRequest } from '@/app/api/notifications/send/route';
 import { createClient } from '@supabase/supabase-js'
 import { getSupabaseConfig } from '@/config/supabase'
+import { logger } from '@/lib/logger'
 
 export interface NotificationAttemptResult {
   success: boolean;
@@ -52,8 +53,10 @@ export async function addToDeadLetterQueue(
     deadLetterQueue.push({ notification, error, timestamp: Date.now() });
   }
   if (deadLetterQueue.length > DLQ_ALERT_THRESHOLD) {
-    console.error(
-      `Dead letter queue size ${deadLetterQueue.length} exceeds threshold ${DLQ_ALERT_THRESHOLD}`
+    logger.error(
+      `Dead letter queue size ${deadLetterQueue.length} exceeds threshold ${DLQ_ALERT_THRESHOLD}`,
+      undefined,
+      { queue_size: deadLetterQueue.length, threshold: DLQ_ALERT_THRESHOLD }
     );
   }
 }
@@ -87,6 +90,6 @@ export async function sendSupportEmail(
 ) {
   // In production, integrate with your email provider
   // For now, just log the email
-  console.log(`[SUPPORT EMAIL] To: ${to}, Subject: ${subject}, Body: ${body}`);
+  logger.info('[SUPPORT EMAIL]', { to, subject, body_length: body.length });
   return { success: true };
 }

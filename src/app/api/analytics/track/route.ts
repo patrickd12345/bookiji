@@ -4,6 +4,7 @@ import { limitRequest } from '@/middleware/requestLimiter'
 // Use server Supabase client
 import { getServerSupabase } from '@/lib/supabaseServer'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
 
 function createSupabaseClient(): SupabaseClient {
   return getServerSupabase()
@@ -314,7 +315,7 @@ async function sendRealTimeAlert(event: string, properties: EventProperties): Pr
     }
 
     // In production, you'd send this to your alert system
-    console.log('🚨 Real-time alert:', alertPayload)
+    logger.warn('Real-time alert', { event, properties, timestamp: alertPayload.timestamp, priority: alertPayload.priority })
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
       console.error('Failed to send real-time alert:', error)

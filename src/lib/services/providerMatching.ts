@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 // Use local Supabase for development
 const supabaseUrl = process.env.NODE_ENV === 'production' 
@@ -75,7 +76,7 @@ export class ProviderMatchingService {
         .limit(5);
 
       if (specialtyError) {
-        console.error('Error finding specialties:', specialtyError);
+        logger.error('Error finding specialties', new Error(specialtyError.message), { intent: criteria.intent });
         return [];
       }
 
@@ -93,7 +94,7 @@ export class ProviderMatchingService {
         .in('specialty_id', specialtyIds);
 
       if (vsError) {
-        console.error('Error finding vendor specialties:', vsError);
+        logger.error('Error finding vendor specialties', new Error(vsError.message), { specialty_ids: specialtyIds });
         return [];
       }
 
@@ -121,7 +122,7 @@ export class ProviderMatchingService {
         .eq('is_active', true) as { data: ProviderProfile[] | null; error: any };
 
       if (providerError) {
-        console.error('Error finding providers:', providerError);
+        logger.error('Error finding providers', new Error(providerError.message), { provider_ids: providerIds });
         return [];
       }
 
@@ -140,7 +141,7 @@ export class ProviderMatchingService {
         .eq('is_active', true) as { data: ServiceData[] | null; error: any };
 
       if (serviceError) {
-        console.error('Error finding services:', serviceError);
+        logger.error('Error finding services', new Error(serviceError.message), { provider_ids: providerIds });
         return [];
       }
 
@@ -156,7 +157,7 @@ export class ProviderMatchingService {
         .eq('status', 'published') as { data: ReviewData[] | null; error: any };
 
       if (ratingError) {
-        console.error('Error finding ratings:', ratingError);
+        logger.error('Error finding ratings', new Error(ratingError.message), { provider_ids: providerIds });
       }
 
       // Build candidate list
@@ -231,7 +232,7 @@ export class ProviderMatchingService {
       return candidates.slice(0, criteria.limit || 10);
 
     } catch (error) {
-      console.error('Error in provider matching:', error);
+      logger.error('Error in provider matching', error instanceof Error ? error : new Error(String(error)), { intent: criteria.intent });
       return [];
     }
   }
@@ -282,7 +283,7 @@ export class ProviderMatchingService {
         .limit(10) as { data: ServiceWithProfile[] | null; error: any };
 
       if (error || !services) {
-        console.error('Error in fallback service search:', error);
+        logger.error('Error in fallback service search', error instanceof Error ? error : new Error(String(error)), { intent: criteria.intent });
         return [];
       }
 
@@ -311,7 +312,7 @@ export class ProviderMatchingService {
         .slice(0, criteria.limit || 10);
 
     } catch (error) {
-      console.error('Error in fallback search:', error);
+      logger.error('Error in fallback search', error instanceof Error ? error : new Error(String(error)), { intent: criteria.intent });
       return [];
     }
   }

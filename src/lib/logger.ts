@@ -1,11 +1,11 @@
 /**
  * Centralized Logger
  * 
- * Environment-aware logging that:
- * - Suppresses logs in production (except errors)
- * - Provides structured logging
- * - Integrates with monitoring systems
- * - Prevents information leakage
+ * Environment-aware logging utility that:
+ * - Suppresses debug/info logs in production
+ * - Always logs warnings and errors
+ * - Provides structured logging with context
+ * - Ready for future integration with monitoring (Sentry, etc.)
  */
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
@@ -20,22 +20,17 @@ class Logger {
 
   constructor() {
     this.isDevelopment = process.env.NODE_ENV === 'development'
-    this.isProduction = process.env.NODE_ENV === 'production'
+    this.isProduction = process.env.NODE_ENV === 'production' || process.env.APP_ENV === 'prod'
   }
 
   private shouldLog(level: LogLevel): boolean {
     // Always log errors
-    if (level === 'error') {
-      return true
-    }
+    if (level === 'error') return true
     
     // In development, log everything
-    if (this.isDevelopment) {
-      return true
-    }
+    if (this.isDevelopment) return true
     
     // In production, only log warnings and errors
-    // (errors already handled above, so just check for warn)
     if (this.isProduction) {
       return level === 'warn'
     }
@@ -53,34 +48,21 @@ class Logger {
   private log(level: LogLevel, message: string, context?: LogContext, error?: Error): void {
     if (!this.shouldLog(level)) return
 
-    const formatted = this.formatMessage(level, message, context)
+    const formattedMessage = this.formatMessage(level, message, context)
     
-    // Use appropriate console method
     switch (level) {
       case 'debug':
-        console.debug(formatted)
+        console.debug(formattedMessage)
         break
       case 'info':
-        console.info(formatted)
+        console.info(formattedMessage)
         break
       case 'warn':
-        console.warn(formatted)
+        console.warn(formattedMessage, error ? error.stack : '')
         break
       case 'error':
-        if (error) {
-          console.error(formatted, error)
-        } else {
-          console.error(formatted)
-        }
+        console.error(formattedMessage, error ? error.stack : '')
         break
-    }
-
-    // In production, send errors to monitoring (Sentry, etc.)
-    if (this.isProduction && level === 'error') {
-      // TODO: Integrate with Sentry or other monitoring service
-      // if (typeof window !== 'undefined' && window.Sentry) {
-      //   window.Sentry.captureException(error || new Error(message), { extra: context })
-      // }
     }
   }
 
@@ -101,9 +83,6 @@ class Logger {
   }
 }
 
-// Export singleton instance
 export const logger = new Logger()
-
-// Export type for dependency injection if needed
 export type { Logger, LogLevel, LogContext }
 
