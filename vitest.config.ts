@@ -24,6 +24,7 @@ export default defineConfig({
       ],
     },
     include: [
+      "src/**/*.{test,spec}.{ts,tsx}",
       "tests/components/**/*.test.{ts,tsx}",
       "tests/unit/**/*.test.{ts,tsx}",
       "tests/api/**/*.spec.ts",
