@@ -136,6 +136,12 @@ async function checkIncompleteTraces() {
 
 /**
  * Check 3: No orphan notification events (must have parent decision in same incident)
+ * 
+ * Linkage rule: Each notification_sent or notification_suppressed event must have
+ * a corresponding escalation_decision_made event in the same incident that occurred
+ * at or before the notification event. This uses temporal ordering (nearest prior decision)
+ * rather than explicit FK, which is acceptable for event sourcing patterns but requires
+ * careful ordering guarantees.
  */
 async function checkOrphanNotifications() {
   try {
@@ -160,7 +166,7 @@ async function checkOrphanNotifications() {
     }
 
     // For each notification event, check if there's a decision event in the same incident
-    // that occurred before or at the same time
+    // that occurred before or at the same time (temporal linkage)
     const orphanEvents = []
 
     for (const notifEvent of notificationEvents) {
@@ -187,12 +193,13 @@ async function checkOrphanNotifications() {
       const example = orphanEvents[0]
       fail(
         `Found ${orphanEvents.length} orphan notification events without parent decision. ` +
+        `Linkage rule: notification events must have a prior escalation_decision_made event in the same incident. ` +
         `Example: incident_id=${example.incident_id}, event_type=${example.event_type}, occurred_at=${example.occurred_at}`
       )
       return
     }
 
-    ok(`All ${notificationEvents.length} notification events have parent decisions`)
+    ok(`All ${notificationEvents.length} notification events have parent decisions (temporal linkage verified)`)
   } catch (error) {
     fail(`Exception checking orphan notifications: ${error.message}`)
   }
@@ -200,6 +207,10 @@ async function checkOrphanNotifications() {
 
 /**
  * Check 4: Resolved incidents must have terminal state (incident_resolved event)
+ * 
+ * Invariant: Any incident marked resolved=true in jarvis_incidents must have
+ * a corresponding incident_resolved event in jarvis_incident_events.
+ * This ensures the timeline captures the terminal state transition.
  */
 async function checkMissingTerminalState() {
   try {
@@ -246,6 +257,7 @@ async function checkMissingTerminalState() {
     if (missingTerminalState.length > 0) {
       fail(
         `Found ${missingTerminalState.length} resolved incidents without incident_resolved event. ` +
+        `Invariant: resolved=true incidents must have incident_resolved event. ` +
         `Example: incident_id=${missingTerminalState[0].incident_id}`
       )
       return

@@ -1,5 +1,16 @@
 -- Migration: Jarvis Phase 4 Observability
 -- Creates event storage and summary tables for observability
+--
+-- Event types (must match TypeScript IncidentEventType exactly):
+--   - incident_created: Incident first detected
+--   - escalation_decision_made: Escalation decision with trace (REQUIRED trace)
+--   - notification_sent: SMS notification sent
+--   - notification_suppressed: Notification suppressed (quiet hours, cap, etc.)
+--   - acknowledged: Incident acknowledged by operator
+--   - incident_resolved: Terminal state reached
+--
+-- Linkage: notification_sent/suppressed events link to escalation_decision_made
+-- via temporal ordering (same incident_id, decision occurred_at <= notification occurred_at)
 
 BEGIN;
 

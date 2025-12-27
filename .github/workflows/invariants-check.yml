@@ -100,6 +100,7 @@ jobs:
             pnpm test src/lib/jarvis/escalation/decideNextAction.test.ts --run || TEST_EXIT_CODE=$?
             pnpm test src/lib/jarvis/observability/explain.test.ts --run || TEST_EXIT_CODE=$?
             pnpm test src/lib/jarvis/observability/trace.test.ts --run || TEST_EXIT_CODE=$?
+            pnpm test src/lib/jarvis/observability/events.test.ts --run || TEST_EXIT_CODE=$?
 
             if [ "$TEST_EXIT_CODE" -ne 0 ]; then
               echo ""

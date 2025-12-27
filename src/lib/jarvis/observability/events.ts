@@ -2,11 +2,27 @@
  * Jarvis Observability - Event Storage
  * 
  * Stores all incident-related events for timeline reconstruction.
+ * 
+ * Event naming consistency: All event_type strings must exactly match
+ * the CHECK constraint in supabase/migrations/20251228000000_jarvis_phase4_observability.sql
+ * 
+ * Linkage pattern: Notification events (notification_sent, notification_suppressed)
+ * are linked to escalation_decision_made events via temporal ordering:
+ * - Same incident_id
+ * - Decision occurred_at <= notification occurred_at
+ * - Nearest prior decision is the parent
+ * 
+ * This is acceptable for event sourcing but requires careful ordering guarantees.
+ * Future enhancement: Consider explicit decision_event_id FK for stronger guarantees.
  */
 
 import { getServerSupabase } from '@/lib/supabaseServer'
 import type { DecisionTrace } from '../escalation/decideNextAction'
 
+/**
+ * Event types - MUST match database CHECK constraint exactly
+ * See: supabase/migrations/20251228000000_jarvis_phase4_observability.sql
+ */
 export type IncidentEventType =
   | 'incident_created'
   | 'escalation_decision_made'
