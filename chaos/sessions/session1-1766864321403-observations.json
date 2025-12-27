@@ -1,0 +1,1104 @@
+{
+  "session_id": "session1-1766864321403",
+  "session_type": "valid_path_degradation",
+  "start_time": "2025-12-27T19:38:41.403Z",
+  "end_time": "2025-12-27T19:40:56.881Z",
+  "duration_ms": 135478,
+  "observations": [
+    {
+      "timestamp": "2025-12-27T19:38:41.407Z",
+      "elapsed_ms": 10,
+      "phase": "SESSION",
+      "event": "start",
+      "data": {
+        "session_id": "session1-1766864321403",
+        "duration_ms": 120000,
+        "base_url": "http://localhost:3000"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:41.413Z",
+      "elapsed_ms": 10,
+      "phase": "STAGE",
+      "event": "start",
+      "data": {
+        "name": "baseline",
+        "latency_ms": 0,
+        "db_failure_rate": 0,
+        "stripe_timeout": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:41.664Z",
+      "elapsed_ms": 261,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "baseline",
+        "attempt": 1,
+        "status": 401,
+        "latency_ms": 250,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:43.921Z",
+      "elapsed_ms": 2518,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "baseline",
+        "attempt": 2,
+        "status": 401,
+        "latency_ms": 245,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:46.134Z",
+      "elapsed_ms": 4731,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "baseline",
+        "attempt": 3,
+        "status": 401,
+        "latency_ms": 203,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:48.344Z",
+      "elapsed_ms": 6941,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "baseline",
+        "attempt": 4,
+        "status": 401,
+        "latency_ms": 196,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:50.671Z",
+      "elapsed_ms": 9268,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "baseline",
+        "attempt": 5,
+        "status": 401,
+        "latency_ms": 315,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:50.792Z",
+      "elapsed_ms": 9389,
+      "phase": "INCIDENT_CHECK",
+      "event": "jarvis_status",
+      "data": {
+        "should_alert": false,
+        "reason": "Local environment - no alerts",
+        "has_snapshot": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:50.792Z",
+      "elapsed_ms": 9389,
+      "phase": "INCIDENT",
+      "event": "suppressed",
+      "data": {
+        "reason": "Local environment - no alerts"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:52.983Z",
+      "elapsed_ms": 11580,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "baseline",
+        "attempt": 6,
+        "status": 401,
+        "latency_ms": 188,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:55.214Z",
+      "elapsed_ms": 13811,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "baseline",
+        "attempt": 7,
+        "status": 401,
+        "latency_ms": 220,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:57.389Z",
+      "elapsed_ms": 15986,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "baseline",
+        "attempt": 8,
+        "status": 401,
+        "latency_ms": 173,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:59.396Z",
+      "elapsed_ms": 17993,
+      "phase": "STAGE",
+      "event": "end",
+      "data": {
+        "stage": "baseline",
+        "requests": 8,
+        "successful": 0,
+        "failed": 8
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:38:59.397Z",
+      "elapsed_ms": 17994,
+      "phase": "STAGE",
+      "event": "start",
+      "data": {
+        "name": "latency_500ms",
+        "latency_ms": 500,
+        "db_failure_rate": 0,
+        "stripe_timeout": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:00.105Z",
+      "elapsed_ms": 18702,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "latency_500ms",
+        "attempt": 9,
+        "status": 401,
+        "latency_ms": 707,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:02.777Z",
+      "elapsed_ms": 21374,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "latency_500ms",
+        "attempt": 10,
+        "status": 401,
+        "latency_ms": 669,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:02.943Z",
+      "elapsed_ms": 21540,
+      "phase": "INCIDENT_CHECK",
+      "event": "jarvis_status",
+      "data": {
+        "should_alert": false,
+        "reason": "Local environment - no alerts",
+        "has_snapshot": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:02.943Z",
+      "elapsed_ms": 21540,
+      "phase": "INCIDENT",
+      "event": "suppressed",
+      "data": {
+        "reason": "Local environment - no alerts"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:05.654Z",
+      "elapsed_ms": 24251,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "latency_500ms",
+        "attempt": 11,
+        "status": 401,
+        "latency_ms": 709,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:08.386Z",
+      "elapsed_ms": 26983,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "latency_500ms",
+        "attempt": 12,
+        "status": 401,
+        "latency_ms": 727,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:11.044Z",
+      "elapsed_ms": 29641,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "latency_500ms",
+        "attempt": 13,
+        "status": 401,
+        "latency_ms": 655,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:13.725Z",
+      "elapsed_ms": 32322,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "latency_500ms",
+        "attempt": 14,
+        "status": 401,
+        "latency_ms": 674,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:16.383Z",
+      "elapsed_ms": 34980,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "latency_500ms",
+        "attempt": 15,
+        "status": 401,
+        "latency_ms": 649,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:16.535Z",
+      "elapsed_ms": 35132,
+      "phase": "INCIDENT_CHECK",
+      "event": "jarvis_status",
+      "data": {
+        "should_alert": false,
+        "reason": "Local environment - no alerts",
+        "has_snapshot": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:16.535Z",
+      "elapsed_ms": 35132,
+      "phase": "INCIDENT",
+      "event": "suppressed",
+      "data": {
+        "reason": "Local environment - no alerts"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:18.546Z",
+      "elapsed_ms": 37143,
+      "phase": "STAGE",
+      "event": "end",
+      "data": {
+        "stage": "latency_500ms",
+        "requests": 7,
+        "successful": 0,
+        "failed": 15
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:18.546Z",
+      "elapsed_ms": 37143,
+      "phase": "STAGE",
+      "event": "start",
+      "data": {
+        "name": "latency_2000ms",
+        "latency_ms": 2000,
+        "db_failure_rate": 0,
+        "stripe_timeout": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:20.724Z",
+      "elapsed_ms": 39321,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "latency_2000ms",
+        "attempt": 16,
+        "status": 401,
+        "latency_ms": 2178,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:24.883Z",
+      "elapsed_ms": 43480,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "latency_2000ms",
+        "attempt": 17,
+        "status": 401,
+        "latency_ms": 2157,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:29.085Z",
+      "elapsed_ms": 47682,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "latency_2000ms",
+        "attempt": 18,
+        "status": 401,
+        "latency_ms": 2196,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:33.275Z",
+      "elapsed_ms": 51872,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "latency_2000ms",
+        "attempt": 19,
+        "status": 401,
+        "latency_ms": 2188,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:37.518Z",
+      "elapsed_ms": 56115,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "latency_2000ms",
+        "attempt": 20,
+        "status": 401,
+        "latency_ms": 2236,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:37.652Z",
+      "elapsed_ms": 56249,
+      "phase": "INCIDENT_CHECK",
+      "event": "jarvis_status",
+      "data": {
+        "should_alert": false,
+        "reason": "Local environment - no alerts",
+        "has_snapshot": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:37.652Z",
+      "elapsed_ms": 56249,
+      "phase": "INCIDENT",
+      "event": "suppressed",
+      "data": {
+        "reason": "Local environment - no alerts"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:39.660Z",
+      "elapsed_ms": 58257,
+      "phase": "STAGE",
+      "event": "end",
+      "data": {
+        "stage": "latency_2000ms",
+        "requests": 5,
+        "successful": 0,
+        "failed": 20
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:39.661Z",
+      "elapsed_ms": 58258,
+      "phase": "STAGE",
+      "event": "start",
+      "data": {
+        "name": "db_partial_10pct",
+        "latency_ms": 1000,
+        "db_failure_rate": 0.1,
+        "stripe_timeout": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:40.792Z",
+      "elapsed_ms": 59389,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "db_partial_10pct",
+        "attempt": 21,
+        "status": 401,
+        "latency_ms": 1131,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:44.049Z",
+      "elapsed_ms": 62646,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "db_partial_10pct",
+        "attempt": 22,
+        "status": 401,
+        "latency_ms": 1256,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:47.213Z",
+      "elapsed_ms": 65810,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "db_partial_10pct",
+        "attempt": 23,
+        "status": 401,
+        "latency_ms": 1158,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:50.220Z",
+      "elapsed_ms": 68818,
+      "phase": "BOOKING_REQUEST",
+      "event": "simulated_db_failure",
+      "data": {
+        "stage": "db_partial_10pct",
+        "attempt": 24,
+        "payload": {
+          "providerId": "test-provider-id",
+          "serviceId": "test-service-id",
+          "startTime": "2025-12-27T20:39:49.220Z",
+          "endTime": "2025-12-27T21:09:49.220Z",
+          "amountUSD": 50
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:53.236Z",
+      "elapsed_ms": 71833,
+      "phase": "BOOKING_REQUEST",
+      "event": "simulated_db_failure",
+      "data": {
+        "stage": "db_partial_10pct",
+        "attempt": 25,
+        "payload": {
+          "providerId": "test-provider-id",
+          "serviceId": "test-service-id",
+          "startTime": "2025-12-27T20:39:52.222Z",
+          "endTime": "2025-12-27T21:09:52.222Z",
+          "amountUSD": 50
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:53.428Z",
+      "elapsed_ms": 72025,
+      "phase": "INCIDENT_CHECK",
+      "event": "jarvis_status",
+      "data": {
+        "should_alert": false,
+        "reason": "Local environment - no alerts",
+        "has_snapshot": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:53.428Z",
+      "elapsed_ms": 72025,
+      "phase": "INCIDENT",
+      "event": "suppressed",
+      "data": {
+        "reason": "Local environment - no alerts"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:56.641Z",
+      "elapsed_ms": 75238,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "db_partial_10pct",
+        "attempt": 26,
+        "status": 401,
+        "latency_ms": 1205,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:58.648Z",
+      "elapsed_ms": 77245,
+      "phase": "STAGE",
+      "event": "end",
+      "data": {
+        "stage": "db_partial_10pct",
+        "requests": 6,
+        "successful": 0,
+        "failed": 26
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:39:58.649Z",
+      "elapsed_ms": 77246,
+      "phase": "STAGE",
+      "event": "start",
+      "data": {
+        "name": "db_partial_30pct",
+        "latency_ms": 1500,
+        "db_failure_rate": 0.3,
+        "stripe_timeout": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:00.157Z",
+      "elapsed_ms": 78754,
+      "phase": "BOOKING_REQUEST",
+      "event": "simulated_db_failure",
+      "data": {
+        "stage": "db_partial_30pct",
+        "attempt": 27,
+        "payload": {
+          "providerId": "test-provider-id",
+          "serviceId": "test-service-id",
+          "startTime": "2025-12-27T20:39:58.649Z",
+          "endTime": "2025-12-27T21:09:58.649Z",
+          "amountUSD": 50
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:03.921Z",
+      "elapsed_ms": 82518,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "db_partial_30pct",
+        "attempt": 28,
+        "status": 401,
+        "latency_ms": 1758,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:07.684Z",
+      "elapsed_ms": 86281,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "db_partial_30pct",
+        "attempt": 29,
+        "status": 401,
+        "latency_ms": 1754,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:11.414Z",
+      "elapsed_ms": 90011,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "db_partial_30pct",
+        "attempt": 30,
+        "status": 401,
+        "latency_ms": 1723,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:11.550Z",
+      "elapsed_ms": 90147,
+      "phase": "INCIDENT_CHECK",
+      "event": "jarvis_status",
+      "data": {
+        "should_alert": false,
+        "reason": "Local environment - no alerts",
+        "has_snapshot": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:11.550Z",
+      "elapsed_ms": 90147,
+      "phase": "INCIDENT",
+      "event": "suppressed",
+      "data": {
+        "reason": "Local environment - no alerts"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:15.232Z",
+      "elapsed_ms": 93829,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "db_partial_30pct",
+        "attempt": 31,
+        "status": 401,
+        "latency_ms": 1673,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:17.238Z",
+      "elapsed_ms": 95835,
+      "phase": "STAGE",
+      "event": "end",
+      "data": {
+        "stage": "db_partial_30pct",
+        "requests": 5,
+        "successful": 0,
+        "failed": 31
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:17.238Z",
+      "elapsed_ms": 95835,
+      "phase": "STAGE",
+      "event": "start",
+      "data": {
+        "name": "stripe_timeout",
+        "latency_ms": 500,
+        "db_failure_rate": 0,
+        "stripe_timeout": true
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:17.744Z",
+      "elapsed_ms": 96341,
+      "phase": "BOOKING_REQUEST",
+      "event": "simulated_stripe_timeout",
+      "data": {
+        "stage": "stripe_timeout",
+        "attempt": 32,
+        "payload": {
+          "providerId": "test-provider-id",
+          "serviceId": "test-service-id",
+          "startTime": "2025-12-27T20:40:17.238Z",
+          "endTime": "2025-12-27T21:10:17.238Z",
+          "amountUSD": 50
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:20.266Z",
+      "elapsed_ms": 98863,
+      "phase": "BOOKING_REQUEST",
+      "event": "simulated_stripe_timeout",
+      "data": {
+        "stage": "stripe_timeout",
+        "attempt": 33,
+        "payload": {
+          "providerId": "test-provider-id",
+          "serviceId": "test-service-id",
+          "startTime": "2025-12-27T20:40:19.755Z",
+          "endTime": "2025-12-27T21:10:19.755Z",
+          "amountUSD": 50
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:22.972Z",
+      "elapsed_ms": 101569,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "stripe_timeout",
+        "attempt": 34,
+        "status": 401,
+        "latency_ms": 705,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:25.642Z",
+      "elapsed_ms": 104239,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "stripe_timeout",
+        "attempt": 35,
+        "status": 401,
+        "latency_ms": 657,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:25.777Z",
+      "elapsed_ms": 104374,
+      "phase": "INCIDENT_CHECK",
+      "event": "jarvis_status",
+      "data": {
+        "should_alert": false,
+        "reason": "Local environment - no alerts",
+        "has_snapshot": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:25.777Z",
+      "elapsed_ms": 104374,
+      "phase": "INCIDENT",
+      "event": "suppressed",
+      "data": {
+        "reason": "Local environment - no alerts"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:28.451Z",
+      "elapsed_ms": 107048,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "stripe_timeout",
+        "attempt": 36,
+        "status": 401,
+        "latency_ms": 662,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:31.145Z",
+      "elapsed_ms": 109742,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "stripe_timeout",
+        "attempt": 37,
+        "status": 401,
+        "latency_ms": 691,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:33.950Z",
+      "elapsed_ms": 112547,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "stripe_timeout",
+        "attempt": 38,
+        "status": 401,
+        "latency_ms": 802,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:35.952Z",
+      "elapsed_ms": 114549,
+      "phase": "STAGE",
+      "event": "end",
+      "data": {
+        "stage": "stripe_timeout",
+        "requests": 7,
+        "successful": 0,
+        "failed": 38
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:35.952Z",
+      "elapsed_ms": 114549,
+      "phase": "STAGE",
+      "event": "start",
+      "data": {
+        "name": "combined_degradation",
+        "latency_ms": 2000,
+        "db_failure_rate": 0.2,
+        "stripe_timeout": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:38.088Z",
+      "elapsed_ms": 116685,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "combined_degradation",
+        "attempt": 39,
+        "status": 401,
+        "latency_ms": 2136,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:42.420Z",
+      "elapsed_ms": 121017,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "combined_degradation",
+        "attempt": 40,
+        "status": 401,
+        "latency_ms": 2330,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:42.533Z",
+      "elapsed_ms": 121130,
+      "phase": "INCIDENT_CHECK",
+      "event": "jarvis_status",
+      "data": {
+        "should_alert": false,
+        "reason": "Local environment - no alerts",
+        "has_snapshot": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:42.533Z",
+      "elapsed_ms": 121130,
+      "phase": "INCIDENT",
+      "event": "suppressed",
+      "data": {
+        "reason": "Local environment - no alerts"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:46.537Z",
+      "elapsed_ms": 125134,
+      "phase": "BOOKING_REQUEST",
+      "event": "simulated_db_failure",
+      "data": {
+        "stage": "combined_degradation",
+        "attempt": 41,
+        "payload": {
+          "providerId": "test-provider-id",
+          "serviceId": "test-service-id",
+          "startTime": "2025-12-27T20:40:44.537Z",
+          "endTime": "2025-12-27T21:10:44.537Z",
+          "amountUSD": 50
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:50.551Z",
+      "elapsed_ms": 129148,
+      "phase": "BOOKING_REQUEST",
+      "event": "simulated_db_failure",
+      "data": {
+        "stage": "combined_degradation",
+        "attempt": 42,
+        "payload": {
+          "providerId": "test-provider-id",
+          "serviceId": "test-service-id",
+          "startTime": "2025-12-27T20:40:48.540Z",
+          "endTime": "2025-12-27T21:10:48.540Z",
+          "amountUSD": 50
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:54.728Z",
+      "elapsed_ms": 133325,
+      "phase": "BOOKING_REQUEST",
+      "event": "failure",
+      "data": {
+        "stage": "combined_degradation",
+        "attempt": 43,
+        "status": 401,
+        "latency_ms": 2176,
+        "response": {
+          "error": "Not authenticated"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:56.728Z",
+      "elapsed_ms": 135325,
+      "phase": "STAGE",
+      "event": "end",
+      "data": {
+        "stage": "combined_degradation",
+        "requests": 5,
+        "successful": 0,
+        "failed": 43
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:56.877Z",
+      "elapsed_ms": 135474,
+      "phase": "INCIDENT_CHECK",
+      "event": "jarvis_status",
+      "data": {
+        "should_alert": false,
+        "reason": "Local environment - no alerts",
+        "has_snapshot": false
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:56.877Z",
+      "elapsed_ms": 135474,
+      "phase": "FINAL_CHECK",
+      "event": "incident_status",
+      "data": {
+        "should_alert": false,
+        "reason": "Local environment - no alerts"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T19:40:56.877Z",
+      "elapsed_ms": 135474,
+      "phase": "SESSION",
+      "event": "end",
+      "data": {
+        "session_id": "session1-1766864321403",
+        "results": {
+          "total_requests": 43,
+          "successful": 0,
+          "failed": 43,
+          "incidents_created": 0,
+          "incidents_suppressed": 8,
+          "errors_by_type": {
+            "status_401": 36,
+            "Database connection timeout": 5,
+            "Stripe API timeout": 2
+          },
+          "latency_distribution": [
+            173,
+            188,
+            196,
+            203,
+            220,
+            245,
+            250,
+            315,
+            506,
+            511,
+            649,
+            655,
+            657,
+            662,
+            669,
+            674,
+            691,
+            705,
+            707,
+            709,
+            727,
+            802,
+            1001,
+            1014,
+            1131,
+            1158,
+            1205,
+            1256,
+            1509,
+            1673,
+            1723,
+            1754,
+            1758,
+            2000,
+            2011,
+            2136,
+            2157,
+            2176,
+            2178,
+            2188,
+            2196,
+            2236,
+            2330
+          ],
+          "avg_latency_ms": 1114.046511627907,
+          "p95_latency_ms": 2196,
+          "duration_ms": 135474
+        }
+      }
+    }
+  ],
+  "findings": {
+    "total_observations": 77,
+    "incident_creation_observed": false,
+    "incident_suppression_observed": true,
+    "errors_observed": 36,
+    "silences_observed": 8
+  }
+}

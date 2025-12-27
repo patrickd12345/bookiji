@@ -13,7 +13,7 @@ import { generatePolicySuggestions } from '@/lib/jarvis/suggestions/engine'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check Phase 5 feature flag

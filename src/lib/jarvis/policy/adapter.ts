@@ -7,15 +7,15 @@
 
 import { getActivePolicy } from './registry'
 import type { PolicyConfig } from './types'
-import type { SleepPolicy } from '../escalation/sleepPolicy'
+import { mapPolicyConfigToSeverityRules, sanitizeNotificationCap, SleepPolicy } from '../escalation/sleepPolicy'
 
 /**
  * Convert PolicyConfig to SleepPolicy format (for backward compatibility)
  */
 export function policyConfigToSleepPolicy(config: PolicyConfig): SleepPolicy {
-  // Use SEV-1 rules as defaults (most permissive)
-  const sev1Rules = config.severity_rules['SEV-1']
-  
+  const severityRules = mapPolicyConfigToSeverityRules(config)
+  const sev1Rule = severityRules['SEV-1']
+
   return {
     id: 'active_policy',
     version: '1.0.0', // Will be replaced with actual policy version
@@ -24,10 +24,11 @@ export function policyConfigToSleepPolicy(config: PolicyConfig): SleepPolicy {
       end: config.quiet_hours.end,
       timezone: config.quiet_hours.timezone
     },
-    wakeThresholdSeverity: sev1Rules.wake_during_quiet_hours ? 'SEV-1' : 'SEV-0',
-    maxSilentMinutes: sev1Rules.max_silent_minutes || 120,
-    escalationIntervalsMinutes: sev1Rules.escalation_intervals_minutes,
-    maxNotificationsPerIncident: config.notification_cap
+    wakeThresholdSeverity: sev1Rule.wakeDuringQuietHours ? 'SEV-1' : 'SEV-0',
+    maxSilentMinutes: sev1Rule.maxSilentMinutes ?? 120,
+    escalationIntervalsMinutes: sev1Rule.escalationIntervalsMinutes,
+    maxNotificationsPerIncident: sanitizeNotificationCap(config.notification_cap),
+    severityRules
   }
 }
 

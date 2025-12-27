@@ -102,3 +102,4 @@ Eliminate `any` types in critical paths (money, auth, ops) to prevent runtime er
 - **Similar to logging**: Same approach as console.log migration
 - **CI guardrails**: ESLint will prevent new `any` types in critical paths
 
+

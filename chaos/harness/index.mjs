@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 import dns from 'node:dns'
+import { Timebase } from '../kernel/timebase.mjs'
 
 // Force IPv4 for stability on Windows Docker Desktop
 if (dns.setDefaultResultOrder) {
@@ -359,6 +360,15 @@ async function main() {
     }
   }
 
+  const timebase = new Timebase({ targetUrl })
+  await timebase.initialize()
+  const timeDiag = timebase.getDiagnostics()
+  console.log(
+    `[SimCity] Timebase initialized (server_time_offset=${timeDiag.server_time_offset}ms, server_now=${new Date(
+      timeDiag.last_timestamp
+    ).toISOString()})`
+  )
+
   const runId = stableUuid(`chaos-run:${seedStr}`)
   // Fixed IDs for bootstrap stability (matches migration)
   const vendors = [
@@ -415,6 +425,7 @@ async function main() {
 
   // Best-effort: persist chaos run start
   let runDbId = null
+  const runStartMs = timebase.nowMs()
   try {
     const insertRes = await restInsert({
       table: 'simcity_runs',
@@ -425,7 +436,7 @@ async function main() {
         concurrency,
         max_events: maxEvents,
         duration_seconds: durationSec,
-        started_at: new Date().toISOString()
+        started_at: new Date(runStartMs).toISOString()
       }
     })
     if (insertRes.ok) {
@@ -445,7 +456,7 @@ async function main() {
         run_id: runDbId,
         status: 'RUNNING',
         last_event_index: -1,
-        last_heartbeat_at: new Date().toISOString(),
+        last_heartbeat_at: new Date(runStartMs).toISOString(),
         last_metrics: {}
       }]
     }).catch(() => {})
@@ -759,10 +770,11 @@ async function main() {
     if (!booking) return { ok: false, status: 404, json: { error: 'Booking not found' }, text: 'Booking not found' }
     if (booking.status === 'cancelled') return { ok: true, status: 200, json: { ok: true }, text: '' }
 
+    const updatedAtMs = timebase.nowMs()
     const patch = await restPatch({
       table: 'bookings',
       filters: { id: `eq.${bookingId}` },
-      patch: { status: 'cancelled', updated_at: new Date().toISOString() }
+      patch: { status: 'cancelled', updated_at: new Date(updatedAtMs).toISOString() }
     })
     if (!patch.ok) return patch
     // Find and release the slot by matching provider_id and time range
@@ -897,6 +909,7 @@ async function main() {
   }
 
   async function insertDeliveryOnce({ intentId, status }) {
+    const deliveryUpdatedMs = timebase.nowMs()
     const res = await fetchJson(restUrl('notification_deliveries', {}), {
       method: 'POST',
       headers: { ...supabaseHeaders, Prefer: 'return=representation' },
@@ -905,7 +918,7 @@ async function main() {
         channel: 'push',
         status,
         attempt_count: 0,
-        updated_at: new Date().toISOString()
+        updated_at: new Date(deliveryUpdatedMs).toISOString()
       }
     })
     if (res.ok) return res
@@ -1203,11 +1216,11 @@ async function main() {
     throw new Error(`unknown_event_type: ${event.type}`)
   }
 
-  const startedAt = Date.now()
+  const startedAt = timebase.nowMs()
   let executed = 0
 
   for (let eventIndex = 0; eventIndex < maxEvents; eventIndex++) {
-    const elapsedSec = (Date.now() - startedAt) / 1000
+    const elapsedSec = (timebase.nowMs() - startedAt) / 1000
     if (elapsedSec >= durationSec) break
 
     const type = chooseEventType(rng)
@@ -1286,6 +1299,7 @@ async function main() {
 
     // Push event telemetry
     if (runDbId) {
+      const observedAtMs = timebase.nowMs()
       await restInsert({
         table: 'simcity_run_events',
         record: {
@@ -1293,7 +1307,7 @@ async function main() {
           event_index: eventIndex,
           event_type: type,
           event_payload: event.payload,
-          observed_at: new Date().toISOString()
+          observed_at: new Date(observedAtMs).toISOString()
         }
       }).catch(() => {})
     }
@@ -1311,6 +1325,7 @@ async function main() {
         })
         const metrics = (Array.isArray(metricsRes.json) ? metricsRes.json[0] : metricsRes.json) || {}
         
+        const heartbeatAtMs = timebase.nowMs()
         await Promise.all([
           restInsert({
             table: 'simcity_run_snapshots',
@@ -1329,7 +1344,7 @@ async function main() {
             filters: { run_id: `eq.${runDbId}` },
             patch: {
               last_event_index: eventIndex,
-              last_heartbeat_at: new Date().toISOString(),
+              last_heartbeat_at: new Date(heartbeatAtMs).toISOString(),
               last_metrics: metrics
             }
           })
@@ -1356,18 +1371,19 @@ async function main() {
 
       // Best-effort: persist chaos run fail
       if (runDbId) {
+        const failureAtMs = timebase.nowMs()
         await Promise.all([
           restPatch({
             table: 'simcity_runs',
             filters: { id: `eq.${runDbId}` },
             patch: {
-              ended_at: new Date().toISOString(),
+              ended_at: new Date(failureAtMs).toISOString(),
               result: 'FAIL',
               pass: false,
               fail_invariant: fail.invariant,
               fail_event_index: fail.event_index,
               fail_forensic: fail.forensic || null,
-              duration_seconds_actual: (Date.now() - startedAt) / 1000
+              duration_seconds_actual: (failureAtMs - startedAt) / 1000
             }
           }),
           restPatch({
@@ -1406,20 +1422,21 @@ async function main() {
     executed++
   }
 
-  const durationActual = Math.round(((Date.now() - startedAt) / 1000) * 10) / 10
+  const completionMs = timebase.nowMs()
+  const durationActual = Math.round(((completionMs - startedAt) / 1000) * 10) / 10
 
   // Best-effort: persist chaos run pass
   if (runDbId) {
-    const durationActual = (Date.now() - startedAt) / 1000
+    const durationSeconds = (completionMs - startedAt) / 1000
     await Promise.all([
       restPatch({
         table: 'simcity_runs',
         filters: { id: `eq.${runDbId}` },
         patch: {
-          ended_at: new Date().toISOString(),
+          ended_at: new Date(completionMs).toISOString(),
           result: 'PASS',
           pass: true,
-          duration_seconds_actual: durationActual
+          duration_seconds_actual: durationSeconds
         }
       }),
       restPatch({

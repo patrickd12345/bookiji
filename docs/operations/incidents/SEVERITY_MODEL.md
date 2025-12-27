@@ -78,3 +78,4 @@ Severity determines urgency, communication, and response expectations.
 If unsure, choose the **higher severity**.
 Downgrading later is always acceptable.
 
+

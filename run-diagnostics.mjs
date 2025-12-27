@@ -11,6 +11,29 @@ function log(...args) {
   console.log(msg);
 }
 
+const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+
+async function logTimeDiagnostics() {
+  const endpoint = new URL('/api/system/time', baseUrl).toString();
+  try {
+    const response = await fetch(endpoint, { headers: { Accept: 'application/json' } });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const payload = await response.json().catch(() => ({}));
+    const serverNow = Number(payload.server_now);
+    const serverIso =
+      payload.server_now_iso || (Number.isFinite(serverNow) ? new Date(serverNow).toISOString() : 'n/a');
+    const offset = payload.server_time_offset ?? payload.server_offset ?? 'n/a';
+    log(
+      `Time diagnostics: server_now=${Number.isFinite(serverNow) ? serverNow : 'n/a'} (${serverIso}), ` +
+        `server_time_offset=${offset}ms`
+    );
+  } catch (error) {
+    log(`Time diagnostics unavailable: ${(error instanceof Error ? error.message : error) || 'unknown error'}`);
+  }
+}
+
 const cwd = process.cwd();
 log(`\n${'='.repeat(60)}`);
 log(`PROJECT DIAGNOSTICS - Bookiji`);
@@ -18,6 +41,7 @@ log(`Working Directory: ${cwd}`);
 log(`Node Version: ${process.version}`);
 log(`Timestamp: ${new Date().toISOString()}`);
 log(`${'='.repeat(60)}\n`);
+await logTimeDiagnostics();
 
 // Test 1: Next.js CLI
 try {
@@ -71,4 +95,3 @@ try {
 writeFileSync(join(cwd, 'DIAGNOSTICS.txt'), output.join('\n'));
 log(`\n✅ Diagnostics written to DIAGNOSTICS.txt`);
 log(`${'='.repeat(60)}\n`);
-

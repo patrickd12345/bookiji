@@ -10,16 +10,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabaseServer'
 import { explainDecision } from '@/lib/jarvis/observability/explain'
 import { resolveIncidentBadges } from '@/lib/jarvis/observability/incidentBadges'
+import { classifyLayerRelevance } from '@/lib/jarvis/observability/layerAwareness'
 import type { BadgeContext } from '@/lib/jarvis/observability/incidentBadges'
+import type { LayerContext } from '@/lib/jarvis/observability/layerAwareness'
 import type { IncidentSnapshot } from '@/lib/jarvis/types'
 import type { DecisionTrace } from '@/lib/jarvis/escalation/decideNextAction'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const incidentId = params.id
+    const { id } = await params
+    const incidentId = id
 
     if (!incidentId) {
       return NextResponse.json(
@@ -57,7 +60,7 @@ export async function GET(
       console.error('[Jarvis] Error fetching summary:', summaryError)
     }
 
-    // Get incident snapshot for badge resolution
+    // Get incident snapshot for badge and layer resolution
     const { data: incident, error: incidentError } = await supabase
       .from('jarvis_incidents')
       .select('snapshot')
@@ -66,7 +69,12 @@ export async function GET(
 
     const snapshot: IncidentSnapshot | undefined = incident?.snapshot as IncidentSnapshot | undefined
 
-    // Build response with explanations and badges
+    // Check for recent changes (heuristic: deploy_recent signal or metadata)
+    const recentDeploy = snapshot?.signals?.deploy_recent || false
+    // Note: recent_migration and config_changed would need to come from changelog or metadata
+    // For now, we only use deploy_recent from snapshot
+
+    // Build response with explanations, badges, and layer awareness
     const timelineWithExplanations = (timeline || []).map(event => {
       const explanation = event.event_type === 'escalation_decision_made' && event.trace
         ? explainDecision(event.trace as unknown as Parameters<typeof explainDecision>[0])
@@ -83,11 +91,27 @@ export async function GET(
         badges = resolveIncidentBadges(badgeContext)
       }
 
+      // Compute layer relevance for incident_created and escalation_decision_made events
+      let layers: ReturnType<typeof classifyLayerRelevance> = []
+      if (event.event_type === 'incident_created' || event.event_type === 'escalation_decision_made') {
+        const layerContext: LayerContext = {
+          snapshot: snapshot,
+          trace: event.trace ? (event.trace as unknown as DecisionTrace) : undefined,
+          event_type: event.event_type as 'incident_created' | 'escalation_decision_made',
+          recent_deploy: recentDeploy,
+          recent_migration: false, // Would need changelog integration
+          config_changed: false // Would need changelog integration
+        }
+        layers = classifyLayerRelevance(layerContext)
+      }
+
       return {
         ...event,
         explanation,
         badges: badges.length > 0 ? badges : undefined,
-        _badge_note: badges.length > 0 ? 'Classification hints — human judgment required' : undefined
+        _badge_note: badges.length > 0 ? 'Classification hints — human judgment required' : undefined,
+        layers: layers.length > 0 ? layers : undefined,
+        _layer_note: layers.length > 0 ? 'Operational layer context — informational only' : undefined
       }
     })
 

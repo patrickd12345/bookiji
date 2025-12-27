@@ -14,7 +14,7 @@ import { getPolicyByUuid } from '@/lib/jarvis/policy/registry'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check Phase 5 feature flag
@@ -35,13 +35,14 @@ export async function POST(
       )
     }
 
+    const { id } = await params
     // Get policy UUID (id param might be policy_id or UUID)
-    let policyUuid = params.id
-    const policy = await getPolicyByUuid(params.id)
+    let policyUuid = id
+    const policy = await getPolicyByUuid(id)
     if (!policy) {
       // Try as policy_id
       const { getPolicyById } = await import('@/lib/jarvis/policy/registry')
-      const policyById = await getPolicyById(params.id)
+      const policyById = await getPolicyById(id)
       if (!policyById) {
         return NextResponse.json(
           { error: 'Policy not found' },

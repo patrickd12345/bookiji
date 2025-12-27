@@ -281,3 +281,4 @@ If you're currently using manual env var assembly:
 - **Safety enforced**: Destructive operations only via `certify:staging`
 - **Golden rule**: If you can delete users, you're not in production
 
+

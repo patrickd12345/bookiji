@@ -211,10 +211,15 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/maintenance/UX_RESILIENCE_PATTERNS.md`
 
 #### Operations
+- `docs/operations/CHANGELOG.md` - Operations changelog for production-affecting changes
 - `docs/operations/ENVIRONMENT_MODES.md` - Environment modes and operator guide (named execution modes)
 - `docs/operations/incidents/INCIDENT_COMMANDER.md` - Incident Commander model for incident response
 - `docs/operations/incidents/POSTMORTEM_TEMPLATE.md` - Blameless post-incident review template
+- `docs/operations/OPERATIONAL_LAYERS.md` - Operational layers contract (Layers 0-5)
 - `docs/operations/PRODUCTION_MONITORING_STRATEGY.md` - Production monitoring strategy (Option B)
+- `docs/operations/PROOF_RUNBOOK.md` - Proof validation runbook for release confidence
+- `docs/operations/RELEASE_CONFIDENCE.md` - Release confidence and proof requirements
+- `docs/operations/ROLLBACKS.md` - Rollback procedures for code, config, database, and third-party changes
 - `docs/operations/SCHEDULING_CHANGE_RULE.md`
 - `docs/operations/incidents/SEVERITY_MODEL.md` - Incident severity classification model
 - `docs/operations/STAGING_SETUP.md` - Staging environment setup guide

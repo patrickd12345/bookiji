@@ -1,0 +1,901 @@
+{
+  "session_id": "session3-1766867627695",
+  "session_type": "recovery_quietening",
+  "start_time": "2025-12-27T20:33:47.695Z",
+  "end_time": "2025-12-27T20:37:48.146Z",
+  "duration_ms": 240451,
+  "observations": [
+    {
+      "timestamp": "2025-12-27T20:33:47.699Z",
+      "elapsed_ms": 4,
+      "phase": "SESSION",
+      "event": "start",
+      "data": {
+        "session_id": "session3-1766867627695",
+        "stress_duration_ms": 120000,
+        "recovery_duration_ms": 60000,
+        "base_url": "https://bookiji-ra585kfwd-patrick-duchesneaus-projects.vercel.app"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:33:47.699Z",
+      "elapsed_ms": 4,
+      "phase": "PHASE",
+      "event": "stress_start",
+      "data": {}
+    },
+    {
+      "timestamp": "2025-12-27T20:33:48.050Z",
+      "elapsed_ms": 355,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:33:52.754Z",
+      "elapsed_ms": 5059,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:33:57.871Z",
+      "elapsed_ms": 10176,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:34:02.884Z",
+      "elapsed_ms": 15189,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:34:07.930Z",
+      "elapsed_ms": 20235,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:34:13.000Z",
+      "elapsed_ms": 25305,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:34:18.078Z",
+      "elapsed_ms": 30383,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:34:23.084Z",
+      "elapsed_ms": 35389,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:34:28.182Z",
+      "elapsed_ms": 40487,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:34:33.239Z",
+      "elapsed_ms": 45544,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:34:38.256Z",
+      "elapsed_ms": 50561,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:34:43.420Z",
+      "elapsed_ms": 55725,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:34:48.381Z",
+      "elapsed_ms": 60686,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:34:53.408Z",
+      "elapsed_ms": 65713,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:34:58.410Z",
+      "elapsed_ms": 70715,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:35:03.485Z",
+      "elapsed_ms": 75790,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:35:08.539Z",
+      "elapsed_ms": 80844,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:35:13.551Z",
+      "elapsed_ms": 85856,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:35:18.620Z",
+      "elapsed_ms": 90925,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:35:23.674Z",
+      "elapsed_ms": 95979,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:35:28.663Z",
+      "elapsed_ms": 100968,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:35:33.704Z",
+      "elapsed_ms": 106009,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:35:38.853Z",
+      "elapsed_ms": 111158,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:35:43.836Z",
+      "elapsed_ms": 116141,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:35:47.805Z",
+      "elapsed_ms": 120110,
+      "phase": "PHASE",
+      "event": "stress_end",
+      "data": {
+        "requests": 59,
+        "successful": 0,
+        "failed": 59,
+        "incidents_created": 0
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:35:47.805Z",
+      "elapsed_ms": 120110,
+      "phase": "PHASE",
+      "event": "recovery_start",
+      "data": {}
+    },
+    {
+      "timestamp": "2025-12-27T20:35:52.972Z",
+      "elapsed_ms": 125277,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:35:57.982Z",
+      "elapsed_ms": 130287,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:36:03.006Z",
+      "elapsed_ms": 135311,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:36:08.070Z",
+      "elapsed_ms": 140375,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:36:13.052Z",
+      "elapsed_ms": 145357,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:36:18.102Z",
+      "elapsed_ms": 150407,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:36:23.171Z",
+      "elapsed_ms": 155476,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:36:28.231Z",
+      "elapsed_ms": 160536,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:36:33.338Z",
+      "elapsed_ms": 165643,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:36:38.374Z",
+      "elapsed_ms": 170679,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:36:43.372Z",
+      "elapsed_ms": 175677,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:36:47.821Z",
+      "elapsed_ms": 180126,
+      "phase": "PHASE",
+      "event": "recovery_end",
+      "data": {
+        "lingering_alerts": 0,
+        "ghost_activity_count": 0
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:36:47.821Z",
+      "elapsed_ms": 180126,
+      "phase": "PHASE",
+      "event": "silence_start",
+      "data": {}
+    },
+    {
+      "timestamp": "2025-12-27T20:36:58.003Z",
+      "elapsed_ms": 190308,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:36:58.142Z",
+      "elapsed_ms": 190447,
+      "phase": "SILENCE",
+      "event": "quiet",
+      "data": {
+        "elapsed_since_stress_end": 70135
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:37:08.060Z",
+      "elapsed_ms": 200365,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:37:08.159Z",
+      "elapsed_ms": 200464,
+      "phase": "SILENCE",
+      "event": "quiet",
+      "data": {
+        "elapsed_since_stress_end": 80245
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:37:18.088Z",
+      "elapsed_ms": 210393,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:37:18.204Z",
+      "elapsed_ms": 210509,
+      "phase": "SILENCE",
+      "event": "quiet",
+      "data": {
+        "elapsed_since_stress_end": 90253
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:37:28.092Z",
+      "elapsed_ms": 220397,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:37:28.179Z",
+      "elapsed_ms": 220484,
+      "phase": "SILENCE",
+      "event": "quiet",
+      "data": {
+        "elapsed_since_stress_end": 100266
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:37:38.070Z",
+      "elapsed_ms": 230375,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:37:38.164Z",
+      "elapsed_ms": 230469,
+      "phase": "SILENCE",
+      "event": "quiet",
+      "data": {
+        "elapsed_since_stress_end": 110267
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:37:47.901Z",
+      "elapsed_ms": 240206,
+      "phase": "PHASE",
+      "event": "silence_end",
+      "data": {}
+    },
+    {
+      "timestamp": "2025-12-27T20:37:48.049Z",
+      "elapsed_ms": 240354,
+      "phase": "INCIDENT_CHECK",
+      "event": "exception",
+      "data": {
+        "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:37:48.145Z",
+      "elapsed_ms": 240450,
+      "phase": "FINAL",
+      "event": "incident_status",
+      "data": {
+        "health": {
+          "healthy": false,
+          "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-12-27T20:37:48.145Z",
+      "elapsed_ms": 240450,
+      "phase": "SESSION",
+      "event": "end",
+      "data": {
+        "session_id": "session3-1766867627695",
+        "results": {
+          "stress_phase": {
+            "requests": 59,
+            "successful": 0,
+            "failed": 59,
+            "incidents_created": 0,
+            "incidents_suppressed": 0
+          },
+          "recovery_phase": {
+            "requests": 0,
+            "successful": 0,
+            "failed": 0,
+            "incidents_created": 0,
+            "incidents_suppressed": 0,
+            "lingering_alerts": 0,
+            "ghost_activity": []
+          },
+          "timeline": [
+            {
+              "elapsed_ms": 4,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 5021,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 10128,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 15163,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 20192,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 25284,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 30353,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 35356,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 40457,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 45516,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 50523,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 55584,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 60654,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 65669,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 70691,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 75763,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 80801,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 85823,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 90891,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 95932,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 100941,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 105980,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 111006,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 116109,
+              "phase": "stress",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 125150,
+              "phase": "recovery",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 130178,
+              "phase": "recovery",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 135184,
+              "phase": "recovery",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 140252,
+              "phase": "recovery",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 145253,
+              "phase": "recovery",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 150296,
+              "phase": "recovery",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 155357,
+              "phase": "recovery",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 160424,
+              "phase": "recovery",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 165506,
+              "phase": "recovery",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 170553,
+              "phase": "recovery",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 175563,
+              "phase": "recovery",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 190139,
+              "phase": "silence",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 200249,
+              "phase": "silence",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 210257,
+              "phase": "silence",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 220270,
+              "phase": "silence",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            },
+            {
+              "elapsed_ms": 230271,
+              "phase": "silence",
+              "incident_status": "quiet",
+              "health": {
+                "healthy": false,
+                "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+              }
+            }
+          ],
+          "duration_ms": 240450,
+          "final_status": {
+            "health": {
+              "healthy": false,
+              "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "findings": {
+    "total_observations": 55,
+    "stress_incidents": 0,
+    "recovery_incidents": 0,
+    "ghost_activity": 0,
+    "quietening_observed": 0,
+    "final_quiet": true
+  }
+}

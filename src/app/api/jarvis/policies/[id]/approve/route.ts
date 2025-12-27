@@ -13,7 +13,7 @@ import { approvePolicyChange } from '@/lib/jarvis/policy/workflow'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check admin access (simplified)
@@ -32,7 +32,8 @@ export async function POST(
       )
     }
 
-    const change = await approvePolicyChange(params.id, approved_by)
+    const { id } = await params
+    const change = await approvePolicyChange(id, approved_by)
 
     return NextResponse.json({ change })
   } catch (error) {

@@ -1,0 +1,90 @@
+{
+  "generated_at": "2025-12-27T17:30:11.445Z",
+  "sessions": [
+    {
+      "session_id": "session1-1766856033360",
+      "session_type": "valid_path_degradation",
+      "start_time": "2025-12-27T17:20:33.360Z",
+      "end_time": "2025-12-27T17:22:49.800Z",
+      "duration_ms": 136440,
+      "findings": {
+        "total_observations": 76,
+        "incident_creation_observed": false,
+        "incident_suppression_observed": true,
+        "errors_observed": 36,
+        "silences_observed": 8
+      }
+    },
+    {
+      "session_id": "session2-1766856179858",
+      "session_type": "mixed_traffic",
+      "start_time": "2025-12-27T17:22:59.858Z",
+      "end_time": "2025-12-27T17:26:00.444Z",
+      "duration_ms": 180586,
+      "findings": {
+        "total_observations": 1083,
+        "noise_requests": 1008,
+        "signal_requests": 35,
+        "incident_creation_observed": false,
+        "incident_suppression_observed": true,
+        "valid_failures_surfaced": false
+      }
+    },
+    {
+      "session_id": "session3-1766856370569",
+      "session_type": "recovery_quietening",
+      "start_time": "2025-12-27T17:26:10.569Z",
+      "end_time": "2025-12-27T17:30:11.427Z",
+      "duration_ms": 240858,
+      "findings": {
+        "total_observations": 90,
+        "stress_incidents": 0,
+        "recovery_incidents": 0,
+        "ghost_activity": 0,
+        "quietening_observed": 11,
+        "final_quiet": true
+      }
+    }
+  ],
+  "consolidated_findings": {
+    "total_sessions": 3,
+    "total_observations": 1249,
+    "incidents_created_any_session": false,
+    "incidents_suppressed_any_session": true,
+    "errors_observed_any_session": true,
+    "silences_observed_any_session": true,
+    "valid_failures_surfaced": false,
+    "ghost_activity_observed": false,
+    "quietening_observed": true
+  },
+  "unanswered_questions": [
+    "Did valid failures surface as incidents?",
+    "Did Jarvis classification remain factual?",
+    "Did error aggregation work correctly?",
+    "Did failures become quieter or noisier over time?",
+    "Did valid failures still surface despite noise?",
+    "Did incidents ignore noise correctly?",
+    "Did Jarvis stay factual and calm?",
+    "Were metrics polluted by junk traffic?",
+    "Did incidents resolve cleanly after stress?",
+    "Were there lingering alerts?",
+    "Did Jarvis de-escalate cleanly?",
+    "Was there any ghost activity?"
+  ],
+  "cannot_verify": [
+    "Whether incidents are created for all valid failures",
+    "Whether suppression windows are appropriate",
+    "Whether latency degradation triggers incidents",
+    "Whether DB partial failures trigger incidents",
+    "Whether Stripe timeouts trigger incidents",
+    "Whether noise rejection is fast enough",
+    "Whether signal failures are detected correctly",
+    "Whether incident classification ignores noise",
+    "Whether metrics aggregation filters noise",
+    "Whether Jarvis remains composed under noise",
+    "Whether incident resolution is automatic",
+    "Whether de-escalation logic works correctly",
+    "Whether ghost activity indicates bugs",
+    "Whether quietening is consistent"
+  ]
+}

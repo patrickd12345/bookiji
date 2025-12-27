@@ -99,7 +99,8 @@ describe('GET /api/analytics/system', () => {
   })
 
   it('health endpoint returns OK', async () => {
-    const res = await healthGET()
+    const req = new NextRequest('http://localhost:3000/api/health')
+    const res = await healthGET(req)
     const data = await res.json()
     expect(res.status).toBe(200)
     expect(data.status).toBe('healthy')

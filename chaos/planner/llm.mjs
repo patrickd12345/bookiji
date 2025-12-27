@@ -239,7 +239,8 @@ async function mapGeminiPlanToRunner(geminiPlan, capabilities, context) {
     stop_conditions: geminiPlan.stop_conditions || ['invariant_violation'],
     time_budget_seconds: geminiPlan.time_budget_seconds,
     confidence: geminiPlan.confidence || 'medium',
-    confidence_rationale: geminiPlan.confidence_rationale || 'Single capability plan generated'
+    confidence_rationale: geminiPlan.confidence_rationale || 'Single capability plan generated',
+    requiredInvariantIds: Object.keys(capability.invariantSpecs || {})
   }
 
   return plan
@@ -270,4 +271,3 @@ function mapChaosProfile(geminiProfile, capabilityId) {
     }
   }
 }
-

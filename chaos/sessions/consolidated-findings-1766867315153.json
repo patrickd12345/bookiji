@@ -1,0 +1,3573 @@
+{
+  "generated_at": "2025-12-27T20:28:35.153Z",
+  "environment": "staging",
+  "staging_mode": true,
+  "sessions": [
+    {
+      "session_id": "session3-1766856370569",
+      "session_type": "recovery_quietening",
+      "start_time": "2025-12-27T17:26:10.569Z",
+      "end_time": "2025-12-27T17:30:11.427Z",
+      "duration_ms": 240858,
+      "findings": {
+        "total_observations": 90,
+        "stress_incidents": 0,
+        "recovery_incidents": 0,
+        "ghost_activity": 0,
+        "quietening_observed": 11,
+        "final_quiet": true
+      },
+      "observations": [
+        {
+          "timestamp": "2025-12-27T17:26:10.574Z",
+          "elapsed_ms": 6,
+          "phase": "SESSION",
+          "event": "start",
+          "data": {
+            "session_id": "session3-1766856370569",
+            "stress_duration_ms": 120000,
+            "recovery_duration_ms": 60000,
+            "base_url": "http://localhost:3000"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:10.575Z",
+          "elapsed_ms": 6,
+          "phase": "PHASE",
+          "event": "stress_start",
+          "data": {}
+        },
+        {
+          "timestamp": "2025-12-27T17:26:10.912Z",
+          "elapsed_ms": 343,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:10.912Z",
+          "elapsed_ms": 343,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:15.756Z",
+          "elapsed_ms": 5187,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:15.756Z",
+          "elapsed_ms": 5187,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:20.918Z",
+          "elapsed_ms": 10349,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:20.918Z",
+          "elapsed_ms": 10349,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:25.924Z",
+          "elapsed_ms": 15355,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:25.924Z",
+          "elapsed_ms": 15355,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:30.834Z",
+          "elapsed_ms": 20265,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:30.834Z",
+          "elapsed_ms": 20265,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:39.107Z",
+          "elapsed_ms": 28538,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:39.107Z",
+          "elapsed_ms": 28538,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:43.993Z",
+          "elapsed_ms": 33424,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:43.993Z",
+          "elapsed_ms": 33424,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:49.010Z",
+          "elapsed_ms": 38441,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:49.010Z",
+          "elapsed_ms": 38441,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:54.048Z",
+          "elapsed_ms": 43479,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:54.048Z",
+          "elapsed_ms": 43479,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:59.093Z",
+          "elapsed_ms": 48524,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:26:59.093Z",
+          "elapsed_ms": 48524,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:04.128Z",
+          "elapsed_ms": 53559,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:04.128Z",
+          "elapsed_ms": 53559,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:09.267Z",
+          "elapsed_ms": 58698,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:09.267Z",
+          "elapsed_ms": 58698,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:14.202Z",
+          "elapsed_ms": 63633,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:14.202Z",
+          "elapsed_ms": 63633,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:19.228Z",
+          "elapsed_ms": 68659,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:19.228Z",
+          "elapsed_ms": 68659,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:24.567Z",
+          "elapsed_ms": 73998,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:24.567Z",
+          "elapsed_ms": 73998,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:29.436Z",
+          "elapsed_ms": 78867,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:29.436Z",
+          "elapsed_ms": 78867,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:34.809Z",
+          "elapsed_ms": 84240,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:34.809Z",
+          "elapsed_ms": 84240,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:39.795Z",
+          "elapsed_ms": 89226,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:39.795Z",
+          "elapsed_ms": 89226,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:45.053Z",
+          "elapsed_ms": 94484,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:45.053Z",
+          "elapsed_ms": 94484,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:50.151Z",
+          "elapsed_ms": 99582,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:50.151Z",
+          "elapsed_ms": 99582,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:55.317Z",
+          "elapsed_ms": 104748,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:27:55.317Z",
+          "elapsed_ms": 104748,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:00.405Z",
+          "elapsed_ms": 109836,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:00.405Z",
+          "elapsed_ms": 109836,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:05.700Z",
+          "elapsed_ms": 115131,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:05.700Z",
+          "elapsed_ms": 115131,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:10.648Z",
+          "elapsed_ms": 120079,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:10.648Z",
+          "elapsed_ms": 120079,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:11.033Z",
+          "elapsed_ms": 120464,
+          "phase": "PHASE",
+          "event": "stress_end",
+          "data": {
+            "requests": 57,
+            "successful": 0,
+            "failed": 57,
+            "incidents_created": 0
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:11.033Z",
+          "elapsed_ms": 120464,
+          "phase": "PHASE",
+          "event": "recovery_start",
+          "data": {}
+        },
+        {
+          "timestamp": "2025-12-27T17:28:16.347Z",
+          "elapsed_ms": 125778,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:16.555Z",
+          "elapsed_ms": 125986,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 5558
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:21.308Z",
+          "elapsed_ms": 130739,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:21.432Z",
+          "elapsed_ms": 130863,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 10618
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:26.446Z",
+          "elapsed_ms": 135877,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:26.774Z",
+          "elapsed_ms": 136205,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 15708
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:31.464Z",
+          "elapsed_ms": 140895,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:31.572Z",
+          "elapsed_ms": 141003,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 20757
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:36.590Z",
+          "elapsed_ms": 146021,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:36.730Z",
+          "elapsed_ms": 146161,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 25801
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:41.508Z",
+          "elapsed_ms": 150939,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:41.615Z",
+          "elapsed_ms": 151046,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 30823
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:46.554Z",
+          "elapsed_ms": 155985,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:46.675Z",
+          "elapsed_ms": 156106,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 35857
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:51.631Z",
+          "elapsed_ms": 161062,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:51.736Z",
+          "elapsed_ms": 161167,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 40926
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:56.758Z",
+          "elapsed_ms": 166189,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:28:56.883Z",
+          "elapsed_ms": 166314,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 45978
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:01.710Z",
+          "elapsed_ms": 171141,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:01.868Z",
+          "elapsed_ms": 171299,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 51010
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:06.917Z",
+          "elapsed_ms": 176348,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:07.027Z",
+          "elapsed_ms": 176458,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 56089
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:11.057Z",
+          "elapsed_ms": 180488,
+          "phase": "PHASE",
+          "event": "recovery_end",
+          "data": {
+            "lingering_alerts": 0,
+            "ghost_activity_count": 0
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:11.057Z",
+          "elapsed_ms": 180488,
+          "phase": "PHASE",
+          "event": "silence_start",
+          "data": {}
+        },
+        {
+          "timestamp": "2025-12-27T17:29:21.253Z",
+          "elapsed_ms": 190684,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:21.425Z",
+          "elapsed_ms": 190856,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 70527
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:31.304Z",
+          "elapsed_ms": 200735,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:31.452Z",
+          "elapsed_ms": 200883,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 80582
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:41.418Z",
+          "elapsed_ms": 210849,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:41.551Z",
+          "elapsed_ms": 210982,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 90656
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:51.362Z",
+          "elapsed_ms": 220793,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:29:51.709Z",
+          "elapsed_ms": 221140,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 100660
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:30:01.504Z",
+          "elapsed_ms": 230935,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:30:01.623Z",
+          "elapsed_ms": 231054,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 110753
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:30:11.115Z",
+          "elapsed_ms": 240546,
+          "phase": "PHASE",
+          "event": "silence_end",
+          "data": {}
+        },
+        {
+          "timestamp": "2025-12-27T17:30:11.252Z",
+          "elapsed_ms": 240683,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:30:11.426Z",
+          "elapsed_ms": 240857,
+          "phase": "FINAL",
+          "event": "incident_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "health": {
+              "healthy": true,
+              "latency_ms": 0
+            }
+          }
+        },
+        {
+          "timestamp": "2025-12-27T17:30:11.426Z",
+          "elapsed_ms": 240857,
+          "phase": "SESSION",
+          "event": "end",
+          "data": {
+            "session_id": "session3-1766856370569",
+            "results": {
+              "stress_phase": {
+                "requests": 57,
+                "successful": 0,
+                "failed": 57,
+                "incidents_created": 0,
+                "incidents_suppressed": 24
+              },
+              "recovery_phase": {
+                "requests": 0,
+                "successful": 0,
+                "failed": 0,
+                "incidents_created": 0,
+                "incidents_suppressed": 11,
+                "lingering_alerts": 0,
+                "ghost_activity": []
+              },
+              "timeline": [
+                {
+                  "elapsed_ms": 6,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 5046,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 10113,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 15114,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 20134,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 28265,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 33280,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 38323,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 43337,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 48347,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 53417,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 58469,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 63510,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 68525,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 73752,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 78754,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 83998,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 89022,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 94198,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 99290,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 104506,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 109599,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 114845,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 119868,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 125564,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 130624,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 135714,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 140763,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 145807,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 150829,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 155863,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 160932,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 165984,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 171016,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 176095,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 190533,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 200588,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 210662,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 220666,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 230759,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                }
+              ],
+              "duration_ms": 240857,
+              "final_status": {
+                "incident_should_alert": false,
+                "health": {
+                  "healthy": true,
+                  "latency_ms": 0
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "session_id": "session3-1766864657215",
+      "session_type": "recovery_quietening",
+      "start_time": "2025-12-27T19:44:17.215Z",
+      "end_time": "2025-12-27T19:48:17.640Z",
+      "duration_ms": 240425,
+      "findings": {
+        "total_observations": 90,
+        "stress_incidents": 0,
+        "recovery_incidents": 0,
+        "ghost_activity": 0,
+        "quietening_observed": 11,
+        "final_quiet": true
+      },
+      "observations": [
+        {
+          "timestamp": "2025-12-27T19:44:17.219Z",
+          "elapsed_ms": 4,
+          "phase": "SESSION",
+          "event": "start",
+          "data": {
+            "session_id": "session3-1766864657215",
+            "stress_duration_ms": 120000,
+            "recovery_duration_ms": 60000,
+            "base_url": "http://localhost:3000"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:17.220Z",
+          "elapsed_ms": 5,
+          "phase": "PHASE",
+          "event": "stress_start",
+          "data": {}
+        },
+        {
+          "timestamp": "2025-12-27T19:44:17.515Z",
+          "elapsed_ms": 300,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:17.515Z",
+          "elapsed_ms": 300,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:22.434Z",
+          "elapsed_ms": 5219,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:22.434Z",
+          "elapsed_ms": 5219,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:27.505Z",
+          "elapsed_ms": 10290,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:27.505Z",
+          "elapsed_ms": 10290,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:32.602Z",
+          "elapsed_ms": 15387,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:32.602Z",
+          "elapsed_ms": 15387,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:37.696Z",
+          "elapsed_ms": 20481,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:37.696Z",
+          "elapsed_ms": 20481,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:42.747Z",
+          "elapsed_ms": 25532,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:42.747Z",
+          "elapsed_ms": 25532,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:47.809Z",
+          "elapsed_ms": 30594,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:47.809Z",
+          "elapsed_ms": 30594,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:52.773Z",
+          "elapsed_ms": 35558,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:52.773Z",
+          "elapsed_ms": 35558,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:57.875Z",
+          "elapsed_ms": 40660,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:44:57.875Z",
+          "elapsed_ms": 40660,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:03.072Z",
+          "elapsed_ms": 45857,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:03.072Z",
+          "elapsed_ms": 45857,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:08.049Z",
+          "elapsed_ms": 50834,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:08.049Z",
+          "elapsed_ms": 50834,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:13.283Z",
+          "elapsed_ms": 56068,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:13.283Z",
+          "elapsed_ms": 56068,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:18.311Z",
+          "elapsed_ms": 61096,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:18.311Z",
+          "elapsed_ms": 61096,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:23.388Z",
+          "elapsed_ms": 66173,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:23.388Z",
+          "elapsed_ms": 66173,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:28.491Z",
+          "elapsed_ms": 71276,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:28.491Z",
+          "elapsed_ms": 71276,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:33.747Z",
+          "elapsed_ms": 76532,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:33.747Z",
+          "elapsed_ms": 76532,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:38.879Z",
+          "elapsed_ms": 81664,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:38.879Z",
+          "elapsed_ms": 81664,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:44.072Z",
+          "elapsed_ms": 86857,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:44.072Z",
+          "elapsed_ms": 86857,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:49.210Z",
+          "elapsed_ms": 91995,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:49.210Z",
+          "elapsed_ms": 91995,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:54.553Z",
+          "elapsed_ms": 97338,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:54.553Z",
+          "elapsed_ms": 97338,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:59.501Z",
+          "elapsed_ms": 102286,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:45:59.501Z",
+          "elapsed_ms": 102286,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:04.820Z",
+          "elapsed_ms": 107605,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:04.820Z",
+          "elapsed_ms": 107605,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:09.752Z",
+          "elapsed_ms": 112537,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:09.752Z",
+          "elapsed_ms": 112537,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:14.997Z",
+          "elapsed_ms": 117782,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:14.997Z",
+          "elapsed_ms": 117782,
+          "phase": "INCIDENT",
+          "event": "suppressed_during_stress",
+          "data": {
+            "reason": "Local environment - no alerts"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:17.302Z",
+          "elapsed_ms": 120087,
+          "phase": "PHASE",
+          "event": "stress_end",
+          "data": {
+            "requests": 59,
+            "successful": 0,
+            "failed": 59,
+            "incidents_created": 0
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:17.302Z",
+          "elapsed_ms": 120087,
+          "phase": "PHASE",
+          "event": "recovery_start",
+          "data": {}
+        },
+        {
+          "timestamp": "2025-12-27T19:46:22.671Z",
+          "elapsed_ms": 125456,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:22.813Z",
+          "elapsed_ms": 125598,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 5173
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:27.549Z",
+          "elapsed_ms": 130334,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:27.660Z",
+          "elapsed_ms": 130445,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 10211
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:32.589Z",
+          "elapsed_ms": 135374,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:32.699Z",
+          "elapsed_ms": 135484,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 15253
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:37.777Z",
+          "elapsed_ms": 140562,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:37.892Z",
+          "elapsed_ms": 140677,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 20335
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:42.788Z",
+          "elapsed_ms": 145573,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:42.902Z",
+          "elapsed_ms": 145687,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 25430
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:47.841Z",
+          "elapsed_ms": 150626,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:47.958Z",
+          "elapsed_ms": 150743,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 30468
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:52.959Z",
+          "elapsed_ms": 155744,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:53.090Z",
+          "elapsed_ms": 155875,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 35523
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:57.871Z",
+          "elapsed_ms": 160656,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:46:57.981Z",
+          "elapsed_ms": 160766,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 40545
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:02.926Z",
+          "elapsed_ms": 165711,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:03.049Z",
+          "elapsed_ms": 165834,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 45579
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:08.047Z",
+          "elapsed_ms": 170832,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:08.267Z",
+          "elapsed_ms": 171052,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 50646
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:13.028Z",
+          "elapsed_ms": 175813,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:13.129Z",
+          "elapsed_ms": 175914,
+          "phase": "INCIDENT",
+          "event": "quietening",
+          "data": {
+            "reason": "Local environment - no alerts",
+            "elapsed_since_stress_end": 55674
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:17.371Z",
+          "elapsed_ms": 180156,
+          "phase": "PHASE",
+          "event": "recovery_end",
+          "data": {
+            "lingering_alerts": 0,
+            "ghost_activity_count": 0
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:17.371Z",
+          "elapsed_ms": 180156,
+          "phase": "PHASE",
+          "event": "silence_start",
+          "data": {}
+        },
+        {
+          "timestamp": "2025-12-27T19:47:27.643Z",
+          "elapsed_ms": 190428,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:27.841Z",
+          "elapsed_ms": 190626,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 70224
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:37.573Z",
+          "elapsed_ms": 200358,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:37.690Z",
+          "elapsed_ms": 200475,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 80226
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:47.669Z",
+          "elapsed_ms": 210454,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:47.795Z",
+          "elapsed_ms": 210580,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 90255
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:57.721Z",
+          "elapsed_ms": 220506,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:47:57.838Z",
+          "elapsed_ms": 220623,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 100323
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:48:07.826Z",
+          "elapsed_ms": 230611,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:48:08.004Z",
+          "elapsed_ms": 230789,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 110327
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:48:17.381Z",
+          "elapsed_ms": 240166,
+          "phase": "PHASE",
+          "event": "silence_end",
+          "data": {}
+        },
+        {
+          "timestamp": "2025-12-27T19:48:17.492Z",
+          "elapsed_ms": 240277,
+          "phase": "INCIDENT_CHECK",
+          "event": "jarvis_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "has_snapshot": false
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:48:17.639Z",
+          "elapsed_ms": 240424,
+          "phase": "FINAL",
+          "event": "incident_status",
+          "data": {
+            "should_alert": false,
+            "reason": "Local environment - no alerts",
+            "health": {
+              "healthy": true,
+              "latency_ms": 0
+            }
+          }
+        },
+        {
+          "timestamp": "2025-12-27T19:48:17.639Z",
+          "elapsed_ms": 240424,
+          "phase": "SESSION",
+          "event": "end",
+          "data": {
+            "session_id": "session3-1766864657215",
+            "results": {
+              "stress_phase": {
+                "requests": 59,
+                "successful": 0,
+                "failed": 59,
+                "incidents_created": 0,
+                "incidents_suppressed": 24
+              },
+              "recovery_phase": {
+                "requests": 0,
+                "successful": 0,
+                "failed": 0,
+                "incidents_created": 0,
+                "incidents_suppressed": 11,
+                "lingering_alerts": 0,
+                "ghost_activity": []
+              },
+              "timeline": [
+                {
+                  "elapsed_ms": 5,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 5076,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 10170,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 15248,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 20339,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 25399,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 30416,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 35428,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 40497,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 45604,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 50664,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 55871,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 60964,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 66018,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 71102,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 76422,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 81455,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 86708,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 91800,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 97131,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 102164,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 107358,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 112428,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 117562,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 125178,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 130216,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 135258,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 140340,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 145435,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 150473,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 155528,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 160550,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 165584,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 170651,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 175679,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 190229,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 200231,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 1
+                  }
+                },
+                {
+                  "elapsed_ms": 210260,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 220328,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                },
+                {
+                  "elapsed_ms": 230332,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": true,
+                    "latency_ms": 0
+                  }
+                }
+              ],
+              "duration_ms": 240424,
+              "final_status": {
+                "incident_should_alert": false,
+                "health": {
+                  "healthy": true,
+                  "latency_ms": 0
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "session_id": "session3-1766867074806",
+      "session_type": "recovery_quietening",
+      "start_time": "2025-12-27T20:24:34.806Z",
+      "end_time": "2025-12-27T20:28:35.140Z",
+      "duration_ms": 240334,
+      "findings": {
+        "total_observations": 55,
+        "stress_incidents": 0,
+        "recovery_incidents": 0,
+        "ghost_activity": 0,
+        "quietening_observed": 0,
+        "final_quiet": true
+      },
+      "observations": [
+        {
+          "timestamp": "2025-12-27T20:24:34.811Z",
+          "elapsed_ms": 6,
+          "phase": "SESSION",
+          "event": "start",
+          "data": {
+            "session_id": "session3-1766867074806",
+            "stress_duration_ms": 120000,
+            "recovery_duration_ms": 60000,
+            "base_url": "https://bookiji-ra585kfwd-patrick-duchesneaus-projects.vercel.app"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:24:34.812Z",
+          "elapsed_ms": 6,
+          "phase": "PHASE",
+          "event": "stress_start",
+          "data": {}
+        },
+        {
+          "timestamp": "2025-12-27T20:24:35.100Z",
+          "elapsed_ms": 294,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:24:39.878Z",
+          "elapsed_ms": 5072,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:24:44.919Z",
+          "elapsed_ms": 10113,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:24:50.013Z",
+          "elapsed_ms": 15207,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:24:55.106Z",
+          "elapsed_ms": 20300,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:25:00.130Z",
+          "elapsed_ms": 25324,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:25:05.239Z",
+          "elapsed_ms": 30433,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:25:10.329Z",
+          "elapsed_ms": 35523,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:25:15.439Z",
+          "elapsed_ms": 40633,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:25:20.470Z",
+          "elapsed_ms": 45664,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:25:25.498Z",
+          "elapsed_ms": 50692,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:25:30.617Z",
+          "elapsed_ms": 55811,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:25:35.703Z",
+          "elapsed_ms": 60897,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:25:40.875Z",
+          "elapsed_ms": 66069,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:25:45.747Z",
+          "elapsed_ms": 70941,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:25:50.819Z",
+          "elapsed_ms": 76013,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:25:55.819Z",
+          "elapsed_ms": 81013,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:26:00.815Z",
+          "elapsed_ms": 86009,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:26:05.871Z",
+          "elapsed_ms": 91065,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:26:10.953Z",
+          "elapsed_ms": 96147,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:26:16.062Z",
+          "elapsed_ms": 101256,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:26:21.108Z",
+          "elapsed_ms": 106302,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:26:26.250Z",
+          "elapsed_ms": 111444,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:26:31.222Z",
+          "elapsed_ms": 116416,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:26:34.872Z",
+          "elapsed_ms": 120066,
+          "phase": "PHASE",
+          "event": "stress_end",
+          "data": {
+            "requests": 59,
+            "successful": 0,
+            "failed": 59,
+            "incidents_created": 0
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:26:34.872Z",
+          "elapsed_ms": 120066,
+          "phase": "PHASE",
+          "event": "recovery_start",
+          "data": {}
+        },
+        {
+          "timestamp": "2025-12-27T20:26:40.092Z",
+          "elapsed_ms": 125286,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:26:45.139Z",
+          "elapsed_ms": 130333,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:26:50.200Z",
+          "elapsed_ms": 135394,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:26:55.252Z",
+          "elapsed_ms": 140446,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:27:00.341Z",
+          "elapsed_ms": 145535,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:27:05.391Z",
+          "elapsed_ms": 150585,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:27:10.439Z",
+          "elapsed_ms": 155633,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:27:15.436Z",
+          "elapsed_ms": 160630,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:27:20.434Z",
+          "elapsed_ms": 165628,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:27:25.451Z",
+          "elapsed_ms": 170645,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:27:30.514Z",
+          "elapsed_ms": 175708,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:27:34.899Z",
+          "elapsed_ms": 180093,
+          "phase": "PHASE",
+          "event": "recovery_end",
+          "data": {
+            "lingering_alerts": 0,
+            "ghost_activity_count": 0
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:27:34.899Z",
+          "elapsed_ms": 180093,
+          "phase": "PHASE",
+          "event": "silence_start",
+          "data": {}
+        },
+        {
+          "timestamp": "2025-12-27T20:27:45.100Z",
+          "elapsed_ms": 190294,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:27:45.188Z",
+          "elapsed_ms": 190382,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 70166
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:27:55.134Z",
+          "elapsed_ms": 200328,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:27:55.222Z",
+          "elapsed_ms": 200416,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 80200
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:28:05.250Z",
+          "elapsed_ms": 210444,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:28:05.334Z",
+          "elapsed_ms": 210528,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 90302
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:28:15.284Z",
+          "elapsed_ms": 220478,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:28:15.369Z",
+          "elapsed_ms": 220563,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 100382
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:28:25.324Z",
+          "elapsed_ms": 230518,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:28:25.416Z",
+          "elapsed_ms": 230610,
+          "phase": "SILENCE",
+          "event": "quiet",
+          "data": {
+            "elapsed_since_stress_end": 110425
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:28:34.949Z",
+          "elapsed_ms": 240143,
+          "phase": "PHASE",
+          "event": "silence_end",
+          "data": {}
+        },
+        {
+          "timestamp": "2025-12-27T20:28:35.063Z",
+          "elapsed_ms": 240257,
+          "phase": "INCIDENT_CHECK",
+          "event": "exception",
+          "data": {
+            "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:28:35.140Z",
+          "elapsed_ms": 240334,
+          "phase": "FINAL",
+          "event": "incident_status",
+          "data": {
+            "health": {
+              "healthy": false,
+              "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+            }
+          }
+        },
+        {
+          "timestamp": "2025-12-27T20:28:35.140Z",
+          "elapsed_ms": 240334,
+          "phase": "SESSION",
+          "event": "end",
+          "data": {
+            "session_id": "session3-1766867074806",
+            "results": {
+              "stress_phase": {
+                "requests": 59,
+                "successful": 0,
+                "failed": 59,
+                "incidents_created": 0,
+                "incidents_suppressed": 0
+              },
+              "recovery_phase": {
+                "requests": 0,
+                "successful": 0,
+                "failed": 0,
+                "incidents_created": 0,
+                "incidents_suppressed": 0,
+                "lingering_alerts": 0,
+                "ghost_activity": []
+              },
+              "timeline": [
+                {
+                  "elapsed_ms": 6,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 5042,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 10081,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 15179,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 20257,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 25300,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 30395,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 35501,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 40527,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 45608,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 50653,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 55788,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 60851,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 65889,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 70908,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 75948,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 80977,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 85981,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 91039,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 96121,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 101227,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 106262,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 111301,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 116389,
+                  "phase": "stress",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 125160,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 130199,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 135265,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 140346,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 145413,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 150463,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 155501,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 160520,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 165524,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 170528,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 175606,
+                  "phase": "recovery",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 190172,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 200206,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 210308,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 220388,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                },
+                {
+                  "elapsed_ms": 230431,
+                  "phase": "silence",
+                  "incident_status": "quiet",
+                  "health": {
+                    "healthy": false,
+                    "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                  }
+                }
+              ],
+              "duration_ms": 240334,
+              "final_status": {
+                "health": {
+                  "healthy": false,
+                  "error": "Unexpected token '<', \"<!doctype \"... is not valid JSON"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "consolidated_findings": {
+    "total_sessions": 3,
+    "total_observations": 235,
+    "incidents_created_any_session": false,
+    "incidents_suppressed_any_session": false,
+    "errors_observed_any_session": false,
+    "silences_observed_any_session": false,
+    "valid_failures_surfaced": false,
+    "ghost_activity_observed": false,
+    "quietening_observed": true
+  },
+  "unanswered_questions": [
+    "Did valid failures surface as incidents?",
+    "Did Jarvis classification remain factual?",
+    "Did error aggregation work correctly?",
+    "Did failures become quieter or noisier over time?",
+    "Did valid failures still surface despite noise?",
+    "Did incidents ignore noise correctly?",
+    "Did Jarvis stay factual and calm?",
+    "Were metrics polluted by junk traffic?",
+    "Did incidents resolve cleanly after stress?",
+    "Were there lingering alerts?",
+    "Did Jarvis de-escalate cleanly?",
+    "Was there any ghost activity?"
+  ],
+  "cannot_verify": [
+    "Whether incidents are created for all valid failures",
+    "Whether suppression windows are appropriate",
+    "Whether latency degradation triggers incidents",
+    "Whether DB partial failures trigger incidents",
+    "Whether Stripe timeouts trigger incidents",
+    "Whether noise rejection is fast enough",
+    "Whether signal failures are detected correctly",
+    "Whether incident classification ignores noise",
+    "Whether metrics aggregation filters noise",
+    "Whether Jarvis remains composed under noise",
+    "Whether incident resolution is automatic",
+    "Whether de-escalation logic works correctly",
+    "Whether ghost activity indicates bugs",
+    "Whether quietening is consistent"
+  ]
+}

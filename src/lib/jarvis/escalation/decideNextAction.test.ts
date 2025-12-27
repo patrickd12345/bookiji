@@ -9,9 +9,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { decideNextAction } from './decideNextAction'
+import { decideNextAction, ALLOWED_ESCALATION_DECISIONS } from './decideNextAction'
 import * as sleepPolicy from './sleepPolicy'
 import type { EscalationContext } from './decideNextAction'
+import type { SleepPolicy, SeveritySleepRule } from './sleepPolicy'
 
 // Mock sleep policy to control quiet hours
 vi.mock('./sleepPolicy', async () => {
@@ -28,8 +29,25 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
   const now = new Date('2025-01-27T10:00:00Z').toISOString()
   const fiveMinutesAgo = new Date('2025-01-27T09:55:00Z').toISOString()
   const twoHoursAgo = new Date('2025-01-27T08:00:00Z').toISOString()
+  const severityRules: Record<'SEV-1' | 'SEV-2' | 'SEV-3', SeveritySleepRule> = {
+    'SEV-1': {
+      wakeDuringQuietHours: true,
+      maxSilentMinutes: 120,
+      escalationIntervalsMinutes: [15, 30, 60, 120]
+    },
+    'SEV-2': {
+      wakeDuringQuietHours: false,
+      maxSilentMinutes: 120,
+      escalationIntervalsMinutes: [15, 30, 60, 120]
+    },
+    'SEV-3': {
+      wakeDuringQuietHours: false,
+      maxSilentMinutes: null,
+      escalationIntervalsMinutes: []
+    }
+  }
 
-  const mockPolicy = {
+  const mockPolicy: SleepPolicy = {
     id: 'test',
     version: '1.0.0',
     quietHours: {
@@ -37,10 +55,11 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
       end: '07:00',
       timezone: 'America/New_York'
     },
-    wakeThresholdSeverity: 'SEV-1' as const,
-    maxSilentMinutes: 120,
-    escalationIntervalsMinutes: [15, 30, 60, 120],
-    maxNotificationsPerIncident: 5
+    wakeThresholdSeverity: 'SEV-1',
+    maxSilentMinutes: severityRules['SEV-1'].maxSilentMinutes ?? 120,
+    escalationIntervalsMinutes: severityRules['SEV-1'].escalationIntervalsMinutes,
+    maxNotificationsPerIncident: 5,
+    severityRules
   }
 
   beforeEach(() => {
@@ -304,7 +323,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
     it('all decisions are one of allowed types', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
 
-      const allowedTypes = ['DO_NOT_NOTIFY', 'SEND_SILENT_SMS', 'SEND_LOUD_SMS', 'WAIT']
+      const allowedTypes = ALLOWED_ESCALATION_DECISIONS
 
       // Test various contexts
       const contexts: EscalationContext[] = [
@@ -450,4 +469,3 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
     })
   })
 })
-

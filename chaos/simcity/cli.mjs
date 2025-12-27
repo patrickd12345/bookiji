@@ -95,6 +95,7 @@ async function main() {
       if (result.elapsedSeconds !== undefined) {
         console.log(`[SimCity] Elapsed time: ${result.elapsedSeconds}s`)
       }
+      printOutcomeSummary(result)
       process.exit(0)
     } else {
       console.error(`[SimCity] ❌ FAIL`)
@@ -108,6 +109,7 @@ async function main() {
       if (result.snapshotPath) {
         console.error(`[SimCity] Forensic snapshot: ${result.snapshotPath}`)
       }
+      printOutcomeSummary(result)
       process.exit(1)
     }
   } catch (err) {
@@ -117,4 +119,28 @@ async function main() {
 }
 
 main()
+
+function printOutcomeSummary(result) {
+  if (!result) return
+  const status = result.status || (result.pass ? 'SUCCESS' : 'FAILURE')
+  console.log(`[SimCity] Final status: ${status}`)
+
+  if (Array.isArray(result.proofs) && result.proofs.length > 0) {
+    console.log(`[SimCity] Proofs (${result.proofs.length}):`)
+    result.proofs.forEach((proof, index) => {
+      console.log(`  ${index + 1}. ${proof.invariantId}: ${proof.detail}`)
+    })
+  } else {
+    console.log('[SimCity] Proofs: <none>')
+  }
+
+  if (Array.isArray(result.violations) && result.violations.length > 0) {
+    console.log(`[SimCity] Violations (${result.violations.length}):`)
+    result.violations.forEach((violation, index) => {
+      console.log(`  ${index + 1}. ${violation.invariantId || '<unknown>'} (${violation.type}): ${violation.detail}`)
+    })
+  } else {
+    console.log('[SimCity] Violations: <none>')
+  }
+}
 

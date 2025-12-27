@@ -232,6 +232,79 @@ LLM may:
 
 **This is the line between chaos and science.**
 
+## IX. Deployment Safety Invariants (Ingress & Preview)
+
+### I-INGRESS-1. Chaos must never run against HTML ingress
+
+Chaos runs must only execute against JSON ingress surfaces. HTML responses, redirects, or authentication walls prove that Vercel Preview Protection (or similar tooling) is in the path and chaos must stop immediately.
+
+- **Preflight guard**: `chaos/preflight/check-json-ingress.mjs` fetches `${BASE_URL}/api/health`, refuses redirects, rejects `text/html` content types, and fails if the response body contains `<html`. Violations raise `HTML ingress detected` with `Likely cause: Vercel Preview Protection`, capturing HTTP status, `Content-Type`, redirect headers, and a snippet of the offending payload.
+- **Session enforcement**: `chaos/sessions/run-simcity-sessions.mjs` executes the preflight before any safety checks or warning countdowns, surfaces failures as `I-INGRESS-1`, and aborts the chaos run before any sessions or timers can fire. The invariant failure is loud, fatal, and auditable.
+- **Preview verification**: `chaos/sessions/verify-preview-access.mjs` now prints HTTP status, `Content-Type`, redirect detection, and HTML detection for every fetch, and exits non-zero on failure so CI/ops catches preview-protected deployments before chaos ever starts.
+
+Violating `I-INGRESS-1` is non-recoverable: the preflight aborts the run, the logs include the invariant ID plus a clear diagnostic summary, and operator tooling has enough context to unblock the deployment safely.
+
+### I-AUTH-SESSION-1. Auth must be machine-valid
+
+Chaos runs must never start unless authentication is proven machine-valid. Anonymous, guest, partial, or expired sessions are fatal. The session must have a valid user ID, a non-anonymous role that matches the expected chaos role (vendor vs customer), and an expiry timestamp in the future.
+
+**What it protects against:**
+- Running chaos with invalid, expired, or missing authentication
+- Anonymous or guest sessions that cannot access protected endpoints
+- Role mismatches (e.g., customer role when vendor role is required)
+- Expired sessions that will fail during execution
+- Redirects or HTML responses from session endpoints (reuses ingress detection rules)
+
+**Where it runs:**
+- Immediately after `I-INGRESS-1` ingress preflight
+- Before any safety checks, warnings, timers, snapshots, or scenarios
+- Only in staging mode with `ENABLE_STAGING_INCIDENTS=true` (skipped otherwise)
+
+**Why failure is fatal:**
+- Chaos scenarios require authenticated access to booking endpoints, database operations, and incident creation
+- Running without valid authentication would produce invalid observations and waste resources
+- Role mismatches would cause authorization failures during execution
+- Expired sessions would fail mid-execution, producing incomplete results
+
+**How tooling and runner enforce it consistently:**
+- **Preflight guard**: `chaos/preflight/check-auth-session.mjs` fetches `${BASE_URL}/api/auth/session` with `Authorization: Bearer <token>`, uses `redirect: 'manual'`, enforces JSON-only responses (blocks redirects, `text/html`, `<html>`), and validates:
+  - Session exists
+  - `user.id` is present
+  - `user.role !== 'anon'`
+  - `user.role === expectedRole` (vendor or customer)
+  - `session.expires_at` is in the future
+- **Session enforcement**: `chaos/sessions/run-simcity-sessions.mjs` executes the preflight immediately after `runIngressPreflight()`, surfaces failures as `I-AUTH-SESSION-1`, and aborts the chaos run before any sessions, timers, or scenarios can start.
+- **Verification tooling**: `chaos/sessions/verify-auth-session.mjs` prints HTTP status, Content-Type, redirect detection, user ID, role, and expiry (human-readable) for debugging, and fails fast before JSON parsing if redirect or HTML is detected.
+
+**Constraints:**
+- No retries
+- No sleeps
+- No heuristics
+- No fallback logic
+- Deterministic behavior only
+
+Violating `I-AUTH-SESSION-1` is non-recoverable: the preflight aborts the run, the logs include the invariant ID plus a clear diagnostic summary (status, content-type, violations, reason), and operator tooling has enough context to obtain valid authentication before retrying.
+
+---
+
+## X. System Honesty Invariants (Meta-Level Binding)
+
+### I-SYSTEM-HONESTY-1. The system must be incapable of lying
+
+This meta-invariant binds all others (ingress, auth, authz, time, snapshot integrity, escalation) so chaos always presents deterministic truth. Every externally visible success is backed by explicit proofs, any violation is fatal or explicitly recorded, partial runs are labeled non-success, and no silent catch or fallback may simulate correctness.
+
+To make this operational:
+
+- The canonical `RunOutcome` model now publishes `{ status: SUCCESS | FAILURE | PARTIAL, proofs[], violations[] }` so every run carries auditable evidence.
+- Every invariant registers a proof on success (for example: ingress reached JSON, auth session valid, terminal state coherent) and a violation on failure.
+- The runner aggregates that evidence across `I-INGRESS-1`, `I-AUTH-SESSION-1`, `I-AUTHZ-CAPABILITY-1`, `I-TIMEBASE-1`, `I-SNAPSHOT-INTEGRITY-1`, and `I-ESCALATION-INVARIANTS-1`, downgrading the run if proofs are missing or violations appear.
+- Verification tooling fails CI whenever `SUCCESS` is reported without the required proofs or whenever violations are present without a corresponding failure status.
+- Run summaries (CLI and automation) now print final status, proof list, and violation list so operators and auditors see exactly what happened.
+
+**The system prefers failure over uncertainty.**
+
+**Silence is a violation.**
+
 ---
 
 ## Implementation References
@@ -247,4 +320,3 @@ LLM may:
 - [SimCity LLM Events](./simcity-llm-events.md)
 - [Database Management Policy](./DATABASE_MANAGEMENT_POLICY.md)
 - [SimCity Phase 3](../simcity-phase3.md)
-

@@ -1,5 +1,13 @@
 import { ExecutionKernel } from '../kernel/index.mjs'
 import { stableUuid, mulberry32, hashSeedToU32 } from '../kernel/utils.mjs'
+import {
+  createRunOutcome,
+  registerProof,
+  registerViolation,
+  finalizeRunOutcome,
+  RunOutcomeStatus
+} from './runOutcome.mjs'
+import { Timebase } from '../kernel/timebase.mjs'
 
 /**
  * Generic template resolver - resolves {{path.to.value}} against runtime context
@@ -98,16 +106,27 @@ function getNestedValue(obj, path) {
 }
 
 export async function runPlan(plan, config) {
+  const targetUrl = config.targetUrl || process.env.TARGET_URL || 'http://localhost:3000'
+  const timebase = new Timebase({ targetUrl })
+  await timebase.initialize()
+  const diag = timebase.getDiagnostics()
+  console.log(
+    `[SimCity] Timebase initialized (server_time_offset=${diag.server_time_offset}ms, server_now=${new Date(
+      diag.last_timestamp
+    ).toISOString()})`
+  )
+
   // Handle sequence plans
   if (plan.sequence && Array.isArray(plan.sequence)) {
-    return await runSequence(plan, config)
+    return await runSequence(plan, config, timebase)
   }
 
   // Single plan execution
-  return await runSinglePlan(plan, config)
+  return await runSinglePlan(plan, config, timebase)
 }
 
-async function runSinglePlan(plan, config) {
+async function runSinglePlan(plan, config, timebase) {
+  if (!timebase) throw new Error('Timebase instance is required for runSinglePlan')
   const kernel = new ExecutionKernel({
     ...config,
     seedStr: plan.seed,
@@ -116,7 +135,8 @@ async function runSinglePlan(plan, config) {
 
   const stopConditions = plan.stop_conditions || ['invariant_violation']
   const timeBudgetMs = plan.time_budget_seconds ? plan.time_budget_seconds * 1000 : null
-  const startTime = Date.now()
+  const startTime = timebase.nowMs()
+  const runOutcome = createRunOutcome({ requiredInvariantIds: plan.requiredInvariantIds || [] })
 
   console.log(`[SimCity] Starting plan execution: ${plan.capabilityId} (seed: ${plan.seed}, iterations: ${plan.iterations})`)
   if (timeBudgetMs) {
@@ -124,14 +144,14 @@ async function runSinglePlan(plan, config) {
   }
 
   // Create fixtures
-  const { fixtures, ids } = await createFixtures(plan, kernel, config)
+  const { fixtures, ids } = await createFixtures(plan, kernel, config, timebase)
   console.log(`[SimCity] Fixtures created: ${Object.keys(fixtures).join(', ')}`)
 
   // Wait for triggers to complete (especially for bookings)
   await new Promise(resolve => setTimeout(resolve, 200))
 
   // Build runtime context for template resolution
-  const runtimeContext = buildRuntimeContext(plan, fixtures, ids, config)
+  const runtimeContext = buildRuntimeContext(plan, fixtures, ids, config, timebase)
 
   // Enforce fixture finalization: all fixtures must have .data before template resolution
   assertContextComplete(runtimeContext)
@@ -145,23 +165,30 @@ async function runSinglePlan(plan, config) {
   // Validate initial state (context is already complete at this point)
   const initialState = await queryStateForInvariants(invariants, kernel, runtimeContext)
   const initialResults = await assertAllInvariants(invariants, initialState, kernel, 0, { type: 'initial' })
-  for (const result of initialResults) {
-    if (!result.pass) {
-      console.error(`[SimCity] Initial state validation failed: ${result.message}`)
-      const snapshot = kernel.snapshotState(initialState, {
+  const initialFailures = ingestInvariantResults(runOutcome, initialResults, {
+    phase: 'initial',
+    step: 0,
+    action: { type: 'initial' }
+  })
+  if (initialFailures.length > 0) {
+    const failure = initialFailures[0]
+    console.error(`[SimCity] Initial state validation failed: ${failure.message}`)
+    const snapshot = kernel.snapshotState(initialState, {
+      step: 0,
+      action: { type: 'initial' },
+      capabilityId: plan.capabilityId,
+      seed: plan.seed
+    })
+    const snapshotPath = await kernel.saveSnapshot(snapshot, 'chaos/forensics')
+    return buildRunResult(
+      runOutcome,
+      {
         step: 0,
-        action: { type: 'initial' },
-        capabilityId: plan.capabilityId,
-        seed: plan.seed
-      })
-      const snapshotPath = await kernel.saveSnapshot(snapshot, 'chaos/forensics')
-      return {
-        pass: false,
-        step: 0,
-        failure: result,
+        failure,
         snapshotPath
-      }
-    }
+      },
+      RunOutcomeStatus.FAILURE
+    )
   }
 
   // Run chaos loop
@@ -172,7 +199,7 @@ async function runSinglePlan(plan, config) {
   while (true) {
     // Check time budget
     if (timeBudgetMs && stopConditions.includes('time_budget_exhausted')) {
-      const elapsed = Date.now() - startTime
+      const elapsed = timebase.nowMs() - startTime
       if (elapsed >= timeBudgetMs) {
         console.log(`[SimCity] Time budget exhausted: ${Math.round(elapsed / 1000)}s >= ${plan.time_budget_seconds}s`)
         const finalState = await queryStateForInvariants(invariants, kernel, runtimeContext)
@@ -182,6 +209,16 @@ async function runSinglePlan(plan, config) {
           console.error(`[SimCity] FAIL: Invalid terminal state after time budget`)
           console.error(`[SimCity] ${terminalCheck.message}`)
           
+          registerViolation(runOutcome, {
+            invariantId: terminalCheck.id || 'terminal_state',
+            type: 'terminal',
+            detail: terminalCheck.message,
+            metadata: {
+              step,
+              action: lastAction
+            }
+          })
+
           const snapshot = kernel.snapshotState(finalState, {
             step,
             action: lastAction,
@@ -191,21 +228,35 @@ async function runSinglePlan(plan, config) {
           })
           const snapshotPath = await kernel.saveSnapshot(snapshot, 'chaos/forensics')
           
-          return {
-            pass: false,
-            step,
-            failure: terminalCheck,
-            snapshotPath
-          }
+          return buildRunResult(
+            runOutcome,
+            {
+              step,
+              failure: terminalCheck,
+              snapshotPath
+            },
+            RunOutcomeStatus.FAILURE
+          )
         }
         
+        registerProof(runOutcome, {
+          invariantId: 'terminal_state',
+          detail: 'Terminal state validated after time budget exhaustion',
+          metadata: {
+            step,
+            action: lastAction
+          }
+        })
+
         console.log(`[SimCity] PASS: Time budget exhausted (${Math.round(elapsed / 1000)}s)`)
-        return {
-          pass: true,
-          iterations: step - 1,
-          restartCount,
-          elapsedSeconds: Math.round(elapsed / 1000)
-        }
+        return buildRunResult(
+          runOutcome,
+          {
+            iterations: step - 1,
+            restartCount,
+            elapsedSeconds: Math.round(elapsed / 1000)
+          }
+        )
       }
     }
 
@@ -253,31 +304,37 @@ async function runSinglePlan(plan, config) {
     // Query state and assert invariants (queries are resolved in queryStateForInvariants)
     const state = await queryStateForInvariants(invariants, kernel, runtimeContext)
     const assertionResults = await assertAllInvariants(invariants, state, kernel, step, action)
+    const invariantFailures = ingestInvariantResults(runOutcome, assertionResults, {
+      phase: 'runtime',
+      step,
+      action
+    })
 
-    // Check for failures
-    for (const result of assertionResults) {
-      if (!result.pass && stopConditions.includes('invariant_violation')) {
-        console.error(`[SimCity] FAIL at step ${step} (action: ${action.type})`)
-        console.error(`[SimCity] ${result.message}`)
-        
-        // Create forensic snapshot
-        const snapshot = kernel.snapshotState(state, {
+    if (invariantFailures.length > 0 && stopConditions.includes('invariant_violation')) {
+      const failure = invariantFailures[0]
+      console.error(`[SimCity] FAIL at step ${step} (action: ${action.type})`)
+      console.error(`[SimCity] ${failure.message}`)
+      
+      // Create forensic snapshot
+      const snapshot = kernel.snapshotState(state, {
+        step,
+        action,
+        capabilityId: plan.capabilityId,
+        seed: plan.seed
+      })
+      const snapshotPath = await kernel.saveSnapshot(snapshot, 'chaos/forensics')
+      
+      console.error(`[SimCity] Forensic snapshot saved to: ${snapshotPath}`)
+      return buildRunResult(
+        runOutcome,
+        {
           step,
           action,
-          capabilityId: plan.capabilityId,
-          seed: plan.seed
-        })
-        const snapshotPath = await kernel.saveSnapshot(snapshot, 'chaos/forensics')
-        
-        console.error(`[SimCity] Forensic snapshot saved to: ${snapshotPath}`)
-        return {
-          pass: false,
-          step,
-          action,
-          failure: result,
+          failure,
           snapshotPath
-        }
-      }
+        },
+        RunOutcomeStatus.FAILURE
+      )
     }
 
     step++
@@ -314,25 +371,38 @@ async function runSinglePlan(plan, config) {
         console.error(`[SimCity] FAIL at step ${step} (idempotency check)`)
         console.error(`[SimCity] ${idempotencyResult.message}`)
         
-        const snapshot = kernel.snapshotState({ before: stateBefore, after: stateAfter }, {
+      const snapshot = kernel.snapshotState({ before: stateBefore, after: stateAfter }, {
+        step,
+        action,
+        capabilityId: plan.capabilityId,
+        seed: plan.seed,
+        checkType: 'idempotency'
+      })
+      const snapshotPath = await kernel.saveSnapshot(snapshot, 'chaos/forensics')
+      
+      registerViolation(runOutcome, {
+        invariantId: 'I-IDEMPOTENCY-1',
+        type: 'idempotency',
+        detail: idempotencyResult.message,
+        metadata: {
           step,
-          action,
-          capabilityId: plan.capabilityId,
-          seed: plan.seed,
-          checkType: 'idempotency'
-        })
-        const snapshotPath = await kernel.saveSnapshot(snapshot, 'chaos/forensics')
-        
-        return {
-          pass: false,
+          action
+        }
+      })
+
+      return buildRunResult(
+        runOutcome,
+        {
           step,
           action,
           failure: idempotencyResult,
           snapshotPath
-        }
-      }
+        },
+        RunOutcomeStatus.FAILURE
+      )
     }
   }
+}
 
   // Final state check
   const finalState = await queryStateForInvariants(invariants, kernel, runtimeContext)
@@ -342,6 +412,16 @@ async function runSinglePlan(plan, config) {
     console.error(`[SimCity] FAIL: Invalid terminal state`)
     console.error(`[SimCity] ${terminalCheck.message}`)
     
+    registerViolation(runOutcome, {
+      invariantId: terminalCheck.id || 'terminal_state',
+      type: 'terminal',
+      detail: terminalCheck.message,
+      metadata: {
+        step,
+        action: lastAction
+      }
+    })
+
     const snapshot = kernel.snapshotState(finalState, {
       step,
       action: lastAction,
@@ -351,40 +431,52 @@ async function runSinglePlan(plan, config) {
     })
     const snapshotPath = await kernel.saveSnapshot(snapshot, 'chaos/forensics')
     
-    return {
-      pass: false,
-      step,
-      failure: terminalCheck,
-      snapshotPath
-    }
+    return buildRunResult(
+      runOutcome,
+      {
+        step,
+        failure: terminalCheck,
+        snapshotPath
+      },
+      RunOutcomeStatus.FAILURE
+    )
   }
 
-  const elapsed = timeBudgetMs ? Math.round((Date.now() - startTime) / 1000) : null
+  registerProof(runOutcome, {
+    invariantId: 'terminal_state',
+    detail: 'Terminal state validated',
+    metadata: {
+      step,
+      action: lastAction
+    }
+  })
+
+  const elapsed = timeBudgetMs ? Math.round((timebase.nowMs() - startTime) / 1000) : null
   console.log(`[SimCity] PASS: Completed ${step - 1} iterations`)
   console.log(`[SimCity] Restarts simulated: ${restartCount}`)
   if (elapsed) {
     console.log(`[SimCity] Elapsed time: ${elapsed}s`)
   }
   
-  return {
-    pass: true,
+  return buildRunResult(runOutcome, {
     iterations: step - 1,
     restartCount,
     elapsedSeconds: elapsed
-  }
+  })
 }
 
-async function runSequence(plan, config) {
+async function runSequence(plan, config, timebase) {
   const sequence = plan.sequence
   const maxSequenceLength = 5
-  
+  const sequenceOutcome = createRunOutcome({ requiredInvariantIds: plan.requiredInvariantIds || [] })
+
   if (sequence.length > maxSequenceLength) {
     throw new Error(`Sequence length ${sequence.length} exceeds maximum ${maxSequenceLength}`)
   }
 
   const stopConditions = plan.stop_conditions || ['invariant_violation']
   const timeBudgetMs = plan.time_budget_seconds ? plan.time_budget_seconds * 1000 : null
-  const startTime = Date.now()
+  const startTime = timebase.nowMs()
 
   console.log(`[SimCity] Starting sequence execution: ${sequence.length} plans`)
   if (timeBudgetMs) {
@@ -398,11 +490,15 @@ async function runSequence(plan, config) {
   for (let i = 0; i < sequence.length; i++) {
     // Check time budget before each step
     if (timeBudgetMs && stopConditions.includes('time_budget_exhausted')) {
-      const elapsed = Date.now() - startTime
+      const elapsed = timebase.nowMs() - startTime
       if (elapsed >= timeBudgetMs) {
         console.log(`[SimCity] Time budget exhausted at step ${i + 1}/${sequence.length}: ${Math.round(elapsed / 1000)}s >= ${plan.time_budget_seconds}s`)
+        finalizeRunOutcome(sequenceOutcome)
         return {
-          pass: true,
+          pass: sequenceOutcome.status === RunOutcomeStatus.SUCCESS,
+          status: sequenceOutcome.status,
+          proofs: sequenceOutcome.proofs,
+          violations: sequenceOutcome.violations,
           steps: i,
           iterations: totalIterations,
           restartCount: totalRestarts,
@@ -410,40 +506,57 @@ async function runSequence(plan, config) {
         }
       }
     }
+
     const stepPlan = sequence[i]
     console.log(`[SimCity] Step ${i + 1}/${sequence.length}: ${stepPlan.capability}`)
 
     // Build plan from sequence step
-    const fullPlan = await buildPlanFromSequenceStep(stepPlan, plan.seed || `seq-${Date.now()}`, sharedContext)
+    const fallbackSeed = plan.seed || `seq-${timebase.nowMs()}`
+    const fullPlan = await buildPlanFromSequenceStep(stepPlan, fallbackSeed, sharedContext, timebase)
 
     // Execute step
-    const result = await runSinglePlan(fullPlan, config)
+    const result = await runSinglePlan(fullPlan, config, timebase)
+    mergeOutcomeData(sequenceOutcome, result, {
+      sequenceStep: stepPlan.capability,
+      stepIndex: i + 1
+    })
+
+    totalIterations += result.iterations || 0
+    totalRestarts += result.restartCount || 0
 
     if (!result.pass) {
+      finalizeRunOutcome(sequenceOutcome, { intendedStatus: RunOutcomeStatus.FAILURE })
       console.error(`[SimCity] Sequence FAILED at step ${i + 1}`)
       return {
-        pass: false,
-        step: i + 1,
+        pass: sequenceOutcome.status === RunOutcomeStatus.SUCCESS,
+        status: sequenceOutcome.status,
+        proofs: sequenceOutcome.proofs,
+        violations: sequenceOutcome.violations,
+        steps: i + 1,
+        iterations: totalIterations,
+        restartCount: totalRestarts,
         sequenceStep: stepPlan.capability,
         failure: result.failure,
         snapshotPath: result.snapshotPath
       }
     }
 
-    totalIterations += result.iterations || 0
-    totalRestarts += result.restartCount || 0
-
     // Optionally carry context forward (for now, we recreate fixtures each step)
     // sharedContext could be used to reuse fixtures if needed
   }
 
-  const elapsed = timeBudgetMs ? Math.round((Date.now() - startTime) / 1000) : null
+  const elapsed = timeBudgetMs ? Math.round((timebase.nowMs() - startTime) / 1000) : null
   console.log(`[SimCity] Sequence PASS: Completed ${sequence.length} steps`)
   if (elapsed) {
     console.log(`[SimCity] Elapsed time: ${elapsed}s`)
   }
+
+  finalizeRunOutcome(sequenceOutcome)
   return {
-    pass: true,
+    pass: sequenceOutcome.status === RunOutcomeStatus.SUCCESS,
+    status: sequenceOutcome.status,
+    proofs: sequenceOutcome.proofs,
+    violations: sequenceOutcome.violations,
     steps: sequence.length,
     iterations: totalIterations,
     restartCount: totalRestarts,
@@ -451,7 +564,7 @@ async function runSequence(plan, config) {
   }
 }
 
-async function buildPlanFromSequenceStep(stepPlan, seed, sharedContext) {
+async function buildPlanFromSequenceStep(stepPlan, seed, sharedContext, timebase) {
   // Load capability
   const { loadCapability } = await import('../capabilities/registry.mjs')
   const capability = await loadCapability(stepPlan.capability)
@@ -461,16 +574,17 @@ async function buildPlanFromSequenceStep(stepPlan, seed, sharedContext) {
     ? mapChaosProfileFromSequence(stepPlan.chaos_profile, stepPlan.capability)
     : capability.chaosProfile
 
-  return {
-    capabilityId: stepPlan.capability,
-    seed: `${seed}-step-${Date.now()}`,
-    iterations: stepPlan.iterations || stepPlan.chaos_profile?.iterations || 50,
-    fixtureSpecs: capability.fixtureSpecs,
-    intentSpecs: capability.intentSpecs,
-    invariantSpecs: capability.invariantSpecs,
-    chaosProfile
+    return {
+      capabilityId: stepPlan.capability,
+      seed: `${seed}-step-${timebase.nowMs()}`,
+      iterations: stepPlan.iterations || stepPlan.chaos_profile?.iterations || 50,
+      fixtureSpecs: capability.fixtureSpecs,
+      intentSpecs: capability.intentSpecs,
+      invariantSpecs: capability.invariantSpecs,
+      chaosProfile,
+      requiredInvariantIds: Object.keys(capability.invariantSpecs || {})
+    }
   }
-}
 
 function mapChaosProfileFromSequence(geminiProfile, capabilityId) {
   const { retry_rate = 0.3, restart_rate = 0.2, reorder_rate = 0.0 } = geminiProfile || {}
@@ -527,7 +641,7 @@ function mapChaosProfileFromSequence(geminiProfile, capabilityId) {
   }
 }
 
-async function createFixtures(plan, kernel, config) {
+async function createFixtures(plan, kernel, config, timebase) {
   const fixtures = {}
   const seedStr = plan.seed
   const rng = kernel.config.rng
@@ -545,7 +659,7 @@ async function createFixtures(plan, kernel, config) {
   }
 
   // Generate time-based values
-  const now = Date.now()
+  const now = timebase.nowMs()
   const slotStart = new Date(now + 24 * 60 * 60 * 1000).toISOString()
   const slotEnd = new Date(new Date(slotStart).getTime() + 60 * 60 * 1000).toISOString()
   const slotBStart = new Date(now + 48 * 60 * 60 * 1000).toISOString()
@@ -628,9 +742,9 @@ async function createFixtures(plan, kernel, config) {
   return { fixtures, ids }
 }
 
-function buildRuntimeContext(plan, fixtures, ids, config) {
+function buildRuntimeContext(plan, fixtures, ids, config, timebase) {
   const seedStr = plan.seed
-  const now = Date.now()
+  const now = timebase.nowMs()
   const slotStart = new Date(now + 24 * 60 * 60 * 1000).toISOString()
   const slotEnd = new Date(new Date(slotStart).getTime() + 60 * 60 * 1000).toISOString()
   const slotBStart = new Date(now + 48 * 60 * 60 * 1000).toISOString()
@@ -908,6 +1022,87 @@ async function assertAllInvariants(invariants, state, kernel, step, action) {
   return results
 }
 
+function ingestInvariantResults(outcome, results, context = {}) {
+  const failures = []
+
+  for (const result of results) {
+    if (result.pass) {
+      for (const proof of result.proofs || []) {
+        registerProof(outcome, {
+          invariantId: result.invariantId,
+          detail: proof.detail,
+          type: proof.type,
+          metadata: {
+            context,
+            ...(proof.metadata || {})
+          }
+        })
+      }
+    } else {
+      const violationList = (Array.isArray(result.violations) && result.violations.length > 0)
+        ? result.violations
+        : [{ type: 'invariant_failure', detail: result.message }]
+
+      for (const violation of violationList) {
+        registerViolation(outcome, {
+          invariantId: violation.invariantId || result.invariantId,
+          type: violation.type || 'invariant_failure',
+          detail: violation.detail || result.message,
+          metadata: {
+            context,
+            ...(violation.metadata || {})
+          }
+        })
+      }
+
+      failures.push(result)
+    }
+  }
+
+  return failures
+}
+
+function buildRunResult(outcome, extras = {}, intendedStatus = RunOutcomeStatus.SUCCESS) {
+  finalizeRunOutcome(outcome, { intendedStatus })
+  const status = outcome.status
+
+  return {
+    ...extras,
+    status,
+    pass: status === RunOutcomeStatus.SUCCESS,
+    proofs: outcome.proofs,
+    violations: outcome.violations
+  }
+}
+
+function mergeOutcomeData(outcome, stepResult, metadata = {}) {
+  if (!outcome || !stepResult) return
+
+  for (const proof of stepResult.proofs || []) {
+    registerProof(outcome, {
+      invariantId: proof.invariantId,
+      detail: proof.detail,
+      type: proof.type,
+      metadata: {
+        ...(proof.metadata || {}),
+        ...metadata
+      }
+    })
+  }
+
+  for (const violation of stepResult.violations || []) {
+    registerViolation(outcome, {
+      invariantId: violation.invariantId,
+      type: violation.type,
+      detail: violation.detail,
+      metadata: {
+        ...(violation.metadata || {}),
+        ...metadata
+      }
+    })
+  }
+}
+
 function checkIdempotency(stateBefore, stateAfter, step, kernel) {
   // Compare key fields
   const fields = ['bookings', 'slot', 'slotA', 'slotB', 'slots']
@@ -941,4 +1136,3 @@ function checkTerminalState(plan, state, fixtures, kernel) {
 
   return { pass: true }
 }
-

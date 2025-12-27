@@ -1,0 +1,407 @@
+{
+  "session_start": "2025-12-27T16:57:17.577Z",
+  "session_end": "2025-12-27T16:58:07.325Z",
+  "target_url": "http://localhost:3000",
+  "supabase_url": "http://127.0.0.1:54321",
+  "server_health": {
+    "alive": true,
+    "status": 200
+  },
+  "observations": [
+    {
+      "timestamp": "2025-12-27T16:57:17.762Z",
+      "phase": "PREFLIGHT",
+      "attack": "server_health",
+      "observation": {
+        "alive": true,
+        "status": 200
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:17.763Z",
+      "phase": "PHASE_1",
+      "attack": "kill_simcity_orchestrator",
+      "observation": {
+        "action": "Starting SimCity, then killing request mid-flight",
+        "method": "Start simulation, abort request immediately"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:17.821Z",
+      "phase": "PHASE_1",
+      "attack": "kill_simcity_orchestrator",
+      "observation": {
+        "result": "Request aborted mid-flight",
+        "error": "This operation was aborted",
+        "contained": "Unknown - need to check if incident was created",
+        "question": "Did SimCity create incident or crash silently?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:18.833Z",
+      "phase": "PHASE_1",
+      "attack": "kill_simcity_orchestrator",
+      "observation": {
+        "incidents_after_kill": 0,
+        "question": "Were incidents created instead of crashes?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:18.834Z",
+      "phase": "PHASE_1",
+      "attack": "kill_jarvis_orchestrator",
+      "observation": {
+        "action": "Triggering Jarvis detection, then killing request mid-flight",
+        "method": "POST /api/cron/jarvis-monitor, abort immediately"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:18.897Z",
+      "phase": "PHASE_1",
+      "attack": "kill_jarvis_orchestrator",
+      "observation": {
+        "result": "Jarvis request killed mid-flight",
+        "error": "This operation was aborted",
+        "contained": "Unknown - need to check if incident was created",
+        "question": "Did Jarvis create incident before death? Or fail silently?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:19.900Z",
+      "phase": "PHASE_1",
+      "attack": "kill_jarvis_orchestrator",
+      "observation": {
+        "incidents_after_kill": 0,
+        "question": "Were incidents created? Did failure stay local?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:19.900Z",
+      "phase": "PHASE_1",
+      "attack": "kill_sms_sender",
+      "observation": {
+        "action": "Triggering SMS send, then killing request mid-flight",
+        "method": "POST to SMS endpoint, abort immediately"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:19.954Z",
+      "phase": "PHASE_1",
+      "attack": "kill_sms_sender",
+      "observation": {
+        "result": "SMS request killed mid-flight",
+        "error": "This operation was aborted",
+        "contained": "Unknown",
+        "question": "Did SMS fail gracefully? Was incident created?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:19.954Z",
+      "phase": "PHASE_1",
+      "attack": "drop_db_connections",
+      "observation": {
+        "action": "Creating many DB connections, then killing all abruptly",
+        "method": "100 concurrent DB queries, abort all"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:20.477Z",
+      "phase": "PHASE_1",
+      "attack": "drop_db_connections",
+      "observation": {
+        "result": "100 connections killed abruptly",
+        "contained": "Unknown - need to check if system recovered",
+        "question": "Did system recover? Did it create incident?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:23.991Z",
+      "phase": "PHASE_2",
+      "attack": "stripe_timeout",
+      "observation": {
+        "action": "Creating booking that would hit Stripe, observe timeout behavior",
+        "method": "POST booking with payment intent, observe classification"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:33.379Z",
+      "phase": "PHASE_2",
+      "attack": "stripe_timeout",
+      "observation": {
+        "result": "Request failed",
+        "status": 404,
+        "expected_classification": "EXTERNAL_DEPENDENCY",
+        "expected_layer": "Layer 0 or 1",
+        "question": "Was it classified as EXTERNAL_DEPENDENCY?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:33.380Z",
+      "phase": "PHASE_2",
+      "attack": "stripe_timeout",
+      "observation": {
+        "incidents_created": 0,
+        "question": "Did Jarvis classify this as EXTERNAL_DEPENDENCY?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:33.380Z",
+      "phase": "PHASE_2",
+      "attack": "supabase_partial_outage",
+      "observation": {
+        "action": "Querying non-existent table to simulate partial outage",
+        "method": "GET /rest/v1/nonexistent_table"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:33.381Z",
+      "phase": "PHASE_2",
+      "attack": "supabase_partial_outage",
+      "observation": {
+        "error": "fetch failed",
+        "expected_classification": "EXTERNAL_DEPENDENCY"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:33.381Z",
+      "phase": "PHASE_2",
+      "attack": "twilio_hard_failure",
+      "observation": {
+        "action": "Triggering SMS with invalid endpoint to simulate Twilio failure",
+        "method": "POST to SMS endpoint with invalid config"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:33.708Z",
+      "phase": "PHASE_2",
+      "attack": "twilio_hard_failure",
+      "observation": {
+        "result": "Request failed",
+        "status": 500,
+        "expected_classification": "EXTERNAL_DEPENDENCY",
+        "expected_layer": "Layer 0",
+        "question": "Was SMS failure classified as EXTERNAL_DEPENDENCY?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:33.708Z",
+      "phase": "PHASE_2",
+      "attack": "extreme_latency",
+      "observation": {
+        "action": "Starting SimCity with extreme latency config",
+        "method": "SimCity with p95Ms: 10000 (10 seconds)"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:33.848Z",
+      "phase": "PHASE_2",
+      "attack": "extreme_latency",
+      "observation": {
+        "result": "Failed to start",
+        "status": 403,
+        "expected_bounded_retries": true,
+        "expected_layer": "Layer 0 or 1",
+        "question": "Did system handle latency with bounded retries?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:41.421Z",
+      "phase": "PHASE_3",
+      "attack": "flood_booking_creation",
+      "observation": {
+        "action": "Flooding system with 500 concurrent booking creation requests",
+        "method": "500 concurrent POST /api/bookings"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:46.537Z",
+      "phase": "PHASE_3",
+      "attack": "flood_booking_creation",
+      "observation": {
+        "total_requests": 500,
+        "succeeded": 0,
+        "failed": 500,
+        "duration_ms": 5116,
+        "expected_caps": "Should fire rate limiting or queue caps",
+        "expected_ack_gating": "ACK gating should hold if enabled",
+        "question": "Did caps fire? Did noise decrease, not increase?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:46.563Z",
+      "phase": "PHASE_3",
+      "attack": "flood_booking_creation",
+      "observation": {
+        "incidents_created": 0,
+        "question": "Did system get QUIETER under stress?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:46.563Z",
+      "phase": "PHASE_3",
+      "attack": "escalation_storm",
+      "observation": {
+        "action": "Triggering 100 Jarvis checks in rapid succession",
+        "method": "100 concurrent GET /api/cron/jarvis-monitor"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:56.579Z",
+      "phase": "PHASE_3",
+      "attack": "escalation_storm",
+      "observation": {
+        "total_requests": 100,
+        "succeeded": 0,
+        "failed": 100,
+        "duration_ms": 10016,
+        "expected_noise_decrease": "Noise should decrease, not increase",
+        "expected_suppression": "Duplicate suppression should fire",
+        "question": "Did duplicate suppression fire? Did noise decrease?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:56.597Z",
+      "phase": "PHASE_3",
+      "attack": "escalation_storm",
+      "observation": {
+        "incidents_created": 0,
+        "question": "Did system get QUIETER under stress?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:57:56.597Z",
+      "phase": "PHASE_3",
+      "attack": "exhaust_notification_caps",
+      "observation": {
+        "action": "Starting SimCity with 100% failure probability to trigger many incidents",
+        "method": "SimCity with failureProbabilityByDomain: { booking: 1.0, payment: 1.0 }"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:58:04.825Z",
+      "phase": "PHASE_3",
+      "attack": "exhaust_notification_caps",
+      "observation": {
+        "result": "Failed to start SimCity",
+        "status": 403
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:58:04.826Z",
+      "phase": "PHASE_3",
+      "attack": "overfill_queues",
+      "observation": {
+        "action": "Same as booking flood - observing queue behavior",
+        "method": "Already executed in flood_booking_creation",
+        "question": "Did queues reject or cap?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:58:06.832Z",
+      "phase": "PHASE_4",
+      "attack": "missing_required_fields",
+      "observation": {
+        "action": "POST /api/bookings with empty body",
+        "method": "POST with {}"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:58:06.954Z",
+      "phase": "PHASE_4",
+      "attack": "missing_required_fields",
+      "observation": {
+        "result": "Request failed (expected)",
+        "status": 404,
+        "response": "\"<!DOCTYPE html><html lang=\\\"en\\\" class=\\\"font-sans\\\"><head><meta charSet=\\\"utf-8\\\"/><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1, viewport-fit=cover\\\"/><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1, viewport-fit=cover\\\"/><link rel=\\\"stylesheet\\\" href",
+        "expected_fail_closed": true,
+        "expected_incident": "Should create incident instead of crash",
+        "question": "Did it fail closed? Was incident created?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:58:06.957Z",
+      "phase": "PHASE_4",
+      "attack": "impossible_combinations",
+      "observation": {
+        "action": "POST /api/bookings with end_time < start_time",
+        "method": "POST with invalid time range"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:58:07.057Z",
+      "phase": "PHASE_4",
+      "attack": "impossible_combinations",
+      "observation": {
+        "result": "Request failed (expected)",
+        "status": 404,
+        "response": "\"<!DOCTYPE html><html lang=\\\"en\\\" class=\\\"font-sans\\\"><head><meta charSet=\\\"utf-8\\\"/><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1, viewport-fit=cover\\\"/><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1, viewport-fit=cover\\\"/><link rel=\\\"stylesheet\\\" href",
+        "expected_fail_closed": true,
+        "question": "Did it fail closed?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:58:07.057Z",
+      "phase": "PHASE_4",
+      "attack": "corrupt_payloads",
+      "observation": {
+        "action": "POST with invalid JSON",
+        "method": "POST with {invalid!!!json"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:58:07.149Z",
+      "phase": "PHASE_4",
+      "attack": "corrupt_payloads",
+      "observation": {
+        "status": 404,
+        "response": "<!DOCTYPE html><html lang=\"en\" class=\"font-sans\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\"/><link rel=\"stylesheet\" href=\"/_next/static/c",
+        "expected_fail_closed": true,
+        "expected_no_crash": true,
+        "question": "Did it fail closed? No crash?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:58:07.149Z",
+      "phase": "PHASE_4",
+      "attack": "out_of_order_events",
+      "observation": {
+        "action": "Cancel non-existent booking",
+        "method": "POST /api/bookings/nonexistent-id/cancel"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:58:07.239Z",
+      "phase": "PHASE_4",
+      "attack": "out_of_order_events",
+      "observation": {
+        "result": "Request failed (expected)",
+        "status": 404,
+        "response": "\"<!DOCTYPE html><html lang=\\\"en\\\" class=\\\"font-sans\\\"><head><meta charSet=\\\"utf-8\\\"/><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1, viewport-fit=cover\\\"/><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1, viewport-fit=cover\\\"/><link rel=\\\"stylesheet\\\" href",
+        "expected_fail_closed": true,
+        "expected_silence": "Should fail silently when ambiguity is real",
+        "question": "Did it fail silently?"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:58:07.239Z",
+      "phase": "PHASE_4",
+      "attack": "extreme_nonsense",
+      "observation": {
+        "action": "POST with null, undefined, wrong types",
+        "method": "POST with { provider_id: null, start_time: 12345 }"
+      }
+    },
+    {
+      "timestamp": "2025-12-27T16:58:07.324Z",
+      "phase": "PHASE_4",
+      "attack": "extreme_nonsense",
+      "observation": {
+        "result": "Request failed (expected)",
+        "status": 404,
+        "response": "\"<!DOCTYPE html><html lang=\\\"en\\\" class=\\\"font-sans\\\"><head><meta charSet=\\\"utf-8\\\"/><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1, viewport-fit=cover\\\"/><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1, viewport-fit=cover\\\"/><link rel=\\\"stylesheet\\\" href",
+        "expected_fail_closed": true,
+        "question": "Did it fail closed?"
+      }
+    }
+  ]
+}

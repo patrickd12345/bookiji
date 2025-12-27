@@ -141,3 +141,4 @@ After a hardening phase, the best move is often to **watch, collect, and learn**
 - **Learn from incidents**: Build knowledge from real problems
 - **Document patterns**: Create playbooks from actual solutions
 
+

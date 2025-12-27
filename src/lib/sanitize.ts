@@ -21,3 +21,4 @@ export function safeHTML(html: string): { __html: string } {
   return { __html: sanitized };
 }
 
+

@@ -57,6 +57,35 @@ function verifyTwilioSignature(
   return true
 }
 
+/**
+ * Check if message contains inappropriate or malicious questions
+ * Rejects questions that attempt to test system vulnerabilities or confuse Jarvis
+ */
+function isInappropriateQuestion(message: string): boolean {
+  const lowerMessage = message.toLowerCase().trim()
+  
+  // Patterns to reject
+  const inappropriatePatterns = [
+    /can\s+i\s+crash\s+it/i,
+    /can\s+i\s+confuse\s+jarvis/i,
+    /can\s+you\s+crash/i,
+    /can\s+you\s+confuse/i,
+    /try\s+to\s+crash/i,
+    /try\s+to\s+confuse/i,
+    /make\s+it\s+crash/i,
+    /break\s+the\s+system/i,
+    /hack\s+the\s+system/i,
+    /exploit\s+the\s+system/i,
+    /test\s+security/i,
+    /bypass\s+security/i,
+    /circumvent\s+guards/i,
+    /disable\s+safety/i,
+    /remove\s+protections/i
+  ]
+  
+  return inappropriatePatterns.some(pattern => pattern.test(lowerMessage))
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Get owner phone (required)
@@ -108,6 +137,28 @@ export async function POST(request: NextRequest) {
       // Return 200 to prevent Twilio retries
       return NextResponse.json(
         { success: false, error: 'Unauthorized sender' },
+        { status: 200 }
+      )
+    }
+
+    // Guard: Reject inappropriate or malicious questions
+    if (isInappropriateQuestion(messageBody)) {
+      console.warn(`[Jarvis] Rejected inappropriate question: ${messageBody.substring(0, 50)}...`)
+      await sendFeedbackSMS(
+        ownerPhone,
+        '❌ Request rejected. I only respond to legitimate incident management commands.'
+      )
+      await logJarvisAction({
+        timestamp: new Date().toISOString(),
+        sender_phone: senderPhone,
+        parsed_intent: { actions: [], confidence: 'low' },
+        environment: (getAppEnv() || 'prod') as Environment,
+        context: messageBody,
+        refusal_reason: 'Inappropriate question detected'
+      })
+      // Return 200 to prevent Twilio retries
+      return NextResponse.json(
+        { success: false, error: 'Inappropriate question rejected' },
         { status: 200 }
       )
     }

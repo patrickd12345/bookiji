@@ -5,9 +5,26 @@
  * No LLM. Pure function.
  */
 
-import { getSleepPolicy, isInQuietHours, minutesUntilQuietHoursEnd } from './sleepPolicy'
+import {
+  getSleepPolicy,
+  isInQuietHours,
+  minutesUntilQuietHoursEnd,
+  sanitizeNotificationCap,
+  SeveritySleepRule
+} from './sleepPolicy'
 import { logger } from '@/lib/logger'
 import type { Severity } from '../types'
+
+const DECISION_MESSAGE_CONSTRAINTS = {
+  DO_NOT_NOTIFY: null,
+  SEND_SILENT_SMS: ['informational', 'update'],
+  SEND_LOUD_SMS: ['wake', 'escalation'],
+  WAIT: null
+} as const
+
+export const ALLOWED_ESCALATION_DECISIONS = Object.keys(
+  DECISION_MESSAGE_CONSTRAINTS
+) as Array<keyof typeof DECISION_MESSAGE_CONSTRAINTS>
 
 export type EscalationDecision =
   | { type: 'DO_NOT_NOTIFY'; reason: string; trace: DecisionTrace }
@@ -42,6 +59,33 @@ export interface EscalationContext {
   notificationCount: number // Total SMS sent for this incident
 }
 
+function assertValidDecision(decision: EscalationDecision): void {
+  const constraints = DECISION_MESSAGE_CONSTRAINTS[decision.type]
+
+  if (constraints === undefined) {
+    throw new Error(`[Jarvis] Invalid decision type: ${decision.type}`)
+  }
+
+  if (constraints !== null) {
+    if (!('messageType' in decision)) {
+      throw new Error(`[Jarvis] Decision ${decision.type} must include a messageType`)
+    }
+    const allowedTypes = constraints as readonly string[]
+    if (!allowedTypes.includes(decision.messageType)) {
+      throw new Error(
+        `[Jarvis] Decision ${decision.type} has unexpected messageType ${decision.messageType}`
+      )
+    }
+  } else if ('messageType' in decision) {
+    throw new Error(`[Jarvis] Decision ${decision.type} must not include a messageType`)
+  }
+}
+
+function finalizeDecision(decision: EscalationDecision): EscalationDecision {
+  assertValidDecision(decision)
+  return decision
+}
+
 /**
  * Create base trace object
  */
@@ -49,18 +93,17 @@ function createTrace(
   context: EscalationContext,
   ruleFired: string,
   inQuietHours: boolean,
-  policy: Awaited<ReturnType<typeof getSleepPolicy>>,
+  cap: number,
   policyMetadata?: { policy_id: string; version: string; checksum: string }
 ): DecisionTrace {
   const trace: DecisionTrace = {
     severity: context.severity,
     quiet_hours: inQuietHours,
     notifications_sent: context.notificationCount,
-    cap: policy.maxNotificationsPerIncident,
+    cap,
     rule_fired: ruleFired
   }
 
-  // Phase 5: Add policy metadata if available
   if (policyMetadata) {
     trace.policy_id = policyMetadata.policy_id
     trace.policy_version = policyMetadata.version
@@ -84,8 +127,8 @@ export async function decideNextAction(
   const activePolicy = policy || await getSleepPolicy()
   const now = new Date()
   const inQuietHours = isInQuietHours(activePolicy)
-  
-  // Phase 5: Load policy metadata if not provided
+  const sanitizedCap = sanitizeNotificationCap(activePolicy.maxNotificationsPerIncident)
+
   let metadata = policyMetadata
   if (!metadata && !policy) {
     try {
@@ -97,151 +140,161 @@ export async function decideNextAction(
         checksum: policyRecord.checksum
       }
     } catch (error) {
-      // Fallback: metadata will be undefined (backward compatible)
       logger.warn('[Jarvis] Could not load policy metadata', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
+  const severityRule: SeveritySleepRule = activePolicy.severityRules[context.severity]
+  if (!severityRule) {
+    throw new Error(`[Jarvis] Missing severity rule for ${context.severity}`)
+  }
+
+  const traceFor = (rule: string) => createTrace(context, rule, inQuietHours, sanitizedCap, metadata)
+  const canWakeInQuietHours = severityRule.wakeDuringQuietHours
+  const maxSilentMinutes = severityRule.maxSilentMinutes
+  const intervals = severityRule.escalationIntervalsMinutes || []
+
   // Rule 1: If acknowledged, do not notify
   if (context.acknowledgedAt) {
-      return {
-        type: 'DO_NOT_NOTIFY',
-        reason: 'Incident acknowledged by owner',
-        trace: createTrace(context, 'acknowledged_no_notify', inQuietHours, activePolicy, metadata)
-      }
+    return finalizeDecision({
+      type: 'DO_NOT_NOTIFY',
+      reason: 'Incident acknowledged by owner',
+      trace: traceFor('acknowledged_no_notify')
+    })
   }
 
   // Rule 2: Hard cap on notifications
-  if (context.notificationCount >= activePolicy.maxNotificationsPerIncident) {
-    return {
+  if (context.notificationCount >= sanitizedCap) {
+    return finalizeDecision({
       type: 'DO_NOT_NOTIFY',
-      reason: `Maximum notifications (${activePolicy.maxNotificationsPerIncident}) reached`,
-      trace: createTrace(context, 'cap_reached', inQuietHours, activePolicy, metadata)
-    }
+      reason: `Maximum notifications (${sanitizedCap}) reached`,
+      trace: traceFor('cap_reached')
+    })
   }
 
   // Rule 3: First notification logic
   if (!context.firstNotifiedAt) {
-    // SEV-1: Always notify immediately, even in quiet hours
-    if (context.severity === 'SEV-1') {
-      return {
+    if (context.severity === 'SEV-3') {
+      return finalizeDecision({
+        type: 'DO_NOT_NOTIFY',
+        reason: 'SEV-3 incidents do not trigger notifications',
+        trace: traceFor('sev3_no_notification')
+      })
+    }
+
+    if (inQuietHours && !canWakeInQuietHours) {
+      const minutesUntilEnd = minutesUntilQuietHoursEnd(activePolicy)
+      if (minutesUntilEnd !== null) {
+        const waitUntil = new Date(now.getTime() + minutesUntilEnd * 60 * 1000)
+        return finalizeDecision({
+          type: 'WAIT',
+          until: waitUntil.toISOString(),
+          reason: `Quiet hours active. Will notify after ${activePolicy.quietHours.end}`,
+          trace: traceFor('quiet_hours_first_wait')
+        })
+      }
+      const fallbackUntil = new Date(now.getTime() + 5 * 60 * 1000)
+      return finalizeDecision({
+        type: 'WAIT',
+        until: fallbackUntil.toISOString(),
+        reason: 'Quiet hours active; waiting for next check.',
+        trace: traceFor('quiet_hours_first_wait_unknown_end')
+      })
+    }
+
+    if (canWakeInQuietHours) {
+      return finalizeDecision({
         type: 'SEND_LOUD_SMS',
         messageType: 'wake',
-        trace: createTrace(context, 'sev1_first_notification', inQuietHours, activePolicy, metadata)
-      }
+        trace: traceFor('first_notification_wake')
+      })
     }
 
-    // SEV-2: Notify immediately if not in quiet hours
-    if (context.severity === 'SEV-2') {
-      if (!inQuietHours) {
-        return {
-          type: 'SEND_SILENT_SMS',
-          messageType: 'informational',
-          trace: createTrace(context, 'sev2_first_notification', inQuietHours, activePolicy, metadata)
-        }
-      } else {
-        // Wait until quiet hours end
-        const minutesUntilEnd = minutesUntilQuietHoursEnd(activePolicy)
-        if (minutesUntilEnd !== null) {
-          const waitUntil = new Date(now.getTime() + minutesUntilEnd * 60 * 1000)
-          return {
-            type: 'WAIT',
-            until: waitUntil.toISOString(),
-            reason: `Quiet hours active. Will notify at ${activePolicy.quietHours.end}`,
-            trace: createTrace(context, 'sev2_quiet_hours_silent_only', inQuietHours, activePolicy, metadata)
-          }
-        }
-      }
-    }
-
-    // SEV-3: Never notify (informational only)
-    return {
-      type: 'DO_NOT_NOTIFY',
-      reason: 'SEV-3 incidents do not trigger notifications',
-      trace: createTrace(context, 'sev3_no_notification', inQuietHours, activePolicy, metadata)
-    }
+    return finalizeDecision({
+      type: 'SEND_SILENT_SMS',
+      messageType: 'informational',
+      trace: traceFor('first_notification_silent')
+    })
   }
 
   // Rule 4: Escalation logic (after first notification)
   const firstNotified = new Date(context.firstNotifiedAt)
   const minutesSinceFirst = Math.floor((now.getTime() - firstNotified.getTime()) / (1000 * 60))
 
-  // Check if we've exceeded max silent minutes (even in quiet hours for SEV-1)
-  if (context.severity === 'SEV-1' && minutesSinceFirst >= activePolicy.maxSilentMinutes) {
-    return {
+  if (typeof maxSilentMinutes === 'number' && minutesSinceFirst >= maxSilentMinutes) {
+    return finalizeDecision({
       type: 'SEND_LOUD_SMS',
       messageType: 'escalation',
-      trace: createTrace(context, 'sev1_max_silent_exceeded', inQuietHours, activePolicy, metadata)
-    }
+      trace: traceFor('max_silent_minutes_exceeded')
+    })
   }
 
-  // Check escalation intervals
-  const intervals = activePolicy.escalationIntervalsMinutes
-  const currentLevel = context.escalationLevel
+  if (intervals.length === 0) {
+    return finalizeDecision({
+      type: 'DO_NOT_NOTIFY',
+      reason: `${context.severity} has no escalation intervals configured`,
+      trace: traceFor('no_escalation_intervals')
+    })
+  }
+
+  const currentLevel = Math.max(0, context.escalationLevel)
+  const intervalIndex = Math.min(currentLevel, intervals.length - 1)
+  const nextInterval = intervals[intervalIndex]
+
   const lastNotified = context.lastNotifiedAt ? new Date(context.lastNotifiedAt) : firstNotified
   const minutesSinceLast = Math.floor((now.getTime() - lastNotified.getTime()) / (1000 * 60))
 
-  // Determine next escalation interval
-  const nextInterval = intervals[currentLevel] || intervals[intervals.length - 1]
-
   if (minutesSinceLast >= nextInterval) {
-    // Time for escalation
-    if (context.severity === 'SEV-1') {
-      // SEV-1: Always escalate loudly
-      return {
+    if (inQuietHours && !canWakeInQuietHours) {
+      if (typeof maxSilentMinutes === 'number' && minutesSinceFirst >= maxSilentMinutes) {
+        return finalizeDecision({
+          type: 'SEND_LOUD_SMS',
+          messageType: 'escalation',
+          trace: traceFor('quiet_hours_max_silent_escalation')
+        })
+      }
+
+      const minutesUntilEnd = minutesUntilQuietHoursEnd(activePolicy)
+      if (minutesUntilEnd !== null) {
+        const waitUntil = new Date(now.getTime() + minutesUntilEnd * 60 * 1000)
+        return finalizeDecision({
+          type: 'WAIT',
+          until: waitUntil.toISOString(),
+          reason: 'Quiet hours active. Escalation deferred.',
+          trace: traceFor('quiet_hours_escalation_wait')
+        })
+      }
+
+      const fallbackUntil = new Date(now.getTime() + 5 * 60 * 1000)
+      return finalizeDecision({
+        type: 'WAIT',
+        until: fallbackUntil.toISOString(),
+        reason: 'Quiet hours active; waiting for next check.',
+        trace: traceFor('quiet_hours_escalation_wait_unknown_end')
+      })
+    }
+
+    if (canWakeInQuietHours) {
+      return finalizeDecision({
         type: 'SEND_LOUD_SMS',
         messageType: 'escalation',
-        trace: createTrace(context, 'sev1_interval_escalation', inQuietHours, activePolicy, metadata)
-      }
-    } else if (context.severity === 'SEV-2') {
-      // SEV-2: Escalate silently if in quiet hours, otherwise normally
-      if (inQuietHours) {
-        // Check if we've waited long enough
-        if (minutesSinceFirst >= activePolicy.maxSilentMinutes) {
-          return {
-            type: 'SEND_LOUD_SMS',
-            messageType: 'escalation',
-            trace: createTrace(context, 'sev2_quiet_hours_max_silent_exceeded', inQuietHours, activePolicy, metadata)
-          }
-        } else {
-          // Still in quiet hours, wait
-          const minutesUntilEnd = minutesUntilQuietHoursEnd(activePolicy)
-          if (minutesUntilEnd !== null) {
-            const waitUntil = new Date(now.getTime() + minutesUntilEnd * 60 * 1000)
-            return {
-              type: 'WAIT',
-              until: waitUntil.toISOString(),
-              reason: 'Quiet hours active. Escalation deferred.',
-              trace: createTrace(context, 'sev2_quiet_hours_wait', inQuietHours, activePolicy, metadata)
-            }
-          }
-        }
-      } else {
-        // Not in quiet hours, escalate silently
-        return {
-          type: 'SEND_SILENT_SMS',
-          messageType: 'update',
-          trace: createTrace(context, 'sev2_interval_escalation', inQuietHours, activePolicy, metadata)
-        }
-      }
+        trace: traceFor('interval_escalation_loud')
+      })
     }
-  } else {
-    // Not time for escalation yet
-    const waitMinutes = nextInterval - minutesSinceLast
-    const waitUntil = new Date(now.getTime() + waitMinutes * 60 * 1000)
-    return {
-      type: 'WAIT',
-      until: waitUntil.toISOString(),
-      reason: `Next escalation in ${waitMinutes} minutes`,
-      trace: createTrace(context, 'interval_wait', inQuietHours, activePolicy, metadata)
-    }
+
+    return finalizeDecision({
+      type: 'SEND_SILENT_SMS',
+      messageType: 'update',
+      trace: traceFor('interval_escalation_silent')
+    })
   }
 
-  // Default: do not notify
-  return {
-    type: 'DO_NOT_NOTIFY',
-    reason: 'No escalation needed at this time',
-      trace: createTrace(context, 'default_no_notify', inQuietHours, activePolicy, metadata)
-  }
+  const waitMinutes = nextInterval - minutesSinceLast
+  const waitUntil = new Date(now.getTime() + waitMinutes * 60 * 1000)
+  return finalizeDecision({
+    type: 'WAIT',
+    until: waitUntil.toISOString(),
+    reason: `Next escalation in ${waitMinutes} minutes`,
+    trace: traceFor('interval_wait')
+  })
 }
-

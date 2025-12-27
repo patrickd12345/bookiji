@@ -105,9 +105,9 @@ export async function getPlan(naturalLanguageIntent, context = {}) {
     invariantSpecs: capability.invariantSpecs,
     chaosProfile: capability.chaosProfile,
     confidence: 'high',
-    confidence_rationale: `Direct match to ${capabilityId} capability`
+    confidence_rationale: `Direct match to ${capabilityId} capability`,
+    requiredInvariantIds: Object.keys(capability.invariantSpecs || {})
   }
 
   return plan
 }
-
