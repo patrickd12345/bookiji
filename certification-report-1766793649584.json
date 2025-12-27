@@ -1,0 +1,197 @@
+{
+  "timestamp": "2025-12-27T00:00:44.733Z",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Atomic Slot Invariant",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "slotId": "2c01057b-929f-48aa-b778-a4a54bcc5449",
+        "vendorId": "91ee3314-ef86-4f6d-8991-b7bf1ba3243d",
+        "vendorAuthId": "6d2498e4-c0d1-4c2a-b812-24c282198add",
+        "serviceId": "08e1d56d-cd62-4990-9c89-98d2c77d4ac6",
+        "bookingAttempts": [
+          {
+            "customerId": "985c7535-94e5-4c85-9ca9-b00d62531f2d",
+            "bookingId": "created",
+            "success": true,
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "f3be7a9f-50e1-468c-9d34-dd59af165671",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "02902a72-3ebc-4eba-98b9-a7315d7a4b31",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "4fe30fe7-b39b-4f7e-8aad-ac9332cc1cf1",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "2fd0fc1a-a844-4ebb-98a5-41f40d2e089c",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "cf4eda6c-c77e-4767-b8db-2428523123e1",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "78010f81-8bcd-4038-8551-444095369883",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "6f449c1e-4f05-4275-85f4-1d987c2b0a71",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "c2d2871a-d5a6-4b07-bb3f-4a9dd8ff4dd4",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "384eb8ba-8023-4951-a9c3-58ddf9590b82",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          }
+        ]
+      },
+      "executionTime": 2269
+    },
+    {
+      "phase": 2,
+      "name": "Payment ↔ Slot Consistency",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "scenario1": {
+          "paymentIntentId": "pi_test_1766793647571"
+        },
+        "bookingsWithPayment": 0
+      },
+      "executionTime": 1151
+    },
+    {
+      "phase": 3,
+      "name": "Time Hostility",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "scenario1": {
+          "slotStart": "2025-12-26T23:00:48.809Z",
+          "now": "2025-12-27T00:00:48.809Z",
+          "bookingResult": [
+            {
+              "success": false,
+              "booking_id": null,
+              "error_message": "Cannot create booking in the past"
+            }
+          ]
+        },
+        "scenario2": {
+          "slotStart": "2025-12-27T00:00:49.023Z",
+          "attemptTime": "2025-12-27T00:00:49.227Z",
+          "bookingResult": [
+            {
+              "success": false,
+              "booking_id": null,
+              "error_message": "insert or update on table \"bookings\" violates foreign key constraint \"bookings_service_id_fkey\""
+            }
+          ]
+        },
+        "scenario4": {
+          "originalStart": "2025-12-27T02:00:48.809Z",
+          "storedStart": "2025-12-27T02:00:48.809+00:00",
+          "originalEnd": "2025-12-27T03:00:48.809Z",
+          "storedEnd": "2025-12-27T03:00:48.809+00:00",
+          "timeMatch": true
+        }
+      },
+      "executionTime": 1426
+    },
+    {
+      "phase": 4,
+      "name": "Abuse & Probing",
+      "status": "ERROR",
+      "violations": [
+        "Phase 4 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 5,
+      "name": "Degraded Reality",
+      "status": "ERROR",
+      "violations": [
+        "Phase 5 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 6,
+      "name": "Forensics & Explainability",
+      "status": "ERROR",
+      "violations": [
+        "Phase 6 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 7,
+      "name": "Soak & Time Decay",
+      "status": "ERROR",
+      "violations": [
+        "Phase 7 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    }
+  ],
+  "finalVerdict": "NOT_CERTIFIED",
+  "unresolvedRisks": [
+    "Phase 4 implementation pending",
+    "Phase 5 implementation pending",
+    "Phase 6 implementation pending",
+    "Phase 7 implementation pending"
+  ]
+}

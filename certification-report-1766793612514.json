@@ -1,0 +1,170 @@
+{
+  "timestamp": "2025-12-27T00:00:07.861Z",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Atomic Slot Invariant",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "slotId": "0f5ce2e9-c979-425b-b468-9fb75312a84c",
+        "vendorId": "4d5f8da9-deaa-403b-b005-0cc05213c00f",
+        "vendorAuthId": "9c1c55c0-5658-41e6-8bcf-77694c2e03ff",
+        "serviceId": "1536ea75-511c-4628-ba00-ad9aba113715",
+        "bookingAttempts": [
+          {
+            "customerId": "45dcadb9-855b-4320-a67b-48a706b010c5",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "c88f3744-132a-4ad4-96cc-d64576acfc55",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "d8bf653c-7d92-4e00-b5d8-6e506708f476",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "f046a9c5-7538-4484-a00b-88acc6d77f26",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "e7616c67-c3d8-4991-87bd-69c496859db2",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "c6f5718c-b100-4072-8213-8c9638e12c9d",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "98e89138-071e-428c-b8c4-4b0519b5801b",
+            "bookingId": "created",
+            "success": true,
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "5dd7fb19-3006-4d08-b547-f30c3afdf7ec",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "1384d182-5e6b-4418-9bcd-9739422548f3",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "5b6cf314-9c21-4d20-8ebd-948eca90d38d",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          }
+        ]
+      },
+      "executionTime": 2895
+    },
+    {
+      "phase": 2,
+      "name": "Payment ↔ Slot Consistency",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "scenario1": {
+          "paymentIntentId": "pi_test_1766793611503"
+        },
+        "bookingsWithPayment": 0
+      },
+      "executionTime": 1750
+    },
+    {
+      "phase": 3,
+      "name": "Time Hostility",
+      "status": "ERROR",
+      "violations": [
+        "Phase 3 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 4,
+      "name": "Abuse & Probing",
+      "status": "ERROR",
+      "violations": [
+        "Phase 4 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 5,
+      "name": "Degraded Reality",
+      "status": "ERROR",
+      "violations": [
+        "Phase 5 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 6,
+      "name": "Forensics & Explainability",
+      "status": "ERROR",
+      "violations": [
+        "Phase 6 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 7,
+      "name": "Soak & Time Decay",
+      "status": "ERROR",
+      "violations": [
+        "Phase 7 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    }
+  ],
+  "finalVerdict": "NOT_CERTIFIED",
+  "unresolvedRisks": [
+    "Phase 3 implementation pending",
+    "Phase 4 implementation pending",
+    "Phase 5 implementation pending",
+    "Phase 6 implementation pending",
+    "Phase 7 implementation pending"
+  ]
+}

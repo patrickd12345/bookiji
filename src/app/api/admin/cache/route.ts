@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cachePerformanceMonitor } from '@/lib/cache/monitoring';
 import { cacheWarmingService } from '@/lib/cache/warming';
 import { createClient } from '@supabase/supabase-js';
+import { createSupabaseServerClient } from '@/lib/supabaseServerClient';
+import { requireAdmin } from '@/lib/auth/requireAdmin';
 
 // Helper to get admin client safely
 function getAdminSupabase() {
@@ -13,8 +15,23 @@ function getAdminSupabase() {
   return createClient(url, key)
 }
 
+/**
+ * AUTHORITATIVE PATH — Admin role verification required
+ * See: docs/invariants/admin-ops.md INV-1
+ */
 export async function GET(request: NextRequest) {
   try {
+    // Admin verification
+    const supabase = createSupabaseServerClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const adminUser = await requireAdmin(session)
+    if (!adminUser) {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+    }
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
     const timeRange = searchParams.get('timeRange') || '24h';
@@ -82,6 +99,18 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Admin verification
+    const supabase = createSupabaseServerClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const adminUser = await requireAdmin(session)
+    if (!adminUser) {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+    }
+
     const { action, ...params } = await request.json();
 
     switch (action) {

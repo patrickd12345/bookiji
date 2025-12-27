@@ -1,0 +1,92 @@
+{
+  "timestamp": "2025-12-26T23:37:36.273Z",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Atomic Slot Invariant",
+      "status": "ERROR",
+      "violations": [
+        "Failed to create vendor: Email address \"simcity+phase1+vendor+1766792256275@example.com\" is invalid"
+      ],
+      "evidence": {
+        "vendorAuthError": {
+          "__isAuthError": true,
+          "name": "AuthApiError",
+          "status": 400,
+          "code": "email_address_invalid"
+        }
+      },
+      "executionTime": 1445
+    },
+    {
+      "phase": 2,
+      "name": "Payment ↔ Slot Consistency",
+      "status": "ERROR",
+      "violations": [
+        "Phase 2 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 3,
+      "name": "Time Hostility",
+      "status": "ERROR",
+      "violations": [
+        "Phase 3 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 4,
+      "name": "Abuse & Probing",
+      "status": "ERROR",
+      "violations": [
+        "Phase 4 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 5,
+      "name": "Degraded Reality",
+      "status": "ERROR",
+      "violations": [
+        "Phase 5 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 6,
+      "name": "Forensics & Explainability",
+      "status": "ERROR",
+      "violations": [
+        "Phase 6 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 7,
+      "name": "Soak & Time Decay",
+      "status": "ERROR",
+      "violations": [
+        "Phase 7 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    }
+  ],
+  "finalVerdict": "NOT_CERTIFIED",
+  "unresolvedRisks": [
+    "Failed to create vendor: Email address \"simcity+phase1+vendor+1766792256275@example.com\" is invalid",
+    "Phase 2 implementation pending",
+    "Phase 3 implementation pending",
+    "Phase 4 implementation pending",
+    "Phase 5 implementation pending",
+    "Phase 6 implementation pending",
+    "Phase 7 implementation pending"
+  ]
+}

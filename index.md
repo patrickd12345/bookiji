@@ -158,6 +158,8 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/ROADMAP.md`
 - `docs/development/SCHEDULING_INVARIANTS.md`
 - `docs/development/INVARIANT_COVERAGE_MATRIX.md`
+- `docs/development/JARVIS_DEPLOYMENT_CHECKLIST.md` - Jarvis deployment checklist and verification steps
+- `docs/development/JARVIS_INCIDENT_COMMANDER.md` - Jarvis incident commander system (3AM mode)
 - `docs/development/SEO_MANAGER_SYSTEM.md`
 - `docs/development/SHADCN_UI_MIGRATION_SUCCESS.md`
 - `docs/development/SIMCITY_RUNBOOK.md`

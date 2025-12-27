@@ -1,0 +1,214 @@
+{
+  "timestamp": "2025-12-27T00:01:55.962Z",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Atomic Slot Invariant",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "slotId": "517b1110-60ec-4c7e-a87d-3b824632f4c0",
+        "vendorId": "607a1a34-614a-4bba-a005-c73d066b19d4",
+        "vendorAuthId": "087b37cc-67be-48a0-ab2e-1db3be0196b2",
+        "serviceId": "4c4bd48a-c76e-4cf6-9ba4-7a905396ea3b",
+        "bookingAttempts": [
+          {
+            "customerId": "70ef424d-f220-453b-bf3d-7651b0b49be1",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "1ae42e95-54ce-485e-9958-32f01f5cb349",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "e6a8a9c2-ece2-4bd2-bd60-2f35e1f761b5",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "77fb3076-63e7-4f3b-b49e-ec096b5c33ef",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "79442a42-191d-4142-8c18-419e3a0eb201",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "661ec83e-1861-4f4f-94ff-4f34dcb4c149",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "b609aa64-24cc-4ab9-8e19-e5f5ca6cb143",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "3d4b0622-b15b-409d-a676-cef30904a2d2",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "f339b963-f125-43a9-9b3b-2647efaca7d4",
+            "bookingId": "created",
+            "success": true,
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "fdc22b75-9bee-4e47-8f4f-4ab2e37c5689",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          }
+        ]
+      },
+      "executionTime": 1896
+    },
+    {
+      "phase": 2,
+      "name": "Payment ↔ Slot Consistency",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "scenario1": {
+          "paymentIntentId": "pi_test_1766793718496"
+        },
+        "bookingsWithPayment": 0
+      },
+      "executionTime": 1295
+    },
+    {
+      "phase": 3,
+      "name": "Time Hostility",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "scenario1": {
+          "slotStart": "2025-12-26T23:01:59.755Z",
+          "now": "2025-12-27T00:01:59.755Z",
+          "bookingResult": [
+            {
+              "success": false,
+              "booking_id": null,
+              "error_message": "Cannot create booking in the past"
+            }
+          ]
+        },
+        "scenario2": {
+          "slotStart": "2025-12-27T00:01:59.953Z",
+          "attemptTime": "2025-12-27T00:02:00.136Z",
+          "bookingResult": [
+            {
+              "success": false,
+              "booking_id": null,
+              "error_message": "insert or update on table \"bookings\" violates foreign key constraint \"bookings_service_id_fkey\""
+            }
+          ]
+        },
+        "scenario4": {
+          "originalStart": "2025-12-27T02:01:59.755Z",
+          "storedStart": "2025-12-27T02:01:59.755+00:00",
+          "originalEnd": "2025-12-27T03:01:59.755Z",
+          "storedEnd": "2025-12-27T03:01:59.755+00:00",
+          "timeMatch": true
+        }
+      },
+      "executionTime": 1333
+    },
+    {
+      "phase": 4,
+      "name": "Abuse & Probing",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "scenario1": {
+          "totalRequests": 100,
+          "successful": 0,
+          "rateLimited": 0
+        },
+        "scenario2": {
+          "probeSearches": 20
+        },
+        "scenario3": {
+          "directBookingAttempt": "failed",
+          "error": "null value in column \"total_amount\" of relation \"bookings\" violates not-null constraint"
+        },
+        "scenario4": {
+          "totalRetries": 50,
+          "successful": 0,
+          "rateLimited": 0
+        }
+      },
+      "executionTime": 824
+    },
+    {
+      "phase": 5,
+      "name": "Degraded Reality",
+      "status": "ERROR",
+      "violations": [
+        "Unexpected error: Failed to parse URL from /api/bookings/confirm"
+      ],
+      "evidence": {
+        "error": "TypeError: Failed to parse URL from /api/bookings/confirm\n    at node:internal/deps/undici/undici:13502:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Object.operation (C:\\Users\\patri\\Projects\\bookiji\\scripts\\adversarial-certification.ts:1363:28)\n    at async <anonymous> (C:\\Users\\patri\\Projects\\bookiji\\scripts\\adversarial-certification.ts:1379:22)\n    at async Promise.all (index 0)\n    at async executePhase5 (C:\\Users\\patri\\Projects\\bookiji\\scripts\\adversarial-certification.ts:1378:28)\n    at async main (C:\\Users\\patri\\Projects\\bookiji\\scripts\\adversarial-certification.ts:1517:20)"
+      },
+      "executionTime": 695
+    },
+    {
+      "phase": 6,
+      "name": "Forensics & Explainability",
+      "status": "ERROR",
+      "violations": [
+        "Phase 6 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 7,
+      "name": "Soak & Time Decay",
+      "status": "ERROR",
+      "violations": [
+        "Phase 7 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    }
+  ],
+  "finalVerdict": "NOT_CERTIFIED",
+  "unresolvedRisks": [
+    "Unexpected error: Failed to parse URL from /api/bookings/confirm",
+    "Phase 6 implementation pending",
+    "Phase 7 implementation pending"
+  ]
+}

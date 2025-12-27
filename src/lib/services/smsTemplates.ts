@@ -28,6 +28,12 @@ export function getSmsTemplate(template: string, data: TemplateData): string {
         service,
         link: typeof data.rating_link === 'string' ? data.rating_link : ''
       });
+    case 'jarvis_incident':
+      // Jarvis incident SMS - use message directly from data
+      return typeof data.message === 'string' ? data.message : 'Jarvis incident alert';
+    case 'jarvis_confirmation':
+      // Jarvis confirmation SMS
+      return typeof data.message === 'string' ? data.message : 'Jarvis action confirmed';
     default:
       return t(locale, 'sms.default');
   }

@@ -12,7 +12,7 @@ function getBrowserEnv() {
     const url = getSupabaseUrl()
     const key = getSupabaseAnonKey()
     return { url, key }
-  } catch (error) {
+  } catch (_error) {
     // Fallback for browser context where APP_ENV might not be set yet
     // This maintains backward compatibility during migration
     const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').split(/\s+/)[0].trim()

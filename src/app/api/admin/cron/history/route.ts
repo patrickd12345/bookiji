@@ -1,14 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminGuard } from '@/middleware/adminGuard'
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
+import { requireAdmin } from '@/lib/auth/requireAdmin'
 
 /**
  * Get execution history for cron jobs
+ * 
+ * AUTHORITATIVE PATH — Admin role verification required
+ * See: docs/invariants/admin-ops.md INV-1
+ * Note: Uses adminGuard middleware which checks profiles.role === 'admin'
  */
 export async function GET(request: NextRequest) {
+  // Admin verification via adminGuard (checks profiles.role === 'admin')
   const guardResult = await adminGuard(request)
   if (guardResult.status !== 200) {
     return guardResult
+  }
+  
+  // Additional explicit check for invariant compliance
+  const supabase = createSupabaseServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session) {
+    try {
+      await requireAdmin(session)
+    } catch {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+    }
   }
 
   try {

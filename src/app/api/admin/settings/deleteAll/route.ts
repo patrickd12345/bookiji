@@ -10,7 +10,7 @@ import { assertDestructiveOpAllowed } from '@/lib/env/operationalInvariants'
  * 
  * WARNING: This is a destructive operation and is forbidden in production.
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Enforce environment isolation: destructive ops forbidden in prod
     assertDestructiveOpAllowed('deleteAll', true)

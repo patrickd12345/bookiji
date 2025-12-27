@@ -1,18 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabaseServer'
-import { getAuthenticatedUserId } from '@/app/api/_utils/auth'
+import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
+import { requireAdmin } from '@/lib/auth/requireAdmin'
 
-export async function GET(request: NextRequest) {
+/**
+ * AUTHORITATIVE PATH — Admin Settings
+ * See: docs/invariants/admin-ops.md INV-1
+ */
+export async function GET(_request: NextRequest) {
   try {
-    const userId = await getAuthenticatedUserId(request)
-    if (!userId) {
+    const supabase = createSupabaseServerClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = getServerSupabase()
+    const adminUser = await requireAdmin(session)
+    if (!adminUser) {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+    }
+
+    const dbSupabase = getServerSupabase()
     
     // Get settings from database (or return defaults)
-    const { data, error } = await supabase
+    const { data, error } = await dbSupabase
       .from('admin_settings')
       .select('*')
       .single()
@@ -39,16 +51,23 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const userId = await getAuthenticatedUserId(request)
-    if (!userId) {
+    const supabase = createSupabaseServerClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const adminUser = await requireAdmin(session)
+    if (!adminUser) {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+    }
+
+    const dbSupabase = getServerSupabase()
     const updates = await request.json()
-    const supabase = getServerSupabase()
     
     // Upsert settings
-    const { error } = await supabase
+    const { error } = await dbSupabase
       .from('admin_settings')
       .upsert({
         id: 1,

@@ -9,6 +9,17 @@ import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 import { assertVendorHasActiveSubscription, SubscriptionRequiredError } from '@/lib/guards/subscriptionGuard';
 import { assertSchedulingEnabled, SchedulingDisabledError } from '@/lib/guards/schedulingKillSwitch';
 
+/**
+ * AUTHORITATIVE PATH — Booking Confirmation
+ * 
+ * This is the ONLY path to create a booking in hold_placed state.
+ * Bypassing this endpoint is a violation of booking lifecycle invariants.
+ * 
+ * See: docs/invariants/bookings-lifecycle.md
+ * - INV-2: Payment-Booking Consistency
+ * - INV-3: No Direct State Transitions
+ */
+
 interface BookingConfirmRequest {
   quote_id: string
   provider_id: string

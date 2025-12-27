@@ -1,10 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
+import { requireAdmin } from '@/lib/auth/requireAdmin'
+
+/**
+ * AUTHORITATIVE PATH — Admin Review Moderation
+ * See: docs/invariants/admin-ops.md INV-1
+ */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js';
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
 export async function POST(request: NextRequest) {
+  // Admin verification
+  const authSupabase = createSupabaseServerClient()
+  const { data: { session } } = await authSupabase.auth.getSession()
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const adminUser = await requireAdmin(session)
+  if (!adminUser) {
+    return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+  }
+
   try {
     const { reviewId, action, reason, moderatorId } = await request.json();
 

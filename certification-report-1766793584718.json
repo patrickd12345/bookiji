@@ -1,0 +1,130 @@
+{
+  "timestamp": "2025-12-26T23:59:41.466Z",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Atomic Slot Invariant",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "slotId": "13307b1c-7e73-44e0-86d0-3049ac76a7cb",
+        "vendorId": "374bd433-1809-4355-9c37-501c64fa9e73",
+        "vendorAuthId": "9247ae51-1ec1-4c3c-9698-f406299ea2b8",
+        "serviceId": "9c29a70d-cad5-4999-b9c5-0d3b10869d91",
+        "bookingAttempts": [
+          {
+            "customerId": "68199cc7-29ce-4e41-860c-9b20aab1b61a",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "6b1f587d-6546-440d-b6cb-79fc8e252a7a",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "08a39c71-18b7-41da-974e-7b8d9369d10b",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "d73c0d25-3d40-40e9-84da-6e8de1127f63",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "192bcbb9-fe24-4454-9379-6bd5b4184a55",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "5150f7e2-e9b1-4a54-823d-ad905e06ef5e",
+            "bookingId": "created",
+            "success": true,
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "aae40c5e-fe50-430a-bcae-9a2ce0193574",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "05145594-c996-4d47-b682-8c726cf38edc",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "631789ae-6246-4fb7-99e9-a218fccdfb65",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "eb5c783c-d828-49bb-9966-4ad437012ed1",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          }
+        ]
+      },
+      "executionTime": 2098
+    },
+    {
+      "phase": 2,
+      "name": "Payment ↔ Slot Consistency",
+      "status": "FAIL",
+      "violations": [
+        "VIOLATION: 2 confirmed bookings without payment intent"
+      ],
+      "evidence": {
+        "scenario1": {
+          "paymentIntentId": "pi_test_1766793584189"
+        },
+        "bookingsWithPayment": 0,
+        "zombieBookings": [
+          {
+            "id": "a3827ec9-36ae-69ae-e277-e81a22de5c30",
+            "status": "confirmed",
+            "stripe_payment_intent_id": null
+          },
+          {
+            "id": "a2a0e966-625e-e107-351c-490f429dd4c0",
+            "status": "confirmed",
+            "stripe_payment_intent_id": null
+          }
+        ]
+      },
+      "executionTime": 1143
+    }
+  ],
+  "finalVerdict": "NOT_CERTIFIED",
+  "unresolvedRisks": [
+    "VIOLATION: 2 confirmed bookings without payment intent"
+  ]
+}

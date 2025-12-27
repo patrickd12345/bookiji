@@ -7,6 +7,17 @@ import { featureFlags } from '@/config/featureFlags'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
+/**
+ * AUTHORITATIVE PATH — Stripe Webhook Handler
+ * 
+ * This is the ONLY path to transition bookings from hold_placed to confirmed.
+ * Webhooks intentionally bypass kill switches to process in-flight operations.
+ * 
+ * See: docs/invariants/webhooks.md
+ * - INV-3: Webhook Only Updates Existing Bookings
+ * - INV-4: Webhook Bypass Kill Switch (Intentional)
+ */
+
 async function webhookHandler(req: NextRequest): Promise<NextResponse> {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
@@ -122,6 +133,11 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promis
       return
     }
 
+    // RUNTIME ASSERTION: Valid state transition
+    // INV-3: No Direct State Transitions (bookings-lifecycle.md)
+    const { assertValidBookingStateTransition } = await import('@/lib/guards/invariantAssertions')
+    await assertValidBookingStateTransition(supabase, booking.id, 'hold_placed', 'confirmed')
+
     // Update booking state to confirmed (only after payment success)
     const { error: updateError } = await supabase
       .from('bookings')
@@ -191,6 +207,11 @@ async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent): Promis
       return
     }
 
+    // RUNTIME ASSERTION: Valid state transition
+    // INV-3: No Direct State Transitions (bookings-lifecycle.md)
+    const { assertValidBookingStateTransition, assertSlotReleasedOnCancellation } = await import('@/lib/guards/invariantAssertions')
+    await assertValidBookingStateTransition(supabase, booking.id, 'hold_placed', 'cancelled')
+
     // Update booking state to cancelled and release slot
     const { error: updateError } = await supabase
       .from('bookings')
@@ -241,6 +262,12 @@ async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent): Promis
         console.error('Failed to release slot on payment failure:', slotError)
         // Don't fail the webhook - log and continue
       }
+    }
+
+    // RUNTIME ASSERTION: Slot released on cancellation
+    // INV-4: Slot Release on Cancellation (bookings-lifecycle.md)
+    if (!updateError) {
+      await assertSlotReleasedOnCancellation(supabase, booking.id)
     }
 
     // Mark outbox entry as failed
@@ -300,6 +327,11 @@ async function handlePaymentCanceled(paymentIntent: Stripe.PaymentIntent): Promi
       console.error('Booking not found for payment intent:', paymentIntent.id)
       return
     }
+
+    // RUNTIME ASSERTION: Valid state transition
+    // INV-3: No Direct State Transitions (bookings-lifecycle.md)
+    const { assertValidBookingStateTransition } = await import('@/lib/guards/invariantAssertions')
+    await assertValidBookingStateTransition(supabase, booking.id, 'hold_placed', 'cancelled')
 
     // Update booking state to cancelled and release slot
     const { error: updateError } = await supabase

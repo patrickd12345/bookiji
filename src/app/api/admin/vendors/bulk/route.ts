@@ -17,6 +17,23 @@ export async function POST(request: NextRequest) {
 
     const supabase = getServerSupabase()
     
+    // AUTHORITATIVE PATH — Admin role verification required
+    // See: docs/invariants/admin-ops.md INV-1
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single()
+
+    const isAdmin = profile?.role === 'admin'
+    // Note: ADMIN_EMAILS check would need user email, not UUID - skipping for now
+    // const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') || ['admin@bookiji.com', 'patri@bookiji.com']
+    // const isEmailAdmin = user?.email && ADMIN_EMAILS.includes(user.email)
+
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+    }
+    
     // Update vendor statuses based on action
      
     let _status: string

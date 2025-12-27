@@ -4,6 +4,7 @@ name: Scheduling Invariant Check (Phase 1 & 2)
 # - Mark this workflow as "required" in branch protection
 # - Invariant failures will block merge
 # - See: docs/operations/SCHEDULING_CHANGE_RULE.md
+# - See: docs/invariants/SIMCITY_MAPPING.md for invariant → phase mapping
 
 on:
   pull_request:

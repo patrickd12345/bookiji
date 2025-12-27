@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
  * 
  * Get current scheduling flag status
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     // Get admin user
     const supabase = createSupabaseServerClient()

@@ -1,10 +1,27 @@
 import { NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabaseServer'
+import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
+import { requireAdmin } from '@/lib/auth/requireAdmin'
 import { z } from 'zod'
 
+/**
+ * AUTHORITATIVE PATH — Admin Service Type Proposal Update
+ * See: docs/invariants/admin-ops.md INV-1
+ */
 const schema = z.object({ action: z.enum(['approve', 'reject']), reviewerId: z.string().uuid().optional(), notes: z.string().optional() })
 
 export async function POST(req: Request) {
+  // Admin verification
+  const authSupabase = createSupabaseServerClient()
+  const { data: { session } } = await authSupabase.auth.getSession()
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const adminUser = await requireAdmin(session)
+  if (!adminUser) {
+    return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
   const urlParts = new URL(req.url).pathname.split('/')

@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/kb-ensure-embeddings",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/jarvis-monitor",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

@@ -1,0 +1,213 @@
+{
+  "timestamp": "2025-12-27T00:02:51.024Z",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Atomic Slot Invariant",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "slotId": "77810ea2-e924-43ac-82cf-290d8fba9e6b",
+        "vendorId": "09207931-7b9e-48c9-8d6c-4b1d86a84140",
+        "vendorAuthId": "c464f1bd-d2ab-4f30-943e-f9ffc74e357d",
+        "serviceId": "e2f40b61-2441-4207-b5fc-0e96e28895d7",
+        "bookingAttempts": [
+          {
+            "customerId": "738ae2bc-d637-458d-9d72-5a04ff038e68",
+            "bookingId": "created",
+            "success": true,
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "c3cb0010-1188-48a4-9281-17c2da214db9",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "a3a6a205-a8ef-4aad-a8a6-c801bca89981",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "ddf813e7-327e-4d4a-baee-06ab14e6e578",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "affa92f0-0b01-47c3-ac3f-7135d50241b4",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "5984c7d3-c45f-4534-aea7-902daa0ddad3",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "2239865f-890c-4118-8546-0509789660c4",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "ed5bd5e3-53d0-4c99-8ce6-9dabe4310079",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "363c7736-9d82-43f3-bbfc-d6556a6f28c1",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          },
+          {
+            "customerId": "b780c949-4d75-4dd1-a7a0-5c2787d777e2",
+            "bookingId": null,
+            "success": false,
+            "error": "Slot is not available",
+            "invariantStatus": "ok",
+            "violations": []
+          }
+        ]
+      },
+      "executionTime": 2018
+    },
+    {
+      "phase": 2,
+      "name": "Payment ↔ Slot Consistency",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "scenario1": {
+          "paymentIntentId": "pi_test_1766793773821"
+        },
+        "bookingsWithPayment": 0
+      },
+      "executionTime": 1586
+    },
+    {
+      "phase": 3,
+      "name": "Time Hostility",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "scenario1": {
+          "slotStart": "2025-12-26T23:02:55.133Z",
+          "now": "2025-12-27T00:02:55.133Z",
+          "bookingResult": [
+            {
+              "success": false,
+              "booking_id": null,
+              "error_message": "Cannot create booking in the past"
+            }
+          ]
+        },
+        "scenario2": {
+          "slotStart": "2025-12-27T00:02:55.363Z",
+          "attemptTime": "2025-12-27T00:02:55.560Z",
+          "bookingResult": [
+            {
+              "success": false,
+              "booking_id": null,
+              "error_message": "insert or update on table \"bookings\" violates foreign key constraint \"bookings_service_id_fkey\""
+            }
+          ]
+        },
+        "scenario4": {
+          "originalStart": "2025-12-27T02:02:55.133Z",
+          "storedStart": "2025-12-27T02:02:55.133+00:00",
+          "originalEnd": "2025-12-27T03:02:55.133Z",
+          "storedEnd": "2025-12-27T03:02:55.133+00:00",
+          "timeMatch": true
+        }
+      },
+      "executionTime": 1253
+    },
+    {
+      "phase": 4,
+      "name": "Abuse & Probing",
+      "status": "PASS",
+      "violations": [],
+      "evidence": {
+        "scenario1": {
+          "totalAttempts": 50,
+          "successful": 50
+        },
+        "scenario2": {
+          "bypassAttempt": "failed",
+          "error": "null value in column \"total_amount\" of relation \"bookings\" violates not-null constraint",
+          "errorCode": "23502"
+        },
+        "scenario3": {
+          "slotsExposed": 5
+        },
+        "scenario4": {
+          "automationAttempts": 20,
+          "successful": 0
+        }
+      },
+      "executionTime": 1194
+    },
+    {
+      "phase": 5,
+      "name": "Degraded Reality",
+      "status": "ERROR",
+      "violations": [
+        "Unexpected error: vendorProfile is not defined"
+      ],
+      "evidence": {
+        "error": "ReferenceError: vendorProfile is not defined\n    at executePhase5 (C:\\Users\\patri\\Projects\\bookiji\\scripts\\adversarial-certification.ts:1343:24)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async main (C:\\Users\\patri\\Projects\\bookiji\\scripts\\adversarial-certification.ts:1486:20)"
+      },
+      "executionTime": 602
+    },
+    {
+      "phase": 6,
+      "name": "Forensics & Explainability",
+      "status": "ERROR",
+      "violations": [
+        "Phase 6 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 7,
+      "name": "Soak & Time Decay",
+      "status": "ERROR",
+      "violations": [
+        "Phase 7 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    }
+  ],
+  "finalVerdict": "NOT_CERTIFIED",
+  "unresolvedRisks": [
+    "Unexpected error: vendorProfile is not defined",
+    "Phase 6 implementation pending",
+    "Phase 7 implementation pending"
+  ]
+}

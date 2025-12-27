@@ -2,13 +2,31 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from '@/config/supabase';
 import { embed } from '@/lib/support/embeddings';
+import { createSupabaseServerClient } from '@/lib/supabaseServerClient';
+import { requireAdmin } from '@/lib/auth/requireAdmin';
 
-// Admin-only route to ensure all KB suggestions have embeddings
-export async function POST(req: Request) {
+/**
+ * Admin-only route to ensure all KB suggestions have embeddings
+ * 
+ * AUTHORITATIVE PATH — Admin role verification required
+ * See: docs/invariants/admin-ops.md INV-1
+ */
+export async function POST(_req: Request) {
   // Admin authentication check
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ') || authHeader.split(' ')[1] !== process.env.ADMIN_API_KEY) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  const supabase = createSupabaseServerClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const adminUser = await requireAdmin(session);
+    if (!adminUser) {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
+    }
+  } catch (_error) {
+    return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
   }
 
   const { url, secretKey } = getSupabaseConfig() as { url: string; secretKey: string };

@@ -66,6 +66,8 @@
     "genome:validate": "tsx src/genome/cli.ts",
     "genome:explain": "tsx src/genome/cli.ts --explain",
     "check:cursorrules": "node scripts/check-cursorrules-sync.mjs",
+    "jarvis:pre-deploy": "node scripts/jarvis-pre-deploy-check.mjs",
+    "jarvis:dry-run": "node scripts/jarvis-dry-run.mjs",
     "prebuild": "cross-env ALLOW_INCOMPLETE_I18N=true npm run i18n:check -- --auto-fill",
     "prepare": "husky install",
     "build:opsai-sdk": "pnpm exec tsc -p packages/opsai-sdk/tsconfig.json",

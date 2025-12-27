@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabaseServer'
-import { getAuthenticatedUserId } from '@/app/api/_utils/auth'
+import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
+import { requireAdmin } from '@/lib/auth/requireAdmin'
 
+/**
+ * AUTHORITATIVE PATH — Admin role verification required
+ * See: docs/invariants/admin-ops.md INV-1
+ */
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getAuthenticatedUserId(request)
-    if (!userId) {
+    // Admin verification
+    const authSupabase = createSupabaseServerClient()
+    const { data: { session } } = await authSupabase.auth.getSession()
+    
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const adminUser = await requireAdmin(session)
+    if (!adminUser) {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
     }
 
     const { subject, message, recipientType } = await request.json()

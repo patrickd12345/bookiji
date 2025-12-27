@@ -1,18 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { createClient } from '@supabase/supabase-js'
-import { resilienceAlertManager, type Alert } from '@/lib/alerting/resilienceAlerts'
+import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
+import { requireAdmin } from '@/lib/auth/requireAdmin'
 
-// Initialize Supabase client
-import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
+/**
+ * AUTHORITATIVE PATH — Admin Resilience Metrics
+ * See: docs/invariants/admin-ops.md INV-1
+ */
+import { resilienceAlertManager, type Alert } from '@/lib/alerting/resilienceAlerts'
+import { supabaseAdmin } from '@/lib/supabaseProxies'
 
 export async function GET() {
+  // Admin verification
+  const supabase = createSupabaseServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const adminUser = await requireAdmin(session)
+  if (!adminUser) {
+    return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+  }
+
   try {
     // Check if user is admin (you can implement your own admin check here)
     // For now, we'll use the service role key which has admin access
     
     // Get resilience metrics using the database function
-    const { data: metrics, error } = await supabase
+    const { data: metrics, error } = await supabaseAdmin
       .rpc('get_resilience_metrics', {
         start_time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Last 24 hours
         end_time: new Date().toISOString()
@@ -27,7 +41,7 @@ export async function GET() {
     }
 
     // Get additional real-time metrics
-    const { data: hourlyMetrics, error: hourlyError } = await supabase
+    const { data: hourlyMetrics, error: hourlyError } = await supabaseAdmin
       .from('resilience_metrics_hourly')
       .select('*')
       .gte('hour', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
@@ -137,6 +151,17 @@ function calculateAdditionalMetrics(hourlyMetrics: HourlyMetric[]) {
 
 // POST endpoint for acknowledging alerts
 export async function POST(request: NextRequest) {
+  // Admin verification
+  const supabase = createSupabaseServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const adminUser = await requireAdmin(session)
+  if (!adminUser) {
+    return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+  }
+
   try {
     const { alertId, acknowledgedBy } = await request.json()
     

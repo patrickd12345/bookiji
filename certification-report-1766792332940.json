@@ -1,0 +1,87 @@
+{
+  "timestamp": "2025-12-26T23:38:52.085Z",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Atomic Slot Invariant",
+      "status": "ERROR",
+      "violations": [
+        "Unexpected error: Cannot access 'vendorProfileId' before initialization"
+      ],
+      "evidence": {
+        "error": "ReferenceError: Cannot access 'vendorProfileId' before initialization\n    at executePhase1 (C:\\Users\\patri\\Projects\\bookiji\\scripts\\adversarial-certification.ts:126:22)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async main (C:\\Users\\patri\\Projects\\bookiji\\scripts\\adversarial-certification.ts:602:20)"
+      },
+      "executionTime": 849
+    },
+    {
+      "phase": 2,
+      "name": "Payment ↔ Slot Consistency",
+      "status": "ERROR",
+      "violations": [
+        "Phase 2 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 3,
+      "name": "Time Hostility",
+      "status": "ERROR",
+      "violations": [
+        "Phase 3 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 4,
+      "name": "Abuse & Probing",
+      "status": "ERROR",
+      "violations": [
+        "Phase 4 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 5,
+      "name": "Degraded Reality",
+      "status": "ERROR",
+      "violations": [
+        "Phase 5 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 6,
+      "name": "Forensics & Explainability",
+      "status": "ERROR",
+      "violations": [
+        "Phase 6 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    },
+    {
+      "phase": 7,
+      "name": "Soak & Time Decay",
+      "status": "ERROR",
+      "violations": [
+        "Phase 7 implementation pending"
+      ],
+      "evidence": {},
+      "executionTime": 0
+    }
+  ],
+  "finalVerdict": "NOT_CERTIFIED",
+  "unresolvedRisks": [
+    "Unexpected error: Cannot access 'vendorProfileId' before initialization",
+    "Phase 2 implementation pending",
+    "Phase 3 implementation pending",
+    "Phase 4 implementation pending",
+    "Phase 5 implementation pending",
+    "Phase 6 implementation pending",
+    "Phase 7 implementation pending"
+  ]
+}

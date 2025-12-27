@@ -1,14 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
+import { requireAdmin } from '@/lib/auth/requireAdmin'
 
+/**
+ * AUTHORITATIVE PATH — Admin role verification required
+ * See: docs/invariants/admin-ops.md INV-1
+ */
 export async function POST(request: NextRequest) {
   try {
     const supabase = createSupabaseServerClient()
     
-    // Check if user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    // Admin verification
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const adminUser = await requireAdmin(session)
+    if (!adminUser) {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
     }
 
     // Get request body for custom refresh options
@@ -112,10 +122,15 @@ export async function GET() {
   try {
     const supabase = createSupabaseServerClient()
     
-    // Check if user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    // Admin verification
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const adminUser = await requireAdmin(session)
+    if (!adminUser) {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
     }
 
     // Get refresh log for monitoring

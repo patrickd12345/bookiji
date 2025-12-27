@@ -1,15 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { alertService } from '@/lib/performance/alertService'
 import { AlertSeverity } from '@/config/performance'
+import { createServerClient } from '@supabase/ssr'
+import { getSupabaseConfig } from '@/config/supabase'
 
 /**
  * Test alert configuration
  * POST /api/admin/test-alerts
+ * 
+ * AUTHORITATIVE PATH — Admin role verification required
+ * See: docs/invariants/admin-ops.md INV-1
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check admin authentication (simplified for demo)
-    // In production, you'd verify JWT token or session
+    // Check admin authentication
+    const config = getSupabaseConfig()
+    const supabase = createServerClient(
+      config.url,
+      config.publishableKey,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(_cookiesToSet) {}
+        }
+      }
+    )
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const isAdmin = profile?.role === 'admin'
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+    }
     
     const body = await request.json()
     const { severity = 'info', testMessage = 'Test alert from admin panel' } = body
@@ -57,10 +90,43 @@ export async function POST(request: NextRequest) {
 /**
  * Get alert configuration
  * GET /api/admin/test-alerts
+ * 
+ * AUTHORITATIVE PATH — Admin role verification required
+ * See: docs/invariants/admin-ops.md INV-1
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const config = process.env.NODE_ENV === 'production' ? {
+    // Check admin authentication
+    const supabaseConfig = getSupabaseConfig()
+    const supabase = createServerClient(
+      supabaseConfig.url,
+      supabaseConfig.publishableKey,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(_cookiesToSet) {}
+        }
+      }
+    )
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const isAdmin = profile?.role === 'admin'
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+    }
+    const alertConfig = process.env.NODE_ENV === 'production' ? {
       slackEnabled: !!process.env.SLACK_WEBHOOK_URL_PROD,
       emailEnabled: !!process.env.ALERT_EMAIL,
       pagerDutyEnabled: !!process.env.PAGERDUTY_INTEGRATION_KEY,
@@ -74,7 +140,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      config,
+      config: alertConfig,
       availableSeverities: Object.values(AlertSeverity)
     })
 

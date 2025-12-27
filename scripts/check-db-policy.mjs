@@ -163,12 +163,81 @@ function checkHoldFolderNotUsedAsSourceOfTruth() {
   }
 }
 
+function checkNoDirectSqlExecution() {
+  // Check scripts directory for patterns that indicate direct SQL execution for SCHEMA CHANGES
+  // Note: Read-only queries (SELECT) are allowed, but schema changes (CREATE/ALTER/DROP) are forbidden
+  const scriptsDir = path.join(repoRoot, "scripts");
+  if (!exists(scriptsDir)) return;
+
+  const scriptFiles = listFilesRecursive(scriptsDir, (p) =>
+    /\.(mjs|js|ts|tsx)$/.test(p),
+  );
+
+  const forbiddenPatterns = [
+    // Executing migration SQL directly (reading migration files and executing them)
+    {
+      pattern: /readFileSync.*migrations.*\.sql.*query|readFileSync.*migrations.*\.sql.*execute|readFileSync.*migrations.*\.sql.*client\.query/i,
+      message: "Reads migration SQL and executes directly - use 'supabase db push' instead",
+    },
+    // Executing CREATE/ALTER/DROP statements directly
+    {
+      pattern: /\.query\([^)]*CREATE\s+(?:TABLE|INDEX|FUNCTION|TRIGGER|POLICY)/i,
+      message: "Executes CREATE statements directly - use migrations via 'supabase db push'",
+    },
+    {
+      pattern: /\.query\([^)]*ALTER\s+TABLE/i,
+      message: "Executes ALTER TABLE directly - use migrations via 'supabase db push'",
+    },
+    {
+      pattern: /\.query\([^)]*DROP\s+(?:TABLE|INDEX|FUNCTION|TRIGGER|POLICY)/i,
+      message: "Executes DROP statements directly - use migrations via 'supabase db push'",
+    },
+    // Using pg library to execute migration SQL
+    {
+      pattern: /import.*pg.*from.*migrations|require\(['"]pg['"]\).*migrations/i,
+      message: "Uses 'pg' library with migration files - use 'supabase db push' instead",
+    },
+  ];
+
+  const allowedPatterns = [
+    /introspect/i, // Introspection scripts (read-only) are allowed
+    /check-/i, // Policy check scripts are allowed
+    /verify-/i, // Verification scripts (read-only) are allowed
+    /SELECT/i, // SELECT queries are allowed (read-only)
+  ];
+
+  for (const file of scriptFiles) {
+    const txt = readText(file);
+    const relativePath = relative(file);
+
+    // Skip if it's clearly a read-only script
+    const isReadOnly = allowedPatterns.some((pattern) =>
+      pattern.test(relativePath) || pattern.test(txt),
+    );
+    if (isReadOnly) {
+      continue;
+    }
+
+    for (const { pattern, message } of forbiddenPatterns) {
+      if (pattern.test(txt)) {
+        fail(
+          `${relativePath}: ${message}. See docs/development/DATABASE_MANAGEMENT_POLICY.md`,
+        );
+        return;
+      }
+    }
+  }
+
+  ok("No direct SQL execution patterns detected in scripts");
+}
+
 function main() {
   ok("Running database policy checks...");
   checkNoSecretsInEnvTemplate();
   checkDocsDoNotRecommendManualSql();
   checkMigrationFilenames();
   checkHoldFolderNotUsedAsSourceOfTruth();
+  checkNoDirectSqlExecution();
 
   if (process.exitCode && process.exitCode !== 0) {
     // eslint-disable-next-line no-console
