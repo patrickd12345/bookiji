@@ -115,14 +115,15 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promis
       return
     }
 
-    // Update booking state to provider_confirmed
+    // Update booking state to confirmed (only after payment success)
     const { error: updateError } = await supabase
       .from('bookings')
       .update({
-        state: 'provider_confirmed',
+        state: 'confirmed',
         confirmed_at: new Date().toISOString()
       })
       .eq('id', booking.id)
+      .eq('state', 'hold_placed') // Only transition from hold_placed
 
     if (updateError) {
       console.error('Failed to update booking state:', updateError)
@@ -149,7 +150,7 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promis
       .insert({
         booking_id: booking.id,
         from_state: 'hold_placed',
-        to_state: 'provider_confirmed',
+        to_state: 'confirmed',
         action: 'state_change',
         actor_type: 'webhook',
         actor_id: 'stripe',
@@ -183,7 +184,7 @@ async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent): Promis
       return
     }
 
-    // Update booking state to cancelled
+    // Update booking state to cancelled and release slot
     const { error: updateError } = await supabase
       .from('bookings')
       .update({
@@ -192,10 +193,47 @@ async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent): Promis
         cancelled_reason: 'Payment failed'
       })
       .eq('id', booking.id)
+      .eq('state', 'hold_placed') // Only transition from hold_placed
 
     if (updateError) {
       console.error('Failed to update booking state:', updateError)
       return
+    }
+
+    // Release the slot by making it available again
+    // Get time info from booking or quote
+    let startTime = booking.start_time
+    let endTime = booking.end_time
+    
+    // If booking uses quote-based model, get time from quote
+    if ((!startTime || !endTime) && booking.quote_id) {
+      const { data: quote } = await supabase
+        .from('quotes')
+        .select('start_time, end_time')
+        .eq('id', booking.quote_id)
+        .single()
+      
+      if (quote) {
+        startTime = quote.start_time
+        endTime = quote.end_time
+      }
+    }
+    
+    if (booking.provider_id && startTime && endTime) {
+      const { error: slotError } = await supabase
+        .from('availability_slots')
+        .update({
+          is_available: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('provider_id', booking.provider_id)
+        .eq('start_time', startTime)
+        .eq('end_time', endTime)
+
+      if (slotError) {
+        console.error('Failed to release slot on payment failure:', slotError)
+        // Don't fail the webhook - log and continue
+      }
     }
 
     // Mark outbox entry as failed
@@ -252,7 +290,7 @@ async function handlePaymentCanceled(paymentIntent: Stripe.PaymentIntent): Promi
       return
     }
 
-    // Update booking state to cancelled
+    // Update booking state to cancelled and release slot
     const { error: updateError } = await supabase
       .from('bookings')
       .update({
@@ -261,10 +299,47 @@ async function handlePaymentCanceled(paymentIntent: Stripe.PaymentIntent): Promi
         cancelled_reason: 'Payment cancelled'
       })
       .eq('id', booking.id)
+      .eq('state', 'hold_placed') // Only transition from hold_placed
 
     if (updateError) {
       console.error('Failed to update booking state:', updateError)
       return
+    }
+
+    // Release the slot by making it available again
+    // Get time info from booking or quote
+    let startTime = booking.start_time
+    let endTime = booking.end_time
+    
+    // If booking uses quote-based model, get time from quote
+    if ((!startTime || !endTime) && booking.quote_id) {
+      const { data: quote } = await supabase
+        .from('quotes')
+        .select('start_time, end_time')
+        .eq('id', booking.quote_id)
+        .single()
+      
+      if (quote) {
+        startTime = quote.start_time
+        endTime = quote.end_time
+      }
+    }
+    
+    if (booking.provider_id && startTime && endTime) {
+      const { error: slotError } = await supabase
+        .from('availability_slots')
+        .update({
+          is_available: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('provider_id', booking.provider_id)
+        .eq('start_time', startTime)
+        .eq('end_time', endTime)
+
+      if (slotError) {
+        console.error('Failed to release slot on payment cancellation:', slotError)
+        // Don't fail the webhook - log and continue
+      }
     }
 
     // Mark outbox entry as failed

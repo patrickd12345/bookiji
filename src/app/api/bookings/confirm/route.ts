@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js'
+import Stripe from 'stripe'
 import { withSLOProbe } from '@/middleware/sloProbe'
 import { featureFlags } from '@/config/featureFlags'
 
@@ -117,7 +118,60 @@ async function confirmHandler(req: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Create booking with hold_placed state
+    // Payment Intent Verification (Server-Authoritative)
+    // Option B: Retrieve and verify provided payment_intent_id via Stripe API
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+    if (!stripeSecretKey) {
+      return NextResponse.json(
+        { error: 'Payment configuration error' },
+        { status: 500 }
+      )
+    }
+
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: '2024-06-20'
+    })
+
+    let paymentIntent: Stripe.PaymentIntent
+    try {
+      paymentIntent = await stripe.paymentIntents.retrieve(body.stripe_payment_intent_id)
+    } catch (error) {
+      console.error('Failed to retrieve payment intent:', error)
+      return NextResponse.json(
+        { 
+          error: 'INVALID_PAYMENT_INTENT',
+          message: 'Payment intent not found or invalid'
+        },
+        { status: 400 }
+      )
+    }
+
+    // Verify payment intent is in a valid state for placing a hold
+    if (paymentIntent.status !== 'requires_payment_method' && 
+        paymentIntent.status !== 'requires_confirmation' &&
+        paymentIntent.status !== 'requires_capture') {
+      return NextResponse.json(
+        { 
+          error: 'INVALID_PAYMENT_INTENT_STATE',
+          message: `Payment intent is in invalid state: ${paymentIntent.status}`
+        },
+        { status: 400 }
+      )
+    }
+
+    // Verify payment intent amount matches quote (if applicable)
+    const expectedAmount = featureFlags.payments.hold_amount_cents || quote.price_cents
+    if (paymentIntent.amount !== expectedAmount) {
+      return NextResponse.json(
+        { 
+          error: 'PAYMENT_AMOUNT_MISMATCH',
+          message: `Payment intent amount (${paymentIntent.amount}) does not match expected amount (${expectedAmount})`
+        },
+        { status: 400 }
+      )
+    }
+
+    // Create booking with hold_placed state (DO NOT set confirmed_at)
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .insert({
@@ -128,7 +182,8 @@ async function confirmHandler(req: NextRequest): Promise<NextResponse> {
         price_cents: quote.price_cents,
         stripe_payment_intent_id: body.stripe_payment_intent_id,
         idempotency_key: body.idempotency_key,
-        confirmed_at: new Date().toISOString()
+        // confirmed_at is NOT set here - only set by webhook on payment success
+        hold_expires_at: new Date(Date.now() + featureFlags.payments.hold_timeout_minutes * 60 * 1000).toISOString()
       })
       .select()
       .single()

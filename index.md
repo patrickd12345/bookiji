@@ -107,7 +107,10 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/deployment/SUPABASE_SETUP.md`
 
 #### Development
+- `docs/development/ADVERSARIAL_CERTIFICATION.md`
 - `docs/development/APP_REVIEW_FIXES.md`
+- `docs/development/BOOKING_STATE_MACHINE.md`
+- `docs/development/BOOKING_STATE_MACHINE.md`
 - `docs/development/automation-and-scaling-docs.md`
 - `docs/development/bookiji-native-calendar-mvp.md`
 - `docs/development/BRAND_GUIDELINES.md`
@@ -179,6 +182,7 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/maintenance/UX_RESILIENCE_PATTERNS.md`
 
 #### Operations
+- `docs/operations/SCHEDULING_CHANGE_RULE.md`
 - `docs/ops/DEPLOYAI_SYSTEM.md`
 - `docs/ops/INCIDENTS_AI.md`
 - `docs/ops/LOGSAI.md`
