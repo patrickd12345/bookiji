@@ -174,14 +174,13 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
     it('notification_count at cap prevents further notifications', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
 
-      const policy = sleepPolicy.getSleepPolicy()
       const context: EscalationContext = {
         severity: 'SEV-1',
         firstNotifiedAt: twoHoursAgo,
         lastNotifiedAt: fiveMinutesAgo,
         escalationLevel: 4,
         acknowledgedAt: null,
-        notificationCount: policy.maxNotificationsPerIncident // At cap
+        notificationCount: mockPolicy.maxNotificationsPerIncident // At cap
       }
 
       const decision = await decideNextAction(context, mockPolicy)
@@ -196,14 +195,13 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
     it('notification_count above cap prevents further notifications', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
 
-      const policy = sleepPolicy.getSleepPolicy()
       const context: EscalationContext = {
         severity: 'SEV-1',
         firstNotifiedAt: twoHoursAgo,
         lastNotifiedAt: fiveMinutesAgo,
         escalationLevel: 5,
         acknowledgedAt: null,
-        notificationCount: policy.maxNotificationsPerIncident + 1 // Above cap
+        notificationCount: mockPolicy.maxNotificationsPerIncident + 1 // Above cap
       }
 
       const decision = await decideNextAction(context, mockPolicy)

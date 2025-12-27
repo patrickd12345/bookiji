@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import type { HelpArticle } from '@/lib/helpArticles';
+import { safeHTML } from '@/lib/sanitize';
 
 export default function HelpArticle({ article }: { article: HelpArticle }) {
   return (
     <article className="prose max-w-none">
       <h1>{article.title}</h1>
-      <div dangerouslySetInnerHTML={{ __html: article.content }} />
+      <div dangerouslySetInnerHTML={safeHTML(article.content)} />
       {article.related && article.related.length > 0 && (
         <div className="mt-8">
           <h2 className="text-lg font-semibold mb-2">Related Articles</h2>

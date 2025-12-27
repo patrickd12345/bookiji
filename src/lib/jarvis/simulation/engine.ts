@@ -128,7 +128,7 @@ export async function simulateIncident(
   const candidateSleepPolicy = policyConfigToSleepPolicy(candidatePolicy.policy_json)
 
   // Build escalation context over time
-  let context: EscalationContext = {
+  const context: EscalationContext = {
     severity: snapshot.severity_guess as 'SEV-1' | 'SEV-2' | 'SEV-3',
     firstNotifiedAt: incident.first_notified_at || null,
     lastNotifiedAt: incident.last_notified_at || null,
@@ -156,7 +156,7 @@ export async function simulateIncident(
     simulatedDecisions.push({
       occurred_at: baselineDecision.occurred_at,
       decision: simulatedDecision.type,
-      trace: simulatedDecision.trace as Record<string, unknown>
+      trace: simulatedDecision.trace as unknown as Record<string, unknown>
     })
 
     // Update context for next iteration (simplified)

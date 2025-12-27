@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { Input } from './ui/input'
 import { Card } from './ui/card'
+import { safeHTML } from '@/lib/sanitize'
 
 interface Category {
   id: string
@@ -117,7 +118,7 @@ const Disclosure: React.FC<DisclosureProps> = ({ title, content }) => {
       {open && (
         <div
           className="mt-2 text-sm prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: content }}
+          dangerouslySetInnerHTML={safeHTML(content)}
         />
       )}
     </Card>

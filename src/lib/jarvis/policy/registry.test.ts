@@ -34,18 +34,20 @@ describe('Policy Registry', () => {
     it('should reject missing quiet_hours', () => {
       const invalid = {
         ...DEFAULT_POLICY_CONFIG,
-        quiet_hours: {} as unknown
+        quiet_hours: {} as unknown as { start: string; end: string; timezone: string }
       }
-      const errors = validatePolicyConfig(invalid)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const errors = validatePolicyConfig(invalid as any)
       expect(errors.some(e => e.includes('quiet_hours'))).toBe(true)
     })
 
     it('should reject missing severity rules', () => {
       const invalid = {
         ...DEFAULT_POLICY_CONFIG,
-        severity_rules: {} as unknown
+        severity_rules: {} as unknown as { [K in 'SEV-1' | 'SEV-2' | 'SEV-3']: unknown }
       }
-      const errors = validatePolicyConfig(invalid)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const errors = validatePolicyConfig(invalid as any)
       expect(errors.some(e => e.includes('severity_rules'))).toBe(true)
     })
   })

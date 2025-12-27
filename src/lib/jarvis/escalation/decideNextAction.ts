@@ -140,7 +140,7 @@ export async function decideNextAction(
         }
       } else {
         // Wait until quiet hours end
-        const minutesUntilEnd = minutesUntilQuietHoursEnd(policy)
+        const minutesUntilEnd = minutesUntilQuietHoursEnd(activePolicy)
         if (minutesUntilEnd !== null) {
           const waitUntil = new Date(now.getTime() + minutesUntilEnd * 60 * 1000)
           return {
@@ -204,7 +204,7 @@ export async function decideNextAction(
           }
         } else {
           // Still in quiet hours, wait
-          const minutesUntilEnd = minutesUntilQuietHoursEnd(policy)
+          const minutesUntilEnd = minutesUntilQuietHoursEnd(activePolicy)
           if (minutesUntilEnd !== null) {
             const waitUntil = new Date(now.getTime() + minutesUntilEnd * 60 * 1000)
             return {
