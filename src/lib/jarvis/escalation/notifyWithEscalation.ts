@@ -39,7 +39,7 @@ export async function notifyWithEscalation(
 
   if (!context) {
     // New incident - create initial context
-    const decision = decideNextAction({
+    const decision = await decideNextAction({
       severity: snapshot.severity_guess,
       firstNotifiedAt: null,
       lastNotifiedAt: null,
@@ -85,7 +85,7 @@ export async function notifyWithEscalation(
   }
 
   // Existing incident - check escalation
-  const decision = decideNextAction(context)
+  const decision = await decideNextAction(context)
 
   // Store decision event
   await storeEscalationDecision(incidentId, decision.type, decision.trace)
@@ -148,7 +148,7 @@ async function sendEscalatedSMS(
   const baseMessage = formatEscalationMessage(assessment, snapshot, isFirst, decision.messageType)
 
   // Select tone profile
-  const policy = getSleepPolicy()
+  const policy = await getSleepPolicy()
   const tone = selectToneProfile(
     decision.messageType as 'informational' | 'update' | 'wake' | 'escalation',
     {

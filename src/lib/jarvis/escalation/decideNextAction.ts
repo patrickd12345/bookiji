@@ -17,6 +17,8 @@ export type EscalationDecision =
 /**
  * Decision Trace - Machine-readable trace of decision logic
  * Required fields; no optional fields allowed
+ * 
+ * Phase 5: Extended with policy metadata for traceability
  */
 export interface DecisionTrace {
   severity: Severity
@@ -24,6 +26,10 @@ export interface DecisionTrace {
   notifications_sent: number
   cap: number
   rule_fired: string
+  // Phase 5: Policy metadata (optional for backward compatibility)
+  policy_id?: string
+  policy_version?: string
+  policy_checksum?: string
 }
 
 export interface EscalationContext {
@@ -41,40 +47,75 @@ export interface EscalationContext {
 function createTrace(
   context: EscalationContext,
   ruleFired: string,
-  inQuietHours: boolean
+  inQuietHours: boolean,
+  policy: Awaited<ReturnType<typeof getSleepPolicy>>,
+  policyMetadata?: { policy_id: string; version: string; checksum: string }
 ): DecisionTrace {
-  return {
+  const trace: DecisionTrace = {
     severity: context.severity,
     quiet_hours: inQuietHours,
     notifications_sent: context.notificationCount,
-    cap: getSleepPolicy().maxNotificationsPerIncident,
+    cap: policy.maxNotificationsPerIncident,
     rule_fired: ruleFired
   }
+
+  // Phase 5: Add policy metadata if available
+  if (policyMetadata) {
+    trace.policy_id = policyMetadata.policy_id
+    trace.policy_version = policyMetadata.version
+    trace.policy_checksum = policyMetadata.checksum
+  }
+
+  return trace
 }
 
 /**
  * Decide next escalation action (deterministic)
+ * 
+ * Phase 5: Accepts optional policy parameter for simulation.
+ * If not provided, loads active policy from database.
  */
-export function decideNextAction(context: EscalationContext): EscalationDecision {
-  const policy = getSleepPolicy()
+export async function decideNextAction(
+  context: EscalationContext,
+  policy?: Awaited<ReturnType<typeof getSleepPolicy>>,
+  policyMetadata?: { policy_id: string; version: string; checksum: string }
+): Promise<EscalationDecision> {
+  const activePolicy = policy || await getSleepPolicy()
   const now = new Date()
-  const inQuietHours = isInQuietHours(policy)
-
-  // Rule 1: If acknowledged, do not notify
-  if (context.acknowledgedAt) {
-    return {
-      type: 'DO_NOT_NOTIFY',
-      reason: 'Incident acknowledged by owner',
-      trace: createTrace(context, 'acknowledged_no_notify', inQuietHours)
+  const inQuietHours = isInQuietHours(activePolicy)
+  
+  // Phase 5: Load policy metadata if not provided
+  let metadata = policyMetadata
+  if (!metadata && !policy) {
+    try {
+      const { getActivePolicy } = await import('../policy/registry')
+      const policyRecord = await getActivePolicy()
+      metadata = {
+        policy_id: policyRecord.policy_id,
+        version: policyRecord.version,
+        checksum: policyRecord.checksum
+      }
+    } catch (error) {
+      // Fallback: metadata will be undefined (backward compatible)
+      console.warn('[Jarvis] Could not load policy metadata:', error)
     }
   }
 
+  // Rule 1: If acknowledged, do not notify
+  if (context.acknowledgedAt) {
+      return {
+        type: 'DO_NOT_NOTIFY',
+        reason: 'Incident acknowledged by owner',
+        trace: createTrace(context, 'acknowledged_no_notify', inQuietHours, activePolicy, metadata)
+      }
+  }
+
   // Rule 2: Hard cap on notifications
-  if (context.notificationCount >= policy.maxNotificationsPerIncident) {
+  if (context.notificationCount >= activePolicy.maxNotificationsPerIncident) {
     return {
       type: 'DO_NOT_NOTIFY',
-      reason: `Maximum notifications (${policy.maxNotificationsPerIncident}) reached`,
-      trace: createTrace(context, 'cap_reached', inQuietHours)
+      reason: `Maximum notifications (${activePolicy.maxNotificationsPerIncident}) reached`,
+      trace: createTrace(context, 'cap_reached', inQuietHours, activePolicy, metadata)
     }
   }
 
@@ -85,7 +126,7 @@ export function decideNextAction(context: EscalationContext): EscalationDecision
       return {
         type: 'SEND_LOUD_SMS',
         messageType: 'wake',
-        trace: createTrace(context, 'sev1_first_notification', inQuietHours)
+        trace: createTrace(context, 'sev1_first_notification', inQuietHours, activePolicy, metadata)
       }
     }
 
@@ -95,7 +136,7 @@ export function decideNextAction(context: EscalationContext): EscalationDecision
         return {
           type: 'SEND_SILENT_SMS',
           messageType: 'informational',
-          trace: createTrace(context, 'sev2_first_notification', inQuietHours)
+          trace: createTrace(context, 'sev2_first_notification', inQuietHours, activePolicy, metadata)
         }
       } else {
         // Wait until quiet hours end
@@ -105,8 +146,8 @@ export function decideNextAction(context: EscalationContext): EscalationDecision
           return {
             type: 'WAIT',
             until: waitUntil.toISOString(),
-            reason: `Quiet hours active. Will notify at ${policy.quietHours.end}`,
-            trace: createTrace(context, 'sev2_quiet_hours_silent_only', inQuietHours)
+            reason: `Quiet hours active. Will notify at ${activePolicy.quietHours.end}`,
+            trace: createTrace(context, 'sev2_quiet_hours_silent_only', inQuietHours, activePolicy, metadata)
           }
         }
       }
@@ -116,7 +157,7 @@ export function decideNextAction(context: EscalationContext): EscalationDecision
     return {
       type: 'DO_NOT_NOTIFY',
       reason: 'SEV-3 incidents do not trigger notifications',
-      trace: createTrace(context, 'sev3_no_notification', inQuietHours)
+      trace: createTrace(context, 'sev3_no_notification', inQuietHours, activePolicy, metadata)
     }
   }
 
@@ -125,16 +166,16 @@ export function decideNextAction(context: EscalationContext): EscalationDecision
   const minutesSinceFirst = Math.floor((now.getTime() - firstNotified.getTime()) / (1000 * 60))
 
   // Check if we've exceeded max silent minutes (even in quiet hours for SEV-1)
-  if (context.severity === 'SEV-1' && minutesSinceFirst >= policy.maxSilentMinutes) {
+  if (context.severity === 'SEV-1' && minutesSinceFirst >= activePolicy.maxSilentMinutes) {
     return {
       type: 'SEND_LOUD_SMS',
       messageType: 'escalation',
-      trace: createTrace(context, 'sev1_max_silent_exceeded', inQuietHours)
+      trace: createTrace(context, 'sev1_max_silent_exceeded', inQuietHours, activePolicy, metadata)
     }
   }
 
   // Check escalation intervals
-  const intervals = policy.escalationIntervalsMinutes
+  const intervals = activePolicy.escalationIntervalsMinutes
   const currentLevel = context.escalationLevel
   const lastNotified = context.lastNotifiedAt ? new Date(context.lastNotifiedAt) : firstNotified
   const minutesSinceLast = Math.floor((now.getTime() - lastNotified.getTime()) / (1000 * 60))
@@ -149,17 +190,17 @@ export function decideNextAction(context: EscalationContext): EscalationDecision
       return {
         type: 'SEND_LOUD_SMS',
         messageType: 'escalation',
-        trace: createTrace(context, 'sev1_interval_escalation', inQuietHours)
+        trace: createTrace(context, 'sev1_interval_escalation', inQuietHours, activePolicy, metadata)
       }
     } else if (context.severity === 'SEV-2') {
       // SEV-2: Escalate silently if in quiet hours, otherwise normally
       if (inQuietHours) {
         // Check if we've waited long enough
-        if (minutesSinceFirst >= policy.maxSilentMinutes) {
+        if (minutesSinceFirst >= activePolicy.maxSilentMinutes) {
           return {
             type: 'SEND_LOUD_SMS',
             messageType: 'escalation',
-            trace: createTrace(context, 'sev2_quiet_hours_max_silent_exceeded', inQuietHours)
+            trace: createTrace(context, 'sev2_quiet_hours_max_silent_exceeded', inQuietHours, activePolicy, metadata)
           }
         } else {
           // Still in quiet hours, wait
@@ -170,7 +211,7 @@ export function decideNextAction(context: EscalationContext): EscalationDecision
               type: 'WAIT',
               until: waitUntil.toISOString(),
               reason: 'Quiet hours active. Escalation deferred.',
-              trace: createTrace(context, 'sev2_quiet_hours_wait', inQuietHours)
+              trace: createTrace(context, 'sev2_quiet_hours_wait', inQuietHours, activePolicy, metadata)
             }
           }
         }
@@ -179,7 +220,7 @@ export function decideNextAction(context: EscalationContext): EscalationDecision
         return {
           type: 'SEND_SILENT_SMS',
           messageType: 'update',
-          trace: createTrace(context, 'sev2_interval_escalation', inQuietHours)
+          trace: createTrace(context, 'sev2_interval_escalation', inQuietHours, activePolicy, metadata)
         }
       }
     }
@@ -191,7 +232,7 @@ export function decideNextAction(context: EscalationContext): EscalationDecision
       type: 'WAIT',
       until: waitUntil.toISOString(),
       reason: `Next escalation in ${waitMinutes} minutes`,
-      trace: createTrace(context, 'interval_wait', inQuietHours)
+      trace: createTrace(context, 'interval_wait', inQuietHours, activePolicy, metadata)
     }
   }
 
@@ -199,7 +240,7 @@ export function decideNextAction(context: EscalationContext): EscalationDecision
   return {
     type: 'DO_NOT_NOTIFY',
     reason: 'No escalation needed at this time',
-    trace: createTrace(context, 'default_no_notify', inQuietHours)
+      trace: createTrace(context, 'default_no_notify', inQuietHours, activePolicy, metadata)
   }
 }
 

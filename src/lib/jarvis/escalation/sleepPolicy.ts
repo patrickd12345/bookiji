@@ -38,9 +38,26 @@ export const OWNER_DEFAULT_V1: SleepPolicy = {
 
 /**
  * Get active sleep policy
+ * 
+ * Phase 5: Now uses policy from database registry.
+ * Falls back to default if no active policy exists.
  */
-export function getSleepPolicy(): SleepPolicy {
-  // For now, only one policy. Can be extended later.
+export async function getSleepPolicy(): Promise<SleepPolicy> {
+  // Check if Phase 5 is enabled
+  const phase5Enabled = process.env.JARVIS_PHASE5_SIMULATION_ENABLED === 'true'
+  
+  if (phase5Enabled) {
+    try {
+      const { getActivePolicyConfig, policyConfigToSleepPolicy } = await import('../policy/adapter')
+      const config = await getActivePolicyConfig()
+      return policyConfigToSleepPolicy(config)
+    } catch (error) {
+      console.error('[Jarvis] Error loading active policy, falling back to default:', error)
+      return OWNER_DEFAULT_V1
+    }
+  }
+  
+  // Phase 5 disabled - use default
   return OWNER_DEFAULT_V1
 }
 

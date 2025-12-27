@@ -57,7 +57,7 @@ export async function checkAndEscalate(
         }
 
         // Decide next action
-        const decision = decideNextAction(context)
+        const decision = await decideNextAction(context)
 
         if (decision.type === 'DO_NOT_NOTIFY' || decision.type === 'WAIT') {
           suppressed++
