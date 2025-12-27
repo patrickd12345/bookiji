@@ -47,6 +47,95 @@
 - **🔔 Multi-Channel Notifications** - Email, SMS with retry logic and DLQ
 - **🛡️ Security & Compliance** - RLS policies, rate limiting, daily backups, admin auto-redirect
 
+### ✅ **Operational Excellence (100% Complete)**
+- **🤖 Jarvis Incident Commander** - Sleep-aware incident detection and escalation system with SMS-based command execution
+- **🔒 Process Invariants Enforcement** - 70 documented invariants with static policy checks and CI integration
+- **💳 Credits & Referrals System** - User credits management and referral tracking
+- **⚖️ Dispute & No-Show Resolution** - Automated dispute handling and no-show detection
+
+---
+
+## 🤖 **Jarvis Incident Commander (3AM Mode)**
+
+Jarvis is Bookiji's operational nervous system that stands watch while you sleep. When incidents occur, Jarvis detects, assesses, and responds intelligently—respecting your sleep and escalation preferences.
+
+### **Key Features**
+
+- **🔍 Incident Detection** - Automatic monitoring of system health, kill switches, and critical metrics
+- **🧠 LLM-Powered Assessment** - Intelligent severity classification and impact analysis
+- **📱 SMS-Based Command Interface** - Reply-to-act system with deterministic command parsing
+- **😴 Sleep-Aware Escalation** - Respects quiet hours (22:00-07:00), only wakes for SEV-1 incidents
+- **📋 Human-in-the-Loop Playbooks** - Multi-step response plans requiring explicit SMS confirmation
+- **🔐 Process Invariants** - 13 escalation tests + static policy checks ensure safe operation
+
+### **Phases Implemented**
+
+- **Phase 1**: Incident detection and SMS notification
+- **Phase 2A**: Reply-to-act with deterministic command parsing
+- **Phase 2B**: Human-in-the-loop playbooks (multi-step responses)
+- **Phase 2C**: Read-only situational awareness (STATUS, WHY, CHANGES, HELP)
+- **Phase 3**: Sleep-aware escalation with tone profiles and hard caps
+
+### **How It Works**
+
+1. **Detection**: Cron job runs every 5 minutes, checks system state
+2. **Assessment**: LLM analyzes severity and impact (SEV-1, SEV-2, SEV-3)
+3. **Notification**: SMS sent with escalation logic (respects quiet hours, hard cap: 5 notifications/incident)
+4. **Response**: Owner replies via SMS with commands (STATUS, ACK, playbook commands, actions)
+5. **Execution**: Pre-authorized actions executed through guard rails
+
+### **Safety Guarantees**
+
+- ✅ No autonomous remediation (human-in-the-loop always)
+- ✅ Deterministic escalation decisions (no LLM deciding when to escalate)
+- ✅ Hard caps prevent spam (max 5 SMS per incident)
+- ✅ ACK command freezes escalation
+- ✅ Full audit trail in `jarvis_incidents` table
+
+**Documentation**: See [JARVIS_INCIDENT_COMMANDER.md](docs/development/JARVIS_INCIDENT_COMMANDER.md) for complete details.
+
+---
+
+## 🔒 **Process Invariants Enforcement (PIE)**
+
+Bookiji enforces **70 documented invariants** across 10 critical surfaces to prevent data corruption, security violations, and operational errors.
+
+### **What's Enforced**
+
+**Tier 1 (Mandatory):**
+- Booking lifecycle authoritative paths
+- Payment intent verification
+- Availability slot consistency
+- Time validation (no past bookings)
+
+**Tier 2:**
+- Admin role verification
+- Webhook signature verification
+- Background job safety
+
+**Tier 3:**
+- AI agent action safety
+- Retry idempotency
+- Backfill reconciliation
+
+### **Enforcement Methods**
+
+1. **Static Policy Checks** - `pnpm invariants:check` scans codebase for violations
+2. **CI Integration** - Fast-fail on PRs touching risky surfaces
+3. **Runtime Assertions** - Database constraints and guard functions
+4. **SimCity Testing** - Adversarial certification with invariant falsification
+
+### **What's Now Impossible**
+
+- ❌ Direct SQL execution for schema changes (must use migrations)
+- ❌ Booking state bypass (must use authoritative paths)
+- ❌ Payment intent bypass (must verify via Stripe API)
+- ❌ Webhook signature bypass (must verify signatures)
+- ❌ Admin action bypass (must verify admin role)
+- ❌ Kill switch bypass (must check before booking creation)
+
+**Documentation**: See [docs/invariants/](docs/invariants/) for complete invariant specifications.
+
 ---
 
 ## 🧠 **Self-Improving Knowledge Base**
@@ -405,5 +494,5 @@ This project is proprietary software. All rights reserved.
 
 **Built with ❤️ by the Bookiji Team**
 
-*Last Updated: January 24, 2025*
+*Last Updated: January 27, 2025*
 *Version: 1.0.0-beta*
