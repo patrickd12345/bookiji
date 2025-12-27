@@ -18,6 +18,7 @@ vi.mock('./sleepPolicy', async () => {
   const actual = await vi.importActual('./sleepPolicy')
   return {
     ...actual,
+    getSleepPolicy: vi.fn(),
     isInQuietHours: vi.fn(),
     minutesUntilQuietHoursEnd: vi.fn()
   }
@@ -28,15 +29,31 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
   const fiveMinutesAgo = new Date('2025-01-27T09:55:00Z').toISOString()
   const twoHoursAgo = new Date('2025-01-27T08:00:00Z').toISOString()
 
+  const mockPolicy = {
+    id: 'test',
+    version: '1.0.0',
+    quietHours: {
+      start: '22:00',
+      end: '07:00',
+      timezone: 'America/New_York'
+    },
+    wakeThresholdSeverity: 'SEV-1' as const,
+    maxSilentMinutes: 120,
+    escalationIntervalsMinutes: [15, 30, 60, 120],
+    maxNotificationsPerIncident: 5
+  }
+
   beforeEach(() => {
     vi.clearAllMocks()
     // Default: not in quiet hours
     vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
     vi.mocked(sleepPolicy.minutesUntilQuietHoursEnd).mockReturnValue(240)
+    // Mock getSleepPolicy to return synchronously
+    vi.mocked(sleepPolicy.getSleepPolicy).mockResolvedValue(mockPolicy)
   })
 
   describe('SEV-2 Quiet Hours Invariant', () => {
-    it('SEV-2 during quiet hours never produces SEND_LOUD_SMS', () => {
+    it('SEV-2 during quiet hours never produces SEND_LOUD_SMS', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(true)
 
       const context: EscalationContext = {
@@ -48,14 +65,14 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: 0
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
 
       // SEV-2 in quiet hours should WAIT, not SEND_LOUD_SMS
       expect(decision.type).not.toBe('SEND_LOUD_SMS')
       expect(decision.type).toBe('WAIT')
     })
 
-    it('SEV-2 during quiet hours (first notification) waits', () => {
+    it('SEV-2 during quiet hours (first notification) waits', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(true)
 
       const context: EscalationContext = {
@@ -67,14 +84,14 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: 0
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
       expect(decision.type).toBe('WAIT')
       if (decision.type === 'WAIT') {
         expect(decision.reason).toContain('Quiet hours')
       }
     })
 
-    it('SEV-2 escalation during quiet hours waits unless maxSilentMinutes exceeded', () => {
+    it('SEV-2 escalation during quiet hours waits unless maxSilentMinutes exceeded', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(true)
 
       // First notification was 1 hour ago (not yet at maxSilentMinutes)
@@ -87,12 +104,12 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: 1
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
       // Should wait (not at maxSilentMinutes yet)
       expect(decision.type).toBe('WAIT')
     })
 
-    it('SEV-2 escalation after maxSilentMinutes in quiet hours produces SEND_LOUD_SMS', () => {
+    it('SEV-2 escalation after maxSilentMinutes in quiet hours produces SEND_LOUD_SMS', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(true)
 
       // First notification was 3 hours ago (exceeds maxSilentMinutes of 120)
@@ -105,14 +122,14 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: 1
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
       // After maxSilentMinutes, even SEV-2 in quiet hours should escalate loudly
       expect(decision.type).toBe('SEND_LOUD_SMS')
     })
   })
 
   describe('SEV-1 Quiet Hours Invariant', () => {
-    it('SEV-1 during quiet hours produces SEND_LOUD_SMS', () => {
+    it('SEV-1 during quiet hours produces SEND_LOUD_SMS', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(true)
 
       const context: EscalationContext = {
@@ -124,7 +141,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: 0
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
 
       // SEV-1 can wake during quiet hours
       expect(decision.type).toBe('SEND_LOUD_SMS')
@@ -133,7 +150,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
       }
     })
 
-    it('SEV-1 escalation during quiet hours produces SEND_LOUD_SMS', () => {
+    it('SEV-1 escalation during quiet hours produces SEND_LOUD_SMS', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(true)
 
       const context: EscalationContext = {
@@ -145,7 +162,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: 1
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
       expect(decision.type).toBe('SEND_LOUD_SMS')
       if (decision.type === 'SEND_LOUD_SMS') {
         expect(decision.messageType).toBe('escalation')
@@ -154,7 +171,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
   })
 
   describe('Notification Count Cap Invariant', () => {
-    it('notification_count at cap prevents further notifications', () => {
+    it('notification_count at cap prevents further notifications', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
 
       const policy = sleepPolicy.getSleepPolicy()
@@ -167,7 +184,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: policy.maxNotificationsPerIncident // At cap
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
 
       // Should not notify when at cap
       expect(decision.type).toBe('DO_NOT_NOTIFY')
@@ -176,7 +193,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
       }
     })
 
-    it('notification_count above cap prevents further notifications', () => {
+    it('notification_count above cap prevents further notifications', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
 
       const policy = sleepPolicy.getSleepPolicy()
@@ -189,7 +206,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: policy.maxNotificationsPerIncident + 1 // Above cap
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
 
       // Should not notify when above cap
       expect(decision.type).toBe('DO_NOT_NOTIFY')
@@ -198,7 +215,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
       }
     })
 
-    it('notification_count below cap allows notifications', () => {
+    it('notification_count below cap allows notifications', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
 
       const context: EscalationContext = {
@@ -210,7 +227,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: 2 // Below cap of 5
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
 
       // Should allow notification if below cap and escalation interval met
       // (This depends on escalation intervals, but should not be DO_NOT_NOTIFY due to cap)
@@ -221,7 +238,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
   })
 
   describe('ACK Invariant', () => {
-    it('ACK prevents further notifications', () => {
+    it('ACK prevents further notifications', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
 
       const context: EscalationContext = {
@@ -233,7 +250,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: 1
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
 
       // Should not notify when acknowledged
       expect(decision.type).toBe('DO_NOT_NOTIFY')
@@ -242,7 +259,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
       }
     })
 
-    it('ACK prevents notifications even for SEV-1', () => {
+    it('ACK prevents notifications even for SEV-1', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(true) // Even in quiet hours
 
       const context: EscalationContext = {
@@ -254,7 +271,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: 1
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
 
       // Should not notify even SEV-1 when acknowledged
       expect(decision.type).toBe('DO_NOT_NOTIFY')
@@ -263,7 +280,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
       }
     })
 
-    it('ACK prevents notifications even at escalation interval', () => {
+    it('ACK prevents notifications even at escalation interval', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
 
       const context: EscalationContext = {
@@ -275,7 +292,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: 1
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
 
       // Should not notify even when escalation interval met
       expect(decision.type).toBe('DO_NOT_NOTIFY')
@@ -286,7 +303,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
   })
 
   describe('Decision Type Invariant', () => {
-    it('all decisions are one of allowed types', () => {
+    it('all decisions are one of allowed types', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
 
       const allowedTypes = ['DO_NOT_NOTIFY', 'SEND_SILENT_SMS', 'SEND_LOUD_SMS', 'WAIT']
@@ -328,14 +345,14 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
       ]
 
       for (const context of contexts) {
-        const decision = decideNextAction(context)
+        const decision = await decideNextAction(context, mockPolicy)
         expect(allowedTypes).toContain(decision.type)
       }
     })
   })
 
   describe('Phase 4: Decision Trace Invariant', () => {
-    it('all decisions must have trace', () => {
+    it('all decisions must have trace', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
 
       const contexts: EscalationContext[] = [
@@ -374,13 +391,13 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
       ]
 
       for (const context of contexts) {
-        const decision = decideNextAction(context)
+        const decision = await decideNextAction(context, mockPolicy)
         expect(decision.trace).toBeDefined()
         expect(decision.trace).not.toBeNull()
       }
     })
 
-    it('all traces must have required fields', () => {
+    it('all traces must have required fields', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
 
       const context: EscalationContext = {
@@ -392,7 +409,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: 0
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
       const trace = decision.trace
 
       expect(trace).toBeDefined()
@@ -408,7 +425,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
       expect(trace.rule_fired.length).toBeGreaterThan(0)
     })
 
-    it('traces must be JSON serializable', () => {
+    it('traces must be JSON serializable', async () => {
       vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
 
       const context: EscalationContext = {
@@ -420,7 +437,7 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
         notificationCount: 0
       }
 
-      const decision = decideNextAction(context)
+      const decision = await decideNextAction(context, mockPolicy)
       const trace = decision.trace
 
       // Should not throw

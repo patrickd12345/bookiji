@@ -16,6 +16,7 @@ on:
       - 'supabase/migrations/*jarvis*.sql'
       - 'scripts/check-invariants-policy.mjs'
       - 'scripts/check-jarvis-phase4-invariants.mjs'
+      - 'scripts/check-jarvis-phase5-invariants.mjs'
       - '.github/workflows/invariants-check.yml'
 
 jobs:
@@ -155,6 +156,39 @@ jobs:
             else
               echo ""
               echo "✅ All Jarvis Phase 4 observability invariants passed"
+            fi
+
+            # Run Phase 5 invariants check
+            echo ""
+            echo "============================================================"
+            echo "🔍 Running Jarvis Phase 5 Invariants"
+            echo "============================================================"
+            echo ""
+            echo "Checking Phase 5 safety invariants..."
+            echo ""
+
+            PHASE5_EXIT_CODE=0
+            node scripts/check-jarvis-phase5-invariants.mjs || PHASE5_EXIT_CODE=$?
+
+            if [ "$PHASE5_EXIT_CODE" -ne 0 ]; then
+              echo ""
+              echo "============================================================"
+              echo "❌ JARVIS PHASE 5 INVARIANT CHECK FAILURE"
+              echo "============================================================"
+              echo ""
+              echo "Phase 5 invariants failed."
+              echo "Review the output above for specific violations."
+              echo ""
+              echo "Required invariants:"
+              echo "  - notification_cap in ACTIVE policy <= 5"
+              echo "  - ACTIVE policy has required keys"
+              echo "  - Production decisions log policy metadata"
+              echo "  - No policy activated without approval"
+              echo ""
+              exit $PHASE5_EXIT_CODE
+            else
+              echo ""
+              echo "✅ All Jarvis Phase 5 invariants passed"
             fi
           fi
 
