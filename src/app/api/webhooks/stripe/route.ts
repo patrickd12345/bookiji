@@ -89,12 +89,19 @@ async function webhookHandler(req: NextRequest): Promise<NextResponse> {
 
 async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promise<void> {
   try {
+    // NOTE: Webhooks intentionally bypass the scheduling kill switch.
+    // This is correct behavior because:
+    // 1. Webhooks only update existing hold_placed bookings (do not create new bookings)
+    // 2. Payment processing must complete for holds that were already placed
+    // 3. The kill switch prevents NEW confirmations, not completion of in-flight payments
+    // If a hold was placed before the switch was flipped, its payment should still process.
+    
     // Find the booking for this payment intent
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .select('*')
       .eq('stripe_payment_intent_id', paymentIntent.id)
-      .eq('state', 'hold_placed')
+      .eq('state', 'hold_placed') // Only updates existing holds, never creates new bookings
       .single()
 
     if (bookingError || !booking) {
@@ -277,12 +284,16 @@ async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent): Promis
 
 async function handlePaymentCanceled(paymentIntent: Stripe.PaymentIntent): Promise<void> {
   try {
+    // NOTE: Webhooks intentionally bypass the scheduling kill switch.
+    // Payment cancellations must be processed to release slots and cancel holds,
+    // regardless of kill switch state. This prevents resource leaks.
+    
     // Find the booking for this payment intent
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .select('*')
       .eq('stripe_payment_intent_id', paymentIntent.id)
-      .eq('state', 'hold_placed')
+      .eq('state', 'hold_placed') // Only updates existing holds
       .single()
 
     if (bookingError || !booking) {

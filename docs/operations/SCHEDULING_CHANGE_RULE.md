@@ -73,9 +73,30 @@ A CI gate will be added to automatically block merges if:
 
 ## Enforcement
 
+### CI Enforcement
+**Phase 1 and Phase 2 are executed automatically on every relevant PR.**
+
+The CI workflow (`.github/workflows/scheduling-certification-check.yml`) runs automatically when PRs touch:
+- `src/app/api/bookings/**`
+- `src/app/api/webhooks/stripe/**`
+- `src/app/api/payments/**`
+- `src/lib/guards/**`
+- `supabase/migrations/**`
+- `scripts/adversarial-certification.ts`
+
+**Current State:** Warning mode (non-blocking)
+- Failures are reported but do not block merge
+- Review output in PR checks
+
+**Upgrade to Hard Gate:**
+1. Mark workflow as "required" in GitHub branch protection settings
+2. Invariant failures will block merge
+3. See workflow file comments for details
+
 ### Code Review
 - Reviewers must verify SimCity phases passed
 - If phases not run, request evidence before approval
+- Check CI output for phase results
 
 ### Deployment
 - Staging deployment blocked if phases fail

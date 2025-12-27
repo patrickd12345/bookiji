@@ -7,6 +7,7 @@ import { featureFlags } from '@/config/featureFlags'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 import { assertVendorHasActiveSubscription, SubscriptionRequiredError } from '@/lib/guards/subscriptionGuard';
+import { assertSchedulingEnabled, SchedulingDisabledError } from '@/lib/guards/schedulingKillSwitch';
 
 interface BookingConfirmRequest {
   quote_id: string
@@ -29,6 +30,22 @@ async function confirmHandler(req: NextRequest): Promise<NextResponse> {
       { error: 'Core booking flow not enabled' },
       { status: 403 }
     )
+  }
+
+  // Enforce scheduling kill switch - must be first check
+  try {
+    await assertSchedulingEnabled(supabase)
+  } catch (error) {
+    if (error instanceof SchedulingDisabledError) {
+      return NextResponse.json(
+        { 
+          error: error.message,
+          code: error.code
+        },
+        { status: error.statusCode }
+      )
+    }
+    throw error
   }
 
   try {

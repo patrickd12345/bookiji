@@ -2020,11 +2020,16 @@ async function executePhase7(): Promise<PhaseResult> {
 
 /**
  * Main execution function
+ * 
+ * @param phasesToRun - Optional array of phase numbers (1-7) to run. If null, runs all phases.
  */
-async function main() {
+async function main(phasesToRun: number[] | null = null) {
   console.log('🎯 BOOKIJI SCHEDULING — ADVERSARIAL CERTIFICATION')
   console.log('=' .repeat(60))
   console.log(`Started: ${new Date().toISOString()}`)
+  if (phasesToRun) {
+    console.log(`Running phases: ${phasesToRun.join(', ')}`)
+  }
   console.log('')
 
   const report: CertificationReport = {
@@ -2036,27 +2041,44 @@ async function main() {
 
   // Execute phases sequentially
   // If any phase FAILS, stop execution
-  const phases = [
-    executePhase1,
-    executePhase2,
-    executePhase3,
-    executePhase4,
-    executePhase5,
-    executePhase6,
-    executePhase7
+  const allPhases = [
+    { num: 1, fn: executePhase1 },
+    { num: 2, fn: executePhase2 },
+    { num: 3, fn: executePhase3 },
+    { num: 4, fn: executePhase4 },
+    { num: 5, fn: executePhase5 },
+    { num: 6, fn: executePhase6 },
+    { num: 7, fn: executePhase7 }
   ]
 
-  for (const phaseFn of phases) {
-    const result = await phaseFn()
+  // Filter phases if specific phases requested
+  const phases = phasesToRun 
+    ? allPhases.filter(p => phasesToRun.includes(p.num))
+    : allPhases
+
+  for (const { num, fn } of phases) {
+    const result = await fn()
     report.phases.push(result)
 
-    if (result.status === 'FAIL') {
+    // Log phase result with clear formatting
+    if (result.status === 'PASS') {
+      console.log(`✅ Phase ${result.phase} PASSED — ${result.name}`)
+    } else if (result.status === 'FAIL') {
+      console.log(`\n❌ Phase ${result.phase} FAILED — ${result.name}`)
+      if (result.violations.length > 0) {
+        console.log(`   Violations:`)
+        result.violations.forEach(v => console.log(`     - ${v}`))
+      }
+      console.log(`\n   See: docs/operations/SCHEDULING_CHANGE_RULE.md`)
+      console.log(`   Certification: certification/scheduling-certification-v1.md`)
       console.log(`\n❌ PHASE ${result.phase} FAILED — STOPPING EXECUTION`)
       break
-    }
-
-    if (result.status === 'ERROR') {
+    } else if (result.status === 'ERROR') {
       console.log(`\n⚠️ PHASE ${result.phase} ERROR — CONTINUING WITH CAUTION`)
+      if (result.violations.length > 0) {
+        console.log(`   Errors:`)
+        result.violations.forEach(v => console.log(`     - ${v}`))
+      }
     }
   }
 
@@ -2071,7 +2093,9 @@ async function main() {
     report.finalVerdict = 'NOT_CERTIFIED'
     report.unresolvedRisks = errorPhases.flatMap(p => p.violations)
   } else {
-    report.finalVerdict = 'CERTIFIED'
+    // If running subset of phases, use "PARTIAL" verdict
+    // Full certification requires all 7 phases
+    report.finalVerdict = phasesToRun && phasesToRun.length < 7 ? 'PARTIAL' : 'CERTIFIED'
   }
 
   // Print final report
@@ -2079,7 +2103,7 @@ async function main() {
   console.log('📊 FINAL VERDICT')
   console.log('='.repeat(60))
   console.log(`Status: ${report.finalVerdict}`)
-  console.log(`Phases Executed: ${report.phases.length}/7`)
+  console.log(`Phases Executed: ${report.phases.length}${phasesToRun ? ` (of ${phasesToRun.length} requested)` : '/7'}`)
   console.log(`Failed: ${failedPhases.length}`)
   console.log(`Errors: ${errorPhases.length}`)
   
@@ -2089,18 +2113,38 @@ async function main() {
   }
 
   // Save report to file
+  // File name includes timestamp for uniqueness within a run
+  // In CI, artifact name includes PR number and run ID for traceability
   const fs = await import('fs/promises')
-  const reportPath = `certification-report-${Date.now()}.json`
+  const timestamp = Date.now()
+  const reportPath = `certification-report-${timestamp}.json`
   await fs.writeFile(reportPath, JSON.stringify(report, null, 2))
   console.log(`\n📄 Report saved to: ${reportPath}`)
+  
+  // In CI, this artifact will be named with PR number and run ID for easy debugging
 
-  process.exit(report.finalVerdict === 'CERTIFIED' ? 0 : 1)
+  // Exit code: 0 for success (CERTIFIED or PARTIAL with no failures), 1 for failure
+  const exitCode = (report.finalVerdict === 'CERTIFIED' || (report.finalVerdict === 'PARTIAL' && failedPhases.length === 0)) ? 0 : 1
+  process.exit(exitCode)
+}
+
+// Parse command line arguments for phase filtering
+function parsePhasesArg(): number[] | null {
+  const phasesArg = process.argv.find(arg => arg.startsWith('--phases='))
+  if (!phasesArg) return null
+  
+  const phasesStr = phasesArg.split('=')[1]
+  if (!phasesStr) return null
+  
+  const phases = phasesStr.split(',').map(p => parseInt(p.trim(), 10)).filter(p => !isNaN(p) && p >= 1 && p <= 7)
+  return phases.length > 0 ? phases : null
 }
 
 // Execute if run directly
 // Check if this is the main module (ES module way)
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('adversarial-certification.ts')) {
-  main().catch(error => {
+  const phasesToRun = parsePhasesArg()
+  main(phasesToRun).catch(error => {
     console.error('Fatal error:', error)
     process.exit(1)
   })

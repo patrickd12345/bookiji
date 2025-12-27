@@ -1,0 +1,163 @@
+name: Scheduling Invariant Check (Phase 1 & 2)
+
+# When ready:
+# - Mark this workflow as "required" in branch protection
+# - Invariant failures will block merge
+# - See: docs/operations/SCHEDULING_CHANGE_RULE.md
+
+on:
+  pull_request:
+    paths:
+      - 'src/app/api/bookings/**'
+      - 'src/app/api/webhooks/stripe/**'
+      - 'src/app/api/payments/**'
+      - 'src/lib/guards/**'
+      - 'supabase/migrations/**'
+      - 'scripts/adversarial-certification.ts'
+
+jobs:
+  scheduling-invariant-check:
+    name: Scheduling Invariant Check (Phase 1 & 2)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      
+      - name: Start Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          # ISOLATION ASSUMPTIONS:
+          # - Local Supabase: Each CI run gets a fresh Docker container (ephemeral)
+          # - Remote Supabase: Assumes isolated test project or schema-per-PR isolation
+          # - Test data uses timestamps (Date.now()) for uniqueness per run
+          # - If using shared remote Supabase, ensure test project isolation or schema separation
+          
+          # If local Supabase is needed, start it
+          # Otherwise, use remote Supabase from secrets
+          if [ -z "$SUPABASE_URL" ]; then
+            supabase start
+            echo "SUPABASE_URL=$(supabase status --output json | jq -r '.api.url')" >> $GITHUB_ENV
+            echo "SUPABASE_SERVICE_ROLE_KEY=$(supabase status --output json | jq -r '.api.service_role_key')" >> $GITHUB_ENV
+            echo "SUPABASE_ANON_KEY=$(supabase status --output json | jq -r '.api.anon_key')" >> $GITHUB_ENV
+            echo "✅ Using local Supabase (ephemeral, isolated per run)"
+          else
+            echo "⚠️  Using remote Supabase from secrets"
+            echo "   ASSUMPTION: Remote Supabase is isolated (test project or schema-per-PR)"
+            echo "   If shared, ensure test data uniqueness via timestamps"
+          fi
+      
+      - name: Apply migrations
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || env.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            # Using remote Supabase - migrations should already be applied
+            # ASSUMPTION: Remote test project has migrations pre-applied or applies them automatically
+            echo "Using remote Supabase - skipping migration apply"
+            echo "   ASSUMPTION: Migrations are already applied or handled by test project setup"
+          else
+            # Local Supabase - reset and apply migrations (ensures clean state)
+            echo "Resetting local Supabase database for clean test state"
+            supabase db reset
+            supabase db push
+            echo "✅ Local Supabase reset complete (isolated, no residual state)"
+          fi
+      
+      - name: Run Scheduling Certification (Phase 1 & 2)
+        env:
+          DEPLOY_ENV: test
+          SIMCITY_ALLOWED_ENVS: test,staging,recovery
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || env.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL || env.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+        run: |
+          echo "🔬 Running Scheduling Certification Phases 1 & 2"
+          echo "============================================================"
+          echo ""
+          echo "Phase 1: Atomic Slot Invariant"
+          echo "  Test: One slot = at most one confirmed booking"
+          echo ""
+          echo "Phase 2: Payment ↔ Booking Consistency"
+          echo "  Test: Payment and booking never out of sync"
+          echo ""
+          echo "See: docs/operations/SCHEDULING_CHANGE_RULE.md"
+          echo "Certification: certification/scheduling-certification-v1.md"
+          echo ""
+          echo "============================================================"
+          echo ""
+          
+          # Run certification script with phases 1 and 2
+          EXIT_CODE=0
+          pnpm exec tsx scripts/adversarial-certification.ts --phases=1,2 || EXIT_CODE=$?
+          
+          if [ "$EXIT_CODE" -ne 0 ]; then
+            echo ""
+            echo "============================================================"
+            echo "❌ Scheduling Invariant Violated"
+            echo "============================================================"
+            echo ""
+            echo "One or more phases failed. Review the output above for details."
+            echo ""
+            echo "Failed phases are marked with: ❌ Phase X FAILED"
+            echo ""
+            echo "Documentation:"
+            echo "  - docs/operations/SCHEDULING_CHANGE_RULE.md"
+            echo "  - certification/scheduling-certification-v1.md"
+            echo ""
+            echo "⚠️  NOTE: This workflow is currently in WARNING MODE."
+            echo "   PR remains mergeable. To block merges on failure:"
+            echo "   1. Mark this workflow as 'required' in branch protection"
+            echo "   2. See: docs/operations/SCHEDULING_CHANGE_RULE.md"
+            echo ""
+            exit $EXIT_CODE
+          else
+            echo ""
+            echo "============================================================"
+            echo "✅ Scheduling Invariants Verified"
+            echo "============================================================"
+            echo ""
+            echo "Phase 1: Atomic Slot Invariant — PASS"
+            echo "Phase 2: Payment ↔ Booking Consistency — PASS"
+            echo ""
+            echo "All scheduling invariants hold. Safe to merge."
+          fi
+      
+      - name: Upload certification report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: certification-report-pr${{ github.event.pull_request.number || 'push' }}-run${{ github.run_id }}
+          path: certification-report-*.json
+          retention-days: 7
+          # Retention: 7 days is sufficient for debugging failed PRs
+          # File names include timestamp (Date.now()) for uniqueness within a run
+          # Artifact name includes PR number (or 'push' for direct pushes) and run ID for traceability
+

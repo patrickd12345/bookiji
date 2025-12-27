@@ -43,6 +43,7 @@ const navItems = [
   { href: '/admin/resilience', icon: Shield, label: 'Resilience' },
   { href: '/admin/operational-insights', icon: BarChart3, label: 'Operational Insights' },
   { href: '/admin/cron', icon: Clock, label: 'Cron Jobs' },
+  { href: '/admin/operations/scheduling', icon: AlertTriangle, label: 'Scheduling' },
   
   // User Management
   { href: '/admin/users', icon: Users, label: 'Users' },
