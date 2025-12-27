@@ -175,12 +175,18 @@ export function validatePolicyConfig(config: PolicyConfig): string[] {
     errors.push('quiet_hours must have timezone')
   }
 
+  // Validate severity_rules structure
+  if (!config.severity_rules || typeof config.severity_rules !== 'object') {
+    errors.push('severity_rules must be an object')
+    return errors
+  }
+
   // Validate severity rules
   const severities: Array<Severity> = ['SEV-1', 'SEV-2', 'SEV-3']
   for (const severity of severities) {
     const rule = config.severity_rules[severity]
     if (!rule) {
-      errors.push(`Missing severity rule for ${severity}`)
+      errors.push(`severity_rules: Missing severity rule for ${severity}`)
       continue
     }
 

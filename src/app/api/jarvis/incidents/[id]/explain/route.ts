@@ -9,6 +9,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabaseServer'
 import { explainDecision } from '@/lib/jarvis/observability/explain'
+import { resolveIncidentBadges } from '@/lib/jarvis/observability/incidentBadges'
+import type { BadgeContext } from '@/lib/jarvis/observability/incidentBadges'
+import type { IncidentSnapshot } from '@/lib/jarvis/types'
+import type { DecisionTrace } from '@/lib/jarvis/escalation/decideNextAction'
 
 export async function GET(
   request: NextRequest,
@@ -53,15 +57,37 @@ export async function GET(
       console.error('[Jarvis] Error fetching summary:', summaryError)
     }
 
-    // Build response with explanations
+    // Get incident snapshot for badge resolution
+    const { data: incident, error: incidentError } = await supabase
+      .from('jarvis_incidents')
+      .select('snapshot')
+      .eq('incident_id', incidentId)
+      .single()
+
+    const snapshot: IncidentSnapshot | undefined = incident?.snapshot as IncidentSnapshot | undefined
+
+    // Build response with explanations and badges
     const timelineWithExplanations = (timeline || []).map(event => {
       const explanation = event.event_type === 'escalation_decision_made' && event.trace
         ? explainDecision(event.trace as unknown as Parameters<typeof explainDecision>[0])
         : null
 
+      // Compute badges for incident_created and escalation_decision_made events
+      let badges: ReturnType<typeof resolveIncidentBadges> = []
+      if (event.event_type === 'incident_created' || event.event_type === 'escalation_decision_made') {
+        const badgeContext: BadgeContext = {
+          snapshot: snapshot, // Use snapshot for both event types if available
+          trace: event.trace ? (event.trace as unknown as DecisionTrace) : undefined,
+          event_type: event.event_type as 'incident_created' | 'escalation_decision_made'
+        }
+        badges = resolveIncidentBadges(badgeContext)
+      }
+
       return {
         ...event,
-        explanation
+        explanation,
+        badges: badges.length > 0 ? badges : undefined,
+        _badge_note: badges.length > 0 ? 'Classification hints — human judgment required' : undefined
       }
     })
 
