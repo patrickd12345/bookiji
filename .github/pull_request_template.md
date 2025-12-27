@@ -11,6 +11,21 @@ Brief description of the changes and why they're needed.
 
 ## Definition-of-Done Checklist
 
+### Scheduling Safety Check ⚠️
+**Required if you touched bookings / payments / slots / time logic**
+
+- [ ] I touched bookings / payments / slots / time
+- [ ] SimCity Phase 1 rerun: ✅ PASS (Atomic Slot Invariant)
+- [ ] SimCity Phase 2 rerun: ✅ PASS (Payment ↔ Booking Consistency)
+- [ ] Evidence attached (screenshot or log output)
+
+**See:** [`docs/operations/SCHEDULING_CHANGE_RULE.md`](../../docs/operations/SCHEDULING_CHANGE_RULE.md)
+
+**Command to run:**
+```bash
+DEPLOY_ENV=test SIMCITY_ALLOWED_ENVS=test,staging,recovery pnpm exec tsx scripts/adversarial-certification.ts
+```
+
 ### Core Booking Flow (if applicable)
 - [ ] **SLO 24h window green** (P95 ≤ 500ms, P99 ≤ 1s)
 - [ ] **DLQ depth 0**, idempotent-skip counter > 0 in chaos run
