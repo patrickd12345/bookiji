@@ -15,6 +15,7 @@ on:
       - 'src/app/api/jarvis/**'
       - 'supabase/migrations/*jarvis*.sql'
       - 'scripts/check-invariants-policy.mjs'
+      - 'scripts/check-jarvis-phase4-invariants.mjs'
       - '.github/workflows/invariants-check.yml'
 
 jobs:
@@ -54,6 +55,7 @@ jobs:
           echo "  - Idempotency keys"
           echo "  - Kill switch enforcement"
           echo "  - Jarvis Phase 3 escalation invariants"
+          echo "  - Jarvis Phase 4 observability invariants"
           echo ""
           echo "See: docs/invariants/ for detailed invariant documentation"
           echo "============================================================"
@@ -96,6 +98,8 @@ jobs:
 
             TEST_EXIT_CODE=0
             pnpm test src/lib/jarvis/escalation/decideNextAction.test.ts --run || TEST_EXIT_CODE=$?
+            pnpm test src/lib/jarvis/observability/explain.test.ts --run || TEST_EXIT_CODE=$?
+            pnpm test src/lib/jarvis/observability/trace.test.ts --run || TEST_EXIT_CODE=$?
 
             if [ "$TEST_EXIT_CODE" -ne 0 ]; then
               echo ""
@@ -111,11 +115,45 @@ jobs:
               echo "  - SEV-1 quiet hours produces SEND_LOUD_SMS"
               echo "  - notification_count never exceeds cap"
               echo "  - ACK prevents further sends"
+              echo "  - All decisions have trace (Phase 4)"
               echo ""
               exit $TEST_EXIT_CODE
             else
               echo ""
               echo "✅ All Jarvis escalation tests passed"
+            fi
+
+            # Run Phase 4 observability invariants check
+            echo ""
+            echo "============================================================"
+            echo "🔍 Running Jarvis Phase 4 Observability Invariants"
+            echo "============================================================"
+            echo ""
+            echo "Checking observability completeness..."
+            echo ""
+
+            PHASE4_EXIT_CODE=0
+            node scripts/check-jarvis-phase4-invariants.mjs || PHASE4_EXIT_CODE=$?
+
+            if [ "$PHASE4_EXIT_CODE" -ne 0 ]; then
+              echo ""
+              echo "============================================================"
+              echo "❌ JARVIS PHASE 4 OBSERVABILITY CHECK FAILURE"
+              echo "============================================================"
+              echo ""
+              echo "Phase 4 observability invariants failed."
+              echo "Review the output above for specific violations."
+              echo ""
+              echo "Required invariants:"
+              echo "  - All escalation_decision_made events must have trace"
+              echo "  - All traces must have required fields"
+              echo "  - No orphan notification events"
+              echo "  - Resolved incidents must have terminal state"
+              echo ""
+              exit $PHASE4_EXIT_CODE
+            else
+              echo ""
+              echo "✅ All Jarvis Phase 4 observability invariants passed"
             fi
           fi
 
