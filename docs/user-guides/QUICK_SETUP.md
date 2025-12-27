@@ -86,6 +86,18 @@ curl http://localhost:11434/api/generate -d '{
 
 ## 🗄 Database Setup (Supabase)
 
+### **0. Preflight Check (REQUIRED)**
+**Before any Supabase operations, verify CLI authentication:**
+```bash
+pnpm supabase:doctor
+```
+
+This checks if Supabase CLI is authenticated. If it fails:
+- Run `supabase login` (CLI authentication, separate from app credentials)
+- See: `docs/development/SUPABASE_CLI_AUTH.md` for details
+
+**Why this matters:** CLI auth errors cause confusing failures. This catches them in 5 seconds instead of 30 minutes.
+
 ### **1. Create Supabase Project**
 - Go to [supabase.com](https://supabase.com)
 - Create new project

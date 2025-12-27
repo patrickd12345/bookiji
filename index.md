@@ -124,6 +124,7 @@ This file contains an index of all markdown files in the repository, organized b
 
 ### Development
 - `docs/development/ADVERSARIAL_CERTIFICATION.md`
+- `docs/development/SUPABASE_CLI_AUTH.md` - Supabase CLI authentication guide
 - `docs/development/APP_REVIEW_FIXES.md`
 - `docs/development/BOOKING_STATE_MACHINE.md`
 - `docs/development/BOOKING_STATE_MACHINE.md`
@@ -199,6 +200,8 @@ This file contains an index of all markdown files in the repository, organized b
 
 #### Operations
 - `docs/operations/SCHEDULING_CHANGE_RULE.md`
+- `docs/operations/STAGING_SETUP.md` - Staging environment setup guide
+- `docs/operations/STAGING_SETUP_EXECUTION_REPORT.md` - Staging setup execution report
 - `docs/ops/DEPLOYAI_SYSTEM.md`
 - `docs/ops/INCIDENTS_AI.md`
 - `docs/ops/LOGSAI.md`

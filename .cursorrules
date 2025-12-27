@@ -24,9 +24,45 @@
 ## Database Management
 
 **CRITICAL**: Always use migrations via Supabase CLI. Never run SQL directly.
-- Create migrations: `supabase migration new <name>`
-- Apply migrations: `supabase db push`
-- See: `docs/development/DATABASE_MANAGEMENT_POLICY.md`
+
+### Absolute Prohibitions (Schema Changes)
+- ❌ **NEVER** execute SQL directly against the database (no `pg` library, no `psql`, no direct connections)
+- ❌ **NEVER** create scripts that execute SQL for schema changes
+- ❌ **NEVER** use Supabase Dashboard SQL Editor for schema changes (only for read-only queries)
+- ❌ **NEVER** bypass `supabase db push` even if it fails — fix migration history first
+
+### Supabase CLI Authentication (CRITICAL)
+- **If Supabase CLI commands fail due to auth errors** (e.g., "Invalid access token format. Must be like `sbp_...`"):
+  - **STOP immediately**
+  - **ONLY valid fix**: Instruct user to run `supabase login`
+  - **NEVER** suggest setting `SUPABASE_ACCESS_TOKEN` in `.env`
+  - **NEVER** suggest using `SUPABASE_ANON_KEY` or `SERVICE_ROLE_KEY` for CLI
+  - **NEVER** suggest executing SQL directly as an alternative
+  - **NEVER** suggest workarounds or alternative paths
+- **CLI authentication is separate from application credentials:**
+  - CLI uses `sbp_...` token (from `supabase login`, stored internally)
+  - App uses `SUPABASE_ANON_KEY` / `SERVICE_ROLE_KEY` (in `.env`, for runtime)
+  - These are three distinct credential domains: CLI auth ≠ App credentials ≠ DB credentials
+- **Preflight check**: Run `pnpm supabase:doctor` before CLI operations to verify auth
+
+### Required Workflow (MANDATORY)
+1. **Create migration**: `supabase migration new <name>` (CLI only, never create files manually)
+2. **Edit the generated SQL file** in `supabase/migrations/`
+3. **Apply migration**: `supabase db push` (never execute SQL directly)
+4. **If `supabase db push` fails**:
+   - DO NOT execute SQL directly
+   - Fix migration history with `supabase migration repair` if needed
+   - Resolve any migration conflicts
+   - Retry `supabase db push`
+5. **Verify**: `supabase migration list` shows migration as applied
+
+### Enforcement Checklist
+Before executing any database operation, verify:
+- [ ] Is this a schema change? → Must use `supabase migration new` + `supabase db push`
+- [ ] Is this a data query? → Can use Supabase client or dashboard (read-only)
+- [ ] Am I about to use `pg`, `psql`, or direct SQL? → STOP. Use migrations instead.
+
+See: `docs/development/DATABASE_MANAGEMENT_POLICY.md`
 
 ## Current Phase
 
@@ -105,8 +141,10 @@ Check `docs/BOOKIJI_CONTINUITY_KERNEL.md` section 7 for current rollout phase st
 ## General Development Rules
 
 - Always test after code changes (API with curl, UI with Playwright)
-- Never run SQL directly - always use migrations
-- Always execute SQL migrations without asking for confirmation
+- **NEVER run SQL directly** - always use migrations via `supabase db push`
+- **NEVER** use `pg` library, `psql`, or direct database connections for schema changes
+- Always execute SQL migrations via `supabase db push` without asking for confirmation
+- If `supabase db push` fails, fix migration history first (never execute SQL directly)
 - Prefer optimistic UI with rollback for actions, retry/backoff for queries, skeletons instead of blank loading states
 - Guard against double clicks
 - Never ask the user to code - do it yourself

@@ -18,6 +18,20 @@ This repo follows a **CLI-only, migration-first** database process. The goal is 
 
 ## Required Workflow (Schema Change)
 
+### 0) Preflight Check (REQUIRED)
+
+**Before touching migrations, verify CLI authentication:**
+```bash
+pnpm supabase:doctor
+```
+
+This checks if Supabase CLI is authenticated. If it fails:
+- Run `supabase login` (ONLY valid fix)
+- **DO NOT** try to fix by setting env vars
+- **DO NOT** execute SQL directly as alternative
+
+**Why this matters:** CLI auth errors cause confusing failures. This catches them in 5 seconds instead of 30 minutes.
+
 ### 1) Create a migration (CLI only)
 
 ```bash
@@ -43,6 +57,12 @@ supabase db reset
 
 ### 4) Apply remotely (staging/prod)
 
+**Before applying, run preflight check:**
+```bash
+pnpm supabase:doctor
+```
+
+Then apply:
 ```bash
 supabase link --project-ref <PROJECT_REF>
 supabase db push
