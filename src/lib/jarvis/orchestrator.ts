@@ -22,6 +22,7 @@ import {
 } from './incidentState'
 import { notifyWithEscalation } from './escalation/notifyWithEscalation'
 import type { ParsedReply, ActionResult } from './types'
+import { storeIncidentCreated } from './observability/events'
 
 /**
  * Main Jarvis function - detect and handle incident
@@ -61,6 +62,9 @@ export async function jarvisDetectAndNotify(
 
     // Step 4: Record incident first (before notification, for escalation tracking)
     await recordIncidentNotification(incidentId, incidentHash, snapshot, assessment)
+    
+    // Store incident_created event
+    await storeIncidentCreated(incidentId, snapshot.severity_guess)
 
     // Step 5: Send SMS with escalation logic
     const escalationResult = await notifyWithEscalation(

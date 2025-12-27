@@ -12,6 +12,11 @@ import { isInQuietHours } from './sleepPolicy'
 import { getSleepPolicy } from './sleepPolicy'
 import type { IncidentSnapshot, JarvisAssessment } from '../types'
 import { sendFeedbackSMS } from '../feedback/sendFeedbackSMS'
+import {
+  storeEscalationDecision,
+  storeNotificationSent,
+  storeNotificationSuppressed
+} from '../observability/events'
 
 export interface EscalationNotificationResult {
   sent: boolean
@@ -43,7 +48,11 @@ export async function notifyWithEscalation(
       notificationCount: 0
     })
 
+    // Store decision event
+    await storeEscalationDecision(incidentId, decision.type, decision.trace)
+
     if (decision.type === 'DO_NOT_NOTIFY' || decision.type === 'WAIT') {
+      await storeNotificationSuppressed(incidentId, decision.reason, decision.trace)
       return {
         sent: false,
         suppressed: true,
@@ -63,6 +72,9 @@ export async function notifyWithEscalation(
 
     if (smsResult.success) {
       await updateEscalationAfterNotification(incidentId, true)
+      await storeNotificationSent(incidentId, 'sms', decision.trace)
+    } else {
+      await storeNotificationSuppressed(incidentId, 'SMS send failed', decision.trace)
     }
 
     return {
@@ -75,7 +87,11 @@ export async function notifyWithEscalation(
   // Existing incident - check escalation
   const decision = decideNextAction(context)
 
+  // Store decision event
+  await storeEscalationDecision(incidentId, decision.type, decision.trace)
+
   if (decision.type === 'DO_NOT_NOTIFY') {
+    await storeNotificationSuppressed(incidentId, decision.reason, decision.trace)
     return {
       sent: false,
       suppressed: true,
@@ -85,6 +101,7 @@ export async function notifyWithEscalation(
   }
 
   if (decision.type === 'WAIT') {
+    await storeNotificationSuppressed(incidentId, decision.reason, decision.trace)
     return {
       sent: false,
       suppressed: true,
@@ -105,6 +122,9 @@ export async function notifyWithEscalation(
 
   if (smsResult.success) {
     await updateEscalationAfterNotification(incidentId, isFirstNotification)
+    await storeNotificationSent(incidentId, 'sms', decision.trace)
+  } else {
+    await storeNotificationSuppressed(incidentId, 'SMS send failed', decision.trace)
   }
 
   return {

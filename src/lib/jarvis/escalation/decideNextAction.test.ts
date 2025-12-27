@@ -333,5 +333,106 @@ describe('Jarvis Phase 3 Escalation Invariants', () => {
       }
     })
   })
+
+  describe('Phase 4: Decision Trace Invariant', () => {
+    it('all decisions must have trace', () => {
+      vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
+
+      const contexts: EscalationContext[] = [
+        {
+          severity: 'SEV-1',
+          firstNotifiedAt: null,
+          lastNotifiedAt: null,
+          escalationLevel: 0,
+          acknowledgedAt: null,
+          notificationCount: 0
+        },
+        {
+          severity: 'SEV-2',
+          firstNotifiedAt: null,
+          lastNotifiedAt: null,
+          escalationLevel: 0,
+          acknowledgedAt: null,
+          notificationCount: 0
+        },
+        {
+          severity: 'SEV-1',
+          firstNotifiedAt: twoHoursAgo,
+          lastNotifiedAt: fiveMinutesAgo,
+          escalationLevel: 1,
+          acknowledgedAt: null,
+          notificationCount: 1
+        },
+        {
+          severity: 'SEV-1',
+          firstNotifiedAt: twoHoursAgo,
+          lastNotifiedAt: fiveMinutesAgo,
+          escalationLevel: 1,
+          acknowledgedAt: new Date().toISOString(),
+          notificationCount: 1
+        }
+      ]
+
+      for (const context of contexts) {
+        const decision = decideNextAction(context)
+        expect(decision.trace).toBeDefined()
+        expect(decision.trace).not.toBeNull()
+      }
+    })
+
+    it('all traces must have required fields', () => {
+      vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
+
+      const context: EscalationContext = {
+        severity: 'SEV-1',
+        firstNotifiedAt: null,
+        lastNotifiedAt: null,
+        escalationLevel: 0,
+        acknowledgedAt: null,
+        notificationCount: 0
+      }
+
+      const decision = decideNextAction(context)
+      const trace = decision.trace
+
+      expect(trace).toBeDefined()
+      expect(trace.severity).toBeDefined()
+      expect(trace.quiet_hours).toBeDefined()
+      expect(typeof trace.quiet_hours).toBe('boolean')
+      expect(trace.notifications_sent).toBeDefined()
+      expect(typeof trace.notifications_sent).toBe('number')
+      expect(trace.cap).toBeDefined()
+      expect(typeof trace.cap).toBe('number')
+      expect(trace.rule_fired).toBeDefined()
+      expect(typeof trace.rule_fired).toBe('string')
+      expect(trace.rule_fired.length).toBeGreaterThan(0)
+    })
+
+    it('traces must be JSON serializable', () => {
+      vi.mocked(sleepPolicy.isInQuietHours).mockReturnValue(false)
+
+      const context: EscalationContext = {
+        severity: 'SEV-2',
+        firstNotifiedAt: null,
+        lastNotifiedAt: null,
+        escalationLevel: 0,
+        acknowledgedAt: null,
+        notificationCount: 0
+      }
+
+      const decision = decideNextAction(context)
+      const trace = decision.trace
+
+      // Should not throw
+      const json = JSON.stringify(trace)
+      const parsed = JSON.parse(json)
+
+      expect(parsed.severity).toBe(trace.severity)
+      expect(parsed.quiet_hours).toBe(trace.quiet_hours)
+      expect(parsed.notifications_sent).toBe(trace.notifications_sent)
+      expect(parsed.cap).toBe(trace.cap)
+      expect(parsed.rule_fired).toBe(trace.rule_fired)
+    })
+  })
 })
 

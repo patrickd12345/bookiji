@@ -8,6 +8,8 @@
 import { getServerSupabase } from '@/lib/supabaseServer'
 import type { IncidentSnapshot, JarvisAssessment } from './types'
 import crypto from 'crypto'
+import { storeAcknowledged, storeIncidentResolved } from './observability/events'
+import { generateAndStoreSummary } from './observability/summary'
 
 /**
  * Generate incident hash for duplicate detection
@@ -161,14 +163,18 @@ export async function getUnrepliedIncidents(
 export async function markIncidentReplied(incidentId: string): Promise<void> {
   try {
     const supabase = getServerSupabase()
+    const now = new Date().toISOString()
     
     await supabase
       .from('jarvis_incidents')
       .update({
         replied: true,
-        replied_at: new Date().toISOString()
+        replied_at: now
       })
       .eq('incident_id', incidentId)
+    
+    // Store acknowledged event
+    await storeAcknowledged(incidentId, now)
   } catch (error) {
     console.error('Error marking incident as replied:', error)
   }
@@ -177,17 +183,24 @@ export async function markIncidentReplied(incidentId: string): Promise<void> {
 /**
  * Mark incident as resolved
  */
-export async function markIncidentResolved(incidentId: string): Promise<void> {
+export async function markIncidentResolved(incidentId: string, terminalState: string = 'resolved'): Promise<void> {
   try {
     const supabase = getServerSupabase()
+    const now = new Date().toISOString()
     
     await supabase
       .from('jarvis_incidents')
       .update({
         resolved: true,
-        resolved_at: new Date().toISOString()
+        resolved_at: now
       })
       .eq('incident_id', incidentId)
+    
+    // Store incident_resolved event
+    await storeIncidentResolved(incidentId, terminalState, now)
+    
+    // Generate and store summary
+    await generateAndStoreSummary(incidentId)
   } catch (error) {
     console.error('Error marking incident as resolved:', error)
   }

@@ -7,6 +7,8 @@
 
 import { getServerSupabase } from '@/lib/supabaseServer'
 import type { EscalationContext } from './decideNextAction'
+import { storeAcknowledged } from '../observability/events'
+import { generateAndStoreSummary } from '../observability/summary'
 
 /**
  * Get escalation context for incident
@@ -88,13 +90,17 @@ export async function updateEscalationAfterNotification(
 export async function markIncidentAcknowledged(incidentId: string): Promise<void> {
   try {
     const supabase = getServerSupabase()
+    const now = new Date().toISOString()
     
     await supabase
       .from('jarvis_incidents')
       .update({
-        acknowledged_at: new Date().toISOString()
+        acknowledged_at: now
       })
       .eq('incident_id', incidentId)
+    
+    // Store acknowledged event
+    await storeAcknowledged(incidentId, now)
   } catch (error) {
     console.error('[Jarvis] Error marking incident as acknowledged:', error)
   }
