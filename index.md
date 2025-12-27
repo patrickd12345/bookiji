@@ -238,6 +238,7 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/user-guides/landing-and-onboarding-copy.md`
 - `docs/user-guides/LANDING_PAGE.md`
 - `docs/user-guides/LOYALTY_FEATURES_PLAN.md`
+- `docs/user-guides/MARKETING_BROCHURE.md`
 - `docs/user-guides/OFFLINE_SUPPORT_AND_MOBILE_APPS.md`
 - `docs/user-guides/PATENT_OUTLINE.md`
 - `docs/user-guides/PERFORMANCE_CONFIGURATION.md`
