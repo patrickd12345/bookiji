@@ -125,10 +125,11 @@ export function getLLMService(): LLMService {
   let model: string | undefined;
 
   if (provider === 'gemini') {
-    apiKey = process.env.GEMINI_API_KEY || '';
+    // Check for GEMINI_API_KEY first, then fallback to GOOGLE_API_KEY
+    apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
     model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
     if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is required when using Gemini provider');
+      throw new Error('GEMINI_API_KEY or GOOGLE_API_KEY is required when using Gemini provider');
     }
   } else if (provider === 'groq') {
     apiKey = process.env.GROQ_API_KEY || '';
@@ -162,10 +163,10 @@ export function getEmbeddingService(): LLMService {
   // Check for provider, with fallback: if GEMINI_API_KEY is set but no provider specified, use Gemini
   let embeddingProvider = (process.env.SUPPORT_EMBEDDING_PROVIDER || '').toLowerCase().trim();
   
-  // Smart fallback: if Gemini key is set but provider not specified, use Gemini
-  if (!embeddingProvider && process.env.GEMINI_API_KEY) {
+  // Smart fallback: if Gemini/Google key is set but provider not specified, use Gemini
+  if (!embeddingProvider && (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY)) {
     embeddingProvider = 'gemini';
-    console.log('ℹ️  SUPPORT_EMBEDDING_PROVIDER not set, but GEMINI_API_KEY found. Using Gemini for embeddings.');
+    console.log('ℹ️  SUPPORT_EMBEDDING_PROVIDER not set, but GEMINI_API_KEY or GOOGLE_API_KEY found. Using Gemini for embeddings.');
   }
   
   // Default to OpenAI if still not set
@@ -177,10 +178,11 @@ export function getEmbeddingService(): LLMService {
   let model: string | undefined;
 
   if (embeddingProvider === 'gemini') {
-    apiKey = process.env.GEMINI_API_KEY || '';
+    // Check for GEMINI_API_KEY first, then fallback to GOOGLE_API_KEY
+    apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
     model = 'text-embedding-004'; // Fixed for Gemini
     if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is required for Gemini embeddings');
+      throw new Error('GEMINI_API_KEY or GOOGLE_API_KEY is required for Gemini embeddings');
     }
   } else {
     apiKey = process.env.OPENAI_API_KEY || '';

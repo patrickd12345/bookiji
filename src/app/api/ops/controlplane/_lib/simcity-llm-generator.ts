@@ -39,34 +39,31 @@ export async function generateLLMEvents(
     // Build prompt for LLM
     const prompt = buildLLMPrompt(snapshot, maxEvents)
 
-    // Call LLM service (placeholder - replace with actual LLM integration)
-    const llmEndpoint = process.env.SIMCITY_LLM_ENDPOINT || 'http://localhost:11434/api/generate'
-    const llmModel = process.env.SIMCITY_LLM_MODEL || 'llama3.2'
-
-    const response = await fetch(llmEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: llmModel,
-        prompt,
-        stream: false,
-        options: {
-          temperature: snapshot.run_goals.chaos ? 0.9 : 0.7, // Higher temperature for chaos
-          top_p: 0.9,
-        },
-      }),
-      signal: AbortSignal.timeout(10000), // 10s timeout
-    })
-
-    if (!response.ok) {
-      console.warn(`LLM service returned ${response.status}`)
+    // Use Gemini (same as rest of Bookiji codebase)
+    // Check for GEMINI_API_KEY first, then fallback to GOOGLE_API_KEY
+    const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
+    if (!geminiApiKey) {
+      console.warn('GEMINI_API_KEY or GOOGLE_API_KEY not set, cannot generate LLM events')
       return []
     }
 
-    const data = await response.json()
-    const rawText = data.response || data.content || ''
+    const { GoogleGenerativeAI } = await import('@google/generative-ai')
+    const genAI = new GoogleGenerativeAI(geminiApiKey)
+    const modelName = process.env.SIMCITY_LLM_MODEL || process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+    })
+
+    const temperature = snapshot.run_goals.chaos ? 0.9 : 0.7
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature,
+        topP: 0.9,
+      },
+    })
+
+    const rawText = result.response.text()
 
     // Parse JSON from LLM response
     // LLM might return markdown code blocks or plain JSON

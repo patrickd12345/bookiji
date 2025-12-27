@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       enabledDomains: body?.enabledDomains,
       domains: body?.domains,
       proposals: body?.proposals,
+      llmEvents: body?.llmEvents,
     })
     return NextResponse.json(status)
   } catch (error) {
