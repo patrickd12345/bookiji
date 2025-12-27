@@ -1,22 +1,29 @@
 // lib/supabaseClient.ts
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env/supabaseEnv'
 
 // We NEVER evaluate env vars or config at module load.
 // We NEVER create a client server-side unless explicitly requested.
 
 function getBrowserEnv() {
-  // Get the first valid URL (in case multiple are set)
-  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').split(/\s+/)[0].trim()
-  // Prefer ANON_KEY. Some deployments set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to "sb_publishable_*"
-  // which is NOT accepted by supabase-js auth endpoints (will produce 401 "Invalid API key").
-  // Only use the fallback if it looks like a JWT (starts with "eyJ").
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  const publishableFallback = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-  const key =
-    anonKey ||
-    (publishableFallback && publishableFallback.startsWith('eyJ') ? publishableFallback : undefined)
-  
-  return { url, key }
+  // Use environment-aware Supabase configuration
+  // This ensures we always use the correct project for the current environment
+  try {
+    const url = getSupabaseUrl()
+    const key = getSupabaseAnonKey()
+    return { url, key }
+  } catch (error) {
+    // Fallback for browser context where APP_ENV might not be set yet
+    // This maintains backward compatibility during migration
+    const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').split(/\s+/)[0].trim()
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const publishableFallback = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    const key =
+      anonKey ||
+      (publishableFallback && publishableFallback.startsWith('eyJ') ? publishableFallback : undefined)
+    
+    return { url, key }
+  }
 }
 
 // Global singleton instance to prevent multiple GoTrueClient instances

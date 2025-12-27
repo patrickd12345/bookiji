@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { simCityStart } from '../../_lib/simcity'
+import { assertSimCityAllowed } from '@/lib/env/operationalInvariants'
 
 export async function POST(request: NextRequest) {
+  // Enforce environment isolation: SimCity forbidden in production
+  try {
+    assertSimCityAllowed();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'SimCity is not allowed'
+    return NextResponse.json({ error: message }, { status: 403 })
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let body: any
   try {

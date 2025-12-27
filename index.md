@@ -75,6 +75,9 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/api/PROVIDER_RESPONSE_BEST_PRACTICES.md`
 - `docs/api/README.md`
 
+#### Architecture
+- `docs/architecture/ENVIRONMENT_MODEL.md` - Environment isolation model and operational invariants
+
 #### Bookiji Knowledge Base
 - `docs/bookiji-kb/ai-features.md`
 - `docs/bookiji-kb/connexion-stripe.md`
@@ -106,7 +109,20 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/deployment/SUPABASE_MIGRATION_GUIDE.md`
 - `docs/deployment/SUPABASE_SETUP.md`
 
-#### Development
+#### Invariants
+- `docs/invariants/bookings-lifecycle.md` - Booking lifecycle invariants
+- `docs/invariants/payments-refunds.md` - Payment and refund invariants
+- `docs/invariants/availability-slots.md` - Availability and slot invariants
+- `docs/invariants/time-scheduling.md` - Time and scheduling invariants
+- `docs/invariants/admin-ops.md` - Admin and operations invariants
+- `docs/invariants/webhooks.md` - Webhook invariants
+- `docs/invariants/background-jobs.md` - Background job invariants
+- `docs/invariants/ai-agent-actions.md` - AI and agent action invariants
+- `docs/invariants/retries-idempotency.md` - Retry and idempotency invariants
+- `docs/invariants/backfills-reconciliation.md` - Backfill and reconciliation invariants
+- `docs/invariants/PROCESS_INVARIANT_ENFORCEMENT_SUMMARY.md` - PIE implementation summary
+
+### Development
 - `docs/development/ADVERSARIAL_CERTIFICATION.md`
 - `docs/development/APP_REVIEW_FIXES.md`
 - `docs/development/BOOKING_STATE_MACHINE.md`

@@ -1,13 +1,15 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { buildSyntheticAwareFetch, detectSyntheticContext } from './simcity/syntheticContext'
+import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env/supabaseEnv'
 
 // We NEVER evaluate env vars or config at module load.
 // We NEVER create a client server-side unless explicitly requested.
 
 // ---------- Server-side client (NEVER for auth/session) ----------
 export function getServerSupabase(): SupabaseClient {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  // Use environment-aware Supabase configuration
+  const url = getSupabaseUrl()
+  const key = getSupabaseAnonKey()
 
   if (!url || !key) {
     throw new Error('Missing Supabase env vars (server)')

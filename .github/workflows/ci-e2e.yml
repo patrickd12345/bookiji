@@ -44,6 +44,30 @@ jobs:
 
       - run: npm ci --legacy-peer-deps
 
+      - name: Environment isolation guard
+        env:
+          APP_ENV: ${{ env.APP_ENV }}
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          PROD_SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+        run: |
+          echo "🔒 Validating environment isolation..."
+          
+          # CI must never run in prod (check actual value, not PR format)
+          if [[ "$APP_ENV" == "prod" ]] || [[ "$APP_ENV" == "production" ]]; then
+            echo "❌ CRITICAL: CI must never run with APP_ENV=prod"
+            echo "   CI should use APP_ENV=staging"
+            exit 1
+          fi
+          
+          # Fail if prod Supabase credentials are detected
+          if [[ -n "$PROD_SUPABASE_URL" ]] && [[ "$STAGING_SUPABASE_URL" == *"prod"* ]]; then
+            echo "❌ CRITICAL: Production Supabase credentials detected in CI"
+            echo "   CI should use STAGING_SUPABASE_URL, not PROD_SUPABASE_URL"
+            exit 1
+          fi
+          
+          echo "✅ Environment isolation validated"
+
       # Note: Repository variables and secrets are defined in Settings → Secrets and variables → Actions
       # yamllint disable-line rule:truthy
       - name: Generate predictive test plan

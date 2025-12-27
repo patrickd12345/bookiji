@@ -3,10 +3,14 @@
  * 
  * This file provides a centralized way to manage Supabase configuration
  * and supports migration from the old key model to the new one.
+ * 
+ * NOTE: New code should use @/lib/env/supabaseEnv instead.
+ * This file is maintained for backward compatibility.
  */
 
 // Import createClient for type reference if needed
 // import { createClient } from '@supabase/supabase-js';
+import { getSupabaseEnv } from '@/lib/env/supabaseEnv';
 
 export interface SupabaseConfig {
   url: string;
@@ -16,8 +20,25 @@ export interface SupabaseConfig {
 
 /**
  * Get Supabase configuration with backward compatibility
+ * 
+ * NOTE: Prefer using getSupabaseEnv() from @/lib/env/supabaseEnv for new code.
+ * This function maintains backward compatibility but delegates to the
+ * environment-aware configuration system.
  */
 export function getSupabaseConfig(): SupabaseConfig {
+  // Try to use environment-aware config first
+  try {
+    const envConfig = getSupabaseEnv();
+    return {
+      url: envConfig.url,
+      publishableKey: envConfig.anonKey,
+      secretKey: envConfig.serviceKey,
+    };
+  } catch {
+    // Fallback to legacy behavior for backward compatibility
+  }
+
+  // Legacy fallback (maintained for backward compatibility)
   // For tests, provide a stable default to avoid env failures
   if (process.env.NODE_ENV === 'test') {
     return {

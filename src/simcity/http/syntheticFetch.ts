@@ -1,4 +1,5 @@
 import { applySyntheticHeaders, SyntheticHeaderSet } from "../contracts/SyntheticHeaders";
+import { assertSimCityAllowed } from "@/lib/env/operationalInvariants";
 
 export interface SyntheticFetchOptions extends RequestInit {
   timeoutMs?: number;
@@ -13,14 +14,10 @@ const DEFAULT_BACKOFF = 250;
 const USER_AGENT = "bookiji-simcity/2";
 
 function validateEnvironment(url: string): void {
-  const allowed = process.env.SIMCITY_ALLOWED === "true";
-  const env = process.env.BOOKIJI_ENV;
-  if (!allowed) {
-    throw new Error("SimCity synthetic traffic is disabled (SIMCITY_ALLOWED)");
-  }
-  if (env === "prod") {
-    throw new Error("SimCity synthetic traffic is blocked in production");
-  }
+  // Use operational invariants to enforce SimCity rules
+  assertSimCityAllowed();
+  
+  // Additional URL allowlist check
 
   const allowedTargets = [
     /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i,

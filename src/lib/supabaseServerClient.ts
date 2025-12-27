@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { getSupabaseConfig } from '@/config/supabase';
+import { getSupabaseUrl, getSupabaseServiceKey, getSupabaseAnonKey } from '@/lib/env/supabaseEnv';
 import { buildSyntheticAwareFetch, detectSyntheticContext } from '@/lib/simcity/syntheticContext';
 
 /**
@@ -7,16 +7,17 @@ import { buildSyntheticAwareFetch, detectSyntheticContext } from '@/lib/simcity/
  * This should NEVER be exposed to the client/browser
  */
 export const createSupabaseServerClient = () => {
-  const config = getSupabaseConfig();
+  const url = getSupabaseUrl();
+  const serviceKey = getSupabaseServiceKey();
 
-  if (!config.secretKey) {
+  if (!serviceKey) {
     throw new Error('Missing Supabase secret key environment variable');
   }
 
   const syntheticContext = detectSyntheticContext();
   const syntheticFetch = buildSyntheticAwareFetch(syntheticContext);
 
-  return createClient(config.url, config.secretKey, {
+  return createClient(url, serviceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
@@ -26,43 +27,21 @@ export const createSupabaseServerClient = () => {
 };
 
 /**
- * Get the Supabase URL from environment variables
- */
-export const getSupabaseUrl = () => {
-  const config = getSupabaseConfig();
-  return config.url;
-};
-
-/**
- * Get the appropriate Supabase key based on context
- * @param isServer - Whether this is running on the server
- * @param requireSecret - Whether the secret key is required
- */
-export const getSupabaseKey = (isServer: boolean = false, requireSecret: boolean = false) => {
-  const config = getSupabaseConfig();
-  
-  if (requireSecret || isServer) {
-    return config.secretKey;
-  }
-  
-  return config.publishableKey;
-};
-
-/**
  * Get Supabase server client that authenticates as the current user
  * This is used for operations that need user context (like requireAdmin)
  */
 export const getSupabaseServerClient = () => {
-  const config = getSupabaseConfig();
+  const url = getSupabaseUrl();
+  const anonKey = getSupabaseAnonKey();
 
-  if (!config.publishableKey) {
+  if (!anonKey) {
     throw new Error('Missing Supabase publishable key environment variable');
   }
 
   const syntheticContext = detectSyntheticContext();
   const syntheticFetch = buildSyntheticAwareFetch(syntheticContext);
 
-  return createClient(config.url, config.publishableKey, {
+  return createClient(url, anonKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false

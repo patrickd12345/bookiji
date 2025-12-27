@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { buildCSPHeader } from '@/lib/security/csp'
 import { adminGuard } from '@/middleware/adminGuard'
 import { SYNTHETIC_HEADER, SYNTHETIC_TRACE_HEADER } from '@/lib/simcity/syntheticContext'
+import { assertAppEnv } from '@/lib/env/assertAppEnv'
+
+// Validate environment at module load (runs once per server instance)
+// This ensures APP_ENV is set before any requests are processed
+try {
+  assertAppEnv();
+} catch (error) {
+  // In production, fail fast
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+    console.error('❌ CRITICAL: APP_ENV validation failed:', error);
+    // Don't throw here - let instrumentation.ts handle it
+    // This prevents middleware from crashing on every request
+  } else {
+    console.warn('⚠️ APP_ENV validation failed (non-fatal in development):', error);
+  }
+}
 
 // In-memory rate limiter storage
 const rateLimitMap = new Map<string, number[]>()

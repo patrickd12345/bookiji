@@ -33,6 +33,39 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       
+      - name: Environment isolation guard
+        env:
+          APP_ENV: ${{ env.APP_ENV || 'staging' }}
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          PROD_SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: |
+          echo "🔒 Validating environment isolation..."
+          
+          # CI must never run in prod
+          if [[ "$APP_ENV" == "prod" ]]; then
+            echo "❌ CRITICAL: CI must never run with APP_ENV=prod"
+            echo "   CI should use APP_ENV=staging"
+            exit 1
+          fi
+          
+          # Fail if prod Supabase credentials are detected
+          if [[ -n "$PROD_SUPABASE_URL" ]]; then
+            if [[ "$STAGING_SUPABASE_URL" == *"prod"* ]] || [[ "$SUPABASE_URL" == *"prod"* ]]; then
+              echo "❌ CRITICAL: Production Supabase credentials detected in CI"
+              echo "   CI should use STAGING_SUPABASE_URL, not PROD_SUPABASE_URL"
+              exit 1
+            fi
+          fi
+          
+          # Ensure staging credentials are used
+          if [[ -z "$STAGING_SUPABASE_URL" ]] && [[ -n "$SUPABASE_URL" ]]; then
+            echo "⚠️  WARNING: Using generic SUPABASE_URL instead of STAGING_SUPABASE_URL"
+            echo "   Consider migrating to environment-specific credentials"
+          fi
+          
+          echo "✅ Environment isolation validated"
+      
       - name: Epistemic gates (genome, determinism, fingerprint)
         run: pnpm -s ci:epistemic
 

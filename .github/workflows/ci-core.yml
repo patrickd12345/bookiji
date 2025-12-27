@@ -31,6 +31,33 @@ jobs:
       - name: Install deps
         run: npm ci --legacy-peer-deps
 
+      - name: Environment isolation guard
+        env:
+          APP_ENV: ${{ env.APP_ENV || 'staging' }}
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          PROD_SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: |
+          echo "🔒 Validating environment isolation..."
+          
+          # CI must never run in prod
+          if [[ "$APP_ENV" == "prod" ]]; then
+            echo "❌ CRITICAL: CI must never run with APP_ENV=prod"
+            echo "   CI should use APP_ENV=staging"
+            exit 1
+          fi
+          
+          # Fail if prod Supabase credentials are detected
+          if [[ -n "$PROD_SUPABASE_URL" ]]; then
+            if [[ "$STAGING_SUPABASE_URL" == *"prod"* ]] || [[ "$SUPABASE_URL" == *"prod"* ]]; then
+              echo "❌ CRITICAL: Production Supabase credentials detected in CI"
+              echo "   CI should use STAGING_SUPABASE_URL, not PROD_SUPABASE_URL"
+              exit 1
+            fi
+          fi
+          
+          echo "✅ Environment isolation validated"
+
       - name: Lint
         run: npm run lint
 
