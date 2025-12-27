@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { Input } from './ui/input'
 import { Card } from './ui/card'
+import { SafeHtml } from '@/lib/utils/safeHtml'
 
 interface Category {
   id: string
@@ -115,10 +116,7 @@ const Disclosure: React.FC<DisclosureProps> = ({ title, content }) => {
         <ChevronDown open={open} />
       </div>
       {open && (
-        <div
-          className="mt-2 text-sm prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: content }}
-        />
+        <SafeHtml html={content} className="mt-2 text-sm prose prose-sm max-w-none" allowUnsafe={false} />
       )}
     </Card>
   )

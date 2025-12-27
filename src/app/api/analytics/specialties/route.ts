@@ -1,8 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from "@supabase/supabase-js";
+import { logger } from '@/lib/logger';
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
+
+interface SpecialtyAnalytics {
+  specialty: {
+    id: string;
+    name: string;
+    parent_id: string | null;
+    path: string;
+  } | null;
+  metrics: {
+    vendorCount: number;
+    totalBookings: number;
+    totalRevenue: number;
+    averageRating: number;
+    bookingTrends: Array<{ date: string; count: number; revenue: number }>;
+    topVendors: Array<{
+      id: string;
+      full_name: string | null;
+      business_name: string | null;
+      average_rating: number | null;
+      total_bookings: number | null;
+    }>;
+    geographicDistribution: {
+      countries: Array<{ name: string; count: number }>;
+      cities: Array<{ name: string; count: number }>;
+    };
+  };
+}
+
+interface AllSpecialtiesAnalytics {
+  overview: {
+    totalSpecialties: number;
+    totalVendors: number;
+    totalBookings: number;
+    overallTrends: Array<{ date: string; count: number; revenue: number }>;
+  };
+  specialtyMetrics: Array<{
+    id: string;
+    name: string;
+    parent_id: string | null;
+    path: string;
+    vendorCount: number;
+    bookingCount: number;
+  }>;
+  popularityRanking: Array<{
+    id: string;
+    name: string;
+    parent_id: string | null;
+    path: string;
+    vendorCount: number;
+    bookingCount: number;
+  }>;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,8 +68,7 @@ export async function GET(req: NextRequest) {
     const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : timeRange === "90d" ? 90 : 365;
     const startDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let analytics: any = {};
+    let analytics: SpecialtyAnalytics | AllSpecialtiesAnalytics;
 
     if (specialtyId) {
       // Single specialty analytics
@@ -34,7 +86,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Specialty analytics error:", error);
+    logger.error("Specialty analytics error", error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -181,8 +233,12 @@ async function getAllSpecialtiesAnalytics(startDate: Date) {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getBookingTrends(bookings: any[], startDate: Date) {
+interface BookingForTrends {
+  created_at: string;
+  total_amount_cents?: number | null;
+}
+
+function getBookingTrends(bookings: BookingForTrends[], startDate: Date) {
   const trends: Record<string, { count: number; revenue: number }> = {};
   
   // Group by day
@@ -216,8 +272,11 @@ function getBookingTrends(bookings: any[], startDate: Date) {
   }));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function calculateAverageRating(bookings: any[]) {
+interface BookingWithRating {
+  rating?: number | null;
+}
+
+function calculateAverageRating(bookings: BookingWithRating[]) {
   const ratings = bookings
     .map(b => b.rating)
     .filter(r => r && r > 0);
@@ -228,8 +287,12 @@ function calculateAverageRating(bookings: any[]) {
   return Math.round((sum / ratings.length) * 10) / 10;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getGeographicDistribution(locations: any[]) {
+interface LocationForDistribution {
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
+function getGeographicDistribution(locations: LocationForDistribution[]) {
   const countries: Record<string, number> = {};
   const cities: Record<string, number> = {};
   

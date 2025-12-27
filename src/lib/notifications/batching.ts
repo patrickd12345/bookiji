@@ -4,6 +4,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { buildPushPayload } from '@/lib/notifications/pushPayload'
 import type { NotificationAttemptResult } from '@/lib/services/notificationQueue'
+import { logger } from '@/lib/logger'
 
 let _supabase: SupabaseClient | null = null
 
@@ -180,7 +181,7 @@ async function sendPushNotification(
   const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
 
   if (!vapidPublicKey || !vapidPrivateKey) {
-    console.warn('⚠️ VAPID keys not configured, skipping push notification')
+    logger.warn('VAPID keys not configured, skipping push notification')
     return { success: false, error: 'missing_vapid_keys' }
   }
 
@@ -229,7 +230,7 @@ async function sendPushNotification(
       return { success: true }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error(`Failed to send push to subscription ${subscription.id}:`, error)
+      logger.error(`Failed to send push to subscription ${subscription.id}`, error instanceof Error ? error : new Error(String(error)), { subscriptionId: subscription.id })
 
       // If subscription is invalid (410 Gone), delete it
       if (error.statusCode === 410) {

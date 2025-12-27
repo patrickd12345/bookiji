@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { KBProvider, KBArticle, KBSearchResult, Locale, Section } from './types';
 import { ollamaService } from '@/lib/ollama';
+import { logger } from '@/lib/logger';
 
 // This will be the production provider using pgvector
 export class PgVectorProvider implements KBProvider {
@@ -18,7 +19,7 @@ export class PgVectorProvider implements KBProvider {
       if (!url || !key) {
         // Fallback for build time if env vars are missing
         if (typeof window === 'undefined' && (!url || !key)) {
-           console.warn('KB Provider: Supabase config missing');
+           logger.warn('KB Provider: Supabase config missing');
            // Return a dummy or throw? Throwing is better but only at runtime
            throw new Error('Supabase config missing for KB Provider');
         }
@@ -81,7 +82,7 @@ export class PgVectorProvider implements KBProvider {
 
       if (error) {
         // If the search fails (e.g., no chunks/embeddings yet), fall back to simple text search
-        console.warn('Vector search failed, falling back to text search:', error.message);
+        logger.warn('Vector search failed, falling back to text search', { error: error.message });
         return await this.fallbackTextSearch(query, locale, sectionBias, limit);
       }
 
@@ -94,7 +95,7 @@ export class PgVectorProvider implements KBProvider {
         url: item.url
       }));
     } catch (error) {
-      console.warn('Search error, falling back to text search:', error);
+      logger.warn('Search error, falling back to text search', { error });
       return await this.fallbackTextSearch(query, locale, sectionBias, limit);
     }
   }
@@ -119,7 +120,7 @@ export class PgVectorProvider implements KBProvider {
     const { data, error } = await queryBuilder;
 
     if (error) {
-      console.error('Fallback search failed:', error);
+      logger.error('Fallback search failed', error instanceof Error ? error : new Error(String(error)));
       return [];
     }
 
@@ -210,7 +211,7 @@ Answer in a helpful, friendly tone. Keep it under 100 words.
 
       return await ollamaService.generate(prompt);
     } catch (error) {
-      console.error('AI synthesis failed, falling back to snippet:', error);
+      logger.error('AI synthesis failed, falling back to snippet', error instanceof Error ? error : new Error(String(error)));
       return topResult.snippet;
     }
   }

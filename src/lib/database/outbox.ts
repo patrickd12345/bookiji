@@ -11,17 +11,31 @@ const supabaseKey = process.env.NODE_ENV === 'production'
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+export interface PaymentOutboxPayload {
+  amount: number;
+  currency: string;
+  payment_intent_id?: string;
+  customer_id?: string;
+  [key: string]: unknown; // Allow additional fields
+}
+
 export interface PaymentOutboxEntry {
   id: string;
   booking_id: string;
   event_type: string;
   idempotency_key: string;
   state: 'queued' | 'in_flight' | 'committed' | 'failed';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload: any;
+  payload: PaymentOutboxPayload;
   created_at: string;
   processed_at?: string;
   error?: string;
+}
+
+export interface AuditLogMeta {
+  previous_state?: string;
+  new_state?: string;
+  changes?: Record<string, unknown>;
+  [key: string]: unknown; // Allow additional fields
 }
 
 export interface AuditLogEntry {
@@ -30,8 +44,7 @@ export interface AuditLogEntry {
   actor_id?: string;
   action: string;
   reason?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  meta?: any;
+  meta?: AuditLogMeta;
   created_at: string;
 }
 
@@ -61,8 +74,7 @@ export class OutboxService {
     bookingId: string,
     eventType: string,
     idempotencyKey: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    payload: any
+    payload: PaymentOutboxPayload
   ): Promise<string> {
     const { data, error } = await supabase
       .from('payments_outbox')

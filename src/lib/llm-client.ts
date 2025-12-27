@@ -1,4 +1,5 @@
 import { getLLMConfig, isDevelopment } from '@/config/environment';
+import { logger } from '@/lib/logger';
 
 export interface LLMRequest {
   messages: Array<{
@@ -69,9 +70,7 @@ class LLMClient {
       const endpoint = this.getChatEndpoint();
       const payload = this.buildPayload(request);
 
-      console.log(`🤖 LLM Request to: ${endpoint}`);
-      console.log(`📝 Model: ${this.model}`);
-      console.log(`🌍 Environment: ${isDevelopment() ? 'Development' : 'Production'}`);
+      logger.debug('LLM Request', { endpoint, model: this.model, environment: isDevelopment() ? 'Development' : 'Production' });
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -90,7 +89,7 @@ class LLMClient {
       const data = await response.json();
       return this.formatResponse(data);
     } catch (error) {
-      console.error('❌ LLM request failed:', error);
+      logger.error('LLM request failed', error);
       throw error;
     }
   }
@@ -200,7 +199,7 @@ class LLMClient {
 
       return response.ok;
     } catch (error) {
-      console.error('❌ LLM health check failed:', error);
+      logger.error('LLM health check failed', error);
       return false;
     }
   }
@@ -222,7 +221,7 @@ class LLMClient {
         return data.data?.map((model: { id: string }) => model.id) || [];
       }
     } catch (error) {
-      console.error('❌ Failed to get available models:', error);
+      logger.error('Failed to get available models', error);
       return [];
     }
   }

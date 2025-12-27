@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { sendEmail, sendSMS, sendPushNotification } from './providers'
+import { logger } from '@/lib/logger'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -24,7 +25,7 @@ export async function notifyUser(
   request?: Request
 ): Promise<NotificationResult[]> {
   
-  console.log(`🔔 Notification Center: Sending '${template}' to user ${userId}`)
+  logger.debug('Notification Center: Sending notification', { template, userId })
 
   // 1. Get preferences
   const { data: prefs, error: prefError } = await supabase
@@ -42,14 +43,14 @@ export async function notifyUser(
   }
 
   if (prefError && prefError.code !== 'PGRST116') {
-    console.warn('Error fetching preferences, using defaults:', prefError)
+    logger.warn('Error fetching preferences, using defaults', { error: prefError })
   }
 
   // 2. Get user contact info from Auth
   const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId)
   
   if (userError || !userData.user) {
-    console.error('User not found for notification:', userId)
+    logger.error('User not found for notification', undefined, { userId })
     return [{ type: 'email', success: false, error: 'User not found' }]
   }
 
@@ -115,7 +116,7 @@ export async function notifyUser(
       data: data
     })
   } catch (e) {
-    console.warn('Failed to create in-app notification:', e)
+    logger.warn('Failed to create in-app notification', { error: e })
   }
 
   return results
@@ -134,7 +135,7 @@ async function logNotification(userId: string, type: string, recipient: string, 
       metadata: result.data // safely ignore if undefined
     })
   } catch (e) {
-    console.error('Failed to log notification:', e)
+    logger.error('Failed to log notification', e instanceof Error ? e : new Error(String(e)))
   }
 }
 

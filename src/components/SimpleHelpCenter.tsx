@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Rocket } from 'lucide-react'
+import { SafeHtml } from '@/lib/utils/safeHtml'
 
 const RealAIChat = dynamic(() => import('./RealAIChat'), { ssr: false })
 
@@ -269,7 +270,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                     {faqResults.map((item) => (
                       <div key={item.id} className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">{item.title}</h3>
-                        <p className="text-gray-600" dangerouslySetInnerHTML={{ __html: item.content }} />
+                        <SafeHtml html={item.content} className="text-gray-600" allowUnsafe={false} />
                       </div>
                     ))}
                   </div>
