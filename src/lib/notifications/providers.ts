@@ -1,6 +1,7 @@
 import { getEmailTemplate } from '@/lib/services/emailTemplates'
 import { getSmsTemplate } from '@/lib/services/smsTemplates'
 import { buildPushPayload } from '@/lib/notifications/pushPayload'
+import { logger } from '@/lib/logger'
 
 export interface NotificationResult {
   success: boolean
@@ -43,7 +44,7 @@ export async function sendEmail(
         }
       } else {
         if (process.env.NODE_ENV === 'development') {
-          console.warn('🌱 Dev fallback: SendGrid request failed with status', response.status, '- treating as success to avoid masking UI work');
+          logger.warn('Dev fallback: SendGrid request failed', { status: response.status });
           return { success: true, providerResponse: String(response.status) }
         }
         return { success: false, error: `SendGrid error ${response.status}` }
@@ -51,14 +52,14 @@ export async function sendEmail(
     } else {
       // Production: require provider. In dev, allow mock.
       if (process.env.NODE_ENV === 'development') {
-        console.log('📧 [mock] sending email:', { recipient, subject })
+        logger.debug('Mock sending email', { recipient, subject })
         return { success: true, providerResponse: 'mock' }
       }
       return { success: false, error: 'Email provider not configured' }
     }
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Email sending error:', error)
+      logger.error('Email sending error', error instanceof Error ? error : new Error(String(error)))
     }
     return {
       success: false,
@@ -103,14 +104,14 @@ export async function sendSMS(recipient: string, template: string, data: Record<
       }
     } else {
       if (process.env.NODE_ENV === 'development') {
-        console.log('📱 [mock] sending SMS:', { recipient, message })
+        logger.debug('Mock sending SMS', { recipient, message })
         return { success: true, providerResponse: 'mock' }
       }
       return { success: false, error: 'SMS provider not configured' }
     }
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('SMS sending error:', error)
+      logger.error('SMS sending error', error instanceof Error ? error : new Error(String(error)))
     }
     return {
       success: false,
@@ -142,7 +143,7 @@ export async function sendPushNotification(recipient: string, template: string, 
       })
     } else {
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔔 [mock] sending push notification:', { recipient, pushContent })
+        logger.debug('Mock sending push notification', { recipient, pushContent })
       }
     }
 
@@ -153,7 +154,7 @@ export async function sendPushNotification(recipient: string, template: string, 
     }
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('Push notification error:', error)
+      logger.error('Push notification error', error instanceof Error ? error : new Error(String(error)))
     }
     return {
       success: false,
