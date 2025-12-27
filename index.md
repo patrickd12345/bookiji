@@ -212,8 +212,11 @@ This file contains an index of all markdown files in the repository, organized b
 
 #### Operations
 - `docs/operations/ENVIRONMENT_MODES.md` - Environment modes and operator guide (named execution modes)
+- `docs/operations/incidents/INCIDENT_COMMANDER.md` - Incident Commander model for incident response
+- `docs/operations/incidents/POSTMORTEM_TEMPLATE.md` - Blameless post-incident review template
 - `docs/operations/PRODUCTION_MONITORING_STRATEGY.md` - Production monitoring strategy (Option B)
 - `docs/operations/SCHEDULING_CHANGE_RULE.md`
+- `docs/operations/incidents/SEVERITY_MODEL.md` - Incident severity classification model
 - `docs/operations/STAGING_SETUP.md` - Staging environment setup guide
 - `docs/operations/STAGING_SETUP_EXECUTION_REPORT.md` - Staging setup execution report
 - `docs/ops/DEPLOYAI_SYSTEM.md`
