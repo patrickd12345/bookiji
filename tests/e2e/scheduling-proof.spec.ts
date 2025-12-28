@@ -215,9 +215,10 @@ test.describe('Scheduling Proof', () => {
     if (isPaymentPage) {
       // First booking succeeded - we're on payment page
       // This proves the slot was successfully booked
-    } else if (alertMessage) {
+    } else if (alertMessage as string | null) {
       // Alert was shown - check if it's an error
-      if (alertMessage.toLowerCase().includes('failed') || alertMessage.toLowerCase().includes('error') || alertMessage.toLowerCase().includes('unavailable')) {
+      const msg = (alertMessage as unknown as string).toLowerCase()
+      if (msg.includes('failed') || msg.includes('error') || msg.includes('unavailable')) {
         throw new Error(`First booking failed with alert: ${alertMessage}`)
       }
     } else {
@@ -264,11 +265,12 @@ test.describe('Scheduling Proof', () => {
 
       // Step 11: Expect rejection/error message for duplicate booking
       // Check for alert message first
-      if (alertMessage) {
-        const isError = alertMessage.toLowerCase().includes('failed') || 
-                       alertMessage.toLowerCase().includes('error') || 
-                       alertMessage.toLowerCase().includes('unavailable') ||
-                       alertMessage.toLowerCase().includes('already')
+      if (alertMessage as string | null) {
+        const msg = (alertMessage as unknown as string).toLowerCase()
+        const isError = msg.includes('failed') || 
+                       msg.includes('error') || 
+                       msg.includes('unavailable') ||
+                       msg.includes('already')
         expect(isError).toBeTruthy()
       } else {
         // Check for error message on page
