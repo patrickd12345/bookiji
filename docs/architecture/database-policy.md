@@ -6,6 +6,8 @@
 This document is the **source of truth** for how Bookiji manages its database.  
 Any change that violates these rules is considered **incorrect** even if it "works."
 
+> **Note:** For Supabase CLI workflow and migration procedures, see [`docs/development/DATABASE_MANAGEMENT_POLICY.md`](../development/DATABASE_MANAGEMENT_POLICY.md). This document focuses on policy and classification rules; that document covers operational workflows.
+
 ---
 
 ## 1) Non-Negotiable Principles

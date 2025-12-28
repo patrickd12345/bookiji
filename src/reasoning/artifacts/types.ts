@@ -37,7 +37,6 @@ export interface ArtifactProvenance {
   readonly system: string;
   readonly system_version: string;
   readonly phase: "12";
-  readonly genome_hash: string;
   readonly governance: GovernanceSnapshots;
   readonly deployment: DeploymentFingerprint;
   readonly external_adapters: ExternalAdapterPolicy;

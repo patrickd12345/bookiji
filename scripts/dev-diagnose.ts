@@ -1,6 +1,5 @@
 import fs from 'fs'
 import path from 'path'
-import yaml from 'js-yaml'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -55,56 +54,10 @@ function listTsconfigPaths() {
   }
 }
 
-function collectSrcPathsFromGenome(node: unknown, acc: Set<string>) {
-  if (!node) return
-  if (typeof node === 'string' && node.startsWith('src/')) {
-    acc.add(node)
-    return
-  }
-
-  if (Array.isArray(node)) {
-    node.forEach((item) => collectSrcPathsFromGenome(item, acc))
-    return
-  }
-
-  if (typeof node === 'object') {
-    for (const value of Object.values(node as Record<string, unknown>)) {
-      collectSrcPathsFromGenome(value, acc)
-    }
-  }
-}
-
-function listGenomeExpectations() {
-  const genomePath = path.join(repoRoot, 'genome/master-genome.yaml')
-  const genome = yaml.load(fs.readFileSync(genomePath, 'utf8')) as any
-  const domains = Object.keys(genome?.domains ?? {})
-
-  logSection('Genome domains')
-  console.log(domains.length ? `- Domains: ${domains.join(', ')}` : '- Domains: (none found)')
-
-  const srcPaths = new Set<string>()
-  collectSrcPathsFromGenome(genome, srcPaths)
-  const expectedDirs = Array.from(srcPaths)
-    .map((p) => (path.extname(p) ? path.dirname(p) : p))
-    .filter((p) => p.startsWith('src/'))
-
-  const uniqueDirs = Array.from(new Set(expectedDirs))
-  const missingDirs = uniqueDirs.filter((relPath) => !fs.existsSync(path.join(repoRoot, relPath)))
-
-  logSection('Missing src directories expected by validators')
-  if (missingDirs.length === 0) {
-    console.log('- none')
-    return
-  }
-
-  missingDirs.forEach((dir) => console.log(`- ${dir}`))
-}
-
 function main() {
   console.log('Bookiji Dev Diagnose (read-only)')
   listPackageVersions()
   listTsconfigPaths()
-  listGenomeExpectations()
 }
 
 main()

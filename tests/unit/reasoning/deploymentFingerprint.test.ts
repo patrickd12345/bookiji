@@ -11,7 +11,6 @@ const baseOptions = {
   git_commit: "commit-abc",
   build_id: "build-123",
   artifact_schema_versions: { "reasoning-artifact": "v1", analytics: "v2" },
-  genome_hash: "genome-1",
   governance_snapshot_hash: deterministicHash(governance),
   reasoning_relevant_config_hashes: [
     { name: "reasoning.timeout.ms", hash: "100" },

@@ -81,7 +81,6 @@ function buildEvidence(artifacts: readonly ReasoningArtifact[], deployment: Depl
       environment: deployment.environment.classification,
       registry_hash: artifact.provenance.governance.registry_hash,
       evolution_hash: artifact.provenance.governance.evolution_hash,
-      genome_hash: artifact.provenance.genome_hash,
     });
 
     return {
@@ -203,7 +202,7 @@ export function buildFullDisclosureAuditReport(options: BuildFullDisclosureAudit
         "Recompute input_closure.hash_closure from listed inputs.",
         "Recompute deployment fingerprint hash and compare to fingerprint_id.",
         "Verify each artifact via verifyReasoningArtifact using the declared deployment fingerprint and environment.",
-        "Validate governance snapshot hash and genome hash bindings for each artifact.",
+        "Validate governance snapshot hash bindings for each artifact.",
       ],
       invalid_conditions: [
         "Any hash recomputation mismatch.",
@@ -278,7 +277,6 @@ export function verifyFullDisclosureAuditReport(
       environment: report.deployment_disclosure.environment.classification,
       registry_hash: entry.governance.registry_hash,
       evolution_hash: entry.governance.evolution_hash,
-      genome_hash: entry.artifact.provenance.genome_hash,
     });
   });
 }

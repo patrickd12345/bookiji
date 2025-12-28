@@ -3,7 +3,6 @@ Verification Rules (Phase 12)
 - ReasoningArtifact integrity: zero out `artifact_id`, hash the artifact body, compare to `identity.artifact_id`.
 - Governance binding: recompute `deterministicHash(provenance.governance)` and match `deployment.governance_snapshot_hash`.
 - Deployment binding: recompute the DeploymentFingerprint hash (empty `fingerprint_id`) and match `fingerprint_id`; environment classification must match the declared verification target.
-- Genome binding: `provenance.deployment.genome_hash` must equal `provenance.genome_hash`.
 - External adapters: policy must be `external-adapter-policy/v1`; all adapter flags must be false; `external_adapter_usage` must be empty.
 - Full Disclosure Audit Report integrity: zero out `report_id`, hash the report body, compare to `report_id`.
 - Input closure: recompute `hash_closure` from the ordered `input_closure.inputs` array.
@@ -13,7 +12,7 @@ Verification Rules (Phase 12)
 Guarantees
 - Deterministic, hash-closed artifacts (reasoning-artifact/v1).
 - Governance-bound provenance with preserved disagreement and mandatory uncertainty.
-- Deployment fingerprint binding (deployment-fingerprint/v1) covering genome hash, governance snapshot, config allowlist, git commit, build id, and environment classification.
+- Deployment fingerprint binding (deployment-fingerprint/v1) covering governance snapshot, config allowlist, git commit, build id, and environment classification.
 - Full Disclosure audit closure (full-disclosure-audit/v1) including input closure and artifact hashes.
 - External orchestration adapters are non-authoritative and cannot emit, mutate, or verify artifacts.
 

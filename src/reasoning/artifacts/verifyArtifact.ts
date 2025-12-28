@@ -10,7 +10,6 @@ import { assertExternalAdapterPolicy } from "../adapters/policy";
 export interface VerificationContext {
   readonly registry_hash?: string;
   readonly evolution_hash?: string;
-  readonly genome_hash?: string;
   readonly deployment_fingerprint_id?: string;
   readonly deployment_fingerprint?: DeploymentFingerprint;
   readonly environment?: DeploymentEnvironmentClassification;
@@ -38,20 +37,12 @@ export function verifyReasoningArtifact(artifact: ReasoningArtifact, context: Ve
     throw new Error("Governance evolution hash mismatch");
   }
 
-  if (context.genome_hash && artifact.provenance.genome_hash !== context.genome_hash) {
-    throw new Error("Genome hash mismatch");
-  }
-
   assertExternalAdapterPolicy(artifact.provenance.external_adapters, artifact.provenance.external_adapter_usage ?? []);
 
   const expectedGovernanceSnapshotHash = deterministicHash(artifact.provenance.governance);
   if (artifact.provenance.deployment.governance_snapshot_hash !== expectedGovernanceSnapshotHash) {
     throw new Error("Deployment fingerprint governance snapshot mismatch");
   }
-  if (artifact.provenance.deployment.genome_hash !== artifact.provenance.genome_hash) {
-    throw new Error("Deployment fingerprint genome hash mismatch");
-  }
-
   verifyDeploymentFingerprint(artifact.provenance.deployment, {
     expected_fingerprint_id:
       context.deployment_fingerprint_id ?? context.deployment_fingerprint?.fingerprint_id ?? undefined,

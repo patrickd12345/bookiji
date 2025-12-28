@@ -97,4 +97,36 @@ describe('POST /api/bookings/create', () => {
     expect(data.booking).toHaveProperty('id')
     expect(data).toHaveProperty('clientSecret')
   })
+
+  it('rejects bookings that start in the past', async () => {
+    const now = new Date()
+    const pastStart = new Date(now.getTime() - 60 * 60 * 1000) // 1 hour ago
+    const pastEnd = new Date(pastStart.getTime() + 60 * 60 * 1000)
+
+    const bookingData = {
+      providerId: 'test-provider-123',
+      serviceId: 'test-service-123',
+      startTime: pastStart.toISOString(),
+      endTime: pastEnd.toISOString(),
+      amountUSD: 25
+    }
+
+    const mockRequest = new NextRequest(
+      new Request(`${TEST_BASE_URL}/api/bookings/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData)
+      })
+    )
+
+    const { POST } = await import('@/app/api/bookings/create/route')
+    const response = await POST(mockRequest)
+    expect(response.status).toBe(400)
+
+    const json = await response.json()
+    expect(json.error).toBeDefined()
+    expect(json.error).toMatch(/past/i)
+  })
 })

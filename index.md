@@ -45,9 +45,6 @@ This file contains an index of all markdown files in the repository, organized b
 ### .cursor/
 - `.cursor/startup-context.md`
 
-### genome/
-- `genome/linter-rules.md`
-
 ---
 
 ## Applications
@@ -84,6 +81,7 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/api/README.md`
 
 #### Architecture
+- `docs/architecture/database-policy.md` - Database Management Policy (DBMP) - comprehensive database policy and table classification rules
 - `docs/architecture/ENVIRONMENT_MODEL.md` - Environment isolation model and operational invariants
 
 #### Bookiji Knowledge Base
@@ -118,6 +116,7 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/deployment/SUPABASE_SETUP.md`
 
 #### Invariants
+- `docs/invariants.md` - Enforceable invariant checklist
 - `docs/invariants/bookings-lifecycle.md` - Booking lifecycle invariants
 - `docs/invariants/payments-refunds.md` - Payment and refund invariants
 - `docs/invariants/availability-slots.md` - Availability and slot invariants
@@ -130,11 +129,10 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/invariants/backfills-reconciliation.md` - Backfill and reconciliation invariants
 - `docs/invariants/PROCESS_INVARIANT_ENFORCEMENT_SUMMARY.md` - PIE implementation summary
 
-### Development
+#### Development
 - `docs/development/ADVERSARIAL_CERTIFICATION.md`
 - `docs/development/SUPABASE_CLI_AUTH.md` - Supabase CLI authentication guide
 - `docs/development/APP_REVIEW_FIXES.md`
-- `docs/development/BOOKING_STATE_MACHINE.md`
 - `docs/development/BOOKING_STATE_MACHINE.md`
 - `docs/development/automation-and-scaling-docs.md`
 - `docs/development/bookiji-native-calendar-mvp.md`
@@ -155,20 +153,21 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/GENOME_LINTER_GUIDE.md`
 - `docs/development/GENOME_LINTER_NEXT_STEPS_PLAN.md`
 - `docs/development/GLOBAL_FAIRNESS_SYSTEM.md`
+- `docs/development/INVARIANT_COVERAGE_MATRIX.md`
 - `docs/development/KB_API_UPGRADE_GUIDE.md`
 - `docs/development/KEYWORDS.md`
+- `docs/development/LOCAL_CRON_SETUP.md` - Local cron jobs setup for development
 - `docs/development/MIGRATION_RECOVERY.md`
 - `docs/development/MIGRATION_TESTING_STRATEGY.md`
 - `docs/development/MODERN_NEXTJS_SETUP.md`
 - `docs/development/NEXT_STEPS_IMPLEMENTATION.md`
 - `docs/development/NOTIFICATIONS_2_0_AND_I18N_COMPLETION.md`
 - `docs/development/NOTIFICATIONS_2_0_I18N_FINAL_SUMMARY.md`
+- `docs/development/PAYMENT_CONSISTENCY_FIX.md` - Payment ↔ booking consistency fix documentation
+- `docs/development/PRE_COMMIT_CHECKS.md` - Pre-commit hook checks and configuration
 - `docs/development/README.md`
 - `docs/development/ROADMAP.md`
 - `docs/development/SCHEDULING_INVARIANTS.md`
-- `docs/development/INVARIANT_COVERAGE_MATRIX.md`
-- `docs/development/JARVIS_DEPLOYMENT_CHECKLIST.md` - Jarvis deployment checklist and verification steps
-- `docs/development/JARVIS_INCIDENT_COMMANDER.md` - Jarvis incident commander system (3AM mode)
 - `docs/development/SEO_MANAGER_SYSTEM.md`
 - `docs/development/SHADCN_UI_MIGRATION_SUCCESS.md`
 - `docs/development/SIMCITY_RUNBOOK.md`
@@ -176,6 +175,8 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/SPECIALTY_SYSTEM_DEPLOYMENT.md`
 - `docs/development/STARTER_COMMIT_IMPLEMENTATION.md`
 - `docs/development/SUPPORT_LOCAL_RUNBOOK.md`
+- `docs/development/SUPPORT_RAG_SIMCITY_EXECUTION_REPORT.md` - SimCity Support RAG execution report
+- `docs/development/SUPPORT_RAG_SIMCITY_SETUP.md` - Support RAG SimCity environment setup
 - `docs/development/TEAM_COORDINATION.md`
 - `docs/development/TESTING_GUIDE.md`
 - `docs/development/TEST_PLAN.md`
@@ -186,6 +187,15 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/TRANSLATION_TEMPLATE.md`
 - `docs/development/TYPE_SAFETY_STRIKE.md` - Type safety strike plan for critical paths
 - `docs/development/WIREFRAMES.md`
+
+#### Jarvis
+- `docs/development/JARVIS_DEPLOYMENT_CHECKLIST.md` - Jarvis deployment checklist and verification steps
+- `docs/development/JARVIS_INCIDENT_COMMANDER.md` - Jarvis incident commander system (3AM mode)
+- `docs/jarvis/phase1-incident-detection.md` - Phase 1: Incident detection and SMS notification
+- `docs/jarvis/phase2-sms-commands.md` - Phase 2: SMS commands and human-in-the-loop (2A, 2B, 2C)
+- `docs/jarvis/phase3-sleep-aware-escalation.md` - Phase 3: Sleep-aware escalation and attention management
+- `docs/jarvis/phase4-observability-sanity-checks.md` - Observability sanity checklist for Jarvis Phase 4
+- `docs/jarvis/phase5-adaptive-policy.md` - Adaptive policy, simulation, and suggestions for Jarvis Phase 5
 
 #### Features
 - `docs/features/simcity-safety.md`
@@ -280,8 +290,6 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/CI_LEVEL2_SUMMARY.md`
 - `docs/CI_PLAYBOOK.md`
 - `docs/FIXES_APPLIED.md`
-- `docs/genome-overview.md`
-- `docs/how-to-update-genome.md`
 - `docs/IMMUTABLE_DEPLOYS.md`
 - `docs/LEVEL2_ENHANCEMENTS.md`
 - `docs/LEVEL3_ENHANCEMENTS.md`

@@ -110,7 +110,6 @@ const fingerprint = buildDeploymentFingerprint({
   git_commit: "commit-report-1",
   build_id: "build-report-1",
   artifact_schema_versions: { "reasoning-artifact": "v1" },
-  genome_hash: "genome-a",
   governance_snapshot_hash: deterministicHash(governanceSnapshots),
   reasoning_relevant_config_hashes: [
     { name: "reasoning.timeout.ms", hash: "150" },
@@ -122,7 +121,6 @@ const provenance = {
   system: "bookiji",
   system_version: "1.1.0",
   phase: "12" as const,
-  genome_hash: fingerprint.genome_hash,
   governance: governanceSnapshots,
   deployment: fingerprint,
   external_adapters: DEFAULT_EXTERNAL_ADAPTER_POLICY,

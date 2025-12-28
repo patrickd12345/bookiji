@@ -9,65 +9,47 @@
  *   - e2e-vendor@bookiji.test
  *   - e2e-customer@bookiji.test
  * 
- * This script is idempotent - safe to run multiple times.
- * 
+ * This script always deletes and recreates the canonical E2E users because
+ * Supabase Auth can leave stale password hashes that break deterministic login.
+ * The delete-and-recreate behavior applies only to the E2E seed run, where
+ * determinism is more important than preserving any prior Supabase data.
+ *
  * Usage:
  *   pnpm e2e:seed
  * 
  * Environment Variables:
  *   SUPABASE_URL - Supabase project URL (required)
  *   SUPABASE_SERVICE_ROLE_KEY - Service role key (required)
- *   E2E_VENDOR_EMAIL - Vendor email (default: e2e-vendor@bookiji.test)
- *   E2E_VENDOR_PASSWORD - Vendor password (default: TestPassword123!)
- *   E2E_CUSTOMER_EMAIL - Customer email (default: e2e-customer@bookiji.test)
- *   E2E_CUSTOMER_PASSWORD - Customer password (default: TestPassword123!)
  *   E2E_ADMIN_EMAIL - Admin email (optional, default: e2e-admin@bookiji.test)
  *   E2E_ADMIN_PASSWORD - Admin password (default: TestPassword123!)
+ *   CREATE_ADMIN - Set to true to seed the admin user (optional)
+ *
+ * Canonical vendor/customer credentials live in scripts/e2e/credentials.ts and are used
+ * by the Playwright suites to avoid drift.
  */
 
+import 'dotenv/config'
+import { Client } from 'pg'
 import { createClient } from '@supabase/supabase-js'
+import { E2E_CUSTOMER_USER, E2E_VENDOR_USER, E2EUserDefinition } from './credentials'
+
+if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  throw new Error('E2E seed requires SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL')
+}
+
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('E2E seed requires SUPABASE_SERVICE_ROLE_KEY')
+}
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-const E2E_VENDOR_EMAIL = process.env.E2E_VENDOR_EMAIL || 'e2e-vendor@bookiji.test'
-const E2E_VENDOR_PASSWORD = process.env.E2E_VENDOR_PASSWORD || 'TestPassword123!'
-const E2E_CUSTOMER_EMAIL = process.env.E2E_CUSTOMER_EMAIL || 'e2e-customer@bookiji.test'
-const E2E_CUSTOMER_PASSWORD = process.env.E2E_CUSTOMER_PASSWORD || 'TestPassword123!'
 const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'e2e-admin@bookiji.test'
 const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'TestPassword123!'
 
-if (!SUPABASE_URL) {
-  console.error('❌ ERROR: SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required')
-  process.exit(1)
-}
+type UserSeed = E2EUserDefinition
 
-if (!SUPABASE_SERVICE_ROLE_KEY) {
-  console.error('❌ ERROR: SUPABASE_SERVICE_ROLE_KEY is required')
-  process.exit(1)
-}
-
-interface UserSeed {
-  email: string
-  password: string
-  role: 'admin' | 'vendor' | 'customer'
-  fullName: string
-}
-
-const usersToSeed: UserSeed[] = [
-  {
-    email: E2E_VENDOR_EMAIL,
-    password: E2E_VENDOR_PASSWORD,
-    role: 'vendor',
-    fullName: 'E2E Test Vendor'
-  },
-  {
-    email: E2E_CUSTOMER_EMAIL,
-    password: E2E_CUSTOMER_PASSWORD,
-    role: 'customer',
-    fullName: 'E2E Test Customer'
-  }
-]
+const usersToSeed: UserSeed[] = [E2E_VENDOR_USER, E2E_CUSTOMER_USER]
 
 // Add admin if explicitly requested
 if (process.env.E2E_ADMIN_EMAIL || process.env.CREATE_ADMIN === 'true') {
@@ -79,155 +61,245 @@ if (process.env.E2E_ADMIN_EMAIL || process.env.CREATE_ADMIN === 'true') {
   })
 }
 
-async function ensureUser(
+async function findUserByEmail(
+  supabase: ReturnType<typeof createClient>,
+  email: string
+): Promise<{ id: string; email?: string } | null> {
+  const normalizedEmail = email.toLowerCase()
+  const perPage = 100
+  let page = 1
+
+  while (true) {
+    const { data, error } = await supabase.auth.admin.listUsers({
+      page,
+      perPage
+    })
+
+    if (error) {
+      throw new Error(`Failed to list users: ${error.message}`)
+    }
+
+    const users = data?.users ?? []
+    const match = users.find(u => u.email?.toLowerCase() === normalizedEmail)
+    if (match) {
+      return match
+    }
+
+    if (users.length < perPage) {
+      break
+    }
+
+    page += 1
+  }
+
+  return null
+}
+
+async function seedUser(
   supabase: ReturnType<typeof createClient>,
   userSeed: UserSeed
 ): Promise<string> {
   const { email, password, role, fullName } = userSeed
+  const existingUser = await findUserByEmail(supabase, email)
 
-  // Check if user already exists
-  const { data: existingUsers } = await supabase.auth.admin.listUsers()
-  const existing = existingUsers?.users.find(
-    u => u.email?.toLowerCase() === email.toLowerCase()
-  )
-
-  let userId: string
-
-  if (existing) {
-    userId = existing.id
-    console.log(`   ✓ User exists: ${email} (${userId})`)
-
-    // Update password if needed (for consistency)
-    await supabase.auth.admin.updateUserById(userId, {
-      password
-    })
-  } else {
-    // Create new user
-    const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: fullName,
-        role
+  if (existingUser) {
+    try {
+      const { error: deleteError } = await supabase.auth.admin.deleteUser(existingUser.id)
+      if (deleteError) {
+        throw deleteError
       }
-    })
-
-    if (createError) {
-      throw new Error(`Failed to create user ${email}: ${createError.message}`)
+      console.log(`   ƒo" Deleted prior user: ${email} (${existingUser.id})`)
+    } catch (deleteError) {
+      if (shouldFallbackToManualDelete(deleteError)) {
+        await manuallyDeleteUser(existingUser.id, email)
+      } else {
+        throw deleteError
+      }
     }
-
-    userId = newUser.user.id
-    console.log(`   ✓ Created user: ${email} (${userId})`)
   }
 
-  // Ensure profile exists with correct role
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, role')
-    .eq('auth_user_id', userId)
-    .single()
+  const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      full_name: fullName,
+      role
+    }
+  })
 
-  if (profileError && profileError.code !== 'PGRST116') {
-    // PGRST116 = not found, which is fine
-    throw new Error(`Failed to check profile: ${profileError.message}`)
+  if (createError || !newUser?.user) {
+    throw new Error(`Failed to create user ${email}: ${createError?.message ?? 'unknown error'}`)
   }
 
-  if (!profile) {
-    // Create profile
-    const { error: insertError } = await supabase
-      .from('profiles')
-      .insert({
-        auth_user_id: userId,
-        email,
-        full_name: fullName,
-        role
-      })
+  const userId = newUser.user.id
+  console.log(`   ƒo" Created user: ${email} (${userId})`)
 
-    if (insertError) {
-      throw new Error(`Failed to create profile: ${insertError.message}`)
-    }
-    console.log(`   ✓ Created profile for ${email}`)
-  } else if (profile.role !== role) {
-    // Update role if different
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ role })
-      .eq('auth_user_id', userId)
+  await ensureProfileExists(supabase, userSeed, userId)
 
-    if (updateError) {
-      throw new Error(`Failed to update profile role: ${updateError.message}`)
-    }
-    console.log(`   ✓ Updated profile role to ${role} for ${email}`)
-  } else {
-    console.log(`   ✓ Profile exists with correct role for ${email}`)
-  }
-
-  // For vendors, ensure app_users and user_roles are set up
   if (role === 'vendor' || role === 'admin') {
-    // Check app_users
-    const { data: appUser, error: appUserError } = await supabase
-      .from('app_users')
-      .select('id')
-      .eq('auth_user_id', userId)
-      .single()
-
-    if (appUserError && appUserError.code !== 'PGRST116') {
-      throw new Error(`Failed to check app_user: ${appUserError.message}`)
-    }
-
-    let appUserId: string
-    if (!appUser) {
-      const { data: newAppUser, error: insertError } = await supabase
-        .from('app_users')
-        .insert({
-          auth_user_id: userId,
-          display_name: fullName
-        })
-        .select('id')
-        .single()
-
-      if (insertError) {
-        throw new Error(`Failed to create app_user: ${insertError.message}`)
-      }
-      appUserId = newAppUser.id
-      console.log(`   ✓ Created app_user for ${email}`)
-    } else {
-      appUserId = appUser.id
-    }
-
-    // Ensure user_roles entry exists
-    const { data: userRole, error: roleError } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('app_user_id', appUserId)
-      .eq('role', role)
-      .single()
-
-    if (roleError && roleError.code !== 'PGRST116') {
-      throw new Error(`Failed to check user_role: ${roleError.message}`)
-    }
-
-    if (!userRole) {
-      const { error: insertError } = await supabase
-        .from('user_roles')
-        .insert({
-          app_user_id: appUserId,
-          role
-        })
-
-      if (insertError) {
-        throw new Error(`Failed to create user_role: ${insertError.message}`)
-      }
-      console.log(`   ✓ Created user_role ${role} for ${email}`)
-    }
+    const appUserId = await ensureAppUserExists(supabase, userSeed, userId)
+    await ensureUserRoleExists(supabase, userSeed, appUserId)
   }
 
   return userId
 }
 
+function shouldFallbackToManualDelete(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false
+  }
+
+  const candidate = error as { code?: string; message?: string }
+  if (candidate.code === 'unexpected_failure') {
+    return true
+  }
+
+  if (typeof candidate.message === 'string' && candidate.message.includes('enqueue_cache_invalidation')) {
+    return true
+  }
+
+  return false
+}
+
+async function manuallyDeleteUser(userId: string, email: string): Promise<void> {
+  const dbUrl =
+    process.env.SUPABASE_DB_URL ||
+    process.env.DATABASE_URL ||
+    'postgresql://postgres:postgres@localhost:55322/postgres'
+
+  const client = new Client({ connectionString: dbUrl })
+  await client.connect()
+
+  const deleteStatements = [
+    'DELETE FROM auth.sessions WHERE user_id = $1',
+    'DELETE FROM auth.identities WHERE user_id = $1',
+    'DELETE FROM auth.mfa_factors WHERE user_id = $1',
+    'DELETE FROM auth.one_time_tokens WHERE user_id = $1',
+    'DELETE FROM storage.objects WHERE owner = $1',
+    'DELETE FROM storage.buckets WHERE owner = $1',
+    'DELETE FROM public.system_flags WHERE updated_by = $1',
+    'DELETE FROM public.notification_preferences WHERE user_id = $1',
+    'DELETE FROM public.notification_logs WHERE user_id = $1',
+    'DELETE FROM public.notification_intents WHERE user_id = $1',
+    'DELETE FROM public.disputes WHERE user_id = $1',
+    'DELETE FROM public.disputes WHERE admin_id = $1',
+    'DELETE FROM public.no_show_events WHERE customer_id = $1',
+    'DELETE FROM public.no_show_events WHERE provider_id = $1',
+    'DELETE FROM public.provider_compensations WHERE provider_id = $1',
+    'DELETE FROM public.quotes WHERE user_id = $1'
+  ]
+
+  try {
+    await client.query('BEGIN')
+    for (const statement of deleteStatements) {
+      await client.query(statement, [userId])
+    }
+
+    const { rows } = await client.query('SELECT id FROM public.app_users WHERE auth_user_id = $1', [userId])
+    if (rows.length > 0) {
+      const [appUserRow] = rows
+      await client.query('DELETE FROM public.user_roles WHERE app_user_id = $1', [appUserRow.id])
+      await client.query('DELETE FROM public.app_users WHERE id = $1', [appUserRow.id])
+    }
+
+    await client.query('DELETE FROM public.profiles WHERE auth_user_id = $1', [userId])
+    await client.query('DELETE FROM auth.users WHERE id = $1', [userId])
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {
+      /* ignore rollback errors */
+    })
+    throw new Error(
+      `Failed to manually delete ${email}: ${error instanceof Error ? error.message : String(error)}`
+    )
+  } finally {
+    await client.end()
+  }
+
+  console.log(`   ƒo" Deleted prior user via manual cleanup: ${email} (${userId})`)
+}
+
+async function ensureProfileExists(
+  supabase: ReturnType<typeof createClient>,
+  userSeed: UserSeed,
+  userId: string
+): Promise<void> {
+  const { email, fullName, role } = userSeed
+  const { error } = await supabase
+    .from('profiles')
+    .upsert(
+      {
+        auth_user_id: userId,
+        email,
+        full_name: fullName,
+        role
+      },
+      { onConflict: 'auth_user_id' }
+    )
+
+  if (error) {
+    throw new Error(`Failed to upsert profile for ${email}: ${error.message}`)
+  }
+
+  console.log(`   ƒo" Ensured profile for ${email}`)
+}
+
+async function ensureAppUserExists(
+  supabase: ReturnType<typeof createClient>,
+  userSeed: UserSeed,
+  userId: string
+): Promise<string> {
+  const { email, fullName } = userSeed
+  const { data, error } = await supabase
+    .from('app_users')
+    .upsert(
+      {
+        auth_user_id: userId,
+        display_name: fullName
+      },
+      { onConflict: 'auth_user_id' }
+    )
+    .select('id')
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to upsert app_user for ${email}: ${error.message}`)
+  }
+
+  if (!data?.id) {
+    throw new Error(`Failed to retrieve app_user id for ${email}`)
+  }
+
+  console.log(`   ƒo" Ensured app_user for ${email}`)
+  return data.id
+}
+
+async function ensureUserRoleExists(
+  supabase: ReturnType<typeof createClient>,
+  userSeed: UserSeed,
+  appUserId: string
+): Promise<void> {
+  const { email, role } = userSeed
+  const { error } = await supabase
+    .from('user_roles')
+    .upsert(
+      {
+        app_user_id: appUserId,
+        role
+      },
+      { onConflict: ['app_user_id', 'role'] }
+    )
+
+  if (error) {
+    throw new Error(`Failed to upsert user_role ${role} for ${email}: ${error.message}`)
+  }
+
+  console.log(`   ƒo" Ensured user_role ${role} for ${email}`)
+}
+
 async function main() {
-  console.log('🌱 E2E User Seeding Script')
+  console.log('dYOñ E2E User Seeding Script')
   console.log('')
   console.log('Users to seed:')
   usersToSeed.forEach(u => {
@@ -245,18 +317,18 @@ async function main() {
   const userIds: Record<string, string> = {}
 
   for (const userSeed of usersToSeed) {
-    console.log(`📝 Processing ${userSeed.email}...`)
+    console.log(`dY"? Processing ${userSeed.email}...`)
     try {
-      const userId = await ensureUser(supabase, userSeed)
+      const userId = await seedUser(supabase, userSeed)
       userIds[userSeed.email] = userId
     } catch (error) {
-      console.error(`❌ Failed to seed ${userSeed.email}:`, error)
+      console.error(`ƒ?O Failed to seed ${userSeed.email}:`, error)
       process.exit(1)
     }
     console.log('')
   }
 
-  console.log('✅ Seeding complete!')
+  console.log('ƒo. Seeding complete!')
   console.log('')
   console.log('Created/Updated Users:')
   Object.entries(userIds).forEach(([email, id]) => {
@@ -270,8 +342,6 @@ async function main() {
 }
 
 main().catch(error => {
-  console.error('❌ Fatal error:', error)
+  console.error('ƒ?O Fatal error:', error)
   process.exit(1)
 })
-
-

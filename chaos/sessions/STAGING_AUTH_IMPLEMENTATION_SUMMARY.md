@@ -132,3 +132,6 @@ const response = await fetch(`${BASE_URL}/api/bookings/create`, {
 **This task is complete. Authentication is ready for SimCity chaos testing in STAGING.**
 
 
+
+
+

@@ -1,0 +1,1 @@
+{"frames":[{"file":"webpack-internal:///(app-pages-browser)/./src/app/login/LoginFormContent.tsx","line1":33,"column1":45,"methodName":"LoginFormContent.useEffect.handle","arguments":[]}],"isServer":false,"isEdgeServer":false,"isAppDirectory":true}

@@ -192,10 +192,6 @@ export function buildReasoningArtifact(options: BuildReasoningArtifactOptions): 
   if (options.provenance.deployment.governance_snapshot_hash !== expectedGovernanceSnapshotHash) {
     throw new Error("Deployment fingerprint governance snapshot hash mismatch");
   }
-  if (options.provenance.deployment.genome_hash !== options.provenance.genome_hash) {
-    throw new Error("Deployment fingerprint genome hash mismatch");
-  }
-
   const guarantees = buildGuarantees();
   const personaArtifacts = buildPersonaArtifacts(options, guarantees);
   const consensus = buildConsensus(options.synthesis, options.synthesis.provenance.assessments);

@@ -26,7 +26,7 @@ export type AppEnvironment = typeof ALLOWED_ENVIRONMENTS[number];
  * @throws Error if APP_ENV is invalid or missing
  */
 export function assertAppEnv(): AppEnvironment {
-  const env = process.env.APP_ENV;
+  const env = process.env.APP_ENV || process.env.NEXT_PUBLIC_APP_ENV;
   
   if (!env) {
     throw new Error(
@@ -52,7 +52,7 @@ export function assertAppEnv(): AppEnvironment {
  * @returns The APP_ENV value if valid, undefined otherwise
  */
 export function getAppEnv(): AppEnvironment | undefined {
-  const env = process.env.APP_ENV;
+  const env = process.env.APP_ENV || process.env.NEXT_PUBLIC_APP_ENV;
   if (env && ALLOWED_ENVIRONMENTS.includes(env as AppEnvironment)) {
     return env as AppEnvironment;
   }
@@ -98,6 +98,9 @@ export function allowsDestructiveOps(): boolean {
   const env = getAppEnv();
   return env === 'local' || env === 'staging';
 }
+
+
+
 
 
 

@@ -476,19 +476,6 @@
 
 ---
 
-## FEAT-GENOME-032 — Genome Linter + Governance Contracts
-- **TC-GEN-001** — ⚠️ **Partially implemented**
-  - Evidence: `genome/` directory exists. `package.json` may have genome scripts. Need to verify `pnpm genome:validate` passes.
-  - Missing: Verification of genome validation command
-
-- **TC-GEN-002** — ⚠️ **Partially implemented**
-  - Evidence: Genome linter exists. Need to verify it fails with actionable message on violations.
-  - Missing: Verification of linter failure behavior
-
-- **TC-GEN-003** — ⚠️ **Partially implemented**
-  - Evidence: Governance system exists. Need to verify flags/deprecations don't break runtime builds.
-  - Missing: Verification of governance flag impact on builds
-
 ---
 
 ## FEAT-DEPLOY-033 — Build & Deployment (Vercel/Supabase Functions Build Fix)
@@ -619,3 +606,4 @@
 - "Missing" means no meaningful implementation found
 - High-risk gaps focus on core booking/scheduling, subscription gating, data integrity, security, and RLS
 - Many "Partially implemented" items may work in practice but need verification through testing
+

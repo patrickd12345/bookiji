@@ -9,7 +9,6 @@
     "system": "bookiji",
     "system_version": "1.0.0",
     "phase": "12",
-    "genome_hash": "ref-genome-hash",
     "governance": {
       "registry_hash": "ref-registry-hash",
       "evolution_hash": "ref-evolution-hash"
@@ -26,7 +25,6 @@
       "artifact_schema_versions": {
         "reasoning-artifact": "v1"
       },
-      "genome_hash": "ref-genome-hash",
       "governance_snapshot_hash": "e6ffe7ef60c91c8780c210a05b2ef259c0ea278654f7da6e78a0009ba7c42ff0",
       "reasoning_relevant_config_hashes": [
         {

@@ -3,7 +3,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
-import yaml from "js-yaml";
 
 const repoRoot = process.cwd();
 
@@ -34,40 +33,6 @@ function readFromRef(ref, filePath) {
   return result.stdout;
 }
 
-function genomeGate() {
-  const genomePath = "genome/master-genome.yaml";
-  const absoluteGenomePath = path.join(repoRoot, genomePath);
-  if (!fs.existsSync(absoluteGenomePath)) {
-    console.warn("[epistemic] genome file missing; skipping genome gate");
-    return;
-  }
-
-  const baseRef = process.env.GITHUB_BASE_REF ? `origin/${process.env.GITHUB_BASE_REF}` : "HEAD^";
-  const baseContent = readFromRef(baseRef, genomePath);
-  if (!baseContent) {
-    console.warn(`[epistemic] unable to read ${genomePath} from ${baseRef}; skipping version gate`);
-    return;
-  }
-
-  const currentContent = fs.readFileSync(absoluteGenomePath, "utf8");
-  const baseHash = hashContent(baseContent);
-  const currentHash = hashContent(currentContent);
-
-  if (baseHash === currentHash) {
-    console.log("[epistemic] genome hash unchanged");
-    return;
-  }
-
-  const baseVersion = yaml.load(baseContent)?.version;
-  const currentVersion = yaml.load(currentContent)?.version;
-
-  if (baseVersion === currentVersion) {
-    throw new Error("Genome hash changed without version bump");
-  }
-
-  console.log(`[epistemic] genome hash changed with version bump ${baseVersion} -> ${currentVersion}`);
-}
-
 function run(command, args, label) {
   const result = spawnSync(command, args, { stdio: "inherit", shell: true });
   if (result.status !== 0) {
@@ -96,7 +61,6 @@ function runDocIntegrityGate() {
 }
 
 function main() {
-  genomeGate();
   runDocIntegrityGate();
   runDeterminismTests();
   regenerateDeploymentFingerprint();

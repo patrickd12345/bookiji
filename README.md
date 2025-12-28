@@ -43,6 +43,7 @@
 - **🚨 Error Monitoring & Alerting** - Sentry integration with automatic error capture and reporting
 - **📈 Funnel Tracking** - Real-time conversion metrics from landing to booking confirmation
 - **👨‍💼 Admin Cockpit** - Complete platform oversight with KB management, manual job triggers, and operational controls
+- **🎛️ OpsAI Control Plane** - Standalone Vite dashboard for agents, playbooks, and operational command console (`apps/opsai-control-plane`)
 - **🤖 Automated Cron Jobs** - Scheduled KB crawling, auto-deduplication, and vectorization (production + local dev)
 - **🔔 Multi-Channel Notifications** - Email, SMS with retry logic and DLQ
 - **🛡️ Security & Compliance** - RLS policies, rate limiting, daily backups, admin auto-redirect
@@ -437,7 +438,18 @@ If you encounter build problems:
 ---
 
 
+## OpsAI (Operations Intelligence Layer)
+
+OpsAI assembles Bookiji's telemetry, health, incidents, and incident playbooks into a single surface that operators can monitor, command, and narrate.
+
+- **Control plane + SDK packages**: `apps/opsai-control-plane/` ships the OpsAI Commander console, and it consumes `@bookiji/opsai` to hit `/api/ops/controlplane/*`.
+- **Helpdesk / L7 tooling**: `packages/opsai-helpdesk/` and `packages/opsai-l7/` deliver diagnostics, reliability predictions, and playbook suggestions.
+- **Voice console (if present)**: `packages/opsai-voice/` provides a vocal SSE stream (`/api/ops/events/stream`, `/api/ops/summary`, `/api/ops/health`, `/api/ops/deployments`).
+
+See [docs/opsai/README.md](docs/opsai/README.md) for the canonical OpsAI hub.
+
 ## 📊 **Performance Metrics**
+
 
 - **Lighthouse Score:** 95+ across all metrics
 - **Core Web Vitals:** All green

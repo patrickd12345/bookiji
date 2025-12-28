@@ -8,7 +8,6 @@
     "environment",
     "git_commit",
     "artifact_schema_versions",
-    "genome_hash",
     "governance_snapshot_hash",
     "reasoning_relevant_config_hashes"
   ],
@@ -29,7 +28,6 @@
       "type": "object",
       "additionalProperties": { "type": "string" }
     },
-    "genome_hash": { "type": "string" },
     "governance_snapshot_hash": { "type": "string" },
     "reasoning_relevant_config_hashes": {
       "type": "array",

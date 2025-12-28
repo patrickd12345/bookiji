@@ -2,228 +2,43 @@
 
 ## Mandatory Context Loading
 
-**ALWAYS** load and reference `docs/BOOKIJI_CONTINUITY_KERNEL.md` at the start of every conversation. This document contains:
-- Canonical architecture definitions
-- Cursor constraints and boundaries
-- AI collaboration norms
-- Current development phase status
-- Genome specifications
+- **Daily anchor**: Always refer to `docs/invariants.md` first. It lists the running invariants that code and tests enforce.
+- **Expanded context**: When a task touches availability, scheduling, bookings, payments, or security, consult `docs/development/INVARIANT_COVERAGE_MATRIX.md` and the relevant files under `docs/invariants/`.
 
 ## Key Constraints
 
-### Cursor Must:
-- Never delete or refactor outside instructions
-- Never modify runtime code when instructed to modify tests or tooling only
-- Never infer structural updates — only implement what's in the Genome
-
-### AI Collaboration Norms:
-- Treat `docs/BOOKIJI_CONTINUITY_KERNEL.md` as canonical
-- Reload it upon each new context
-- Maintain phase continuity
-
-## Database Management
-
-**CRITICAL**: Always use migrations via Supabase CLI. Never run SQL directly.
-
-### Absolute Prohibitions (Schema Changes)
-- ❌ **NEVER** execute SQL directly against the database (no `pg` library, no `psql`, no direct connections)
-- ❌ **NEVER** create scripts that execute SQL for schema changes
-- ❌ **NEVER** use Supabase Dashboard SQL Editor for schema changes (only for read-only queries)
-- ❌ **NEVER** bypass `supabase db push` even if it fails — fix migration history first
-
-### Supabase CLI Authentication (CRITICAL)
-- **If Supabase CLI commands fail due to auth errors** (e.g., "Invalid access token format. Must be like `sbp_...`"):
-  - **STOP immediately**
-  - **ONLY valid fix**: Instruct user to run `supabase login`
-  - **NEVER** suggest setting `SUPABASE_ACCESS_TOKEN` in `.env`
-  - **NEVER** suggest using `SUPABASE_ANON_KEY` or `SERVICE_ROLE_KEY` for CLI
-  - **NEVER** suggest executing SQL directly as an alternative
-  - **NEVER** suggest workarounds or alternative paths
-- **CLI authentication is separate from application credentials:**
-  - CLI uses `sbp_...` token (from `supabase login`, stored internally)
-  - App uses `SUPABASE_ANON_KEY` / `SERVICE_ROLE_KEY` (in `.env`, for runtime)
-  - These are three distinct credential domains: CLI auth ≠ App credentials ≠ DB credentials
-- **Preflight check**: Run `pnpm supabase:doctor` before CLI operations to verify auth
-
-### Required Workflow (MANDATORY)
-1. **Create migration**: `supabase migration new <name>` (CLI only, never create files manually)
-2. **Edit the generated SQL file** in `supabase/migrations/`
-3. **Apply migration**: `supabase db push` (never execute SQL directly)
-4. **If `supabase db push` fails**:
-   - DO NOT execute SQL directly
-   - Fix migration history with `supabase migration repair` if needed
-   - Resolve any migration conflicts
-   - Retry `supabase db push`
-5. **Verify**: `supabase migration list` shows migration as applied
-
-### Enforcement Checklist
-Before executing any database operation, verify:
-- [ ] Is this a schema change? → Must use `supabase migration new` + `supabase db push`
-- [ ] Is this a data query? → Can use Supabase client or dashboard (read-only)
-- [ ] Am I about to use `pg`, `psql`, or direct SQL? → STOP. Use migrations instead.
-
-See: `docs/development/DATABASE_MANAGEMENT_POLICY.md`
-
-## Current Phase
-
-Check `docs/BOOKIJI_CONTINUITY_KERNEL.md` section 7 for current rollout phase status.
+- **Truth comes from code and tests**: Do not invent architectural rules outside what runtime code enforces or tests fail when broken.
+- **No unauthorized SQL**: Follow `docs/development/DATABASE_MANAGEMENT_POLICY.md`: create Supabase migrations, push them with the CLI, and never issue raw SQL against production schema.
+- **Document updates**: When adding a new `.md` file, update `index.md` and ensure the file is referenced by `scripts/check-cursorrules-sync.mjs` by mentioning it there as appropriate.
 
 ## Testing Requirements
 
-### When Creating a New Feature
+- Add or adjust tests when you touch logic that affects bookings, availability, payments, or invariants that now live under `docs/invariants/*.md`.
+- Prefer executable verification (unit, integration, e2e) to prose. If you add an invariant to `docs/invariants.md`, point to the test(s) that already cover it.
+- Run targeted test suites described in `docs/testing/SELECTOR_MAP.md` and the Playwright contracts when shipping API or UI changes.
 
-**MANDATORY**: Whenever a new feature is created, you MUST update `TEST_PLAN.md` to include functional test cases for that feature.
+## Database Workflow
 
-1. **Identify Feature Area**: Determine which functional area the feature belongs to:
-   - Customer Features
-   - Vendor Features
-   - Admin Features
-   - Booking System
-   - Payment Processing
-   - Authentication & Authorization
-   - Security
-   - Reviews & Ratings
-   - Notifications
-   - Support & Help Center
-   - Analytics & Reporting
-   - Settings & Configuration
-   - Search & Discovery
-   - Calendar & Scheduling
-   - Credits & Referrals
-   - Disputes & Moderation
-   - Knowledge Base
-   - Operational Features
+1. Generate a migration with `supabase migration new <name>`.
+2. Check the SQL, apply with `supabase db push`, and confirm `supabase db status` shows no pending migrations.
+3. Do not execute `pg`, `psql`, or direct SQL; always go through the migration tooling.
+4. If `supabase db push` fails, fix the migration history first, then rerun the push.
 
-2. **Update TEST_PLAN.md**: Add functional test cases to the appropriate section following this format:
-   ```
-   #### TC-AREA-XXX: Test Case Name
-   **Priority**: High/Medium/Low
-   **Test Steps**:
-   1. Step 1
-   2. Step 2
-   3. Step 3
+## Documentation Index Maintenance
 
-   **Expected Results**:
-   - Result 1
-   - Result 2
-   - Result 3
-
-   **Acceptance Criteria**:
-   - Criterion 1
-   - Criterion 2
-   - Criterion 3
-   ```
-
-3. **Test Case Requirements**:
-   - Use consistent naming: TC-[AREA]-[NUMBER]
-   - Assign appropriate priority (Critical/High/Medium/Low)
-   - Include detailed test steps
-   - List all expected results
-   - Define clear acceptance criteria
-   - Cover happy path and error scenarios
-   - Include edge cases
-
-4. **Update Table of Contents**: If adding a new section, update the table of contents
-
-5. **Update Version**: Update the version history section with the new feature
-
-### Example Workflow
-
-1. Feature created: "New booking cancellation feature"
-2. Update `TEST_PLAN.md`:
-   - Add to "Booking System" section
-   - Create test case: TC-BOOK-007: Cancel Booking
-   - Include test steps, expected results, and acceptance criteria
-   - Add any additional test cases for edge cases (e.g., TC-BOOK-008: Cancel Booking After Payment)
-3. Update version history
-4. Commit both feature and updated test plan
-
-## General Development Rules
-
-- Always test after code changes (API with curl, UI with Playwright)
-- **NEVER run SQL directly** - always use migrations via `supabase db push`
-- **NEVER** use `pg` library, `psql`, or direct database connections for schema changes
-- Always execute SQL migrations via `supabase db push` without asking for confirmation
-- If `supabase db push` fails, fix migration history first (never execute SQL directly)
-- Prefer optimistic UI with rollback for actions, retry/backoff for queries, skeletons instead of blank loading states
-- Guard against double clicks
-- Never ask the user to code - do it yourself
-- Check terminal regularly to ensure it's not stuck
-
-## Code Quality
-
-- Follow TypeScript best practices
-- Use proper error handling
-- Write self-documenting code
-- Follow existing code patterns
-- Maintain consistency with project structure
-
-## Testing Standards
-
-- Write tests for all new features
-- Update tests when modifying existing features
-- Ensure tests are isolated and independent
-- Use descriptive test names
-- Follow the test organization structure
-- Run tests before committing
-
-## Documentation
-
-- Update `TEST_PLAN.md` when adding features
-- Keep documentation current with code changes
-- Document complex logic and decisions
-
-### Documentation Index Maintenance
-
-**IMPORTANT**: Whenever creating a new `.md` file (markdown file) anywhere in the repository:
-1. Automatically update `index.md` to include the new file in the appropriate category
-2. Maintain the alphabetical ordering within each category
-3. Preserve the existing category structure and organization
-4. Place the file in the correct section based on its directory path and purpose
-
-#### How to Update index.md:
-- Locate the appropriate category section (or create a new one if needed)
-- Add the new file path in alphabetical order within that section
-- Ensure the path is relative to the repository root (e.g., `docs/development/NEW_FILE.md`)
-- Maintain consistent formatting with existing entries
-
-#### Categories:
-- Root Level Files: Files in the repository root
-- Configuration & Setup: `.cursor/`, `genome/`
-- Applications: `apps/`
-- Chaos Engineering: `chaos/`
-- Documentation: `docs/` (with subcategories)
-- Issues: `issues/`
-- Operations: `ops/`
-- Packages: `packages/`
-- Reference: `reference/`
-- Scripts: `scripts/`
-- Source Code: `src/`
-- Supabase: `supabase/`
-- Tests: `tests/`
+- Keep `index.md` current: add new markdown files under the appropriate heading, preserve ordering, and remove entries for deleted files.
+- Refer to this file when determining whether a doc already exists before creating a duplicate.
 
 ## Reference Files
 
-### Core Architecture & Constraints
-- Architecture: `docs/BOOKIJI_CONTINUITY_KERNEL.md`
-- Genome Spec: `genome/master-genome.yaml`
-- Genome Linter: `genome/linter-rules.md`
-- JSON Index: `docs/BOOKIJI_CONTINUITY_INDEX.json`
+- `README.md` – Primary project overview and launch guidance.
+- `docs/invariants.md` – Single source of truth for enforced invariants.
+- `docs/development/INVARIANT_COVERAGE_MATRIX.md` – Matrix linking invariants to coverage and enforcement points.
+- `docs/development/DATABASE_MANAGEMENT_POLICY.md` – Database rules.
+- `docs/testing/SELECTOR_MAP.md` – Key Playwright selectors and coverage notes.
+- `docs/operations/PROOF_RUNBOOK.md` and `docs/operations/RELEASE_CONFIDENCE.md` – Release readiness references.
 
-### Important Documentation
-- **README.md** - Main project documentation including Self-Improving KB process
-- **docs/development/DATABASE_MANAGEMENT_POLICY.md** - Database migration policy
-- **docs/support-module/** - Support module documentation (KB crawl, RAG, suggestions)
-- **docs/bookiji-kb/** - Knowledge base content and structure
-- **docs/development/LOCAL_CRON_SETUP.md** - Local cron job setup
+## Maintenance
 
-### When Creating New Documentation
-- Always reference existing docs in `docs/` directory
-- Update README.md if adding major features
-- Follow existing documentation patterns and structure
-- **Update .cursorrules** if adding important documentation that agents should reference
-
-### Maintenance
-- `.cursorrules` does NOT auto-update - it requires manual updates
-- Run `pnpm check:cursorrules` to verify all important docs are referenced
-- Update this file when adding major features or important documentation
+- Keep `.cursorrules` aligned with reality; run `pnpm check:cursorrules` after adding or removing important docs so the sync script stays happy.
+- Report any missing references that appear in the check output, and update both this file and `scripts/check-cursorrules-sync.mjs` if needed.

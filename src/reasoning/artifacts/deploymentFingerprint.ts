@@ -20,7 +20,6 @@ export interface DeploymentFingerprint {
   readonly git_commit: string;
   readonly build_id?: string;
   readonly artifact_schema_versions: Readonly<Record<string, string>>;
-  readonly genome_hash: string;
   readonly governance_snapshot_hash: string;
   readonly reasoning_relevant_config_hashes: readonly ReasoningConfigHash[];
 }
@@ -30,7 +29,6 @@ export interface BuildDeploymentFingerprintOptions {
   readonly git_commit: string;
   readonly build_id?: string;
   readonly artifact_schema_versions: Record<string, string>;
-  readonly genome_hash: string;
   readonly governance_snapshot_hash: string;
   readonly reasoning_relevant_config_hashes?: readonly ReasoningConfigHash[];
 }
@@ -79,7 +77,6 @@ export function buildDeploymentFingerprint(options: BuildDeploymentFingerprintOp
     git_commit: options.git_commit,
     build_id: options.build_id,
     artifact_schema_versions,
-    genome_hash: options.genome_hash,
     governance_snapshot_hash: options.governance_snapshot_hash,
     reasoning_relevant_config_hashes,
   };

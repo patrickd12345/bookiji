@@ -2,6 +2,8 @@
 
 This repo follows a **CLI-only, migration-first** database process. The goal is to keep schema changes deterministic, reviewable, reproducible, and consistent across environments.
 
+> **Note:** For comprehensive database policy including table classification (Class A/B/C), RLS rules, and security policies, see [`docs/architecture/database-policy.md`](../architecture/database-policy.md). This document focuses on Supabase CLI workflow and migration procedures.
+
 ## Non‑Negotiables
 
 - **No manual SQL in Supabase dashboard** for schema changes.

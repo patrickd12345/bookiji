@@ -2,7 +2,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import yaml from "js-yaml";
 
 function stableStringify(value) {
   if (value === null || typeof value !== "object") return JSON.stringify(value);
@@ -16,12 +15,6 @@ function stableStringify(value) {
 function deterministicHash(value) {
   const hasher = crypto.createHash("sha256");
   hasher.update(stableStringify(value));
-  return hasher.digest("hex");
-}
-
-function hashContent(content) {
-  const hasher = crypto.createHash("sha256");
-  hasher.update(content);
   return hasher.digest("hex");
 }
 
@@ -52,7 +45,6 @@ function buildFingerprint({
   git_commit,
   build_id,
   artifact_schema_versions,
-  genome_hash,
   governance_snapshot_hash,
   reasoning_relevant_config_hashes,
 }) {
@@ -74,7 +66,6 @@ function buildFingerprint({
     git_commit,
     build_id,
     artifact_schema_versions: artifactSchemas,
-    genome_hash,
     governance_snapshot_hash,
     reasoning_relevant_config_hashes: sanitizeConfigHashes(reasoning_relevant_config_hashes),
   };
@@ -88,10 +79,6 @@ function main() {
   const output = args.output || path.join("deploy-metadata", "deployment-fingerprint.json");
   const deployEnv = process.env.DEPLOY_ENV ?? "dev";
   const deployEnvLabel = process.env.DEPLOY_ENV_LABEL;
-  const genomePath = path.join(process.cwd(), "genome", "master-genome.yaml");
-  const genomeContent = fs.readFileSync(genomePath, "utf8");
-  const genome_hash = hashContent(genomeContent);
-
   const governance_snapshot_hash =
     process.env.GOVERNANCE_SNAPSHOT_HASH ??
     deterministicHash({
@@ -113,7 +100,6 @@ function main() {
     git_commit: process.env.GIT_COMMIT ?? process.env.GITHUB_SHA ?? "unknown",
     build_id: process.env.BUILD_ID ?? process.env.GITHUB_RUN_ID ?? undefined,
     artifact_schema_versions: artifactSchemas,
-    genome_hash,
     governance_snapshot_hash,
     reasoning_relevant_config_hashes: configHashes,
   });

@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { loadGenome } from "@/genome/loadGenome";
 import { CancellationPattern } from "@/trust/contracts/CancellationPattern";
 import { FraudSignal } from "@/trust/contracts/FraudSignal";
 import { InterventionRule } from "@/trust/contracts/InterventionRule";
@@ -11,25 +10,19 @@ import { RiskScore } from "@/trust/contracts/RiskScore";
 
 const repoRoot = process.cwd();
 
-describe("Trust & Safety contract schema", () => {
-  it("declares trust_safety schema and required files", () => {
-    const genome = loadGenome(path.join(repoRoot, "genome", "master-genome.yaml"));
-    expect(genome.domains.trust_safety?.schema).toBe("src/trust/contracts");
-    expect(genome.domains.trust_safety?.required).toEqual([
-      "FraudSignal.ts",
-      "RiskScore.ts",
-      "CancellationPattern.ts",
-      "NoShowProfile.ts",
-      "ReliabilityModel.ts",
-      "InterventionRule.ts",
-    ]);
-  });
+const trustContractFiles = [
+  "FraudSignal.ts",
+  "RiskScore.ts",
+  "CancellationPattern.ts",
+  "NoShowProfile.ts",
+  "ReliabilityModel.ts",
+  "InterventionRule.ts",
+];
 
-  it("has all trust & safety contract files available", () => {
-    const genome = loadGenome(path.join(repoRoot, "genome", "master-genome.yaml"));
-    const schemaRoot = genome.domains.trust_safety?.schema ?? "";
-    (genome.domains.trust_safety?.required ?? []).forEach((fileName) => {
-      const filePath = path.resolve(repoRoot, schemaRoot, fileName);
+describe("Trust & Safety contract files", () => {
+  it("keeps required contract files present under src/trust/contracts", () => {
+    trustContractFiles.forEach((fileName) => {
+      const filePath = path.resolve(repoRoot, "src/trust/contracts", fileName);
       expect(fs.existsSync(filePath)).toBe(true);
     });
   });

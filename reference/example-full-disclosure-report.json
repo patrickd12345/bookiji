@@ -34,7 +34,6 @@
             "system": "bookiji",
             "system_version": "1.0.0",
             "phase": "12",
-            "genome_hash": "ref-genome-hash",
             "governance": {
               "registry_hash": "ref-registry-hash",
               "evolution_hash": "ref-evolution-hash"
@@ -51,7 +50,6 @@
               "artifact_schema_versions": {
                 "reasoning-artifact": "v1"
               },
-              "genome_hash": "ref-genome-hash",
               "governance_snapshot_hash": "e6ffe7ef60c91c8780c210a05b2ef259c0ea278654f7da6e78a0009ba7c42ff0",
               "reasoning_relevant_config_hashes": [
                 {
@@ -226,7 +224,6 @@
           "artifact_schema_versions": {
             "reasoning-artifact": "v1"
           },
-          "genome_hash": "ref-genome-hash",
           "governance_snapshot_hash": "e6ffe7ef60c91c8780c210a05b2ef259c0ea278654f7da6e78a0009ba7c42ff0",
           "reasoning_relevant_config_hashes": [
             {
@@ -278,7 +275,6 @@
       "artifact_schema_versions": {
         "reasoning-artifact": "v1"
       },
-      "genome_hash": "ref-genome-hash",
       "governance_snapshot_hash": "e6ffe7ef60c91c8780c210a05b2ef259c0ea278654f7da6e78a0009ba7c42ff0",
       "reasoning_relevant_config_hashes": [
         {
@@ -336,7 +332,7 @@
       "Recompute input_closure.hash_closure from listed inputs.",
       "Recompute deployment fingerprint hash and compare to fingerprint_id.",
       "Verify each artifact via verifyReasoningArtifact using the declared deployment fingerprint and environment.",
-      "Validate governance snapshot hash and genome hash bindings for each artifact."
+      "Validate governance snapshot hash bindings for each artifact."
     ],
     "invalid_conditions": [
       "Any hash recomputation mismatch.",

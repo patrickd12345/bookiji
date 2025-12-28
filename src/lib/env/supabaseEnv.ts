@@ -37,6 +37,25 @@ export interface SupabaseEnvConfig {
  * @throws Error if APP_ENV is invalid or required credentials are missing
  */
 export function getSupabaseEnv(): SupabaseEnvConfig {
+  if (process.env.E2E === 'true') {
+    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!url || !anonKey) {
+      throw new Error(
+        'Missing E2E Supabase credentials. ' +
+        'Ensure .env.e2e defines SUPABASE_URL and SUPABASE_ANON_KEY'
+      )
+    }
+
+    return {
+      url,
+      anonKey,
+      serviceKey
+    }
+  }
+
   const env = assertAppEnv();
 
   if (env === 'local') {
@@ -123,6 +142,9 @@ export function getSupabaseServiceKey(): string {
   }
   return config.serviceKey;
 }
+
+
+
 
 
 

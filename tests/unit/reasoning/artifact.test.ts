@@ -135,7 +135,6 @@ const fingerprint = buildDeploymentFingerprint({
   git_commit: "commit-123",
   build_id: "build-456",
   artifact_schema_versions: { "reasoning-artifact": "v1" },
-  genome_hash: "genome-hash",
   governance_snapshot_hash: deterministicHash(governance),
   reasoning_relevant_config_hashes: [
     { name: "reasoning.timeout.ms", hash: "100" },
@@ -147,7 +146,6 @@ const provenance = {
   system: "bookiji",
   system_version: "1.0.0",
   phase: "12" as const,
-  genome_hash: fingerprint.genome_hash,
   governance,
   deployment: fingerprint,
   external_adapters: DEFAULT_EXTERNAL_ADAPTER_POLICY,
@@ -186,7 +184,6 @@ describe("ReasoningArtifact", () => {
     const scrambledProvenance = {
       phase: "12" as const,
       governance: provenance.governance,
-      genome_hash: provenance.genome_hash,
       system_version: provenance.system_version,
       system: provenance.system,
       deployment: provenance.deployment,
@@ -247,7 +244,6 @@ describe("ReasoningArtifact", () => {
       git_commit: "commit-different",
       build_id: provenance.deployment.build_id,
       artifact_schema_versions: { ...provenance.deployment.artifact_schema_versions },
-      genome_hash: provenance.deployment.genome_hash,
       governance_snapshot_hash: provenance.deployment.governance_snapshot_hash,
       reasoning_relevant_config_hashes: provenance.deployment.reasoning_relevant_config_hashes,
     });

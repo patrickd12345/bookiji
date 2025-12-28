@@ -1,0 +1,102 @@
+# Page snapshot
+
+```yaml
+- link "Skip to main":
+  - /url: "#main"
+- navigation:
+  - link "Bookiji":
+    - /url: /
+  - link "Start Booking":
+    - /url: /get-started
+  - button "Book an appointment as a customer": Book an Appointment
+  - link "Log In":
+    - /url: /login
+  - button "Change theme":
+    - img
+    - text: Change theme
+- main:
+  - heading "Sign in to your account" [level=2]
+  - paragraph:
+    - text: Or
+    - link "create a new account":
+      - /url: /register
+  - text: Unable to connect to authentication server. Please check your internet connection and try again. Email address or Username
+  - textbox "Email address or Username": e2e-vendor@bookiji.test
+  - text: Password
+  - textbox "Password": TestPassword123!
+  - checkbox "Remember me"
+  - text: Remember me
+  - link "Forgot your password?":
+    - /url: /forgot-password
+  - button "Sign in"
+  - text: Or continue with
+  - button "Google":
+    - img
+    - text: Google
+  - button "GitHub":
+    - img
+    - text: GitHub
+- contentinfo:
+  - heading "Bookiji" [level=3]
+  - list:
+    - listitem:
+      - link "About":
+        - /url: /about
+    - listitem:
+      - link "How It Works":
+        - /url: /how-it-works
+    - listitem:
+      - link "Blog":
+        - /url: /blog
+    - listitem:
+      - link "Contact":
+        - /url: /contact
+    - listitem:
+      - link "Compliance":
+        - /url: /compliance
+  - heading "Support" [level=3]
+  - list:
+    - listitem:
+      - link "Help Center":
+        - /url: /help
+    - listitem:
+      - link "FAQ":
+        - /url: /faq
+    - listitem:
+      - link "Contact Support":
+        - /url: /help/tickets
+    - listitem:
+      - link "Service Requests":
+        - /url: /requests
+  - heading "For Professionals" [level=3]
+  - list:
+    - listitem:
+      - link "Get Started":
+        - /url: /vendor/onboarding
+    - listitem:
+      - link "Professional Help":
+        - /url: /vendor/help
+    - listitem:
+      - link "Professional Dashboard":
+        - /url: /vendor/dashboard
+  - heading "Legal" [level=3]
+  - list:
+    - listitem:
+      - link "Privacy Policy":
+        - /url: /privacy
+    - listitem:
+      - link "Terms of Service":
+        - /url: /terms
+    - listitem:
+      - link "Compliance":
+        - /url: /compliance
+  - paragraph: © 2025 Bookiji. All rights reserved.
+  - paragraph: Built with Next.js, Supabase, and AI
+- alert
+- paragraph:
+  - text: We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.
+  - button "Learn more"
+- button "Preferences"
+- button "Essential Only"
+- button "Accept All"
+```

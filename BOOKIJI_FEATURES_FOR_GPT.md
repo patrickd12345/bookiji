@@ -356,6 +356,7 @@
 - **Migration Guides**: Database migration procedures
 - **Setup Guides**: Development environment setup
 - **Testing Guides**: Test execution and writing
+- **OpsAI hub**: [docs/opsai/README.md](docs/opsai/README.md)
 
 ---
 

@@ -30,7 +30,6 @@ function buildReferenceArtifact() {
     git_commit: "reference-commit",
     build_id: "reference-build",
     artifact_schema_versions: { "reasoning-artifact": "v1" },
-    genome_hash: "ref-genome-hash",
     governance_snapshot_hash: deterministicHash(governance),
     reasoning_relevant_config_hashes: [
       { name: "reasoning.timeout.ms", hash: "120" },
@@ -164,7 +163,6 @@ function buildReferenceArtifact() {
     system: "bookiji",
     system_version: "1.0.0",
     phase: "12" as const,
-    genome_hash: fingerprint.genome_hash,
     governance,
     deployment: fingerprint,
     external_adapters: DEFAULT_EXTERNAL_ADAPTER_POLICY,

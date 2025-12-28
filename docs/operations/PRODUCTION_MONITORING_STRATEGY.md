@@ -142,3 +142,6 @@ After a hardening phase, the best move is often to **watch, collect, and learn**
 - **Document patterns**: Create playbooks from actual solutions
 
 
+
+
+

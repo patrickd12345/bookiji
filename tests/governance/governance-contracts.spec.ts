@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { loadGenome } from "@/genome/loadGenome";
 import { DeprecationPolicy } from "@/governance/DeprecationPolicy";
 import { DomainRegistry } from "@/governance/DomainRegistry";
 import { EvolutionFlags } from "@/governance/EvolutionFlags";
@@ -18,16 +17,8 @@ const expectedContracts = [
   "src/governance/MigrationRules.ts",
 ];
 
-describe("Governance genome requirements", () => {
-  const genomePath = path.join(repoRoot, "genome", "master-genome.yaml");
-
-  it("declares governance contracts and marks them required", () => {
-    const genome = loadGenome(genomePath);
-    expect(genome.domains.governance.contracts).toEqual(expectedContracts);
-    expect(genome.domains.governance.required).toBe(true);
-  });
-
-  it("has all governance contract files on disk", () => {
+describe("Governance contracts", () => {
+  it("keeps required governance contract files available", () => {
     expectedContracts.forEach((contract) => {
       const filePath = path.resolve(repoRoot, contract);
       expect(fs.existsSync(filePath)).toBe(true);

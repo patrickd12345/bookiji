@@ -16,12 +16,11 @@
     },
     "provenance": {
       "type": "object",
-      "required": ["system", "system_version", "phase", "genome_hash", "governance", "deployment", "external_adapters"],
+      "required": ["system", "system_version", "phase", "governance", "deployment", "external_adapters"],
       "properties": {
         "system": { "type": "string" },
         "system_version": { "type": "string" },
         "phase": { "enum": ["12"] },
-        "genome_hash": { "type": "string" },
         "governance": {
           "type": "object",
           "required": ["registry_hash", "evolution_hash"],

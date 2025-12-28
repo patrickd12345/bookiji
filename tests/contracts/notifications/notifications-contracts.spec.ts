@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { loadGenome } from "@/genome/loadGenome";
 import { DLQContract } from "@/notifications/contracts/DLQContract";
 import { NotificationChannel } from "@/notifications/contracts/NotificationChannel";
 import { NotificationEnvelope } from "@/notifications/contracts/NotificationEnvelope";
@@ -10,24 +9,18 @@ import { RetryStrategy } from "@/notifications/contracts/RetryStrategy";
 
 const repoRoot = process.cwd();
 
-describe("Notifications 2.0 genome schema", () => {
-  it("pins the schema root and required contracts", () => {
-    const genome = loadGenome(path.join(repoRoot, "genome", "master-genome.yaml"));
-    expect(genome.domains.notifications_2?.schema).toBe("src/notifications/contracts");
-    expect(genome.domains.notifications_2?.required).toEqual([
-      "NotificationChannel.ts",
-      "NotificationEnvelope.ts",
-      "RetryStrategy.ts",
-      "QuietHoursPolicy.ts",
-      "DLQContract.ts",
-    ]);
-  });
+const notificationsContractFiles = [
+  "NotificationChannel.ts",
+  "NotificationEnvelope.ts",
+  "RetryStrategy.ts",
+  "QuietHoursPolicy.ts",
+  "DLQContract.ts",
+];
 
-  it("has each notifications contract file available", () => {
-    const genome = loadGenome(path.join(repoRoot, "genome", "master-genome.yaml"));
-    const schemaRoot = genome.domains.notifications_2?.schema ?? "";
-    (genome.domains.notifications_2?.required ?? []).forEach((fileName) => {
-      const filePath = path.resolve(repoRoot, schemaRoot, fileName);
+describe("Notifications contracts", () => {
+  it("keeps the notifications contract files under src/notifications/contracts", () => {
+    notificationsContractFiles.forEach((fileName) => {
+      const filePath = path.resolve(repoRoot, "src/notifications/contracts", fileName);
       expect(fs.existsSync(filePath)).toBe(true);
     });
   });

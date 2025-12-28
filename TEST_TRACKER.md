@@ -890,28 +890,6 @@
 
 ---
 
-## FEAT-GENOME-032 — Genome Linter + Governance Contracts
-**Code Scope**
-- `src/genome/`
-- `src/governance/`
-- `docs/development/GENOME_LINTER_GUIDE.md`
-- `package.json (genome scripts)`
-
-**Code Rev:** `__________`  
-**Invalidated On:** `YYYY-MM-DD`  
-**Last Verified On:** `YYYY-MM-DD`
-
-### Tests
-- [ ] **TC-GEN-001** — `pnpm genome:validate` passes on clean repo state
-  - Comments:
-- [ ] **TC-GEN-002** — Introduce a known violation (temporary) and confirm linter fails with actionable message
-  - Comments:
-- [ ] **TC-GEN-003** — Governance flags/deprecations do not break runtime builds
-  - Comments:
-
-### Invalidation Log (append-only)
-- YYYY-MM-DD — invalidated (code changed in scope): <short note>
-
 ---
 
 ## FEAT-DEPLOY-033 — Build & Deployment (Vercel/Supabase Functions Build Fix)
@@ -1023,5 +1001,7 @@
 
 ### Invalidation Log (append-only)
 - YYYY-MM-DD — invalidated (code changed in scope): <short note>
+
+
 
 

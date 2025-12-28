@@ -34,7 +34,8 @@
     "e2e:debug": "playwright test --debug",
     "e2e:proof": "playwright test --config=playwright.proof.config.ts",
     "e2e:proof:headed": "playwright test --config=playwright.proof.config.ts --headed",
-    "e2e:seed": "tsx scripts/e2e/seed-users.ts",
+    "e2e:scheduling-proof": "tsx scripts/e2e/verify-web-server.ts && playwright test --config=playwright.scheduling-proof.config.ts",
+    "e2e:seed": "cross-env DOTENV_CONFIG_PATH=.env.e2e tsx scripts/e2e/seed-users.ts",
     "db:reset-users": "tsx scripts/reset-users.ts",
     "proof:all": "pnpm db:reset-users && pnpm e2e:seed && pnpm e2e:proof:headed || (echo '❌ Proof suite failed - check test-results/proof and playwright-report/proof' && exit 1) && playwright show-report",
     "certify:staging": "pnpm env:staging sh -c 'ALLOW_DESTRUCTIVE_USER_RESET=true ADMIN_EMAIL=${ADMIN_EMAIL:-admin@bookiji.com} pnpm proof:all'",
@@ -43,6 +44,7 @@
     "chaos": "playwright test tests/chaos/",
     "drift": "tsx scripts/check-drift.ts",
     "docs:integrity": "tsx scripts/docCodeIntegrity.ts",
+    "docs:index-lint": "tsx scripts/docs-index-lint.ts",
     "db:reset": "supabase db reset",
     "db:push": "supabase db push",
     "db:pull": "supabase db pull",
@@ -73,8 +75,6 @@
     "anomalyai": "tsx scripts/anomalyai-monitor.ts",
     "ops:smoke": "tsx scripts/ops-smoke-test.ts",
     "ci:epistemic": "node scripts/ci-epistemic-gates.mjs",
-    "genome:validate": "tsx src/genome/cli.ts",
-    "genome:explain": "tsx src/genome/cli.ts --explain",
     "check:cursorrules": "node scripts/check-cursorrules-sync.mjs",
     "prebuild": "cross-env ALLOW_INCOMPLETE_I18N=true npm run i18n:check -- --auto-fill",
     "prepare": "husky install",
@@ -84,7 +84,9 @@
     "build:opsai-l7": "pnpm exec tsc -p packages/opsai-l7/tsconfig.json",
     "dev:controlplane": "pnpm --dir apps/opsai-control-plane dev",
     "build:controlplane": "pnpm --dir apps/opsai-control-plane build",
-    "bootstrap": "pnpm run build:opsai-sdk && pnpm run build:opsai-helpdesk && pnpm run build:opsai-l7 && pnpm run build:voice-console && pnpm run build:controlplane"
+    "bootstrap": "pnpm run build:opsai-sdk && pnpm run build:opsai-helpdesk && pnpm run build:opsai-l7 && pnpm run build:voice-console && pnpm run build:controlplane",
+    "invariants:check": "node scripts/check-invariants-policy.mjs && node scripts/check-jarvis-phase4-invariants.mjs && node scripts/check-jarvis-phase5-invariants.mjs",
+    "monday:executive": "node scripts/monday/sync-executive-dashboard.mjs"
   },
   "dependencies": {
     "@faker-js/faker": "^10.0.0",
@@ -207,6 +209,16 @@
   },
   "overrides": {
     "nodemailer": "7.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "supabase",
+      "esbuild",
+      "sharp",
+      "msw",
+      "@sentry/cli",
+      "protobufjs"
+    ]
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,css,md}": "eslint --fix"

@@ -12,11 +12,8 @@ const REPO_ROOT = process.cwd();
 // Important files that should be referenced in .cursorrules
 const IMPORTANT_FILES = [
   'README.md',
-  'docs/BOOKIJI_CONTINUITY_KERNEL.md',
   'docs/development/DATABASE_MANAGEMENT_POLICY.md',
-  'genome/master-genome.yaml',
-  'genome/linter-rules.md',
-  'docs/BOOKIJI_CONTINUITY_INDEX.json',
+  'docs/invariants.md',
 ];
 
 // Important directories that should be mentioned
@@ -82,7 +79,6 @@ function checkCursorRules() {
 }
 
 checkCursorRules();
-
 
 
 
