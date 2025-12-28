@@ -25,7 +25,16 @@
  *   E2E_ADMIN_PASSWORD - Admin password (default: TestPassword123!)
  */
 
+import 'dotenv/config'
 import { createClient } from '@supabase/supabase-js'
+
+if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  throw new Error('E2E seed requires SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL')
+}
+
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('E2E seed requires SUPABASE_SERVICE_ROLE_KEY')
+}
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -36,16 +45,6 @@ const E2E_CUSTOMER_EMAIL = process.env.E2E_CUSTOMER_EMAIL || 'e2e-customer@booki
 const E2E_CUSTOMER_PASSWORD = process.env.E2E_CUSTOMER_PASSWORD || 'TestPassword123!'
 const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'e2e-admin@bookiji.test'
 const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'TestPassword123!'
-
-if (!SUPABASE_URL) {
-  console.error('❌ ERROR: SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required')
-  process.exit(1)
-}
-
-if (!SUPABASE_SERVICE_ROLE_KEY) {
-  console.error('❌ ERROR: SUPABASE_SERVICE_ROLE_KEY is required')
-  process.exit(1)
-}
 
 interface UserSeed {
   email: string
@@ -79,30 +78,52 @@ if (process.env.E2E_ADMIN_EMAIL || process.env.CREATE_ADMIN === 'true') {
   })
 }
 
+async function findUserByEmail(
+  supabase: ReturnType<typeof createClient>,
+  email: string
+): Promise<{ id: string; email?: string } | null> {
+  const normalizedEmail = email.toLowerCase()
+  const perPage = 100
+  let page = 1
+
+  while (true) {
+    const { data, error } = await supabase.auth.admin.listUsers({
+      page,
+      perPage
+    })
+
+    if (error) {
+      throw new Error(`Failed to list users: ${error.message}`)
+    }
+
+    const users = data?.users ?? []
+    const match = users.find(u => u.email?.toLowerCase() === normalizedEmail)
+    if (match) {
+      return match
+    }
+
+    if (users.length < perPage) {
+      break
+    }
+
+    page += 1
+  }
+
+  return null
+}
+
 async function ensureUser(
   supabase: ReturnType<typeof createClient>,
   userSeed: UserSeed
 ): Promise<string> {
   const { email, password, role, fullName } = userSeed
 
-  // Check if user already exists
-  const { data: existingUsers } = await supabase.auth.admin.listUsers()
-  const existing = existingUsers?.users.find(
-    u => u.email?.toLowerCase() === email.toLowerCase()
-  )
-
+  // Look for an existing user so the script stays idempotent
+  let existingUser = await findUserByEmail(supabase, email)
+  let createdNewUser = false
   let userId: string
 
-  if (existing) {
-    userId = existing.id
-    console.log(`   ✓ User exists: ${email} (${userId})`)
-
-    // Update password if needed (for consistency)
-    await supabase.auth.admin.updateUserById(userId, {
-      password
-    })
-  } else {
-    // Create new user
+  if (!existingUser) {
     const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -114,11 +135,31 @@ async function ensureUser(
     })
 
     if (createError) {
-      throw new Error(`Failed to create user ${email}: ${createError.message}`)
+      const fallback = await findUserByEmail(supabase, email)
+      if (!fallback) {
+        throw new Error(`Failed to create user ${email}: ${createError.message}`)
+      }
+      existingUser = fallback
+      console.log(`   ✓ Duplicate detected, using existing user: ${email} (${existingUser.id})`)
+    } else if (newUser?.user) {
+      existingUser = newUser.user
+      createdNewUser = true
+      console.log(`   ✓ Created user: ${email} (${existingUser.id})`)
     }
+  } else {
+    console.log(`   ✓ User exists: ${email} (${existingUser.id})`)
+  }
 
-    userId = newUser.user.id
-    console.log(`   ✓ Created user: ${email} (${userId})`)
+  if (!existingUser) {
+    throw new Error(`Unable to resolve user ${email}`)
+  }
+
+  userId = existingUser.id
+
+  if (!createdNewUser) {
+    await supabase.auth.admin.updateUserById(userId, {
+      password
+    })
   }
 
   // Ensure profile exists with correct role
@@ -273,5 +314,7 @@ main().catch(error => {
   console.error('❌ Fatal error:', error)
   process.exit(1)
 })
+
+
 
 
