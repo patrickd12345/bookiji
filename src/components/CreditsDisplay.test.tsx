@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import CreditsDisplay from './CreditsDisplay';
 
-// Mock fetch
-global.fetch = jest.fn();
+const fetchMock = vi.fn();
 
 const mockUserCredits = {
   id: '1',
@@ -31,10 +31,11 @@ const defaultProps = {
 
 describe('CreditsDisplay', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (fetch as jest.Mock).mockResolvedValue({
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue({
       json: () => Promise.resolve({ success: true, data: mockUserCredits }),
     });
+    global.fetch = fetchMock as unknown as typeof fetch;
   });
 
   it('renders loading state initially', () => {
@@ -70,7 +71,7 @@ describe('CreditsDisplay', () => {
   });
 
   it('handles error state gracefully', async () => {
-    (fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+    fetchMock.mockRejectedValue(new Error('Network error'));
     
     render(<CreditsDisplay {...defaultProps} />);
     
@@ -80,7 +81,7 @@ describe('CreditsDisplay', () => {
   });
 
   it('handles API error response', async () => {
-    (fetch as jest.Mock).mockResolvedValue({
+    fetchMock.mockResolvedValue({
       json: () => Promise.resolve({ success: false, error: 'Invalid user' }),
     });
     

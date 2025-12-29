@@ -1,17 +1,18 @@
+import { vi } from 'vitest';
 import { CreditsService } from './credits';
 import { CREDITS_CONSTANTS } from '@/types/credits';
 
 // Mock Supabase client
-jest.mock('@/lib/supabaseClient', () => ({
-  getSupabaseClient: jest.fn(() => ({
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          single: jest.fn(() => Promise.resolve({ data: null, error: null })),
+vi.mock('@/lib/supabaseClient', () => ({
+  getSupabaseClient: vi.fn(() => ({
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          single: vi.fn(() => Promise.resolve({ data: null, error: null })),
         })),
       })),
     })),
-    rpc: jest.fn(() => Promise.resolve({ data: null, error: null })),
+    rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),
   })),
 }));
 

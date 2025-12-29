@@ -41,6 +41,7 @@ export default function CreditsDisplay({ userId, showDetails = false, className 
   if (loading) {
     return (
       <div className={`animate-pulse ${className}`}>
+        <p className="text-sm text-gray-500">Loading credits...</p>
         <div className="h-8 bg-gray-200 rounded w-24"></div>
         {showDetails && (
           <div className="mt-2 space-y-2">
@@ -71,11 +72,11 @@ export default function CreditsDisplay({ userId, showDetails = false, className 
       </div>
 
       {/* Tier Badge */}
-      <div className="mt-2 flex items-center space-x-2">
-        <span className={`text-lg ${getTierColor(credits.current_tier)}`}>
+      <div className={`mt-2 flex items-center space-x-2 ${className}`}>
+        <span className={`inline-flex ${getTierColor(credits.current_tier)}`}>
           {getTierIcon(credits.current_tier)}
         </span>
-        <span className={`text-sm font-medium ${getTierColor(credits.current_tier)}`}>
+        <span className={`inline-flex text-sm font-medium ${getTierColor(credits.current_tier)}`}>
           {credits.current_tier}
         </span>
       </div>
@@ -93,7 +94,7 @@ export default function CreditsDisplay({ userId, showDetails = false, className 
           </div>
           <div className="flex justify-between">
             <span>Referrals:</span>
-            <span className="font-medium">{credits.completed_referrals}</span>
+            <span className="font-medium">{`${credits.completed_referrals}/${credits.total_referrals} completed`}</span>
           </div>
           
           {/* Tier Benefits */}
@@ -111,6 +112,12 @@ export default function CreditsDisplay({ userId, showDetails = false, className 
                   <div className="flex items-center space-x-1 text-xs">
                     <span className="text-purple-500">✓</span>
                     <span>Exclusive Offers</span>
+                  </div>
+                )}
+                {credits.benefits.vip_events && (
+                  <div className="flex items-center space-x-1 text-xs">
+                    <span className="text-green-500">✓</span>
+                    <span>VIP Events</span>
                   </div>
                 )}
                 {credits.benefits.dedicated_manager && (
