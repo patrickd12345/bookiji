@@ -132,7 +132,9 @@ export function CreditsRedemption({
     return (
       <Card className={`animate-pulse ${className}`}>
         <CardHeader>
-          <CardTitle className="h-6 bg-gray-200 rounded w-32"></CardTitle>
+          <CardTitle className="h-6 bg-gray-200 rounded w-32">
+            <span className="sr-only">Loading credits...</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -176,10 +178,8 @@ export function CreditsRedemption({
       <CardContent className="space-y-4">
         {/* Current Credits */}
         <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-          <span className="text-sm font-medium">Available Credits:</span>
-          <span className="text-lg font-bold text-green-600">
-            {formatCredits(credits.credits_balance)}
-          </span>
+          <span className="text-sm font-medium">{`Credits Available: ${credits.credits_balance.toFixed(2)}`}</span>
+          <span className="text-lg font-bold text-green-600">${credits.credits_balance.toFixed(2)}</span>
         </div>
 
         {/* Redemption Input */}
@@ -192,7 +192,7 @@ export function CreditsRedemption({
               min="0"
               max={maxRedemption}
               step="0.01"
-              value={redemptionAmount || ''}
+              value={redemptionAmount.toFixed(2)}
               onChange={(e) => handleAmountChange(e.target.value)}
               placeholder="0.00"
               className="flex-1"
@@ -203,7 +203,7 @@ export function CreditsRedemption({
               onClick={handleMaxRedemption}
               disabled={!canRedeem}
             >
-              Max
+              Use Max
             </Button>
           </div>
           <p className="text-xs text-gray-500">
@@ -257,7 +257,7 @@ export function CreditsRedemption({
           className="w-full"
           size="lg"
         >
-          {isApplying ? 'Applying...' : `Apply ${formatCredits(redemptionAmount)} Credits`}
+          {isApplying ? 'Applying...' : 'Apply Credits'}
         </Button>
 
         {/* Error Display */}
