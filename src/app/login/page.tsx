@@ -1,7 +1,27 @@
 import { Suspense } from 'react';
 import LoginFormContent from './LoginFormContent';
 
-export default async function LoginPage() {
+type LoginSearchParams = Record<string, string | string[] | undefined>;
+type LoginPageProps = {
+  searchParams?: Promise<LoginSearchParams>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+
+  const isPlainMode = resolvedSearchParams?.plain === '1';
+
+  // Plain rendering mode is used for quick health checks (no client components or async work)
+  if (isPlainMode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white text-gray-900">
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-semibold">Bookiji Login</h1>
+          <p className="text-gray-600">Plain mode active. Remove ?plain=1 for full experience.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Suspense
