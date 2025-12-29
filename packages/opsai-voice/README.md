@@ -1,6 +1,11 @@
 # OpsAI Voice Console
 
-The OpsAI Voice Console is a lightweight browser experience that lets operators ask for summaries, health updates, and deployments while the page reads answers aloud using the Web Speech API.
+The OpsAI Voice Console (VoicePanel) is a lightweight browser experience that lets operators ask for summaries, health updates, and deployments while the page reads answers aloud using the Web Speech API.
+
+## Purpose & invocation
+
+- Lives under `packages/opsai-voice/` and can be hosted standalone or embedded alongside the OpsAI Control Plane panels.
+- Entry point is `dist/voice-console/index.html`; buttons call Ops endpoints and narrate responses for on-call use.
 
 ## How to run it
 

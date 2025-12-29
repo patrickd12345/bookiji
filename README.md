@@ -438,13 +438,14 @@ If you encounter build problems:
 ---
 
 
-## OpsAI (Operations Intelligence Layer)
+## OpsAI — Operations Intelligence Layer
 
-OpsAI assembles Bookiji's telemetry, health, incidents, and incident playbooks into a single surface that operators can monitor, command, and narrate.
+OpsAI is the operations intelligence stack that centralizes telemetry, incidents, and operator controls.
 
-- **Control plane + SDK packages**: `apps/opsai-control-plane/` ships the OpsAI Commander console, and it consumes `@bookiji/opsai` to hit `/api/ops/controlplane/*`.
-- **Helpdesk / L7 tooling**: `packages/opsai-helpdesk/` and `packages/opsai-l7/` deliver diagnostics, reliability predictions, and playbook suggestions.
-- **Voice console (if present)**: `packages/opsai-voice/` provides a vocal SSE stream (`/api/ops/events/stream`, `/api/ops/summary`, `/api/ops/health`, `/api/ops/deployments`).
+- **Control plane**: `apps/opsai-control-plane/` hosts the dashboard for health, deployments, incidents, and commands.
+- **SDK / packages**: `packages/opsai-sdk/` powers summaries, metrics, deployments, and webhooks.
+- **Helpdesk / L7 tooling**: `packages/opsai-helpdesk/` and `packages/opsai-l7/` handle diagnostics, predictions, and synthetic checks.
+- **Voice console support**: `packages/opsai-voice/` reads responses aloud from `/api/ops/events/stream`, `/api/ops/summary`, `/api/ops/health`, and `/api/ops/deployments`.
 
 See [docs/opsai/README.md](docs/opsai/README.md) for the canonical OpsAI hub.
 
