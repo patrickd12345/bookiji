@@ -80,6 +80,7 @@ function getClientIP(request: NextRequest): string {
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
   const hostname = request.headers.get('host') || ''
+  const plainMode = request.nextUrl.searchParams.get('plain') === '1'
 
   // Rewrite sched.bookiji.com to show /sched page content (same as www.bookiji.com/sched)
   // Check for sched subdomain (handles both sched.bookiji.com and sched.bookiji.com:port)
@@ -99,6 +100,34 @@ export async function middleware(request: NextRequest) {
     // For /sched path on sched subdomain, let it pass through normally
     // For all other paths on sched subdomain, allow normal routing
     // (this ensures /vendor/*, /api/*, etc. still work)
+  }
+
+  if (pathname === '/login' && plainMode) {
+    const response = new NextResponse(
+      `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bookiji Login</title>
+    <style>
+      body { display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #111; margin: 0; }
+      .wrapper { text-align: center; }
+      h1 { font-size: 1.75rem; margin: 0 0 0.25rem; }
+      p { margin: 0; color: #4b5563; }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <h1>Bookiji Login</h1>
+      <p>Plain mode active. Remove ?plain=1 for full experience.</p>
+    </div>
+  </body>
+</html>`
+    )
+    response.headers.set('Content-Type', 'text/html; charset=utf-8')
+    addSecurityHeaders(response)
+    return response
   }
 
   if (request.headers.get(SYNTHETIC_HEADER) === 'simcity') {
