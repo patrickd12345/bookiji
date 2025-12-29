@@ -1,8 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import { CreditsRedemption } from './CreditsRedemption';
 
-// Mock fetch
-global.fetch = jest.fn();
+const fetchMock = vi.fn();
 
 const mockCreditsData = {
   id: '1',
@@ -22,18 +22,19 @@ const mockCreditsData = {
 const defaultProps = {
   userId: '1',
   totalCost: 100.00,
-  onCreditsAppliedAction: jest.fn(),
+  onCreditsAppliedAction: vi.fn(),
   className: '',
 };
 
 describe('CreditsRedemption', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    global.fetch = jest.fn();
+    vi.clearAllMocks();
+    fetchMock.mockReset();
+    global.fetch = fetchMock as unknown as typeof fetch;
   });
 
   it('renders without crashing', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    fetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true, data: mockCreditsData })
     });
@@ -51,7 +52,7 @@ describe('CreditsRedemption', () => {
   });
 
   it('handles error state', async () => {
-    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+    fetchMock.mockRejectedValueOnce(new Error('Network error'));
 
     render(<CreditsRedemption {...defaultProps} />);
     
@@ -61,7 +62,7 @@ describe('CreditsRedemption', () => {
   });
 
   it('calculates max redemption correctly', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    fetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true, data: mockCreditsData })
     });
@@ -80,7 +81,7 @@ describe('CreditsRedemption', () => {
   });
 
   it('applies credits successfully', async () => {
-    (global.fetch as jest.Mock)
+    fetchMock
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true, data: mockCreditsData })
