@@ -10,6 +10,12 @@
 
 ---
 
+## OpsAI — Operations Intelligence
+
+OpsAI centralizes the control plane UI, SDK/CLI, helpdesk diagnostics, L7 reliability checks, and the voice console used to narrate ops status. See [docs/opsai/README.md](docs/opsai/README.md) for the canonical overview.
+
+---
+
 ## 🎯 Core Differentiators (Unique Features)
 
 ### 1. **$1 Commitment Fee System**

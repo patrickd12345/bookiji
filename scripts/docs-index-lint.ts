@@ -2,28 +2,41 @@
 import fs from 'fs'
 import path from 'path'
 
-const INDEX_PATH = path.join(process.cwd(), 'index.md')
+const INDEX_PATH = path.join(process.cwd(), 'docs', 'index.md')
 const JARVIS_DIR = path.join(process.cwd(), 'docs', 'jarvis')
 
 if (!fs.existsSync(INDEX_PATH)) {
-  console.error('index.md not found at repo root')
+  console.error('docs/index.md not found')
   process.exit(1)
 }
 
 const indexContent = fs.readFileSync(INDEX_PATH, 'utf8')
-const entryRegex = /`([^`]+\.md)`/g
+const mdLinkRegex = /\[[^\]]+\]\(([^)#]+\.md)/g
+const codeLinkRegex = /`([^`]+\.md)`/g
+
 const counts = new Map<string, number>()
 const duplicates: string[] = []
 
+function recordLink(raw: string) {
+  const withoutFragment = raw.split('#')[0]
+  const normalized = path.normalize(withoutFragment.replace(/^\.\//, '')).replace(/\\/g, '/')
+  const previous = counts.get(normalized) ?? 0
+  counts.set(normalized, previous + 1)
+  if (previous === 1) {
+    duplicates.push(normalized)
+  }
+}
+
 for (const line of indexContent.split(/\r?\n/)) {
-  let match: RegExpExecArray | null
-  while ((match = entryRegex.exec(line))) {
-    const target = match[1]
-    const previous = counts.get(target) ?? 0
-    counts.set(target, previous + 1)
-    if (previous === 1) {
-      duplicates.push(target)
-    }
+  let mdMatch: RegExpExecArray | null
+  let codeMatch: RegExpExecArray | null
+
+  while ((mdMatch = mdLinkRegex.exec(line))) {
+    recordLink(mdMatch[1])
+  }
+
+  while ((codeMatch = codeLinkRegex.exec(line))) {
+    recordLink(codeMatch[1])
   }
 }
 
@@ -32,11 +45,12 @@ if (fs.existsSync(JARVIS_DIR)) {
   const phaseFiles = fs
     .readdirSync(JARVIS_DIR, { withFileTypes: true })
     .filter((entry) => entry.isFile() && /^phase\d-.*\.md$/i.test(entry.name))
-    .map((entry) => `docs/jarvis/${entry.name}`)
 
-  for (const phasePath of phaseFiles) {
-    if (!counts.has(phasePath)) {
-      missingPhases.push(phasePath)
+  for (const phase of phaseFiles) {
+    const relativePath = path.join('docs', 'jarvis', phase.name).replace(/\\/g, '/')
+    const altRelativePath = path.join('jarvis', phase.name).replace(/\\/g, '/')
+    if (!counts.has(relativePath) && !counts.has(altRelativePath)) {
+      missingPhases.push(relativePath)
     }
   }
 }
