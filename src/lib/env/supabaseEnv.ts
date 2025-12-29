@@ -37,10 +37,22 @@ export interface SupabaseEnvConfig {
  * @throws Error if APP_ENV is invalid or required credentials are missing
  */
 export function getSupabaseEnv(): SupabaseEnvConfig {
-  if (process.env.E2E === 'true') {
+  // DIAGNOSTIC: Log environment check
+  const isE2E = process.env.E2E === 'true' || process.env.NEXT_PUBLIC_E2E === 'true'
+  console.warn('[SUPABASE ENV] E2E check', {
+    E2E: process.env.E2E,
+    NEXT_PUBLIC_E2E: process.env.NEXT_PUBLIC_E2E,
+    isE2E,
+    hasNextPublicUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    nextPublicUrl: process.env.NEXT_PUBLIC_SUPABASE_URL
+  })
+
+  if (isE2E) {
     const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
     const anonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    console.warn('[SUPABASE ENV] E2E mode detected', { url, hasAnonKey: !!anonKey })
 
     if (!url || !anonKey) {
       throw new Error(
@@ -142,6 +154,11 @@ export function getSupabaseServiceKey(): string {
   }
   return config.serviceKey;
 }
+
+
+
+
+
 
 
 

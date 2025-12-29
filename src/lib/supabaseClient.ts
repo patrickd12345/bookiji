@@ -6,13 +6,26 @@ import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env/supabaseEnv'
 // We NEVER create a client server-side unless explicitly requested.
 
 function getBrowserEnv() {
+  // DIAGNOSTIC: Log environment configuration at module load
+  console.warn('[SUPABASE CLIENT CONFIG]', {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    anon: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 10),
+    appEnv: process.env.NEXT_PUBLIC_APP_ENV,
+    e2e: process.env.E2E,
+    nextPublicE2e: process.env.NEXT_PUBLIC_E2E,
+    hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  })
+
   // Use environment-aware Supabase configuration
   // This ensures we always use the correct project for the current environment
   try {
     const url = getSupabaseUrl()
     const key = getSupabaseAnonKey()
+    console.warn('[SUPABASE CLIENT] Using getSupabaseEnv()', { url, keyPreview: key?.slice(0, 10) })
     return { url, key }
-  } catch (_error) {
+  } catch (error) {
+    console.warn('[SUPABASE CLIENT] getSupabaseEnv() failed, using fallback', error)
     // Fallback for browser context where APP_ENV might not be set yet
     // This maintains backward compatibility during migration
     const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').split(/\s+/)[0].trim()
@@ -22,6 +35,7 @@ function getBrowserEnv() {
       anonKey ||
       (publishableFallback && publishableFallback.startsWith('eyJ') ? publishableFallback : undefined)
     
+    console.warn('[SUPABASE CLIENT] Using fallback env vars', { url, keyPreview: key?.slice(0, 10) })
     return { url, key }
   }
 }
@@ -44,11 +58,24 @@ export function getBrowserSupabase(): SupabaseClient | null {
 
   const { url, key } = getBrowserEnv()
 
+  // DIAGNOSTIC: Log final client creation
+  console.warn('[SUPABASE CLIENT] Creating browser client', {
+    url,
+    hasKey: !!key,
+    keyPreview: key?.slice(0, 10)
+  })
+
   if (!url || !key) {
     console.error('Supabase env vars missing (browser)', { 
       hasUrl: !!url, 
       hasKey: !!key,
-      urlPreview: url ? `${url.substring(0, 30)}...` : 'missing'
+      urlPreview: url ? `${url.substring(0, 30)}...` : 'missing',
+      allEnvVars: {
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'present' : 'missing',
+        E2E: process.env.E2E,
+        NEXT_PUBLIC_E2E: process.env.NEXT_PUBLIC_E2E
+      }
     })
     return null
   }
@@ -65,6 +92,7 @@ export function getBrowserSupabase(): SupabaseClient | null {
         storage: typeof window !== 'undefined' ? window.localStorage : undefined,
       },
     })
+    console.warn('[SUPABASE CLIENT] Browser client created successfully', { url })
     return browserInstance
   } catch (error) {
     console.error('Failed to create Supabase client:', error)

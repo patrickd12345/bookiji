@@ -5,6 +5,17 @@ const isProd = process.env.VERCEL_ENV === 'production';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://*.supabase.co';
 const supabaseDomain = supabaseUrl.replace(/^https?:\/\//, '').split('/')[0];
 
+// Allow localhost connections for local development and E2E testing
+const isLocalOrE2E = process.env.NODE_ENV === 'development' || 
+                     process.env.E2E === 'true' || 
+                     process.env.NEXT_PUBLIC_E2E === 'true' ||
+                     supabaseUrl.includes('localhost') ||
+                     supabaseUrl.includes('127.0.0.1');
+
+const connectSrc = isLocalOrE2E
+  ? `connect-src 'self' ws: wss: http://localhost:* http://127.0.0.1:* https://${supabaseDomain} https://*.supabase.co https://api.stripe.com; `
+  : `connect-src 'self' ws: wss: https://${supabaseDomain} https://*.supabase.co https://api.stripe.com; `;
+
 const securityHeaders = [
   {
     key: 'Content-Security-Policy',
@@ -12,7 +23,7 @@ const securityHeaders = [
       "default-src 'self'; " +
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; " +
       "style-src 'self' 'unsafe-inline'; " +
-      `connect-src 'self' ws: wss: https://${supabaseDomain} https://*.supabase.co https://api.stripe.com; ` +
+      connectSrc +
       "img-src 'self' data: blob: https:; " +
       "font-src 'self' data:; " +
       "frame-src https://js.stripe.com;",

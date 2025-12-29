@@ -44,6 +44,13 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+})
+
 const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'e2e-admin@bookiji.test'
 const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'TestPassword123!'
 
@@ -307,19 +314,12 @@ async function main() {
   })
   console.log('')
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  })
-
   const userIds: Record<string, string> = {}
 
   for (const userSeed of usersToSeed) {
     console.log(`dY"? Processing ${userSeed.email}...`)
     try {
-      const userId = await seedUser(supabase, userSeed)
+      const userId = await seedUser(supabaseAdmin, userSeed)
       userIds[userSeed.email] = userId
     } catch (error) {
       console.error(`ƒ?O Failed to seed ${userSeed.email}:`, error)

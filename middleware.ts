@@ -6,6 +6,16 @@ import { assertAppEnv } from '@/lib/env/assertAppEnv'
 
 // Validate environment at module load (runs once per server instance)
 // This ensures APP_ENV is set before any requests are processed
+// DIAGNOSTIC: Log environment state
+console.log('[MIDDLEWARE ENV CHECK]', {
+  E2E: process.env.E2E,
+  NEXT_PUBLIC_E2E: process.env.NEXT_PUBLIC_E2E,
+  APP_ENV: process.env.APP_ENV,
+  NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
+  SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NODE_ENV: process.env.NODE_ENV
+})
+
 try {
   assertAppEnv();
 } catch (error) {
@@ -128,7 +138,12 @@ export async function middleware(request: NextRequest) {
       return new NextResponse('Not Found', { status: 404 })
     }
   }
-  
+
+  // Avoid running blocking auth checks for the login entry point
+  if (pathname === '/login') {
+    return createSecuredNextResponse()
+  }
+ 
   // Apply admin guard first for all admin routes
   if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
     const adminGuardResult = await adminGuard(request)
@@ -194,12 +209,7 @@ export async function middleware(request: NextRequest) {
   }
   
   // Apply security headers to all other routes
-  const response = NextResponse.next()
-  addSecurityHeaders(response)
-  // Add CSP with per-request nonce
-  const nonce = Math.random().toString(36).slice(2)
-  response.headers.set('Content-Security-Policy', buildCSPHeader(nonce))
-  return response
+  return createSecuredNextResponse()
 }
 
 function addSecurityHeaders(response: NextResponse) {
@@ -209,6 +219,15 @@ function addSecurityHeaders(response: NextResponse) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
   response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+}
+
+function createSecuredNextResponse() {
+  const response = NextResponse.next()
+  addSecurityHeaders(response)
+  // Add CSP with per-request nonce
+  const nonce = Math.random().toString(36).slice(2)
+  response.headers.set('Content-Security-Policy', buildCSPHeader(nonce))
+  return response
 }
 
 export const config = {

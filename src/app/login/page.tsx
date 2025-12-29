@@ -7,8 +7,7 @@ type LoginPageProps = {
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const resolvedSearchParams = searchParams ? await searchParams : undefined;
-
+  const resolvedSearchParams = await searchParams;
   const isPlainMode = resolvedSearchParams?.plain === '1';
 
   // Plain rendering mode is used for quick health checks (no client components or async work)

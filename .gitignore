@@ -102,3 +102,9 @@ core
 # Recovery artifacts (NEVER commit raw DB dumps / storage exports)
 /recovery-artifacts/
 /recovery-logs/
+
+temp_trace_extract/
+
+query
+
+start
