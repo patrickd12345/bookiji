@@ -22,10 +22,34 @@ const envPaths = [
 
 console.log('🚀 Starting E2E test run...\n')
 
-// Step 1: Check if .env.e2e exists, if not try to create it
-if (!fs.existsSync(envE2EPath)) {
-  console.log('📝 .env.e2e not found, checking for .env files...')
+// Step 1: Check if .env.e2e exists and has correct config, if not try to create/update it
+const requiredVars = [
+  'SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+]
+
+let needsSync = false
+if (fs.existsSync(envE2EPath)) {
+  // Check if .env.e2e has localhost but we're in a cloud environment
+  const e2eEnv = dotenv.config({ path: envE2EPath }).parsed || {}
+  const supabaseUrl = e2eEnv.SUPABASE_URL || e2eEnv.NEXT_PUBLIC_SUPABASE_URL || ''
+  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(supabaseUrl)
+  const isCloudEnv = process.env.CI === 'true' || process.env.CURSOR === 'true' || process.env.CODEX === 'true' || 
+                     process.env.DOCKER === 'true' || process.cwd().includes('/workspace')
   
+  // If we have localhost in cloud env, or missing vars, we need to sync
+  if ((isLocalhost && isCloudEnv) || !requiredVars.every(v => e2eEnv[v])) {
+    needsSync = true
+    console.log('📝 .env.e2e needs updating (localhost in cloud env or missing vars)')
+  }
+} else {
+  needsSync = true
+  console.log('📝 .env.e2e not found, checking for .env files or environment variables...')
+}
+
+if (needsSync) {
   const envPath = envPaths.find(p => fs.existsSync(p))
   if (envPath) {
     console.log(`✅ Found ${path.basename(envPath)}, syncing to .env.e2e...`)
@@ -37,12 +61,6 @@ if (!fs.existsSync(envE2EPath)) {
     }
   } else {
     // Check if env vars are in process.env
-    const requiredVars = [
-      'SUPABASE_URL',
-      'NEXT_PUBLIC_SUPABASE_URL',
-      'SUPABASE_SERVICE_ROLE_KEY',
-      'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    ]
     const hasVars = requiredVars.every(v => process.env[v])
     
     if (!hasVars) {
@@ -80,10 +98,16 @@ if (!fs.existsSync(envE2EPath)) {
       if (process.env.BASE_URL) {
         lines.push('')
         lines.push(`BASE_URL=${process.env.BASE_URL}`)
+      } else {
+        lines.push('')
+        lines.push('BASE_URL=http://localhost:3000')
       }
       
       fs.writeFileSync(envE2EPath, lines.join('\n') + '\n')
       console.log('✅ Created .env.e2e from environment variables')
+      if (isRemote) {
+        console.log('⚠️  Remote Supabase detected - E2E_ALLOW_REMOTE_SUPABASE=true set')
+      }
     }
   }
 }
