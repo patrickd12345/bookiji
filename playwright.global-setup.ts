@@ -2,7 +2,9 @@ import { execSync } from 'node:child_process'
 
 export default async function globalSetup() {
   // Ensure deterministic Supabase Auth users exist for E2E runs.
-  execSync('pnpm e2e:seed', { stdio: 'inherit' })
+  if (process.env.E2E_SKIP_SEED !== 'true') {
+    execSync('pnpm e2e:seed', { stdio: 'inherit' })
+  }
 
   // Warm Next.js routes to avoid first-hit compile delays causing E2E flake.
   const baseURL = process.env.BASE_URL || process.env.E2E_BASE_URL || 'http://localhost:3000'
