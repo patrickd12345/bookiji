@@ -14,6 +14,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import dotenv from 'dotenv'
 
+// Helper to wait (for async operations)
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 const envE2EPath = path.resolve(process.cwd(), '.env.e2e')
 // Priority order: .env.local first (most specific), then .env, then backups
 const envPaths = [
@@ -112,13 +115,18 @@ if (fs.existsSync(envE2EPath)) {
     syncReason = 'missing required variables'
   }
   // Check if we have better credentials available elsewhere
+  // BUT: Don't overwrite localhost if .env.e2e already has all required vars and we're not in cloud
   else if (hasAllRequiredVars) {
     const remoteUrl = allEnvVars.SUPABASE_URL || allEnvVars.NEXT_PUBLIC_SUPABASE_URL || ''
     const isRemote = remoteUrl && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(remoteUrl)
-    if (isRemote && isLocalhost) {
+    // Only sync to remote if we're in a cloud environment AND .env.e2e has localhost
+    // Otherwise, preserve the existing .env.e2e configuration
+    if (isRemote && isLocalhost && isCloudEnv) {
       needsSync = true
-      syncReason = 'remote credentials available but .env.e2e has localhost'
+      syncReason = 'remote credentials available but .env.e2e has localhost (cloud environment)'
     }
+    // If .env.e2e has localhost and we're NOT in cloud, keep it (local development)
+    // If .env.e2e has all required vars, keep it as-is
   }
 } else {
   needsSync = true
@@ -258,21 +266,181 @@ try {
   process.exit(1)
 }
 
+// Step 2.5: Check Supabase connectivity before seeding (async wrapper)
+await (async () => {
+const supabaseUrl = allEnvVars.SUPABASE_URL || allEnvVars.NEXT_PUBLIC_SUPABASE_URL || ''
+const isLocalSupabase = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(supabaseUrl)
+
+if (isLocalSupabase && process.env.E2E_SKIP_SEED !== 'true') {
+  console.log('\n🔍 Checking if local Supabase is running...')
+  
+  // Try to check Supabase status
+  let supabaseRunning = false
+  try {
+    const statusOutput = execSync('npx supabase status', { 
+      encoding: 'utf-8',
+      stdio: 'pipe',
+      timeout: 10000 
+    })
+    // Check if status shows running services
+    if (statusOutput.includes('API URL:') || statusOutput.includes('DB URL:')) {
+      supabaseRunning = true
+      console.log('✅ Local Supabase is running')
+    }
+  } catch (error) {
+    // Supabase CLI not available or containers not running
+    console.log('⚠️  Could not verify Supabase status (Docker may not be running)')
+  }
+  
+  // If we can't verify, try a quick HTTP connection test
+  if (!supabaseRunning) {
+    try {
+      // Simple HTTP check - try to reach the API endpoint
+      const testUrl = supabaseUrl.replace(/\/$/, '') + '/rest/v1/'
+      const curlResult = execSync(
+        `curl -s -o nul -w "%{http_code}" --max-time 3 "${testUrl}"`,
+        { encoding: 'utf-8', timeout: 5000, stdio: 'pipe', shell: true }
+      )
+      if (curlResult.trim() === '200' || curlResult.trim() === '401' || curlResult.trim() === '404') {
+        // Any response means the server is reachable
+        supabaseRunning = true
+        console.log('✅ Local Supabase is reachable')
+      }
+    } catch (error) {
+      // curl failed or timeout - server not reachable
+    }
+    
+    if (!supabaseRunning) {
+      console.log('⚠️  Local Supabase is not reachable')
+      console.log('')
+      
+      // Try to auto-start Supabase if Docker is available
+      let dockerAvailable = false
+      try {
+        execSync('docker --version', { stdio: 'pipe', timeout: 3000 })
+        dockerAvailable = true
+      } catch {
+        // Docker not available
+      }
+      
+      if (dockerAvailable && !process.env.E2E_NO_AUTO_START) {
+        console.log('🚀 Attempting to start Supabase automatically...')
+        try {
+          // Start Supabase in background (non-blocking)
+          console.log('   Running: pnpm db:start')
+          execSync('pnpm db:start', { 
+            stdio: 'inherit',
+            timeout: 120_000 // 2 minutes max for startup
+          })
+          
+          // Wait a bit for services to be ready
+          console.log('   Waiting for Supabase to be ready...')
+          await wait(5000)
+          
+          // Verify it's running now
+          try {
+            const statusOutput = execSync('npx supabase status', { 
+              encoding: 'utf-8',
+              stdio: 'pipe',
+              timeout: 10000 
+            })
+            if (statusOutput.includes('API URL:') || statusOutput.includes('DB URL:')) {
+              supabaseRunning = true
+              console.log('✅ Supabase started successfully!')
+            }
+          } catch {
+            // Status check failed, but might still be starting
+            console.log('   ⏳ Supabase is starting (may take a moment)...')
+            // Try one more time after a longer wait
+            await wait(10000)
+            try {
+              const testUrl = supabaseUrl.replace(/\/$/, '') + '/rest/v1/'
+              const curlResult = execSync(
+                `curl -s -o nul -w "%{http_code}" --max-time 3 "${testUrl}"`,
+                { encoding: 'utf-8', timeout: 5000, stdio: 'pipe', shell: true }
+              )
+              if (curlResult.trim() === '200' || curlResult.trim() === '401' || curlResult.trim() === '404') {
+                supabaseRunning = true
+                console.log('✅ Supabase is now reachable!')
+              }
+            } catch {
+              // Still not ready
+            }
+          }
+        } catch (error: any) {
+          console.log('   ❌ Failed to start Supabase automatically')
+          if (error.message?.includes('Docker') || error.message?.includes('docker')) {
+            console.log('   💡 Docker may not be running. Start Docker Desktop and try again.')
+          }
+        }
+      }
+      
+      if (!supabaseRunning) {
+        console.log('')
+        console.log('💡 Options:')
+        if (dockerAvailable) {
+          console.log('  1. Start Supabase manually: pnpm db:start')
+          console.log('  2. Use remote Supabase: pnpm e2e:setup-remote')
+        } else {
+          console.log('  1. Use remote Supabase (recommended): pnpm e2e:setup-remote')
+          console.log('     → Get a free Supabase project at https://app.supabase.com')
+        }
+        console.log('  3. Skip seeding (if users already exist): E2E_SKIP_SEED=true pnpm e2e:all')
+        console.log('')
+        console.log('⏭️  Auto-skipping seeding and continuing with tests...')
+        console.log('   (Tests may fail if required users don\'t exist)')
+        console.log('   (Set E2E_NO_AUTO_START=true to skip auto-start attempts)')
+        process.env.E2E_SKIP_SEED = 'true'
+      }
+    }
+  }
+}
+})() // End async IIFE
+
 // Step 3: Seed test users (unless skipped)
 if (process.env.E2E_SKIP_SEED !== 'true') {
   console.log('\n🌱 Seeding test users...')
   try {
     execSync('pnpm e2e:seed', { stdio: 'inherit' })
+    console.log('✅ User seeding completed')
   } catch (error: any) {
-    // Check if it's a connection error
-    if (error.message?.includes('ECONNREFUSED') || error.message?.includes('connect')) {
-      console.error('\n❌ Cannot connect to Supabase')
-      console.error('   Make sure Supabase is running (pnpm db:start) or use a remote instance')
-      console.error('   For remote Supabase, ensure E2E_ALLOW_REMOTE_SUPABASE=true in .env.e2e')
+    const errorOutput = error.stdout?.toString() || error.stderr?.toString() || error.message || ''
+    
+    // Check for timeout or connection errors
+    if (errorOutput.includes('Connection timeout') ||
+        errorOutput.includes('timeout') ||
+        errorOutput.includes('ECONNREFUSED') ||
+        errorOutput.includes('Cannot connect') ||
+        errorOutput.includes('UND_ERR_HEADERS_TIMEOUT')) {
+      console.error('\n❌ Cannot connect to Supabase for seeding')
+      console.error('')
+      console.error('💡 Options:')
+      console.error('  1. Start local Supabase: pnpm db:start')
+      console.error('  2. Use remote Supabase: pnpm e2e:setup-remote')
+      console.error('  3. Skip seeding: E2E_SKIP_SEED=true pnpm e2e:all')
+      console.error('')
+      
+      // If it's a local Supabase, auto-skip and continue
+      if (isLocalSupabase) {
+        console.error('⚠️  Auto-skipping seeding and continuing with tests...')
+        console.error('   (Tests may fail if required users don\'t exist)')
+        process.env.E2E_SKIP_SEED = 'true'
+      } else {
+        // Remote Supabase - this is more serious
+        console.error('❌ Cannot connect to remote Supabase')
+        console.error('   Verify:')
+        console.error('   - SUPABASE_URL is correct')
+        console.error('   - Project is active (not paused) in Supabase dashboard')
+        console.error('   - Network can reach Supabase')
+        console.error('   - API keys are valid')
+        process.exit(1)
+      }
     } else {
+      // Other seeding error (not connectivity)
       console.error('\n❌ Failed to seed test users')
+      console.error('   Error:', errorOutput.substring(0, 500))
+      process.exit(1)
     }
-    process.exit(1)
   }
 } else {
   console.log('\n⏭️  Skipping user seeding (E2E_SKIP_SEED=true)')

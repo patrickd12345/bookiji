@@ -113,16 +113,65 @@ CREATE POLICY "Users can view own notification deliveries"
     )
   );
 
--- ========================================
--- 3. BATCH QUEUE EXTENSIONS (link to intents)
--- ========================================
+ -- ========================================
+ -- 3. BATCH QUEUE TABLE (ensures availability after full reset)
+ -- ========================================
 
-ALTER TABLE notification_batch_queue
-  ADD COLUMN IF NOT EXISTS intent_id UUID REFERENCES notification_intents(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS delivery_id UUID REFERENCES notification_deliveries(id) ON DELETE SET NULL;
+ CREATE TABLE IF NOT EXISTS notification_batch_queue (
+   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+   batch_id TEXT NOT NULL,
+   notification_data JSONB NOT NULL,
+   priority TEXT CHECK (priority IN ('low', 'normal', 'high', 'urgent')) DEFAULT 'normal',
+   expires_at TIMESTAMPTZ NOT NULL,
+   processed BOOLEAN DEFAULT FALSE,
+   created_at TIMESTAMPTZ DEFAULT NOW()
+ );
 
-CREATE INDEX IF NOT EXISTS notification_batch_queue_intent_idx
-  ON notification_batch_queue(intent_id);
+ALTER TABLE notification_batch_queue ENABLE ROW LEVEL SECURITY;
 
-CREATE INDEX IF NOT EXISTS notification_batch_queue_delivery_idx
-  ON notification_batch_queue(delivery_id);
+DROP POLICY IF EXISTS "Users can view own queued notifications" ON notification_batch_queue;
+CREATE POLICY "Users can view own queued notifications"
+  ON notification_batch_queue FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own queued notifications" ON notification_batch_queue;
+CREATE POLICY "Users can insert own queued notifications"
+  ON notification_batch_queue FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can manage own queued notifications" ON notification_batch_queue;
+CREATE POLICY "Users can manage own queued notifications"
+  ON notification_batch_queue FOR UPDATE
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own queued notifications" ON notification_batch_queue;
+CREATE POLICY "Users can delete own queued notifications"
+  ON notification_batch_queue FOR DELETE
+  USING (auth.uid() = user_id);
+
+ CREATE INDEX IF NOT EXISTS idx_notification_batch_queue_user_id
+   ON notification_batch_queue(user_id);
+
+ CREATE INDEX IF NOT EXISTS idx_notification_batch_queue_batch_id
+   ON notification_batch_queue(batch_id);
+
+ CREATE INDEX IF NOT EXISTS idx_notification_batch_queue_expires_at
+   ON notification_batch_queue(expires_at);
+
+ CREATE INDEX IF NOT EXISTS idx_notification_batch_queue_processed
+   ON notification_batch_queue(processed) WHERE processed = FALSE;
+
+ -- ========================================
+ -- 4. BATCH QUEUE EXTENSIONS (link to intents)
+ -- ========================================
+
+ ALTER TABLE notification_batch_queue
+   ADD COLUMN IF NOT EXISTS intent_id UUID REFERENCES notification_intents(id) ON DELETE SET NULL,
+   ADD COLUMN IF NOT EXISTS delivery_id UUID REFERENCES notification_deliveries(id) ON DELETE SET NULL;
+
+ CREATE INDEX IF NOT EXISTS notification_batch_queue_intent_idx
+   ON notification_batch_queue(intent_id);
+
+ CREATE INDEX IF NOT EXISTS notification_batch_queue_delivery_idx
+   ON notification_batch_queue(delivery_id);

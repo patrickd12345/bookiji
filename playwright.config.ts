@@ -60,11 +60,12 @@ export default defineConfig({
   testDir: './tests/e2e',
   globalSetup: './playwright.global-setup.ts',
 
-  // Full-suite stability: avoid overloading local Next.js + Supabase on Windows.
-  fullyParallel: false,
-  workers: 1,
+  // Performance: Use parallel workers when Supabase is available, sequential when not
+  // Check if Supabase is likely available (not a perfect check, but helps)
+  fullyParallel: process.env.E2E_SKIP_SEED !== 'true',
+  workers: process.env.E2E_SKIP_SEED === 'true' ? 1 : 2, // Use 2 workers if Supabase available
   retries: 1,
-  timeout: 120_000,
+  timeout: 60_000, // Reduced from 120s to 60s - fail faster
 
   use: {
     baseURL,
@@ -87,14 +88,17 @@ export default defineConfig({
       name: 'chromium',
       use: devices['Desktop Chrome'],
     },
-    {
-      name: 'firefox',
-      use: devices['Desktop Firefox'],
-    },
-    {
-      name: 'webkit',
-      use: devices['Desktop Safari'],
-    },
+    // Only run other browsers if explicitly requested (saves time)
+    ...(process.env.E2E_ALL_BROWSERS === 'true' ? [
+      {
+        name: 'firefox',
+        use: devices['Desktop Firefox'],
+      },
+      {
+        name: 'webkit',
+        use: devices['Desktop Safari'],
+      },
+    ] : []),
   ],
 
   webServer: {

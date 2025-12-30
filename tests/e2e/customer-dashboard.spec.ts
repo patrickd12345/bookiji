@@ -5,8 +5,8 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
 test.describe('Customer Dashboard', () => {
   test.beforeEach(async ({ page, auth }) => {
     await auth.loginAsCustomer()
-    await page.waitForURL(/\/customer\/dashboard/, { timeout: 60_000, waitUntil: 'domcontentloaded' })
-    await expect(page.locator('[data-test="dashboard-root"]')).toBeVisible({ timeout: 60_000 })
+    await page.waitForURL(/\/customer\/dashboard/, { timeout: 30_000, waitUntil: 'domcontentloaded' })
+    await expect(page.locator('[data-test="dashboard-root"]')).toBeVisible({ timeout: 30_000 })
   })
 
   test('should load customer dashboard page', async ({ page }) => {

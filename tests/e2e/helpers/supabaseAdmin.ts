@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseAdminClient } from '../../../scripts/e2e/createSupabaseAdmin'
 
 export function getSupabaseAdmin() {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -7,8 +7,10 @@ export function getSupabaseAdmin() {
   if (!url) throw new Error('Missing SUPABASE_URL (expected local)')
   if (!key) throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY (expected local)')
 
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
+  // Use the utility with timeout and IPv4 handling to prevent UND_ERR_HEADERS_TIMEOUT
+  return createSupabaseAdminClient(url, key, {
+    timeoutMs: 60000, // 60 second timeout for admin operations
+    forceIPv4: true   // Force IPv4 to avoid IPv6 resolution issues on Windows
   })
 }
 

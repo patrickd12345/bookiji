@@ -9,7 +9,12 @@ export default async function globalSetup() {
     } catch (error: any) {
       // If seeding fails, check if it's a connection error
       const output = error.stdout?.toString() || error.stderr?.toString() || error.message || ''
-      if (output.includes('ECONNREFUSED') || output.includes('fetch failed') || output.includes('Cannot connect')) {
+      if (output.includes('ECONNREFUSED') || 
+          output.includes('fetch failed') || 
+          output.includes('Cannot connect') ||
+          output.includes('Connection timeout') ||
+          output.includes('timeout') ||
+          output.includes('UND_ERR_HEADERS_TIMEOUT')) {
         console.error('\n❌ User seeding failed - Supabase is not reachable')
         console.error('\n💡 Options:')
         console.error('  1. Set up remote Supabase: pnpm e2e:setup-remote')

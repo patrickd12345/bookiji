@@ -31,7 +31,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import dotenv from 'dotenv'
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseAdminClient } from './createSupabaseAdmin'
 import { E2E_CUSTOMER_USER, E2E_VENDOR_USER, E2EUserDefinition } from './credentials'
 
 // Allow skipping seed if explicitly requested (useful for cloud environments where users may already exist)
@@ -90,26 +90,15 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-// Fix for Node 18+ / Undici localhost issues where it defaults to IPv6 ::1
-// but local Supabase/Docker usually listens on IPv4 127.0.0.1
-const finalSupabaseUrl = SUPABASE_URL?.replace('localhost', '127.0.0.1')
-
-const supabaseAdmin = createClient(finalSupabaseUrl || '', SUPABASE_SERVICE_ROLE_KEY || '', {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  },
-  global: {
-    // Increase timeout to avoid UND_ERR_HEADERS_TIMEOUT on slow connections/cold starts
-    fetch: (url, options) => {
-      return fetch(url, {
-        ...options,
-        // @ts-ignore - undici/node-fetch support signal, and we want to extend the timeout
-        signal: options?.signal || AbortSignal.timeout(60000) 
-      })
-    }
+// Create admin client with timeout and IPv4 handling to prevent UND_ERR_HEADERS_TIMEOUT
+const supabaseAdmin = createSupabaseAdminClient(
+  SUPABASE_URL!,
+  SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    timeoutMs: 60000, // 60 second timeout for admin operations
+    forceIPv4: true   // Force IPv4 to avoid IPv6 resolution issues on Windows
   }
-})
+)
 
 const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'e2e-admin@bookiji.test'
 const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'TestPassword123!'
@@ -151,10 +140,13 @@ async function findUserByEmail(
         error = result.error
       } catch (err: any) {
         // Handle connection errors more gracefully
-        if (err.message?.includes('ECONNREFUSED') || 
-            err.message?.includes('fetch failed') || 
-            err.code === 'UND_ERR_HEADERS_TIMEOUT' || 
-            err.cause?.code === 'UND_ERR_HEADERS_TIMEOUT') {
+        // The createSupabaseAdminClient utility already provides detailed error messages
+        // for UND_ERR_HEADERS_TIMEOUT, so we just re-throw those
+        if (err.code === 'UND_ERR_HEADERS_TIMEOUT' || err.message?.includes('timeout')) {
+          throw err // Already has detailed diagnostics from createSupabaseAdminClient
+        }
+        
+        if (err.message?.includes('ECONNREFUSED') || err.message?.includes('fetch failed')) {
           const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
           const isLocal = supabaseUrl && /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(supabaseUrl)
           
@@ -225,9 +217,38 @@ async function seedUser(
   const existingUser = await findUserByEmail(supabase, email)
 
   if (existingUser) {
+    // Try to delete, but if it fails due to constraints, update instead
     const { error: deleteError } = await supabase.auth.admin.deleteUser(existingUser.id)
     if (deleteError) {
-      throw deleteError
+      // If deletion fails, try to update the user instead
+      console.log(`   ⚠️  Could not delete existing user ${email}, attempting to update instead...`)
+      const { data: updatedUser, error: updateError } = await supabase.auth.admin.updateUserById(
+        existingUser.id,
+        {
+          password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: fullName,
+            role
+          }
+        }
+      )
+      
+      if (updateError) {
+        throw new Error(`Failed to update existing user ${email}: ${updateError.message}`)
+      }
+      
+      console.log(`   ✅ Updated existing user: ${email} (${existingUser.id})`)
+      const userId = existingUser.id
+      
+      await ensureProfileExists(supabase, userSeed, userId)
+
+      if (role === 'vendor' || role === 'admin') {
+        const appUserId = await ensureAppUserExists(supabase, userSeed, userId)
+        await ensureUserRoleExists(supabase, userSeed, appUserId)
+      }
+
+      return userId
     }
     console.log(`   ✅ Deleted prior user: ${email} (${existingUser.id})`)
   }
@@ -243,38 +264,71 @@ async function seedUser(
     }
   })
 
-  // If user already exists, try to delete and recreate
+  // If user already exists, try to update instead of delete/recreate
   if (createError) {
     const errorMsg = createError.message?.toLowerCase() || ''
     if (errorMsg.includes('already') || errorMsg.includes('exists') || errorMsg.includes('registered')) {
-      console.log(`   ⚠️  User ${email} may already exist, attempting to find and delete...`)
+      console.log(`   ⚠️  User ${email} already exists, attempting to update...`)
       
-      // Try one more time to find the user
-      const retryUser = await findUserByEmail(supabase, email)
-      if (retryUser) {
-        const { error: deleteError } = await supabase.auth.admin.deleteUser(retryUser.id)
-        if (deleteError) {
-          throw new Error(`Failed to delete existing user ${email}: ${deleteError.message}`)
-        }
-        console.log(`   ✅ Deleted existing user: ${email} (${retryUser.id})`)
+      // Try to find the user - if listUsers fails, try to sign in to get user ID
+      let retryUser = await findUserByEmail(supabase, email)
+      
+      if (!retryUser) {
+        // If we can't find via listUsers, try signing in to get the user ID
+        // Create a temporary client for sign-in (use the same supabase instance)
+        const tempClient = supabase
         
-        // Retry creation
-        const { data: retryNewUser, error: retryCreateError } = await supabase.auth.admin.createUser({
+        // Try to sign in - if it works, we have the user
+        const { data: signInData, error: signInError } = await tempClient.auth.signInWithPassword({
           email,
-          password,
-          email_confirm: true,
-          user_metadata: {
-            full_name: fullName,
-            role
-          }
+          password
         })
         
-        if (retryCreateError || !retryNewUser?.user) {
-          throw new Error(`Failed to create user ${email} after deletion: ${retryCreateError?.message ?? 'unknown error'}`)
+        if (signInData?.user) {
+          retryUser = signInData.user
+          console.log(`   ✅ Found existing user via sign-in: ${email} (${retryUser.id})`)
+        } else {
+          // If sign-in fails, try to get user by attempting to reset password or use admin API
+          // For now, try to update password directly using admin API with email lookup
+          console.log(`   ⚠️  Could not find user ${email} via listUsers or sign-in, attempting direct update...`)
+          
+          // Try to update using admin API - we'll need the user ID, so try one more listUsers with smaller page
+          try {
+            const { data: usersData } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 })
+            const foundUser = usersData?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
+            if (foundUser) {
+              retryUser = foundUser
+            }
+          } catch {
+            // If all else fails, throw error with helpful message
+            throw new Error(
+              `User ${email} exists but cannot be found or updated. ` +
+              `Try manually deleting the user from Supabase Auth dashboard, or set E2E_SKIP_SEED=true to skip seeding.`
+            )
+          }
+        }
+      }
+      
+      if (retryUser) {
+        // Update the user's password and metadata
+        const { data: updatedUser, error: updateError } = await supabase.auth.admin.updateUserById(
+          retryUser.id,
+          {
+            password,
+            email_confirm: true,
+            user_metadata: {
+              full_name: fullName,
+              role
+            }
+          }
+        )
+        
+        if (updateError) {
+          throw new Error(`Failed to update existing user ${email}: ${updateError.message}`)
         }
         
-        const userId = retryNewUser.user.id
-        console.log(`   ✅ Created user: ${email} (${userId})`)
+        console.log(`   ✅ Updated existing user: ${email} (${retryUser.id})`)
+        const userId = retryUser.id
         
         await ensureProfileExists(supabase, userSeed, userId)
 
@@ -285,12 +339,16 @@ async function seedUser(
 
         return userId
       } else {
-        throw new Error(`User ${email} appears to exist but could not be found for deletion: ${createError.message}`)
+        throw new Error(
+          `User ${email} appears to exist but could not be found for update: ${createError.message}. ` +
+          `Try manually deleting the user from Supabase Auth dashboard, or set E2E_SKIP_SEED=true to skip seeding.`
+        )
       }
     }
     
-    // Other errors - throw them
-    throw new Error(`Failed to create user ${email}: ${createError.message}`)
+    // Other errors - throw them with full details
+    const errorDetails = createError.message || JSON.stringify(createError)
+    throw new Error(`Failed to create user ${email}: ${errorDetails}`)
   }
 
   if (!newUser?.user) {
