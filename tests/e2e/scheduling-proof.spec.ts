@@ -132,7 +132,7 @@ test.describe('Scheduling Proof', () => {
           slot_type: 'regular'
         },
         {
-          onConflict: 'provider_id,start_time'
+          onConflict: 'provider_id,start_time,end_time'
         }
       )
 

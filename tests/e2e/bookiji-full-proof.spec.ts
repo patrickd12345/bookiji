@@ -175,7 +175,7 @@ test.describe('Bookiji Production Readiness Proof', () => {
         is_available: true,
         slot_type: 'regular'
       }, {
-        onConflict: 'provider_id,start_time'
+        onConflict: 'provider_id,start_time,end_time'
       })
 
     if (slotError && slotError.code !== '23505') {
