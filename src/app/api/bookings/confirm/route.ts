@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 import { withSLOProbe } from '@/middleware/sloProbe'
 import { featureFlags } from '@/config/featureFlags'
+import { Database } from '@/types/supabase'
+import { SupabaseClient } from '@supabase/supabase-js'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 import { assertVendorHasActiveSubscription, SubscriptionRequiredError } from '@/lib/guards/subscriptionGuard';
@@ -33,7 +35,7 @@ async function confirmHandler(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    await assertSchedulingEnabled(supabase as any);
+    await assertSchedulingEnabled(supabase as SupabaseClient<Database>);
 
     const body: BookingConfirmRequest = await req.json()
     

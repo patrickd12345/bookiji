@@ -32,6 +32,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import dotenv from 'dotenv'
 import { createSupabaseAdminClient } from './createSupabaseAdmin'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { E2E_CUSTOMER_USER, E2E_VENDOR_USER, E2EUserDefinition } from './credentials'
 
 // Allow skipping seed if explicitly requested (useful for cloud environments where users may already exist)
@@ -118,7 +119,7 @@ if (process.env.E2E_ADMIN_EMAIL || process.env.CREATE_ADMIN === 'true') {
 }
 
 async function findUserByEmail(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   email: string
 ): Promise<{ id: string; email?: string } | null> {
   const normalizedEmail = email.toLowerCase()
@@ -208,7 +209,7 @@ async function findUserByEmail(
 }
 
 async function seedUser(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   userSeed: UserSeed
 ): Promise<string> {
   const { email, password, role, fullName } = userSeed
@@ -369,7 +370,7 @@ async function seedUser(
 }
 
 async function ensureProfileExists(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   userSeed: UserSeed,
   userId: string
 ): Promise<void> {
@@ -394,7 +395,7 @@ async function ensureProfileExists(
 }
 
 async function ensureAppUserExists(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   userSeed: UserSeed,
   userId: string
 ): Promise<string> {
@@ -424,7 +425,7 @@ async function ensureAppUserExists(
 }
 
 async function ensureUserRoleExists(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   userSeed: UserSeed,
   appUserId: string
 ): Promise<void> {
