@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { logger } from "@/lib/logger";
 
 const transporter = nodemailer.createTransport({
   host: process.env.MAILERSEND_SMTP_HOST,
@@ -27,7 +28,7 @@ export async function sendEmail({
       html,
     });
     
-    console.log('Email sent successfully to:', to, 'MessageID:', result.messageId);
+    logger.info('Email sent successfully to:', { to, messageId: result.messageId });
     return result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
