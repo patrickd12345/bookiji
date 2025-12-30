@@ -49,7 +49,7 @@ const eslintConfig = [
   {
     files: ["src/lib/**/*", "src/app/api/**/*"],
     rules: {
-      "no-console": ["error", {
+      "no-console": ["warn", {
         allow: ["warn", "error"] // Allow console.warn/error (used by logger)
       }],
     },

@@ -1,4 +1,5 @@
 import { getLLMConfig, isDevelopment } from '@/config/environment';
+import { logger } from '@/lib/logger';
 
 export interface LLMRequest {
   messages: Array<{
@@ -69,9 +70,9 @@ class LLMClient {
       const endpoint = this.getChatEndpoint();
       const payload = this.buildPayload(request);
 
-      console.log(`🤖 LLM Request to: ${endpoint}`);
-      console.log(`📝 Model: ${this.model}`);
-      console.log(`🌍 Environment: ${isDevelopment() ? 'Development' : 'Production'}`);
+      logger.info(`🤖 LLM Request to: ${endpoint}`);
+      logger.info(`📝 Model: ${this.model}`);
+      logger.info(`🌍 Environment: ${isDevelopment() ? 'Development' : 'Production'}`);
 
       const response = await fetch(endpoint, {
         method: 'POST',

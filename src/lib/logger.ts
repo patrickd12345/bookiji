@@ -1,6 +1,7 @@
+/* eslint-disable no-console */
 /**
  * Centralized Logger
- * 
+ *
  * Environment-aware logging utility that:
  * - Suppresses debug/info logs in production
  * - Always logs warnings and errors

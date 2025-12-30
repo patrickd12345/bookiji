@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger'
 import { getEmailTemplate } from '@/lib/services/emailTemplates'
 import { getSmsTemplate } from '@/lib/services/smsTemplates'
 import { buildPushPayload } from '@/lib/notifications/pushPayload'
@@ -51,7 +52,7 @@ export async function sendEmail(
     } else {
       // Production: require provider. In dev, allow mock.
       if (process.env.NODE_ENV === 'development') {
-        console.log('📧 [mock] sending email:', { recipient, subject })
+        logger.info('📧 [mock] sending email:', { recipient, subject })
         return { success: true, providerResponse: 'mock' }
       }
       return { success: false, error: 'Email provider not configured' }
@@ -103,7 +104,7 @@ export async function sendSMS(recipient: string, template: string, data: Record<
       }
     } else {
       if (process.env.NODE_ENV === 'development') {
-        console.log('📱 [mock] sending SMS:', { recipient, message })
+        logger.info('📱 [mock] sending SMS:', { recipient, message })
         return { success: true, providerResponse: 'mock' }
       }
       return { success: false, error: 'SMS provider not configured' }
@@ -142,7 +143,7 @@ export async function sendPushNotification(recipient: string, template: string, 
       })
     } else {
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔔 [mock] sending push notification:', { recipient, pushContent })
+        logger.info('🔔 [mock] sending push notification:', { recipient, pushContent })
       }
     }
 

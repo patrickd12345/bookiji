@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/.vite
+**/.vite
 /.pnp
 .pnp.*
 .yarn/*

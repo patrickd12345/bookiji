@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
 import { sendEmail, sendSMS, sendPushNotification } from './providers'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -24,7 +25,7 @@ export async function notifyUser(
   request?: Request
 ): Promise<NotificationResult[]> {
   
-  console.log(`🔔 Notification Center: Sending '${template}' to user ${userId}`)
+  logger.info(`🔔 Notification Center: Sending '${template}' to user ${userId}`)
 
   // 1. Get preferences
   const { data: prefs, error: prefError } = await supabase

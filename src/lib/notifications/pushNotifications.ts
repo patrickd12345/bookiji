@@ -1,5 +1,6 @@
 // Web Push Notifications 2.0 Implementation
 // Features: Service worker registration, notification preferences, batching, quiet hours
+import { logger } from '@/lib/logger'
 
 export interface PushNotificationPreferences {
   enabled: boolean
@@ -380,19 +381,19 @@ class PushNotificationManager {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleAcceptAction(notification: any) {
     // Handle accept action (e.g., accept booking request)
-    console.log('Accept action for notification:', notification)
+    logger.info('Accept action for notification', { notification })
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleDeclineAction(notification: any) {
     // Handle decline action (e.g., decline booking request)
-    console.log('Decline action for notification:', notification)
+    logger.info('Decline action for notification', { notification })
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleSnoozeAction(notification: any) {
     // Handle snooze action (e.g., remind later)
-    console.log('Snooze action for notification:', notification)
+    logger.info('Snooze action for notification', { notification })
   }
 }
 
