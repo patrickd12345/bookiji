@@ -28,10 +28,32 @@
  * by the Playwright suites to avoid drift.
  */
 
-import 'dotenv/config'
+import fs from 'node:fs'
+import path from 'node:path'
+import dotenv from 'dotenv'
 import { Client } from 'pg'
 import { createClient } from '@supabase/supabase-js'
 import { E2E_CUSTOMER_USER, E2E_VENDOR_USER, E2EUserDefinition } from './credentials'
+
+// Load .env.e2e if it exists, otherwise fall back to .env or .env.local
+const envE2EPath = path.resolve(process.cwd(), '.env.e2e')
+const envPaths = [
+  path.resolve(process.cwd(), '.env.local'),
+  path.resolve(process.cwd(), '.env'),
+]
+
+if (fs.existsSync(envE2EPath)) {
+  dotenv.config({ path: envE2EPath })
+} else {
+  const envPath = envPaths.find(p => fs.existsSync(p))
+  if (envPath) {
+    dotenv.config({ path: envPath })
+    console.warn(`⚠️  Using ${path.basename(envPath)} instead of .env.e2e for seeding`)
+  } else {
+    // Fall back to default dotenv behavior
+    dotenv.config()
+  }
+}
 
 if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
   throw new Error('E2E seed requires SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL')

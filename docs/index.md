@@ -260,6 +260,7 @@ This canonical site map surfaces every Markdown document in the repository by di
 
 #### Testing
 - [docs/testing/SELECTOR_MAP.md](testing/SELECTOR_MAP.md)
+- [docs/testing/E2E_ENV_FIX.md](testing/E2E_ENV_FIX.md) - E2E environment configuration fix: using .env as fallback
 
 #### User Guides
 - [docs/user-guides/ADSENSE_APPROVAL_SETUP.md](user-guides/ADSENSE_APPROVAL_SETUP.md)
