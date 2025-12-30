@@ -260,6 +260,9 @@ This canonical site map surfaces every Markdown document in the repository by di
 
 #### Testing
 - [docs/testing/SELECTOR_MAP.md](testing/SELECTOR_MAP.md)
+- [docs/testing/E2E_QUICK_START.md](testing/E2E_QUICK_START.md) - ⚡ Quick start guide for E2E tests (start here!)
+- [docs/testing/CLOUD_E2E_SETUP.md](testing/CLOUD_E2E_SETUP.md) - Guide for running E2E tests in cloud environments (Cursor, Codex, CI)
+- [docs/testing/E2E_CLOUD_REALITY.md](testing/E2E_CLOUD_REALITY.md) - Understanding E2E requirements: why you need Supabase and how to get a free test project
 - [docs/testing/E2E_ENV_FIX.md](testing/E2E_ENV_FIX.md) - E2E environment configuration fix: using .env as fallback
 
 #### Development

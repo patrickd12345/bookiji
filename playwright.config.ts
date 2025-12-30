@@ -28,6 +28,7 @@ if (process.env.E2E !== 'true') {
 }
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+
 if (!supabaseUrl) {
   throw new Error(`Missing SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL`)
 }
@@ -49,7 +50,8 @@ if (!isLocalSupabase && !allowRemoteSupabase) {
 }
 
 if (!isLocalSupabase) {
-  console.warn(`⚠️  Using remote Supabase: ${supabaseUrl}`)
+  console.warn(`⚠️  Running E2E against remote Supabase: ${supabaseUrl}`)
+  console.warn(`   Ensure this is a test/staging instance, not production!`)
 }
 
 const baseURL = process.env.BASE_URL || 'http://localhost:3000'
