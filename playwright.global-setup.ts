@@ -2,7 +2,38 @@ import { execSync } from 'node:child_process'
 
 export default async function globalSetup() {
   // Ensure deterministic Supabase Auth users exist for E2E runs.
-  execSync('pnpm e2e:seed', { stdio: 'inherit' })
+  // Skip if E2E_SKIP_SEED is set (useful for cloud environments where users may already exist)
+  if (process.env.E2E_SKIP_SEED !== 'true') {
+    try {
+      execSync('pnpm e2e:seed', { stdio: 'inherit' })
+    } catch (error: any) {
+      // If seeding fails, check if it's a connection error
+      const output = error.stdout?.toString() || error.stderr?.toString() || error.message || ''
+      if (output.includes('ECONNREFUSED') || output.includes('fetch failed') || output.includes('Cannot connect')) {
+        console.error('\n❌ User seeding failed - Supabase is not reachable')
+        console.error('\n💡 Options:')
+        console.error('  1. Set up remote Supabase: pnpm e2e:setup-remote')
+        console.error('  2. Skip seeding (if users already exist): E2E_SKIP_SEED=true pnpm e2e')
+        console.error('  3. Start local Supabase: pnpm db:start (requires Docker)')
+        console.error('\n📖 See docs/testing/CLOUD_E2E_SETUP.md for details\n')
+        
+        // In cloud environments, allow continuing if skip flag would work
+        const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+        const isRemote = supabaseUrl && !/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(supabaseUrl)
+        
+        if (isRemote || process.env.CI || process.env.CURSOR || process.env.CODEX) {
+          console.error('⚠️  Continuing without seeded users - tests may fail if they require specific users')
+          console.error('   Set E2E_SKIP_SEED=true to suppress this warning\n')
+        } else {
+          throw error
+        }
+      } else {
+        throw error
+      }
+    }
+  } else {
+    console.log('⏭️  Skipping user seeding (E2E_SKIP_SEED=true)')
+  }
 
   // Warm Next.js routes to avoid first-hit compile delays causing E2E flake.
   const baseURL = process.env.BASE_URL || process.env.E2E_BASE_URL || 'http://localhost:3000'

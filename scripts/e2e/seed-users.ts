@@ -33,12 +33,37 @@ import { Client } from 'pg'
 import { createClient } from '@supabase/supabase-js'
 import { E2E_CUSTOMER_USER, E2E_VENDOR_USER, E2EUserDefinition } from './credentials'
 
+// Allow skipping seed if explicitly requested (useful for cloud environments where users may already exist)
+if (process.env.E2E_SKIP_SEED === 'true') {
+  console.log('⏭️  Skipping user seeding (E2E_SKIP_SEED=true)')
+  process.exit(0)
+}
+
 if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  throw new Error('E2E seed requires SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL')
+  const error = new Error(
+    'E2E seed requires SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL\n' +
+    '\n' +
+    'For cloud environments without Docker:\n' +
+    '  1. Create a test Supabase project at https://app.supabase.com\n' +
+    '  2. Get your project URL and service role key from Settings → API\n' +
+    '  3. Run: pnpm e2e:setup-remote\n' +
+    '  4. Or set E2E_SKIP_SEED=true if users already exist\n' +
+    '\n' +
+    'See docs/testing/CLOUD_E2E_SETUP.md for details.'
+  )
+  throw error
 }
 
 if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('E2E seed requires SUPABASE_SERVICE_ROLE_KEY')
+  const error = new Error(
+    'E2E seed requires SUPABASE_SERVICE_ROLE_KEY\n' +
+    '\n' +
+    'Get your service role key from:\n' +
+    '  Supabase Dashboard → Your Project → Settings → API → Project API keys\n' +
+    '\n' +
+    'Or set E2E_SKIP_SEED=true if users already exist in your Supabase project.'
+  )
+  throw error
 }
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -77,10 +102,47 @@ async function findUserByEmail(
   let page = 1
 
   while (true) {
-    const { data, error } = await supabase.auth.admin.listUsers({
-      page,
-      perPage
-    })
+    let data, error
+    try {
+      const result = await supabase.auth.admin.listUsers({
+        page,
+        perPage
+      })
+      data = result.data
+      error = result.error
+    } catch (err: any) {
+      // Handle connection errors more gracefully
+      if (err.message?.includes('ECONNREFUSED') || err.message?.includes('fetch failed')) {
+        const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+        const isLocal = supabaseUrl && /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(supabaseUrl)
+        
+        if (isLocal) {
+          throw new Error(
+            `Cannot connect to local Supabase at ${supabaseUrl}\n` +
+            '\n' +
+            'Local Supabase requires Docker. Options:\n' +
+            '  1. Start Docker and run: pnpm db:start\n' +
+            '  2. Use remote Supabase: pnpm e2e:setup-remote\n' +
+            '  3. Skip seeding: E2E_SKIP_SEED=true pnpm e2e\n' +
+            '\n' +
+            'See docs/testing/CLOUD_E2E_SETUP.md for cloud setup.'
+          )
+        } else {
+          throw new Error(
+            `Cannot connect to remote Supabase at ${supabaseUrl}\n` +
+            '\n' +
+            'Check:\n' +
+            '  1. SUPABASE_URL is correct\n' +
+            '  2. Network can reach Supabase\n' +
+            '  3. Project is active in Supabase dashboard\n' +
+            '  4. API keys are valid\n' +
+            '\n' +
+            'Or skip seeding: E2E_SKIP_SEED=true pnpm e2e'
+          )
+        }
+      }
+      throw err
+    }
 
     if (error) {
       throw new Error(`Failed to list users: ${error.message}`)

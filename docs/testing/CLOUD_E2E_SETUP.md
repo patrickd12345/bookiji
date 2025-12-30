@@ -9,6 +9,8 @@ E2E tests can run in two modes:
 1. **Local Mode** (default): Requires Docker to run Supabase locally
 2. **Cloud Mode**: Uses a remote Supabase test/staging instance
 
+> ⚠️ **Important:** E2E tests require a Supabase database. If Docker isn't available, you **must** use a remote Supabase project. See [E2E_CLOUD_REALITY.md](./E2E_CLOUD_REALITY.md) for details on getting a free Supabase project.
+
 ## Prerequisites
 
 Before running E2E tests, check your setup:
