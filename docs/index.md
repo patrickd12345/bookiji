@@ -260,6 +260,7 @@ This canonical site map surfaces every Markdown document in the repository by di
 
 #### Testing
 - [docs/testing/SELECTOR_MAP.md](testing/SELECTOR_MAP.md)
+- [docs/testing/CLOUD_E2E_SETUP.md](testing/CLOUD_E2E_SETUP.md) - Guide for running E2E tests in cloud environments (Cursor, Codex, CI)
 
 #### User Guides
 - [docs/user-guides/ADSENSE_APPROVAL_SETUP.md](user-guides/ADSENSE_APPROVAL_SETUP.md)
