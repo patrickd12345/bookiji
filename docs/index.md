@@ -262,6 +262,9 @@ This canonical site map surfaces every Markdown document in the repository by di
 - [docs/testing/SELECTOR_MAP.md](testing/SELECTOR_MAP.md)
 - [docs/testing/E2E_ENV_FIX.md](testing/E2E_ENV_FIX.md) - E2E environment configuration fix: using .env as fallback
 
+#### Development
+- [docs/development/ENV_LOCAL_PROTECTION.md](development/ENV_LOCAL_PROTECTION.md) - Why .env.local gets deleted and how to protect it
+
 #### User Guides
 - [docs/user-guides/ADSENSE_APPROVAL_SETUP.md](user-guides/ADSENSE_APPROVAL_SETUP.md)
 - [docs/user-guides/ADSENSE_COMPLIANCE_AUDIT.md](user-guides/ADSENSE_COMPLIANCE_AUDIT.md)

@@ -7,16 +7,22 @@ export interface E2EUserDefinition {
   fullName: string
 }
 
+const E2E_VENDOR_EMAIL = process.env.E2E_VENDOR_EMAIL || 'e2e-vendor@bookiji.test'
+const E2E_VENDOR_PASSWORD = process.env.E2E_VENDOR_PASSWORD || 'TestPassword123!'
+
 export const E2E_VENDOR_USER: E2EUserDefinition = {
-  email: 'e2e-vendor@bookiji.test',
-  password: 'TestPassword123!',
+  email: E2E_VENDOR_EMAIL,
+  password: E2E_VENDOR_PASSWORD,
   role: 'vendor',
   fullName: 'E2E Test Vendor'
 }
 
+const E2E_CUSTOMER_EMAIL = process.env.E2E_CUSTOMER_EMAIL || 'e2e-customer@bookiji.test'
+const E2E_CUSTOMER_PASSWORD = process.env.E2E_CUSTOMER_PASSWORD || 'password123'
+
 export const E2E_CUSTOMER_USER: E2EUserDefinition = {
-  email: 'e2e-customer@bookiji.test',
-  password: 'password123',
+  email: E2E_CUSTOMER_EMAIL,
+  password: E2E_CUSTOMER_PASSWORD,
   role: 'customer',
   fullName: 'E2E Test Customer'
 }

@@ -31,7 +31,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import dotenv from 'dotenv'
-import { Client } from 'pg'
 import { createClient } from '@supabase/supabase-js'
 import { E2E_CUSTOMER_USER, E2E_VENDOR_USER, E2EUserDefinition } from './credentials'
 
@@ -95,30 +94,41 @@ async function findUserByEmail(
   email: string
 ): Promise<{ id: string; email?: string } | null> {
   const normalizedEmail = email.toLowerCase()
-  const perPage = 100
-  let page = 1
+  
+  // Try to get user by email directly via getUserByEmail (if available)
+  // Otherwise, try listUsers with pagination
+  try {
+    const perPage = 100
+    let page = 1
 
-  while (true) {
-    const { data, error } = await supabase.auth.admin.listUsers({
-      page,
-      perPage
-    })
+    while (true) {
+      const { data, error } = await supabase.auth.admin.listUsers({
+        page,
+        perPage
+      })
 
-    if (error) {
-      throw new Error(`Failed to list users: ${error.message}`)
+      if (error) {
+        // If listUsers fails, return null - we'll handle it in seedUser
+        console.warn(`   ⚠️  Could not list users: ${error.message}, will attempt direct create/delete`)
+        return null
+      }
+
+      const users = data?.users ?? []
+      const match = users.find(u => u.email?.toLowerCase() === normalizedEmail)
+      if (match) {
+        return match
+      }
+
+      if (users.length < perPage) {
+        break
+      }
+
+      page += 1
     }
-
-    const users = data?.users ?? []
-    const match = users.find(u => u.email?.toLowerCase() === normalizedEmail)
-    if (match) {
-      return match
-    }
-
-    if (users.length < perPage) {
-      break
-    }
-
-    page += 1
+  } catch (err) {
+    // If anything fails, return null - we'll try to create and handle errors
+    console.warn(`   ⚠️  User lookup failed: ${err instanceof Error ? err.message : String(err)}, will attempt direct create`)
+    return null
   }
 
   return null
@@ -129,24 +139,19 @@ async function seedUser(
   userSeed: UserSeed
 ): Promise<string> {
   const { email, password, role, fullName } = userSeed
+  
+  // Try to find existing user, but don't fail if lookup fails
   const existingUser = await findUserByEmail(supabase, email)
 
   if (existingUser) {
-    try {
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(existingUser.id)
-      if (deleteError) {
-        throw deleteError
-      }
-      console.log(`   ƒo" Deleted prior user: ${email} (${existingUser.id})`)
-    } catch (deleteError) {
-      if (shouldFallbackToManualDelete(deleteError)) {
-        await manuallyDeleteUser(existingUser.id, email)
-      } else {
-        throw deleteError
-      }
+    const { error: deleteError } = await supabase.auth.admin.deleteUser(existingUser.id)
+    if (deleteError) {
+      throw deleteError
     }
+    console.log(`   ✅ Deleted prior user: ${email} (${existingUser.id})`)
   }
 
+  // Try to create user - if it already exists, we'll get an error and handle it
   const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
     email,
     password,
@@ -157,12 +162,62 @@ async function seedUser(
     }
   })
 
-  if (createError || !newUser?.user) {
-    throw new Error(`Failed to create user ${email}: ${createError?.message ?? 'unknown error'}`)
+  // If user already exists, try to delete and recreate
+  if (createError) {
+    const errorMsg = createError.message?.toLowerCase() || ''
+    if (errorMsg.includes('already') || errorMsg.includes('exists') || errorMsg.includes('registered')) {
+      console.log(`   ⚠️  User ${email} may already exist, attempting to find and delete...`)
+      
+      // Try one more time to find the user
+      const retryUser = await findUserByEmail(supabase, email)
+      if (retryUser) {
+        const { error: deleteError } = await supabase.auth.admin.deleteUser(retryUser.id)
+        if (deleteError) {
+          throw new Error(`Failed to delete existing user ${email}: ${deleteError.message}`)
+        }
+        console.log(`   ✅ Deleted existing user: ${email} (${retryUser.id})`)
+        
+        // Retry creation
+        const { data: retryNewUser, error: retryCreateError } = await supabase.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: fullName,
+            role
+          }
+        })
+        
+        if (retryCreateError || !retryNewUser?.user) {
+          throw new Error(`Failed to create user ${email} after deletion: ${retryCreateError?.message ?? 'unknown error'}`)
+        }
+        
+        const userId = retryNewUser.user.id
+        console.log(`   ✅ Created user: ${email} (${userId})`)
+        
+        await ensureProfileExists(supabase, userSeed, userId)
+
+        if (role === 'vendor' || role === 'admin') {
+          const appUserId = await ensureAppUserExists(supabase, userSeed, userId)
+          await ensureUserRoleExists(supabase, userSeed, appUserId)
+        }
+
+        return userId
+      } else {
+        throw new Error(`User ${email} appears to exist but could not be found for deletion: ${createError.message}`)
+      }
+    }
+    
+    // Other errors - throw them
+    throw new Error(`Failed to create user ${email}: ${createError.message}`)
+  }
+
+  if (!newUser?.user) {
+    throw new Error(`Failed to create user ${email}: unknown error`)
   }
 
   const userId = newUser.user.id
-  console.log(`   ƒo" Created user: ${email} (${userId})`)
+  console.log(`   ✅ Created user: ${email} (${userId})`)
 
   await ensureProfileExists(supabase, userSeed, userId)
 
@@ -172,81 +227,6 @@ async function seedUser(
   }
 
   return userId
-}
-
-function shouldFallbackToManualDelete(error: unknown): boolean {
-  if (!error || typeof error !== 'object') {
-    return false
-  }
-
-  const candidate = error as { code?: string; message?: string }
-  if (candidate.code === 'unexpected_failure') {
-    return true
-  }
-
-  if (typeof candidate.message === 'string' && candidate.message.includes('enqueue_cache_invalidation')) {
-    return true
-  }
-
-  return false
-}
-
-async function manuallyDeleteUser(userId: string, email: string): Promise<void> {
-  const dbUrl =
-    process.env.SUPABASE_DB_URL ||
-    process.env.DATABASE_URL ||
-    'postgresql://postgres:postgres@localhost:55322/postgres'
-
-  const client = new Client({ connectionString: dbUrl })
-  await client.connect()
-
-  const deleteStatements = [
-    'DELETE FROM auth.sessions WHERE user_id = $1',
-    'DELETE FROM auth.identities WHERE user_id = $1',
-    'DELETE FROM auth.mfa_factors WHERE user_id = $1',
-    'DELETE FROM auth.one_time_tokens WHERE user_id = $1',
-    'DELETE FROM storage.objects WHERE owner = $1',
-    'DELETE FROM storage.buckets WHERE owner = $1',
-    'DELETE FROM public.system_flags WHERE updated_by = $1',
-    'DELETE FROM public.notification_preferences WHERE user_id = $1',
-    'DELETE FROM public.notification_logs WHERE user_id = $1',
-    'DELETE FROM public.notification_intents WHERE user_id = $1',
-    'DELETE FROM public.disputes WHERE user_id = $1',
-    'DELETE FROM public.disputes WHERE admin_id = $1',
-    'DELETE FROM public.no_show_events WHERE customer_id = $1',
-    'DELETE FROM public.no_show_events WHERE provider_id = $1',
-    'DELETE FROM public.provider_compensations WHERE provider_id = $1',
-    'DELETE FROM public.quotes WHERE user_id = $1'
-  ]
-
-  try {
-    await client.query('BEGIN')
-    for (const statement of deleteStatements) {
-      await client.query(statement, [userId])
-    }
-
-    const { rows } = await client.query('SELECT id FROM public.app_users WHERE auth_user_id = $1', [userId])
-    if (rows.length > 0) {
-      const [appUserRow] = rows
-      await client.query('DELETE FROM public.user_roles WHERE app_user_id = $1', [appUserRow.id])
-      await client.query('DELETE FROM public.app_users WHERE id = $1', [appUserRow.id])
-    }
-
-    await client.query('DELETE FROM public.profiles WHERE auth_user_id = $1', [userId])
-    await client.query('DELETE FROM auth.users WHERE id = $1', [userId])
-    await client.query('COMMIT')
-  } catch (error) {
-    await client.query('ROLLBACK').catch(() => {
-      /* ignore rollback errors */
-    })
-    throw new Error(
-      `Failed to manually delete ${email}: ${error instanceof Error ? error.message : String(error)}`
-    )
-  } finally {
-    await client.end()
-  }
-
-  console.log(`   ƒo" Deleted prior user via manual cleanup: ${email} (${userId})`)
 }
 
 async function ensureProfileExists(

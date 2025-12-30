@@ -15,14 +15,31 @@ import path from 'node:path'
 import dotenv from 'dotenv'
 
 const envE2EPath = path.resolve(process.cwd(), '.env.e2e')
+// Priority order: .env.local first (most specific), then .env, then backups
 const envPaths = [
   path.resolve(process.cwd(), '.env.local'),
   path.resolve(process.cwd(), '.env'),
   path.resolve(process.cwd(), 'env.local'),
   path.resolve(process.cwd(), 'env'),
+  // Check backup files as last resort
+  path.resolve(process.cwd(), '.env.local.bak'),
+  path.resolve(process.cwd(), '.env.bak'),
 ]
 
 console.log('🚀 Starting E2E test run...\n')
+
+// Step 0: Protect .env.local (restore from backup if missing)
+const envLocalPath = path.resolve(process.cwd(), '.env.local')
+const envLocalBakPath = path.resolve(process.cwd(), '.env.local.bak')
+if (!fs.existsSync(envLocalPath) && fs.existsSync(envLocalBakPath)) {
+  console.log('⚠️  .env.local missing, restoring from .env.local.bak...')
+  try {
+    fs.copyFileSync(envLocalBakPath, envLocalPath)
+    console.log('✅ Restored .env.local from backup\n')
+  } catch (error) {
+    console.warn('⚠️  Failed to restore .env.local from backup\n')
+  }
+}
 
 // Step 1: Auto-detect and fix configuration
 const requiredVars = [
@@ -48,12 +65,24 @@ const isCloudEnv =
 // Load all potential env sources
 const loadEnvFromFiles = () => {
   const envVars: Record<string, string> = {}
+  const foundFiles: string[] = []
+  
   for (const envPath of envPaths) {
     if (fs.existsSync(envPath)) {
-      const loaded = dotenv.config({ path: envPath }).parsed || {}
-      Object.assign(envVars, loaded)
+      foundFiles.push(path.basename(envPath))
+      try {
+        const loaded = dotenv.config({ path: envPath }).parsed || {}
+        Object.assign(envVars, loaded)
+      } catch (error) {
+        console.warn(`⚠️  Failed to load ${path.basename(envPath)}: ${error}`)
+      }
     }
   }
+  
+  if (foundFiles.length > 0) {
+    console.log(`   Found env files: ${foundFiles.join(', ')}`)
+  }
+  
   return envVars
 }
 
@@ -99,13 +128,34 @@ if (fs.existsSync(envE2EPath)) {
 if (needsSync) {
   console.log(`📝 ${syncReason}, attempting to fix...`)
   
+  // Debug: Show what we found
+  console.log('   Checking for credentials...')
+  const foundInFiles = requiredVars.filter(v => fileEnvVars[v])
+  const foundInEnv = requiredVars.filter(v => process.env[v] && !fileEnvVars[v])
+  
+  if (foundInFiles.length > 0) {
+    console.log(`   ✅ Found in files: ${foundInFiles.join(', ')}`)
+  }
+  if (foundInEnv.length > 0) {
+    console.log(`   ✅ Found in env: ${foundInEnv.join(', ')}`)
+  }
+  
   if (!hasAllRequiredVars) {
     console.error('\n❌ Cannot find remote Supabase credentials!')
     console.error('   Required variables:')
     requiredVars.forEach(v => {
       const hasVar = !!allEnvVars[v]
-      console.error(`     ${hasVar ? '✅' : '❌'} ${v}${hasVar ? ` (from ${fileEnvVars[v] ? 'file' : 'env'})` : ''}`)
+      const source = fileEnvVars[v] ? 'file' : (process.env[v] ? 'env' : 'missing')
+      console.error(`     ${hasVar ? '✅' : '❌'} ${v}${hasVar ? ` (from ${source})` : ''}`)
     })
+    
+    // Show what files we checked
+    console.error('\n   Checked files:')
+    envPaths.forEach(p => {
+      const exists = fs.existsSync(p)
+      console.error(`     ${exists ? '✅' : '❌'} ${path.basename(p)}`)
+    })
+    
     console.error('\n   Options:')
     console.error('   1. Create a .env or .env.local file with remote Supabase credentials')
     console.error('   2. Set environment variables:')
@@ -149,6 +199,25 @@ if (needsSync) {
       lines.push(`${key}=${value}`)
     }
   })
+
+  // Optional E2E credential overrides
+  const credentialVars = [
+    'E2E_VENDOR_EMAIL',
+    'E2E_VENDOR_PASSWORD',
+    'E2E_CUSTOMER_EMAIL',
+    'E2E_CUSTOMER_PASSWORD',
+    'E2E_ADMIN_EMAIL',
+    'E2E_ADMIN_PASSWORD',
+  ]
+
+  const presentCredentialVars = credentialVars.filter(key => allEnvVars[key])
+  if (presentCredentialVars.length > 0) {
+    lines.push('')
+    lines.push('# E2E Credential Overrides')
+    presentCredentialVars.forEach(key => {
+      lines.push(`${key}=${allEnvVars[key]}`)
+    })
+  }
   
   // Preserve BASE_URL if set, otherwise use default
   if (allEnvVars.BASE_URL) {
