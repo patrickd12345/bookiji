@@ -73,6 +73,26 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   }
 })
 
+// Test connectivity before proceeding
+async function testSupabaseConnection(): Promise<boolean> {
+  try {
+    // Try to list users - this will fail fast if Supabase isn't accessible
+    const { error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1 })
+    if (error) {
+      // If we get an error but not a connection error, Supabase is reachable
+      return !error.message.includes('fetch failed') && !error.message.includes('ECONNREFUSED')
+    }
+    return true
+  } catch (err: any) {
+    const errMsg = String(err?.message || err || '')
+    if (err?.code === 'ECONNREFUSED' || errMsg.includes('fetch failed') || errMsg.includes('ECONNREFUSED')) {
+      return false
+    }
+    // Other errors might mean Supabase is reachable but something else is wrong
+    return true
+  }
+}
+
 const E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'e2e-admin@bookiji.test'
 const E2E_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'TestPassword123!'
 
@@ -330,6 +350,26 @@ async function ensureUserRoleExists(
 async function main() {
   console.log('dYOñ E2E User Seeding Script')
   console.log('')
+  
+  // Test Supabase connectivity first
+  console.log('🔍 Testing Supabase connection...')
+  const isConnected = await testSupabaseConnection()
+  if (!isConnected) {
+    console.error('❌ Cannot connect to Supabase!')
+    console.error(`   URL: ${SUPABASE_URL}`)
+    console.error('')
+    console.error('   Possible issues:')
+    console.error('   1. Supabase is not running (if localhost)')
+    console.error('   2. Network connectivity issues')
+    console.error('   3. Incorrect SUPABASE_URL')
+    console.error('')
+    console.error('   For local Supabase: Run `pnpm db:start`')
+    console.error('   For remote Supabase: Verify SUPABASE_URL and network access')
+    process.exit(1)
+  }
+  console.log('✅ Supabase connection verified')
+  console.log('')
+  
   console.log('Users to seed:')
   usersToSeed.forEach(u => {
     console.log(`   - ${u.email} (${u.role})`)

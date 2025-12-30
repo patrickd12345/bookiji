@@ -71,9 +71,10 @@ if (fs.existsSync(envE2EPath)) {
   const e2eEnv = dotenv.config({ path: envE2EPath }).parsed || {}
   const supabaseUrl = e2eEnv.SUPABASE_URL || e2eEnv.NEXT_PUBLIC_SUPABASE_URL || ''
   const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(supabaseUrl)
+  const allowRemote = e2eEnv.E2E_ALLOW_REMOTE_SUPABASE === 'true'
   
-  // Check if we have localhost in cloud env
-  if (isLocalhost && isCloudEnv) {
+  // Check if we have localhost in cloud env (unless explicitly allowed)
+  if (isLocalhost && isCloudEnv && !allowRemote) {
     needsSync = true
     syncReason = 'localhost in cloud environment'
   } 
