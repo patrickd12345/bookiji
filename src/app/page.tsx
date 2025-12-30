@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { ADSENSE_APPROVAL_MODE } from "@/lib/adsense"
 import HomePageWrapper from './HomePageWrapper'
 import MaintenanceWrapper from './MaintenanceWrapper'
+import { isTruthyEnv } from '@/lib/env/isTruthyEnv'
 
 /**
  * Coming Soon Page with Secret Key Access
@@ -23,6 +24,14 @@ function PageContent() {
   useEffect(() => {
     const checkAccess = async () => {
       try {
+        // Always show the real site in E2E runs (tests must not be gated by the "coming soon" screen).
+        const isE2E = isTruthyEnv(process.env.NEXT_PUBLIC_E2E) || isTruthyEnv(process.env.E2E)
+        if (isE2E) {
+          setHasAccess(true)
+          setIsChecking(false)
+          return
+        }
+
         // Always show real site in AdSense approval mode
         if (ADSENSE_APPROVAL_MODE) {
           setHasAccess(true)

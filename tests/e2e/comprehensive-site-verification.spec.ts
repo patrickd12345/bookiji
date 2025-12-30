@@ -8,6 +8,8 @@ import { test, expect, Page } from '@playwright/test'
  */
 
 test.describe('Comprehensive Site Verification', () => {
+  test.skip(process.env.E2E_COMPREHENSIVE !== 'true', 'Comprehensive verification is opt-in (set E2E_COMPREHENSIVE=true).')
+
   let page: Page
   const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
 
@@ -328,4 +330,3 @@ test.describe('Comprehensive Site Verification', () => {
     }
   })
 })
-

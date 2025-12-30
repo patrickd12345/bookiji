@@ -170,14 +170,14 @@ test.describe('Scheduling Proof', () => {
       await expect(submitButton.first()).toBeEnabled({ timeout: 5000 })
 
       const usernameError = page.locator('text=/Username not found/i')
-      const schedulingRootPromise = page.waitForSelector('[data-test="vendor-scheduling-root"]', { timeout: 15000 })
+      const schedulingRootPromise = page.waitForSelector('[data-test="vendor-scheduling-root"]', { timeout: 60000 })
       await submitButton.first().click()
       await expect(usernameError).toHaveCount(0, { timeout: 2000 })
       await schedulingRootPromise
     })
 
     await test.step('Open vendor booking page and select service', async () => {
-      await page.goto(`/book/${vendorId}`, { waitUntil: 'domcontentloaded', timeout: 15000 })
+      await page.goto(`/book/${vendorId}`, { waitUntil: 'domcontentloaded', timeout: 60000 })
       await page.waitForLoadState('networkidle', { timeout: 10000 })
       await expect(page.locator('h1')).toContainText(/Book with/i, { timeout: 5000 })
       await selectSchedulingProofService()
@@ -223,7 +223,7 @@ test.describe('Scheduling Proof', () => {
         throw new Error('Time slot was not selected earlier')
       }
 
-      await page.goto(`/book/${vendorId}`, { waitUntil: 'domcontentloaded', timeout: 15000 })
+      await page.goto(`/book/${vendorId}`, { waitUntil: 'domcontentloaded', timeout: 60000 })
       await page.waitForLoadState('networkidle', { timeout: 10000 })
       await selectSchedulingProofService()
 

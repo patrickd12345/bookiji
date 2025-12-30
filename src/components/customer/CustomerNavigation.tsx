@@ -39,14 +39,16 @@ export function CustomerNavigation() {
       }
 
       try {
-        const { data: profile } = await supabase
+        // Avoid `.single()` to prevent noisy 406 errors when the row doesn't exist.
+        // Profiles are keyed by `auth_user_id` in this schema.
+        const { data: profiles } = await supabase
           .from('profiles')
           .select('role')
-          .eq('id', session.user.id)
-          .single()
+          .eq('auth_user_id', session.user.id)
+          .limit(1)
 
         // Check if user is customer or admin (admins can access customer pages)
-        const role = profile?.role
+        const role = Array.isArray(profiles) ? profiles[0]?.role : undefined
         setIsCustomer(role === 'customer' || role === 'admin' || !role) // Show nav if no role (new user)
       } catch (error) {
         console.error('Error checking customer role:', error)
@@ -105,4 +107,3 @@ export function CustomerNavigation() {
     </nav>
   )
 }
-

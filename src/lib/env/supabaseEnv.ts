@@ -12,13 +12,20 @@
  * All Supabase clients must use this module.
  */
 
-import { assertAppEnv } from './assertAppEnv';
+import { assertAppEnv, getAppEnv } from './assertAppEnv';
+import { isTruthyEnv } from './isTruthyEnv';
 
 export interface SupabaseEnvConfig {
   url: string;
   anonKey: string;
   serviceKey?: string;
 }
+
+const LOCAL_DEFAULT_URL = 'http://localhost:55321';
+const LOCAL_DEFAULT_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+const LOCAL_DEFAULT_SERVICE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU';
 
 /**
  * Get Supabase configuration for the current environment.
@@ -37,28 +44,32 @@ export interface SupabaseEnvConfig {
  * @throws Error if APP_ENV is invalid or required credentials are missing
  */
 export function getSupabaseEnv(): SupabaseEnvConfig {
-  // DIAGNOSTIC: Log environment check
-  const isE2E = process.env.E2E === 'true' || process.env.NEXT_PUBLIC_E2E === 'true'
-  console.warn('[SUPABASE ENV] E2E check', {
-    E2E: process.env.E2E,
-    NEXT_PUBLIC_E2E: process.env.NEXT_PUBLIC_E2E,
-    isE2E,
-    hasNextPublicUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    nextPublicUrl: process.env.NEXT_PUBLIC_SUPABASE_URL
-  })
+  const isE2E = isTruthyEnv(process.env.E2E) || isTruthyEnv(process.env.NEXT_PUBLIC_E2E);
+  const debug = isTruthyEnv(process.env.DEBUG_SUPABASE_ENV);
+
+  if (debug) {
+    console.warn('[SUPABASE ENV] E2E check', {
+      E2E: process.env.E2E,
+      NEXT_PUBLIC_E2E: process.env.NEXT_PUBLIC_E2E,
+      isE2E,
+      hasNextPublicUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      nextPublicUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    });
+  }
 
   if (isE2E) {
-    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-    const anonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || LOCAL_DEFAULT_URL;
+    const anonKey =
+      process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || LOCAL_DEFAULT_ANON_KEY;
+    const serviceKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || LOCAL_DEFAULT_SERVICE_KEY;
 
-    console.warn('[SUPABASE ENV] E2E mode detected', { url, hasAnonKey: !!anonKey })
-
-    if (!url || !anonKey) {
-      throw new Error(
-        'Missing E2E Supabase credentials. ' +
-        'Ensure .env.e2e defines SUPABASE_URL and SUPABASE_ANON_KEY'
-      )
+    if (debug) {
+      console.warn('[SUPABASE ENV] E2E mode detected', {
+        url,
+        hasAnonKey: !!anonKey,
+        hasServiceKey: !!serviceKey,
+      });
     }
 
     return {
@@ -68,16 +79,19 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
     }
   }
 
-  const env = assertAppEnv();
+  const asserted = getAppEnv();
+  const env =
+    asserted ??
+    (process.env.NODE_ENV === 'production' ? assertAppEnv() : 'local');
 
   if (env === 'local') {
     // Supabase Local - standard demo keys
     return {
-      url: process.env.LOCAL_SUPABASE_URL || 'http://localhost:54321',
-      anonKey: process.env.LOCAL_SUPABASE_ANON_KEY || 
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
+      // This repo runs Supabase API (Kong) on 55321 by default (see supabase/config.toml).
+      url: process.env.LOCAL_SUPABASE_URL || LOCAL_DEFAULT_URL,
+      anonKey: process.env.LOCAL_SUPABASE_ANON_KEY || LOCAL_DEFAULT_ANON_KEY,
       serviceKey: process.env.LOCAL_SUPABASE_SERVICE_KEY ||
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU',
+        LOCAL_DEFAULT_SERVICE_KEY,
     };
   }
 
@@ -154,9 +168,6 @@ export function getSupabaseServiceKey(): string {
   }
   return config.serviceKey;
 }
-
-
-
 
 
 

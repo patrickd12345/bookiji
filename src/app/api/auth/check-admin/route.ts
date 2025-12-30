@@ -44,7 +44,7 @@ export async function GET(_request: NextRequest) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('id, role, org_id')
-      .eq('id', user.id)
+      .eq('auth_user_id', user.id)
       .maybeSingle()
     
     if (profile?.role === 'admin') {

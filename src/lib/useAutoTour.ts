@@ -2,11 +2,14 @@ import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Shepherd from 'shepherd.js'
 import { getTourByRoute } from './guidedTourRegistry'
+import { isTruthyEnv } from './env/isTruthyEnv'
 
 export function useAutoTour() {
   const pathname = usePathname() ?? ''
 
   useEffect(() => {
+    if (isTruthyEnv(process.env.NEXT_PUBLIC_E2E)) return
+
     const tourDef = getTourByRoute(pathname)
     if (!tourDef) return
 

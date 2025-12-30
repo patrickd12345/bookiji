@@ -29,6 +29,7 @@ export default function MainNavigation() {
 
   // Define checkAuth BEFORE any conditional returns to ensure hooks are consistent
   const checkAuth = useCallback(async () => {
+    if (shouldHide) return
     const supabase = supabaseBrowserClient()
     if (!supabase) return
     const { data: { session } } = await supabase.auth.getSession();
@@ -36,12 +37,13 @@ export default function MainNavigation() {
 
     if (session) {
       try {
-        // Try to get profile with roles and beta_status, fallback to basic profile if needed
-        const { data: profile, error } = await supabase
+        // Avoid `.single()`/`maybeSingle()` to prevent noisy 406 errors when the row doesn't exist.
+        // Profiles are keyed by `auth_user_id` in this schema.
+        const { data: profiles, error } = await supabase
           .from('profiles')
-          .select('role, beta_status')
-          .eq('id', session.user.id)
-          .single();
+          .select('role')
+          .eq('auth_user_id', session.user.id)
+          .limit(1);
 
         if (error) {
           if (error.code === '500' || error.message.includes('500')) {
@@ -60,6 +62,7 @@ export default function MainNavigation() {
           return;
         }
 
+        const profile = Array.isArray(profiles) ? profiles[0] : null
         if (profile) {
           // Handle both old 'roles' array and new 'role' string format
           let rolesArray: string[] = [];
@@ -78,7 +81,7 @@ export default function MainNavigation() {
           setRoles(r);
           const defaultRole = r.includes('customer') ? 'customer' : r[0] || null;
           setUserRole(defaultRole);
-          setIsBetaUser(!!profile.beta_status);
+          setIsBetaUser(false);
           
           // Check if user is admin
           const adminCheck = async () => {
@@ -112,7 +115,7 @@ export default function MainNavigation() {
         setIsBetaUser(false);
       }
     }
-  }, []); // Empty deps - only needs to run once on mount
+  }, [shouldHide]); // Only needs to run on route-group changes
 
   useEffect(() => {
     checkAuth();
@@ -281,36 +284,24 @@ export default function MainNavigation() {
                       >
                         {t('nav.start_booking')}
                       </Link>
-                      <button
-                        onClick={() => {
-                          if (isLoggedIn && userRole !== 'vendor') {
-                            router.push('/customer/dashboard');
-                          } else {
-                            router.push('/register?redirect=/customer/dashboard');
-                          }
-                        }}
+                      <Link
+                        href={isLoggedIn && userRole !== 'vendor' ? '/customer/dashboard' : '/register?redirect=/customer/dashboard'}
                         className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted flex flex-col items-start"
                         aria-label="Book an appointment as a customer"
                         data-test="nav-book-appointment"
                       >
                         <span>Book an Appointment</span>
                         <span className="text-xs text-gray-500">(Customer)</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (isLoggedIn && userRole === 'vendor') {
-                            router.push('/vendor/dashboard');
-                          } else {
-                            router.push('/register?redirect=/vendor/dashboard');
-                          }
-                        }}
+                      </Link>
+                      <Link
+                        href={isLoggedIn && userRole === 'vendor' ? '/vendor/dashboard' : '/register?redirect=/vendor/dashboard'}
                         className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted flex flex-col items-start"
                         aria-label="Offer your services as a professional"
                         data-test="nav-offer-services"
                       >
                         <span>Offer Your Services</span>
                         <span className="text-xs text-gray-500">(Professional)</span>
-                      </button>
+                      </Link>
                       <Link
                         href="/help"
                         className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
@@ -351,14 +342,14 @@ export default function MainNavigation() {
                 >
                   {t('nav.start_booking')}
                 </Link>
-                <button
-                  onClick={() => router.push('/register?redirect=/customer/dashboard')}
+                <Link
+                  href="/register?redirect=/customer/dashboard"
                   className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
                   aria-label="Book an appointment as a customer"
                   data-test="nav-book-appointment"
                 >
                   Book an Appointment
-                </button>
+                </Link>
                 <Link
                   href="/login"
                   className="px-3 py-2 rounded-md text-sm font-medium text-primary hover:opacity-80"
@@ -496,26 +487,22 @@ export default function MainNavigation() {
                   >
                     {t('nav.start_booking')}
                   </Link>
-                  <button
-                    onClick={() => {
-                      setMobileOpen(false)
-                      router.push('/register?redirect=/customer/dashboard')
-                    }}
+                  <Link
+                    href="/register?redirect=/customer/dashboard"
+                    onClick={() => setMobileOpen(false)}
                     className="px-3 py-2 rounded-md text-sm font-medium text-left text-foreground hover:bg-muted"
                   >
                     <div>Book an Appointment</div>
                     <div className="text-xs text-gray-500">(Customer)</div>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setMobileOpen(false)
-                      router.push('/register?redirect=/vendor/dashboard')
-                    }}
+                  </Link>
+                  <Link
+                    href="/register?redirect=/vendor/dashboard"
+                    onClick={() => setMobileOpen(false)}
                     className="px-3 py-2 rounded-md text-sm font-medium text-left text-foreground hover:bg-muted"
                   >
                     <div>Offer Your Services</div>
                     <div className="text-xs text-gray-500">(Professional)</div>
-                  </button>
+                  </Link>
                   <Link
                     href="/help"
                     className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"

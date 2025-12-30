@@ -254,20 +254,20 @@ test.describe('Site Crawler', () => {
   test('crawl admin pages (requires login)', async ({ page }) => {
     test.setTimeout(180_000) // 3 minutes
 
-    const baseURL = process.env.BASE_URL || 'http://localhost:3000'
-    const adminEmail = process.env.ADMIN_EMAIL || 'patrick_duchesneau_1@hotmail.com'
-    const adminPassword = process.env.ADMIN_PASSWORD || 'Taratata!1232123'
+    const baseURL = process.env.E2E_BASE_URL || process.env.BASE_URL || 'http://localhost:3000'
+    const adminEmail = process.env.E2E_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'e2e-admin@bookiji.test'
+    const adminPassword = process.env.E2E_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || 'TestPassword123!'
 
     console.log(`🔐 Logging in as admin to crawl admin pages...`)
 
     // Login first
-    await page.goto(`${baseURL}/login`)
-    await page.fill('input[type="email"]', adminEmail)
-    await page.fill('input[type="password"]', adminPassword)
+    await page.goto(`${baseURL}/login?next=/admin`)
+    await page.fill('input[name="email"]', adminEmail)
+    await page.fill('input[name="password"]', adminPassword)
     await page.click('button[type="submit"]')
-    
+     
     // Wait for redirect
-    await page.waitForURL(/\/(admin|get-started|choose-role)/, { timeout: 10000 })
+    await page.waitForURL(/\/admin(\/.*)?$/, { timeout: 30000, waitUntil: 'domcontentloaded' })
 
     const visited = new Set<string>()
     const adminPages = [
@@ -329,4 +329,3 @@ test.describe('Site Crawler', () => {
     console.log(`\n✅ Admin pages crawl completed!`)
   })
 })
-

@@ -63,7 +63,7 @@ export function getSupabaseConfig(): SupabaseConfig {
   // For local development, force local database connection if requested
   if (process.env.NODE_ENV === 'development' && process.env.FORCE_LOCAL_DB === 'true') {
     return {
-      url: 'http://127.0.0.1:54321',
+      url: 'http://127.0.0.1:55321',
       publishableKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
       secretKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU'
     };

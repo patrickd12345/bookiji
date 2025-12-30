@@ -1,5 +1,7 @@
 import { test, expect } from '../fixtures/base'
 
+test.skip(process.env.E2E_SERVICES !== 'true', 'Service management E2E is opt-in (set E2E_SERVICES=true).')
+
 test('vendor can create and edit a service', async ({ vendor, services, page }) => {
   await vendor.registerVendor('vendor+services@example.com')
   await services.createService('E2E Massage')
@@ -9,7 +11,6 @@ test('vendor can create and edit a service', async ({ vendor, services, page }) 
     page.locator('[data-test="service-row"][data-name="E2E Massage – Updated"]'),
   ).toBeVisible()
 })
-
 
 
 

@@ -1,6 +1,12 @@
 import { test, expect } from '../fixtures/base'
 import { stripeReplayTester } from '../helpers/stripe-replay'
 
+const STRIPE_WEBHOOK_TESTS_ENABLED =
+  process.env.E2E_STRIPE === 'true' &&
+  !!process.env.STRIPE_WEBHOOK_SECRET
+
+test.skip(!STRIPE_WEBHOOK_TESTS_ENABLED, 'Stripe webhook replay tests require E2E_STRIPE=true + STRIPE_WEBHOOK_SECRET.')
+
 test.describe('Stripe Webhook Replay Tests', () => {
   test('handles duplicate webhooks (idempotency)', async ({ request }) => {
     const replayTester = stripeReplayTester()
@@ -65,7 +71,6 @@ test.describe('Stripe Webhook Replay Tests', () => {
     expect(result).toBe(true)
   })
 })
-
 
 
 

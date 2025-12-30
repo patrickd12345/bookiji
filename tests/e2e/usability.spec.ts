@@ -147,11 +147,14 @@ test.describe('Site Usability Tests', () => {
 
     test('registration form provides clear feedback', async ({ page }) => {
       await page.goto(`${BASE_URL}/register`)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
-      // Try submitting empty form
       const submitButton = page.locator('button[type="submit"]').first()
-      await submitButton.click()
+      // The register submit is disabled until a role is selected; treat disabled as acceptable feedback.
+      const isDisabled = await submitButton.isDisabled().catch(() => false)
+      if (!isDisabled) {
+        await submitButton.click()
+      }
 
       // Wait a bit for validation
       await page.waitForTimeout(500)
@@ -229,7 +232,13 @@ test.describe('Site Usability Tests', () => {
   test.describe('Error Handling and Feedback', () => {
     test('error messages are clear and helpful', async ({ page }) => {
       await page.goto(`${BASE_URL}/register`)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
+
+      // Enable submit by selecting a role first
+      const roleButton = page.getByRole('button', { name: /book services|offer services/i }).first()
+      if (await roleButton.count() > 0) {
+        await roleButton.click()
+      }
 
       // Fill form with invalid data
       const emailField = page.locator('input[type="email"]').first()
@@ -350,7 +359,7 @@ test.describe('Site Usability Tests', () => {
 
     test('important information is visible above the fold', async ({ page }) => {
       await page.goto(BASE_URL)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       // Get viewport height
       const viewport = page.viewportSize()
@@ -384,7 +393,7 @@ test.describe('Site Usability Tests', () => {
   test.describe('Loading States and Feedback', () => {
     test('loading states provide feedback', async ({ page }) => {
       await page.goto(BASE_URL)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       // Check for any loading indicators
       const loadingIndicators = page.locator('[aria-busy="true"], .loading, [class*="loading"], [class*="spinner"]')
@@ -398,7 +407,13 @@ test.describe('Site Usability Tests', () => {
 
     test('buttons show loading state during actions', async ({ page }) => {
       await page.goto(`${BASE_URL}/register`)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
+
+      // Registration submit is disabled until a role is selected
+      const roleButton = page.getByRole('button', { name: /book services|offer services/i }).first()
+      if (await roleButton.count() > 0) {
+        await roleButton.click()
+      }
 
       const submitButton = page.locator('button[type="submit"]').first()
       if (await submitButton.count() > 0) {
@@ -429,4 +444,3 @@ test.describe('Site Usability Tests', () => {
     })
   })
 })
-

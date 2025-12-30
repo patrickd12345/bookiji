@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Admin Access Test', () => {
-  const adminEmail = 'patrick_duchesneau_1@hotmail.com'
-  const adminPassword = 'Taratata!1232123'
+  const adminEmail = process.env.E2E_ADMIN_EMAIL || 'e2e-admin@bookiji.test'
+  const adminPassword = process.env.E2E_ADMIN_PASSWORD || 'TestPassword123!'
 
   test('admin can log in and access mission control', async ({ page }) => {
     // Step 1: Navigate to login page
@@ -12,7 +12,7 @@ test.describe('Admin Access Test', () => {
 
     // Step 2: Fill in login form
     console.log('Step 2: Filling in login form...')
-    await page.fill('input[type="email"]', adminEmail)
+    await page.fill('input[name="email"]', adminEmail)
     await page.fill('input[type="password"]', adminPassword)
 
     // Step 3: Submit login
@@ -22,7 +22,7 @@ test.describe('Admin Access Test', () => {
     // Step 4: Wait for navigation after login
     console.log('Step 4: Waiting for post-login navigation...')
     // Could go to /get-started, /choose-role, or /admin
-    await page.waitForURL(/\/(get-started|choose-role|admin|customer|vendor)/, { timeout: 10000 })
+    await page.waitForURL(/\/(get-started|choose-role|admin|customer|vendor)/, { timeout: 30000, waitUntil: 'domcontentloaded' })
 
     // Step 5: Check if we're on choose-role page and handle it
     const currentUrl = page.url()
@@ -120,12 +120,12 @@ test.describe('Admin Access Test', () => {
   test('admin check API endpoint works', async ({ page, request }) => {
     // First, we need to log in to get a session
     await page.goto('/login')
-    await page.fill('input[type="email"]', adminEmail)
+    await page.fill('input[name="email"]', adminEmail)
     await page.fill('input[type="password"]', adminPassword)
     await page.click('button[type="submit"]')
     
     // Wait for login to complete
-    await page.waitForURL(/\/(get-started|choose-role|admin|customer|vendor)/, { timeout: 10000 })
+    await page.waitForURL(/\/(get-started|choose-role|admin|customer|vendor)/, { timeout: 30000, waitUntil: 'domcontentloaded' })
     
     // Get cookies from the page context
     const cookies = await page.context().cookies()
@@ -148,4 +148,3 @@ test.describe('Admin Access Test', () => {
     expect(data.email).toBe(adminEmail)
   })
 })
-

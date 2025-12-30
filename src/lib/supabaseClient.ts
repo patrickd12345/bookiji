@@ -28,13 +28,27 @@ function getBrowserEnv() {
     console.warn('[SUPABASE CLIENT] getSupabaseEnv() failed, using fallback', error)
     // Fallback for browser context where APP_ENV might not be set yet
     // This maintains backward compatibility during migration
-    const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').split(/\s+/)[0].trim()
+    let url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').split(/\s+/)[0].trim()
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     const publishableFallback = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-    const key =
+    let key =
       anonKey ||
       (publishableFallback && publishableFallback.startsWith('eyJ') ? publishableFallback : undefined)
     
+    // Local dev/E2E fallback: some dev servers may start without NEXT_PUBLIC_* env vars.
+    // Only apply when running in a browser on localhost.
+    if (typeof window !== 'undefined') {
+      const host = window.location.hostname
+      const isLocalHost = host === 'localhost' || host === '127.0.0.1'
+      if (isLocalHost) {
+        if (!url) url = 'http://localhost:55321'
+        if (!key) {
+          key =
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+        }
+      }
+    }
+
     console.warn('[SUPABASE CLIENT] Using fallback env vars', { url, keyPreview: key?.slice(0, 10) })
     return { url, key }
   }

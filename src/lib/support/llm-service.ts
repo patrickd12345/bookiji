@@ -2,11 +2,12 @@
  * LLM Provider Abstraction
  * Supports multiple providers for RAG generation:
  * - OpenAI (GPT-4o-mini) - Reliable, widely used
- * - Gemini 1.5 Flash - Free tier, very cheap
+ * - Gemini 1.5 Flash - Free tier, very cheap (default)
  * - Groq - Free tier, extremely fast inference
  * - DeepSeek - Low cost alternative
  * 
  * Note: Embeddings use OpenAI or Gemini (they have embedding APIs)
+ * Defaults to Gemini (free tier) for both generation and embeddings
  * Generation can use any of the above providers
  */
 
@@ -159,18 +160,26 @@ export function getLLMService(): LLMService {
  * Only OpenAI and Gemini have embedding APIs
  */
 export function getEmbeddingService(): LLMService {
-  // Check for provider, with fallback: if GEMINI_API_KEY is set but no provider specified, use Gemini
+  // Check for provider, with fallback: prefer Gemini (free tier) if key is available
   let embeddingProvider = (process.env.SUPPORT_EMBEDDING_PROVIDER || '').toLowerCase().trim();
   
-  // Smart fallback: if Gemini key is set but provider not specified, use Gemini
-  if (!embeddingProvider && process.env.GEMINI_API_KEY) {
-    embeddingProvider = 'gemini';
-    console.log('ℹ️  SUPPORT_EMBEDDING_PROVIDER not set, but GEMINI_API_KEY found. Using Gemini for embeddings.');
+  // Smart fallback: if no provider specified, prefer Gemini (free tier) if key is available
+  if (!embeddingProvider) {
+    if (process.env.GEMINI_API_KEY) {
+      embeddingProvider = 'gemini';
+      // Using Gemini (free tier) for embeddings when GEMINI_API_KEY is available
+    } else if (process.env.OPENAI_API_KEY) {
+      embeddingProvider = 'openai';
+      // Using OpenAI for embeddings (GEMINI_API_KEY not found)
+    } else {
+      // Default to Gemini (free tier) but will error if no key
+      embeddingProvider = 'gemini';
+    }
   }
   
-  // Default to OpenAI if still not set
-  if (!embeddingProvider || (embeddingProvider !== 'gemini' && embeddingProvider !== 'openai')) {
-    embeddingProvider = 'openai';
+  // Validate provider is one of the supported options
+  if (embeddingProvider !== 'gemini' && embeddingProvider !== 'openai') {
+    embeddingProvider = 'gemini'; // Default to Gemini (free tier)
   }
   
   let apiKey: string;

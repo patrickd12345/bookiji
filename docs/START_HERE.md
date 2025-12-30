@@ -11,6 +11,7 @@ Use this page as the jump-off to the most referenced systems and guides in the r
 - OpsAI hub (control plane, SDKs, helpdesk, voice): [docs/opsai/README.md](opsai/README.md)
 - Operations playbooks and monitoring: [docs/operations/PRODUCTION_MONITORING_STRATEGY.md](operations/PRODUCTION_MONITORING_STRATEGY.md), [docs/operations/OPERATIONAL_LAYERS.md](operations/OPERATIONAL_LAYERS.md)
 - Incident response: [docs/operations/incidents/INCIDENT_COMMANDER.md](operations/incidents/INCIDENT_COMMANDER.md)
+- Debugging knowledge base (E2E, CSP, Supabase, env, UI determinism): [docs/debugging/e2e-philosophy.md](debugging/e2e-philosophy.md) with companion guides in `docs/debugging/`
 
 ## Automation Tracks
 - Jarvis phases (incident automation): [docs/jarvis/phase1-incident-detection.md](jarvis/phase1-incident-detection.md) through [phase5 adaptive policy](jarvis/phase5-adaptive-policy.md)

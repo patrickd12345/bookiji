@@ -10,10 +10,21 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       return NextResponse.json({ success: false, bookings: [], count: 0, error: 'User ID is required' }, { status: 400 })
     }
+
+    // Map auth user_id -> profile.id for accurate filtering
+    let profileId: string | null = null
+    const { data: profileRow } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('auth_user_id', userId)
+      .maybeSingle()
+    profileId = profileRow?.id ?? null
+    const filterId = profileId || userId
+
     const { data, error } = await supabase
       .from('bookings')
-      .select(`*, services(name), customers:users!bookings_customer_id_fkey(full_name), vendors:users!bookings_vendor_id_fkey(full_name)`)
-      .or(`customer_id.eq.${userId},vendor_id.eq.${userId}`)
+      .select(`*, services(name), customers:profiles!bookings_customer_id_fkey(full_name), providers:profiles!bookings_provider_id_fkey(full_name)`)
+      .or(`customer_id.eq.${filterId},provider_id.eq.${filterId}`)
       .order('created_at', { ascending: false })
 
     if (error) {

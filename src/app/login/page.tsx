@@ -2,11 +2,12 @@ import { Suspense } from 'react';
 import LoginFormContent from './LoginFormContent';
 
 type LoginSearchParams = Record<string, string | string[] | undefined>;
-type LoginPageProps = {
-  searchParams?: Promise<LoginSearchParams>;
-};
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
+export default async function LoginPage({ 
+  searchParams 
+}: {
+  searchParams?: Promise<LoginSearchParams>;
+}) {
   const resolvedSearchParams = await searchParams;
   const isPlainMode = resolvedSearchParams?.plain === '1';
 

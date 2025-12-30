@@ -1,5 +1,12 @@
 import { test, expect } from '../fixtures/base'
 
+const STRIPE_E2E_ENABLED =
+  process.env.E2E_STRIPE === 'true' &&
+  !!process.env.STRIPE_SECRET_KEY &&
+  !!process.env.STRIPE_WEBHOOK_SECRET
+
+test.skip(!STRIPE_E2E_ENABLED, 'Stripe E2E not configured (set E2E_STRIPE=true and Stripe env vars).')
+
 test('full booking flow: search → time → pay → webhook → confirm', async ({ page, booking, stripe }) => {
   await booking.start()
   await booking.chooseProvider()

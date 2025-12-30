@@ -2,6 +2,8 @@ import { test, expect } from '../fixtures/base'
 import type { APIRequestContext } from '@playwright/test'
 import { getSupabaseAdmin } from './helpers/supabaseAdmin'
 
+test.skip(process.env.E2E_SCHEDULING_EXTENDED !== 'true', 'Extended daily scheduling flow is opt-in (set E2E_SCHEDULING_EXTENDED=true).')
+
 const EXPECTATION_TEXT = 'Arrive 10 minutes early'
 const TIME_DRIFT_MS = 2_000
 

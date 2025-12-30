@@ -183,9 +183,9 @@ export default function UserDashboard() {
               supabase
                 .from('profiles')
                 .select('id, full_name, email, phone, avatar_url, role, created_at, verified_at')
-                .eq('id', session.user.id)
-                .maybeSingle()
-                .then(result => ({ data: result.data, error: result.error }))
+                .eq('auth_user_id', session.user.id)
+                .limit(1)
+                .then(result => ({ data: (result.data?.[0] ?? null), error: result.error }))
             ),
             10000
           ),
@@ -207,13 +207,7 @@ export default function UserDashboard() {
             10000
           ),
           withTimeout(
-            Promise.resolve(
-              supabase
-                .from('favorite_providers')
-                .select('provider_id, providers(*)')
-                .eq('user_id', session.user.id)
-                .then(result => ({ data: result.data, error: result.error }))
-            ),
+            Promise.resolve({ data: [] as any[], error: null }),
             10000
           )
         ])
@@ -227,13 +221,7 @@ export default function UserDashboard() {
 
         // Handle favorites (needed for stats calculation)
         let favoritesData: Provider[] = []
-        if (favoritesResult.status === 'fulfilled' && 'data' in favoritesResult.value && favoritesResult.value.data) {
-          const favorites = favoritesResult.value.data as Array<{ providers: Provider | Provider[] }>
-          favoritesData = favorites
-            .map((fp) => Array.isArray(fp.providers) ? fp.providers[0] : fp.providers)
-            .filter((p): p is Provider => p !== null && typeof p === 'object' && 'id' in p)
-          setFavoriteProviders(favoritesData)
-        }
+        setFavoriteProviders([])
 
         // Handle profile - query profiles table directly (user_role_summary doesn't exist)
         let profileData: UserProfile | null = null

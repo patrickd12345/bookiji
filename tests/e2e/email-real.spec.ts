@@ -1,6 +1,12 @@
 import { test, expect } from '../fixtures/base'
 import { emailInbox } from '../helpers/email-inbox'
 
+const EMAIL_REAL_ENABLED =
+  process.env.E2E_EMAIL === 'true' &&
+  !!process.env.MAILHOG_URL
+
+test.skip(!EMAIL_REAL_ENABLED, 'Email delivery tests require E2E_EMAIL=true and MAILHOG_URL.')
+
 test.describe('Email Delivery Tests', () => {
   test.beforeEach(async ({ request }) => {
     // Clear inbox before each test
@@ -99,7 +105,6 @@ test.describe('Email Delivery Tests', () => {
     }
   })
 })
-
 
 
 

@@ -159,41 +159,29 @@ export function ConsentManager() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg z-50">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between">
-        <div className="mb-4 md:mb-0">
-          <p className="text-sm">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg z-50 overflow-x-hidden">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="w-full md:w-auto min-w-0">
+          <p className="text-sm break-words">
             We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.
-            <button
-              onClick={() => router.push('/privacy')}
-              className="text-blue-600 hover:underline ml-1"
-            >
+            <button onClick={() => router.push('/privacy')} className="text-blue-600 hover:underline ml-1">
               Learn more
             </button>
           </p>
         </div>
-        
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setShowPreferences(true)}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
-          >
+
+        <div className="w-full md:w-auto flex flex-wrap items-center justify-center md:justify-end gap-2">
+          <button onClick={() => setShowPreferences(true)} className="px-4 py-2 text-gray-600 hover:text-gray-800">
             Preferences
           </button>
-          <button
-            onClick={acceptEssential}
-            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-          >
+          <button onClick={acceptEssential} className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
             Essential Only
           </button>
-          <button
-            onClick={acceptAll}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
+          <button onClick={acceptAll} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
             Accept All
           </button>
         </div>
       </div>
     </div>
   )
-} 
+}

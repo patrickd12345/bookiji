@@ -22,10 +22,13 @@ const baseURL = process.env.BASE_URL || 'http://localhost:3000'
 
 export default defineConfig({
   testDir: './tests/e2e',
+  globalSetup: './playwright.global-setup.ts',
 
-  fullyParallel: true,
+  // Full-suite stability: avoid overloading local Next.js + Supabase on Windows.
+  fullyParallel: false,
+  workers: 2,
   retries: 1,
-  timeout: 45_000,
+  timeout: 120_000,
 
   use: {
     baseURL,
@@ -59,9 +62,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
+    command: 'npx dotenv-cli -e .env.e2e -- npm run dev',
     port: 3000,
     reuseExistingServer: true,
-    timeout: 45_000,
+    timeout: 120_000,
   },
 })

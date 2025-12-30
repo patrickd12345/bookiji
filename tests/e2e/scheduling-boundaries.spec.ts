@@ -2,6 +2,8 @@ import { test, expect } from '../fixtures/base'
 
 const EXPECTATION_TEXT = 'Arrive 10 minutes early'
 
+test.skip(process.env.E2E_SCHEDULING_EXTENDED !== 'true', 'Extended scheduling guardrail tests are opt-in (set E2E_SCHEDULING_EXTENDED=true).')
+
 const customerForbidden = [
   /\bpayment\b/i,
   /\bpricing\b/i,

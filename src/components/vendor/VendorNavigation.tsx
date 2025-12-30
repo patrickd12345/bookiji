@@ -37,14 +37,16 @@ export function VendorNavigation() {
       }
 
       try {
-        const { data: profile } = await supabase
+        // Avoid `.single()` to prevent noisy 406 errors when the row doesn't exist.
+        // Profiles are keyed by `auth_user_id` in this schema.
+        const { data: profiles } = await supabase
           .from('profiles')
           .select('role')
-          .eq('id', session.user.id)
-          .single()
+          .eq('auth_user_id', session.user.id)
+          .limit(1)
 
         // Check if user is vendor or admin (admins can access vendor pages)
-        const role = profile?.role
+        const role = Array.isArray(profiles) ? profiles[0]?.role : undefined
         setIsVendor(role === 'vendor' || role === 'admin')
       } catch (error) {
         console.error('Error checking vendor role:', error)
@@ -95,4 +97,3 @@ export function VendorNavigation() {
     </nav>
   )
 }
-

@@ -38,7 +38,12 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization')
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice('Bearer '.length).trim() : null
+
+    const { data: { user }, error: authError } = bearerToken
+      ? await supabase.auth.getUser(bearerToken)
+      : await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -113,7 +118,12 @@ export async function DELETE(request: NextRequest) {
       }
     )
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization')
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice('Bearer '.length).trim() : null
+
+    const { data: { user }, error: authError } = bearerToken
+      ? await supabase.auth.getUser(bearerToken)
+      : await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },

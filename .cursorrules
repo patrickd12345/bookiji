@@ -4,6 +4,7 @@
 
 - **Daily anchor**: Always refer to `docs/invariants.md` first. It lists the running invariants that code and tests enforce.
 - **Expanded context**: When a task touches availability, scheduling, bookings, payments, or security, consult `docs/development/INVARIANT_COVERAGE_MATRIX.md` and the relevant files under `docs/invariants/`.
+- **Knowledge Base**: At chat start, check `docs/index.md` and automatically load all KB files listed under the "Bookiji Knowledge Base" section. These files contain troubleshooting guides, FAQs, and vendor documentation that should be referenced when answering questions.
 
 ## Key Constraints
 

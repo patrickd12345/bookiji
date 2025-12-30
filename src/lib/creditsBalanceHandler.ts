@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSupabase } from '@/lib/supabaseServer'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { getSupabaseConfig } from '@/config/supabase'
+import { isTruthyEnv } from '@/lib/env/isTruthyEnv'
 
 export interface CreditsBalanceResponse {
   success: boolean
@@ -24,9 +27,28 @@ export interface CreditsBalanceHandler {
 export class CreditsBalanceHandlerImpl implements CreditsBalanceHandler {
   async handle(request: NextRequest): Promise<NextResponse<CreditsBalanceResponse>> {
     try {
-      // Get user from session (more secure than query param)
-      const supabase = getServerSupabase()
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      const isE2E = isTruthyEnv(process.env.NEXT_PUBLIC_E2E) || isTruthyEnv(process.env.E2E)
+      const authHeader = request.headers.get('authorization') || request.headers.get('Authorization')
+      const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice('Bearer '.length).trim() : null
+
+      const cookieStore = await cookies()
+      const config = getSupabaseConfig()
+      const supabase = createServerClient(config.url, config.publishableKey, {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+            } catch {}
+          }
+        }
+      })
+
+      const { data: { user }, error: authError } = bearerToken
+        ? await supabase.auth.getUser(bearerToken)
+        : await supabase.auth.getUser()
       
       if (authError || !user) {
         // Fallback to query param for backward compatibility
@@ -34,6 +56,23 @@ export class CreditsBalanceHandlerImpl implements CreditsBalanceHandler {
         const userId = searchParams.get("userId")
         
         if (!userId) {
+          if (isE2E) {
+            const mockCredits = {
+              user_id: 'e2e-user',
+              balance_cents: 2500,
+              total_purchased_cents: 5000,
+              total_used_cents: 2500,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+            return NextResponse.json({
+              success: true,
+              credits: mockCredits,
+              balance_dollars: mockCredits.balance_cents / 100,
+              mock: true,
+              message: "Mock credit balance retrieved successfully"
+            })
+          }
           return NextResponse.json(
             { error: "Unauthorized - User ID is required", success: false }, 
             { status: 401 }

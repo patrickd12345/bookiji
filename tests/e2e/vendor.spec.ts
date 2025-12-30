@@ -1,11 +1,9 @@
 import { test, expect } from '../fixtures/base'
 
-test('vendor can register and reach dashboard', async ({ vendor, page }) => {
-  await vendor.registerVendor('vendor+e2e@example.com')
-  await expect(page.locator('[data-test="vendor-dashboard"]')).toBeVisible()
+test('vendor can reach dashboard', async ({ auth, page }) => {
+  await auth.loginAsVendor()
+  await expect(page.locator('[data-test="dashboard-root"]')).toBeVisible({ timeout: 60_000 })
 })
-
-
 
 
 

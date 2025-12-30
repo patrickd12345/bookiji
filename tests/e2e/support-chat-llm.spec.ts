@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test'
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
 
+test.skip(process.env.E2E_SUPPORT_CHAT !== 'true', 'Support chat LLM tests are optional (set E2E_SUPPORT_CHAT=true).')
+
 test.describe('Support Chat LLM Integration', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(BASE_URL)

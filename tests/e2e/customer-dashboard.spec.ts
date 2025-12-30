@@ -1,12 +1,12 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../fixtures/base'
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
 
 test.describe('Customer Dashboard', () => {
-  test.beforeEach(async ({ page }) => {
-    // Navigate to customer dashboard
-    await page.goto(`${BASE_URL}/customer/dashboard`)
-    await page.waitForLoadState('networkidle')
+  test.beforeEach(async ({ page, auth }) => {
+    await auth.loginAsCustomer()
+    await page.waitForURL(/\/customer\/dashboard/, { timeout: 60_000, waitUntil: 'domcontentloaded' })
+    await expect(page.locator('[data-test="dashboard-root"]')).toBeVisible({ timeout: 60_000 })
   })
 
   test('should load customer dashboard page', async ({ page }) => {
@@ -30,17 +30,14 @@ test.describe('Customer Dashboard', () => {
   })
 
   test('should display UserDashboard component', async ({ page }) => {
-    // Wait for UserDashboard to render
-    // Look for common dashboard elements
-    const dashboardContent = page.locator('[class*="dashboard"], [class*="Dashboard"]').first()
-    await expect(dashboardContent).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('[data-test="dashboard-root"]')).toBeVisible({ timeout: 5000 })
   })
 
   test('should handle authentication redirect if not logged in', async ({ page }) => {
     // Clear any existing auth
     await page.context().clearCookies()
     await page.goto(`${BASE_URL}/customer/dashboard`)
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     
     // Should either show login page or dashboard (depending on auth state)
     const url = page.url()
@@ -63,8 +60,8 @@ test.describe('Customer Dashboard', () => {
       errors.push(error.message)
     })
     
-    await page.goto(`${BASE_URL}/customer/dashboard`)
-    await page.waitForLoadState('networkidle')
+    // Reload the dashboard once listeners are attached.
+    await page.reload({ waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(2000) // Wait for any async operations
     
     // Filter out known non-critical errors
@@ -84,8 +81,6 @@ test.describe('Customer Dashboard', () => {
     expect(criticalErrors.length).toBeLessThan(5)
   })
 })
-
-
 
 
 

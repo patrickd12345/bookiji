@@ -17,7 +17,7 @@ test.describe('mobile responsiveness', () => {
 
   test('home page does not overflow horizontally', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' })
-    await expect(page.locator('text=Bookiji')).toBeVisible()
+    await expect(page.locator('body')).toContainText('Bookiji', { timeout: 10_000 })
     await expectNoHorizontalOverflow(page)
   })
 
@@ -27,4 +27,3 @@ test.describe('mobile responsiveness', () => {
     await expectNoHorizontalOverflow(page)
   })
 })
-

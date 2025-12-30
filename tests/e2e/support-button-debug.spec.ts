@@ -2,6 +2,8 @@ import { test, expect, type Locator } from '@playwright/test'
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
 
+test.skip(process.env.E2E_SUPPORT_DEBUG !== 'true', 'Support button debug test is opt-in (set E2E_SUPPORT_DEBUG=true).')
+
 test.describe('Magenta Support Button Debug', () => {
   test('should observe support button behavior', async ({ page }) => {
     const consoleMessages: string[] = []
@@ -262,4 +264,3 @@ test.describe('Magenta Support Button Debug', () => {
     console.log(`Failed network requests: ${networkRequests.filter(r => r.status >= 400).length}`)
   })
 })
-

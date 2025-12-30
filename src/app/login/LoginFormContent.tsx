@@ -84,6 +84,16 @@ export default function LoginFormContent() {
       return;
     }
 
+    const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit, timeoutMs: number) => {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), timeoutMs)
+      try {
+        return await fetch(input, { ...init, signal: controller.signal })
+      } finally {
+        clearTimeout(timer)
+      }
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: loginEmail,
@@ -101,14 +111,15 @@ export default function LoginFormContent() {
 
       // Sync session to server cookies so middleware can read it
       try {
-        await fetch('/api/auth/sync-session', {
+        await fetchWithTimeout('/api/auth/sync-session', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             access_token: data.session.access_token,
             refresh_token: data.session.refresh_token
           })
-        })
+        }, 15000)
       } catch (syncError) {
         console.warn('Failed to sync session to cookies:', syncError)
         // Continue anyway - session is in localStorage
@@ -116,16 +127,16 @@ export default function LoginFormContent() {
 
       // Check if user is admin and redirect accordingly
       try {
-        const adminCheck = await fetch('/api/auth/check-admin', {
+        const adminCheck = await fetchWithTimeout('/api/auth/check-admin', {
           method: 'GET',
           credentials: 'include'
-        })
+        }, 5000)
         
         if (adminCheck.ok) {
           const { isAdmin } = await adminCheck.json()
           if (isAdmin) {
             // Always redirect admins to admin cockpit
-            router.push('/admin')
+            window.location.assign('/admin')
             return
           }
         }
@@ -135,7 +146,7 @@ export default function LoginFormContent() {
       }
 
       // Successful login - redirect to next URL or default
-      router.push(nextUrl);
+      window.location.assign(nextUrl);
     } catch (error: unknown) {
       console.error('Login exception:', error);
       if (error instanceof Error) {
