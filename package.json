@@ -32,6 +32,8 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:debug": "playwright test --debug",
+    "e2e:check": "tsx scripts/e2e/check-env.ts",
+    "e2e:setup-remote": "tsx scripts/e2e/setup-remote.ts",
     "e2e:proof": "playwright test --config=playwright.proof.config.ts",
     "e2e:proof:headed": "playwright test --config=playwright.proof.config.ts --headed",
     "e2e:scheduling-proof": "tsx scripts/e2e/verify-web-server.ts && playwright test --config=playwright.scheduling-proof.config.ts",
