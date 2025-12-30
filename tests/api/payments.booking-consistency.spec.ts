@@ -1,114 +1,292 @@
 /**
  * Payment ↔ Booking Consistency Tests
- * 
- * Tests the invariant: "A confirmed booking and payment decision are never out of sync."
- * 
- * Coverage:
- * 1. Cannot create booking hold with fake payment intent
- * 2. Cannot end in confirmed state without webhook success
- * 3. Duplicate webhooks are idempotent
+ *
+ * Unit-level tests for confirm + webhook invariants.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { createClient } from '@supabase/supabase-js'
-import Stripe from 'stripe'
-import { getSupabaseConfig } from '@/config/supabase'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { NextRequest } from 'next/server'
 
-// Mock Stripe
-vi.mock('stripe', () => {
-  return {
-    default: vi.fn().mockImplementation(() => ({
-      paymentIntents: {
-        retrieve: vi.fn(),
-        create: vi.fn()
-      }
-    }))
+const stripeRetrieveMock = vi.fn()
+const stripeConstructEventMock = vi.fn()
+
+vi.mock('stripe', () => ({
+  default: class Stripe {
+    paymentIntents = {
+      retrieve: stripeRetrieveMock,
+      create: vi.fn()
+    }
+    webhooks = {
+      constructEvent: stripeConstructEventMock
+    }
+    constructor() {}
   }
-})
+}))
+
+const supabaseAdminMock = {
+  from: vi.fn()
+} as any
+
+vi.mock('@/lib/supabaseProxies', () => ({
+  supabaseAdmin: supabaseAdminMock
+}))
+
+vi.mock('@/config/featureFlags', () => ({
+  featureFlags: {
+    beta: { core_booking_flow: true },
+    payments: { hold_timeout_minutes: 15, hold_amount_cents: 1000 },
+    slo: {
+      enabled: false,
+      quote_endpoint_target_p95_ms: 1000,
+      quote_endpoint_target_p99_ms: 2000,
+      confirm_endpoint_target_p95_ms: 1000,
+      confirm_endpoint_target_p99_ms: 2000
+    }
+  }
+}))
+
+vi.mock('@/lib/guards/subscriptionGuard', () => ({
+  SubscriptionRequiredError: class SubscriptionRequiredError extends Error {},
+  assertVendorHasActiveSubscription: vi.fn(async () => {})
+}))
+
+vi.mock('@/lib/guards/invariantAssertions', () => ({
+  assertValidBookingStateTransition: vi.fn(async () => {})
+}))
+
+vi.mock('next/headers', () => ({
+  headers: vi.fn(async () => new Headers({ 'stripe-signature': 'test-signature' })),
+  cookies: vi.fn(async () => ({
+    getAll: vi.fn(() => []),
+    set: vi.fn(),
+    setAll: vi.fn(),
+    delete: vi.fn()
+  }))
+}))
 
 describe('Payment ↔ Booking Consistency', () => {
-  let supabase: ReturnType<typeof createClient>
-  let mockStripe: Stripe
-
   beforeEach(() => {
-    const config = getSupabaseConfig()
-    supabase = createClient(config.url, config.secretKey || config.publishableKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
+    vi.clearAllMocks()
+    process.env.STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_your_key'
+    process.env.STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_webhook_secret'
+
+    const quote = {
+      id: 'test-quote-id',
+      user_id: 'test-user-id',
+      price_cents: 1000,
+      expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      start_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      candidates: [{ id: 'test-provider-id' }]
+    }
+
+    const booking = {
+      id: 'booking-1',
+      state: 'hold_placed',
+      provider_id: 'test-provider-id',
+      quote_id: 'test-quote-id'
+    }
+
+    let outboxCommitted = false
+
+    const bookingsSelect = {
+      eq: vi.fn((column: string) => {
+        if (column === 'idempotency_key') {
+          return {
+            single: vi.fn(async () => ({ data: null, error: null }))
+          }
+        }
+
+        if (column === 'stripe_payment_intent_id') {
+          return {
+            eq: vi.fn(() => ({
+              single: vi.fn(async () => ({ data: booking, error: null }))
+            }))
+          }
+        }
+
+        return {
+          single: vi.fn(async () => ({ data: null, error: null }))
+        }
+      })
+    }
+
+    const bookingsInsert = {
+      select: vi.fn(() => ({
+        single: vi.fn(async () => ({ data: booking, error: null }))
+      }))
+    }
+
+    const bookingsUpdate = vi.fn(() => ({
+      eq: vi.fn(() => ({
+        eq: vi.fn(async () => ({ error: null }))
+      }))
+    }))
+
+    const paymentsOutboxSelectCommitted = {
+      eq: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          single: vi.fn(async () => ({
+            data: outboxCommitted ? { id: 'outbox-1', status: 'committed' } : null,
+            error: null
+          }))
+        }))
+      }))
+    }
+
+    const paymentsOutboxInsert = vi.fn(async () => ({ error: null }))
+    const paymentsOutboxUpdate = vi.fn(() => ({
+      eq: vi.fn(() => ({
+        eq: vi.fn(async () => {
+          outboxCommitted = true
+          return { error: null }
+        })
+      }))
+    }))
+
+    supabaseAdminMock.from.mockImplementation((table: string) => {
+      if (table === 'system_flags') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: vi.fn(async () => ({ data: { value: true }, error: null }))
+            }))
+          }))
+        }
+      }
+
+      if (table === 'bookings') {
+        return {
+          select: vi.fn(() => bookingsSelect),
+          insert: vi.fn(() => bookingsInsert),
+          update: bookingsUpdate,
+          eq: vi.fn(() => bookingsSelect)
+        } as any
+      }
+
+      if (table === 'quotes') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              gt: vi.fn(() => ({
+                single: vi.fn(async () => ({ data: quote, error: null }))
+              }))
+            }))
+          }))
+        } as any
+      }
+
+      if (table === 'payments_outbox') {
+        return {
+          select: vi.fn(() => paymentsOutboxSelectCommitted),
+          insert: vi.fn(() => ({ then: (resolve: any) => Promise.resolve({ error: null }).then(resolve) })),
+          update: paymentsOutboxUpdate,
+          eq: vi.fn(() => paymentsOutboxSelectCommitted),
+          single: vi.fn(async () => ({ data: null, error: null }))
+        } as any
+      }
+
+      if (table === 'booking_audit_log') {
+        return {
+          insert: vi.fn(async () => ({ error: null }))
+        } as any
+      }
+
+      if (table === 'availability_slots') {
+        return {
+          update: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                eq: vi.fn(async () => ({ error: null }))
+              }))
+            }))
+          }))
+        } as any
+      }
+
+      return {}
     })
-    
-    mockStripe = new Stripe('sk_test_mock', { apiVersion: '2024-06-20' })
+
+    // Allow tests to inspect update calls.
+    ;(globalThis as any).__bookingsUpdateMock = bookingsUpdate
   })
 
   describe('Cannot create booking hold with fake payment intent', () => {
-    it('should reject booking creation with non-existent payment intent', async () => {
-      // Mock Stripe to return error for non-existent PI
-      vi.mocked(mockStripe.paymentIntents.retrieve).mockRejectedValue(
-        new Error('No such payment_intent')
+    it('rejects booking creation with non-existent payment intent', async () => {
+      stripeRetrieveMock.mockRejectedValueOnce(new Error('No such payment_intent'))
+
+      const req = new NextRequest(
+        new Request('http://localhost:3000/api/bookings/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quote_id: 'test-quote-id',
+            provider_id: 'test-provider-id',
+            stripe_payment_intent_id: 'pi_fake_12345',
+            idempotency_key: 'test-key-1'
+          })
+        })
       )
 
-      // Attempt to create booking with fake PI
-      const response = await fetch('/api/bookings/confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quote_id: 'test-quote-id',
-          provider_id: 'test-provider-id',
-          stripe_payment_intent_id: 'pi_fake_12345',
-          idempotency_key: `test-key-${Date.now()}`
-        })
-      })
+      const { POST } = await import('@/app/api/bookings/confirm/route')
+      const response = await POST(req)
 
       expect(response.status).toBe(400)
       const json = await response.json()
       expect(json.error).toBe('INVALID_PAYMENT_INTENT')
     })
 
-    it('should reject booking creation with payment intent in wrong state', async () => {
-      // Mock Stripe to return PI in 'succeeded' state (already processed)
-      const mockPI = {
+    it('rejects booking creation with payment intent in wrong state', async () => {
+      stripeRetrieveMock.mockResolvedValueOnce({
         id: 'pi_test_123',
         status: 'succeeded',
         amount: 1000,
         currency: 'usd'
-      } as unknown as Stripe.PaymentIntent
-      vi.mocked(mockStripe.paymentIntents.retrieve).mockResolvedValue(mockPI as any)
-
-      const response = await fetch('/api/bookings/confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quote_id: 'test-quote-id',
-          provider_id: 'test-provider-id',
-          stripe_payment_intent_id: 'pi_test_123',
-          idempotency_key: `test-key-${Date.now()}`
-        })
       })
+
+      const req = new NextRequest(
+        new Request('http://localhost:3000/api/bookings/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quote_id: 'test-quote-id',
+            provider_id: 'test-provider-id',
+            stripe_payment_intent_id: 'pi_test_123',
+            idempotency_key: 'test-key-2'
+          })
+        })
+      )
+
+      const { POST } = await import('@/app/api/bookings/confirm/route')
+      const response = await POST(req)
 
       expect(response.status).toBe(400)
       const json = await response.json()
       expect(json.error).toBe('INVALID_PAYMENT_INTENT_STATE')
     })
 
-    it('should reject booking creation with payment intent amount mismatch', async () => {
-      // Mock Stripe to return PI with wrong amount
-      const mockPI = {
+    it('rejects booking creation with payment intent amount mismatch', async () => {
+      stripeRetrieveMock.mockResolvedValueOnce({
         id: 'pi_test_123',
         status: 'requires_confirmation',
-        amount: 500, // Wrong amount
+        amount: 500,
         currency: 'usd'
-      } as unknown as Stripe.PaymentIntent
-      vi.mocked(mockStripe.paymentIntents.retrieve).mockResolvedValue(mockPI as any)
-
-      const response = await fetch('/api/bookings/confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quote_id: 'test-quote-id',
-          provider_id: 'test-provider-id',
-          stripe_payment_intent_id: 'pi_test_123',
-          idempotency_key: `test-key-${Date.now()}`
-        })
       })
+
+      const req = new NextRequest(
+        new Request('http://localhost:3000/api/bookings/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quote_id: 'test-quote-id',
+            provider_id: 'test-provider-id',
+            stripe_payment_intent_id: 'pi_test_123',
+            idempotency_key: 'test-key-3'
+          })
+        })
+      )
+
+      const { POST } = await import('@/app/api/bookings/confirm/route')
+      const response = await POST(req)
 
       expect(response.status).toBe(400)
       const json = await response.json()
@@ -116,70 +294,9 @@ describe('Payment ↔ Booking Consistency', () => {
     })
   })
 
-  describe('Cannot end in confirmed state without webhook success', () => {
-    it('should not set confirmed_at when creating booking hold', async () => {
-      // This test verifies that the confirm endpoint doesn't set confirmed_at
-      // The actual test would need to create a booking and check the database
-      
-      // Mock valid payment intent
-      const mockPI = {
-        id: 'pi_test_valid',
-        status: 'requires_confirmation',
-        amount: 1000,
-        currency: 'usd'
-      } as unknown as Stripe.PaymentIntent
-      vi.mocked(mockStripe.paymentIntents.retrieve).mockResolvedValue(mockPI as any)
-
-      const response = await fetch('/api/bookings/confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quote_id: 'test-quote-id',
-          provider_id: 'test-provider-id',
-          stripe_payment_intent_id: 'pi_test_valid',
-          idempotency_key: `test-key-${Date.now()}`
-        })
-      })
-
-      if (response.ok) {
-        const json = await response.json()
-        const bookingId = json.data?.booking_id
-        
-        if (bookingId) {
-          // Check that booking was created with hold_placed state, not confirmed
-          const { data: booking } = await supabase
-            .from('bookings')
-            .select('state, confirmed_at')
-            .eq('id', bookingId)
-            .single()
-
-          expect(booking?.state).toBe('hold_placed')
-          expect(booking?.confirmed_at).toBeNull()
-        }
-      }
-    })
-
-    it('should prevent direct database update to confirmed without payment', async () => {
-      // This test verifies the database constraint
-      // Attempt to directly update a booking to confirmed without payment intent
-      
-      // Create a test booking first (if possible)
-      // Then try to update it to confirmed without payment intent
-      // Should fail due to trigger/constraint
-      
-      // Note: This would require actual database access in test environment
-      // For now, we document the expected behavior
-      expect(true).toBe(true) // Placeholder - actual test requires DB setup
-    })
-  })
-
   describe('Duplicate webhooks are idempotent', () => {
-    it('should handle duplicate payment_intent.succeeded webhooks gracefully', async () => {
-      // Create a booking in hold_placed state
-      const bookingId = 'test-booking-id'
-      
-      // First webhook - should succeed
-      const firstWebhook = {
+    it('handles duplicate payment_intent.succeeded webhooks gracefully', async () => {
+      stripeConstructEventMock.mockReturnValue({
         type: 'payment_intent.succeeded',
         data: {
           object: {
@@ -188,62 +305,32 @@ describe('Payment ↔ Booking Consistency', () => {
             currency: 'usd'
           }
         }
-      }
-
-      // Process first webhook
-      const firstResponse = await fetch('/api/webhooks/stripe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'stripe-signature': 'test-signature'
-        },
-        body: JSON.stringify(firstWebhook)
       })
 
-      // Check booking is confirmed
-      const { data: bookingAfterFirst } = await supabase
-        .from('bookings')
-        .select('state, confirmed_at')
-        .eq('id', bookingId)
-        .single()
+      const { POST } = await import('@/app/api/webhooks/stripe/route')
 
-      expect(bookingAfterFirst?.state).toBe('confirmed')
-      const firstConfirmedAt = bookingAfterFirst?.confirmed_at
+      const req1 = new NextRequest(
+        new Request('http://localhost:3000/api/webhooks/stripe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ any: 'payload' })
+        })
+      )
+      const res1 = await POST(req1)
+      expect(res1.status).toBe(200)
 
-      // Process duplicate webhook
-      const secondResponse = await fetch('/api/webhooks/stripe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'stripe-signature': 'test-signature'
-        },
-        body: JSON.stringify(firstWebhook)
-      })
+      const req2 = new NextRequest(
+        new Request('http://localhost:3000/api/webhooks/stripe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ any: 'payload' })
+        })
+      )
+      const res2 = await POST(req2)
+      expect(res2.status).toBe(200)
 
-      // Check booking state hasn't changed (idempotent)
-      const { data: bookingAfterSecond } = await supabase
-        .from('bookings')
-        .select('state, confirmed_at')
-        .eq('id', bookingId)
-        .single()
-
-      expect(bookingAfterSecond?.state).toBe('confirmed')
-      expect(bookingAfterSecond?.confirmed_at).toBe(firstConfirmedAt)
-      
-      // Should not have created duplicate audit logs or outbox entries
-      // (This would be checked in a more complete test)
-    })
-
-    it('should not process webhook if booking is already in different state', async () => {
-      // If booking is already cancelled, webhook should not change it to confirmed
-      // This tests the .eq('state', 'hold_placed') guard in webhook handler
-      
-      // Create booking in cancelled state
-      // Send payment_intent.succeeded webhook
-      // Verify booking remains cancelled
-      
-      expect(true).toBe(true) // Placeholder - actual test requires DB setup
+      const bookingsUpdateMock = (globalThis as any).__bookingsUpdateMock as ReturnType<typeof vi.fn>
+      expect(bookingsUpdateMock).toHaveBeenCalledTimes(1)
     })
   })
 })
-

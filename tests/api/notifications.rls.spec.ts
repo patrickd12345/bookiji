@@ -19,7 +19,9 @@ const configureSupabase = () => {
         })),
         delete: vi.fn(() => ({
           eq: vi.fn(() => ({
-            eq: vi.fn(async () => ({ error: null }))
+            eq: vi.fn(() => ({
+              limit: vi.fn(async () => ({ error: null }))
+            }))
           }))
         }))
       } as any

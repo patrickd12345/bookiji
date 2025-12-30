@@ -26,7 +26,7 @@ export default defineConfig({
 
   // Full-suite stability: avoid overloading local Next.js + Supabase on Windows.
   fullyParallel: false,
-  workers: 2,
+  workers: 1,
   retries: 1,
   timeout: 120_000,
 

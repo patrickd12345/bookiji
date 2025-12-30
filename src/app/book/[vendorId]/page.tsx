@@ -382,7 +382,7 @@ export default function BookVendorPage() {
           )}
 
           <div className="mb-4 text-sm text-gray-600">
-            {availabilitySlots.length === 0 ? 'No availability yet — check back soon.' : 'Select a date and time to book.'}
+            {availabilitySlots.length === 0 ? 'No availability yet - check back soon.' : 'Select a date and time to book.'}
           </div>
 
           {/* Services Selection */}

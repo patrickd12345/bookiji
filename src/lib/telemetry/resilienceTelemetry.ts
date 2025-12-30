@@ -1,4 +1,10 @@
-import { v4 as uuidv4 } from 'uuid'
+function generateSignalId(): string {
+  try {
+    const cryptoObj = globalThis.crypto as Crypto | undefined
+    if (cryptoObj?.randomUUID) return cryptoObj.randomUUID()
+  } catch {}
+  return `signal_${Date.now()}_${Math.random().toString(16).slice(2)}`
+}
 
 // Core telemetry types
 export interface ResilienceSignal {
@@ -38,7 +44,9 @@ class ResilienceTelemetryClient {
   constructor(endpoint: string = '/api/telemetry/resilience') {
     this.sessionId = this.generateSessionId()
     this.endpoint = endpoint
-    this.startBatchTimer()
+    if (process.env.NODE_ENV !== 'test') {
+      this.startBatchTimer()
+    }
   }
 
   private generateSessionId(): string {
@@ -53,7 +61,7 @@ class ResilienceTelemetryClient {
   async sendSignal(signal: Omit<ResilienceSignal, 'id' | 'timestamp' | 'session_id'>): Promise<void> {
     const fullSignal: ResilienceSignal = {
       ...signal,
-      id: uuidv4(),
+      id: generateSignalId(),
       timestamp: Date.now(),
       session_id: this.sessionId,
       user_id: this.userId
@@ -254,5 +262,3 @@ export const useResilienceTelemetry = () => {
     track: telemetry
   }
 }
-
-

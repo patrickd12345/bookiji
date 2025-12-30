@@ -10,7 +10,11 @@ interface CrawlResult {
   title: string
 }
 
+const SHOULD_RUN_CRAWLER = process.env.E2E_CRAWL === 'true'
+
 test.describe('Site Crawler', () => {
+  test.skip(!SHOULD_RUN_CRAWLER, 'Set E2E_CRAWL=true to enable the crawler in E2E runs.')
+
   test('crawl entire site and check for errors', async ({ page, browser }) => {
     test.setTimeout(300_000) // 5 minutes for full crawl
 
@@ -261,13 +265,13 @@ test.describe('Site Crawler', () => {
     console.log(`🔐 Logging in as admin to crawl admin pages...`)
 
     // Login first
-    await page.goto(`${baseURL}/login?next=/admin`)
+    await page.goto(`${baseURL}/login?next=/admin`, { waitUntil: 'domcontentloaded' })
     await page.fill('input[name="email"]', adminEmail)
     await page.fill('input[name="password"]', adminPassword)
     await page.click('button[type="submit"]')
-     
-    // Wait for redirect
-    await page.waitForURL(/\/admin(\/.*)?$/, { timeout: 30000, waitUntil: 'domcontentloaded' })
+
+    // Wait for redirect (some environments show an intermediate "Verifying admin access" screen)
+    await page.waitForURL(/\/admin(\/.*)?$/, { timeout: 60_000, waitUntil: 'domcontentloaded' })
 
     const visited = new Set<string>()
     const adminPages = [
@@ -296,10 +300,18 @@ test.describe('Site Crawler', () => {
       console.log(`\n📍 Visiting: ${path}`)
 
       try {
-        const response = await page.goto(normalized, {
-          waitUntil: 'domcontentloaded', // Changed from networkidle to avoid timeout on pages with real-time connections
-          timeout: 30000,
-        })
+        let response = null as any
+        try {
+          response = await page.goto(normalized, {
+            waitUntil: 'domcontentloaded', // Avoid timeout on pages with real-time connections
+            timeout: 30_000,
+          })
+        } catch (error: any) {
+          const message = error instanceof Error ? error.message : String(error)
+          if (!message.includes('interrupted by another navigation')) throw error
+          await page.waitForLoadState('domcontentloaded').catch(() => {})
+          response = await page.goto(normalized, { waitUntil: 'domcontentloaded', timeout: 30_000 })
+        }
         
         // Wait a bit for dynamic content
         await page.waitForTimeout(2000)

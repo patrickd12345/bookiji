@@ -52,7 +52,7 @@ async function runWorker(workerId, endTime) {
   // page.on('console', msg => console.log(`[Browser ${workerId}] ${msg.text()}`));
   
   let successes = 0;
-  let failures = [];
+  const failures = [];
 
   try {
     // Create a single user for this worker to reuse (simulating a returning user)
@@ -68,7 +68,7 @@ async function runWorker(workerId, endTime) {
     console.log(`[Worker ${workerId}] Created user ${user.email}`);
 
     // First time login might redirect to /choose-role because of onboarding
-    let isFirstLogin = true;
+    const isFirstLogin = true;
 
     while (Date.now() < endTime) {
       const runId = crypto.randomUUID().slice(0, 6);

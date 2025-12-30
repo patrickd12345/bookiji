@@ -62,11 +62,14 @@ describe('POST /api/bookings/create', () => {
   })
 
   it('should create a booking', async () => {
+    const now = new Date()
+    const futureStart = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24h from now
+    const futureEnd = new Date(futureStart.getTime() + 60 * 60 * 1000) // +1 hour
     const bookingData = {
       providerId: 'test-provider-123',
       serviceId: 'test-service-123',
-      startTime: '2024-06-01T14:00:00.000Z',
-      endTime: '2024-06-01T15:00:00.000Z',
+      startTime: futureStart.toISOString(),
+      endTime: futureEnd.toISOString(),
       amountUSD: 25
     }
 

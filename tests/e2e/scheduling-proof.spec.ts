@@ -17,6 +17,7 @@
  */
 
 import { test, expect } from '../fixtures/base'
+import type { Page } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import {
   E2E_VENDOR_USER,
@@ -38,6 +39,19 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const FAR_FUTURE_DATE = new Date('2030-06-15T14:00:00Z')
 const FAR_FUTURE_DATE_STR = FAR_FUTURE_DATE.toISOString().split('T')[0]
 const FAR_FUTURE_TIME_STR = FAR_FUTURE_DATE.toTimeString().slice(0, 5) // HH:MM format
+
+async function safeGoto(page: Page, url: string, timeout = 60_000) {
+  try {
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout })
+    return
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (!message.includes('interrupted by another navigation')) throw error
+  }
+
+  await page.waitForLoadState('domcontentloaded').catch(() => {})
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout })
+}
 
 test.describe('Scheduling Proof', () => {
   let vendorProfileId: string
@@ -153,7 +167,7 @@ test.describe('Scheduling Proof', () => {
     let secondAttemptRedirected = false
 
     await test.step('Login as the E2E vendor', async () => {
-      await page.goto('/login?next=/vendor/schedule', { waitUntil: 'domcontentloaded', timeout: 60000 })
+      await safeGoto(page, '/login?next=/vendor/schedule')
       await page.waitForLoadState('networkidle', { timeout: 60000 })
 
       const emailInput = page.locator('input[name="email"]')
@@ -177,7 +191,7 @@ test.describe('Scheduling Proof', () => {
     })
 
     await test.step('Open vendor booking page and select service', async () => {
-      await page.goto(`/book/${vendorId}`, { waitUntil: 'domcontentloaded', timeout: 60000 })
+      await safeGoto(page, `/book/${vendorId}`)
       await page.waitForLoadState('networkidle', { timeout: 10000 })
       await expect(page.locator('h1')).toContainText(/Book with/i, { timeout: 5000 })
       await selectSchedulingProofService()
@@ -207,7 +221,11 @@ test.describe('Scheduling Proof', () => {
       await expect(bookButton).toBeEnabled({ timeout: 5000 })
 
       alertMessage = null
-      const paymentNavigation = page.waitForURL(/\/pay\//, { timeout: 10000 }).then(() => true).catch(() => false)
+      const paymentNavigation = page
+        .waitForURL(/\/pay(?:\/|\?|$)/, { timeout: 60_000, waitUntil: 'domcontentloaded' })
+        .then(() => true)
+        .catch(() => false)
+
       await bookButton.click()
       const reachedPaymentPage = await paymentNavigation
 
@@ -223,7 +241,7 @@ test.describe('Scheduling Proof', () => {
         throw new Error('Time slot was not selected earlier')
       }
 
-      await page.goto(`/book/${vendorId}`, { waitUntil: 'domcontentloaded', timeout: 60000 })
+      await safeGoto(page, `/book/${vendorId}`)
       await page.waitForLoadState('networkidle', { timeout: 10000 })
       await selectSchedulingProofService()
 
@@ -243,7 +261,10 @@ test.describe('Scheduling Proof', () => {
         await expect(timeSelect2).toHaveValue(selectedTimeValue, { timeout: 5000 })
 
         alertMessage = null
-        const duplicateNavigation = page.waitForURL(/\/pay\//, { timeout: 10000 }).then(() => true).catch(() => false)
+        const duplicateNavigation = page
+          .waitForURL(/\/pay(?:\/|\?|$)/, { timeout: 20000, waitUntil: 'commit' })
+          .then(() => true)
+          .catch(() => false)
         const bookButton2 = page.getByRole('button', { name: /book appointment/i }).or(page.locator('button').filter({ hasText: /book/i })).first()
         await expect(bookButton2).toBeVisible({ timeout: 5000 })
         await expect(bookButton2).toBeEnabled({ timeout: 5000 })

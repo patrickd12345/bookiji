@@ -20,7 +20,8 @@ import {
   Mail,
   Shield,
   Award,
-  Zap
+  Zap,
+  Bell
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -36,6 +37,7 @@ import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { customerDashboardSteps, customerDashboardTourId } from '@/tours/dashboardNavigation'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { logger } from '@/lib/logger'
 
 interface UserProfile {
   id: string
@@ -147,13 +149,15 @@ export default function UserDashboard() {
       const data = await response.json() as NotificationResponse
       notifications.setData(data.notifications)
     } catch (error) {
-      console.error('Failed to load notifications:', error)
-      notifications.setError(error instanceof Error ? error.message : 'Failed to load notifications')
+      const notificationErrorMessage = error instanceof Error ? error.message : 'Failed to load notifications'
+      const notificationError = error instanceof Error ? error : new Error(notificationErrorMessage)
+      logger.error('Failed to load notifications', notificationError)
+      notifications.setError(notificationErrorMessage)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Intentionally empty - notifications object methods are stable
 
-  // Load user data (profile, bookings, credits, favorites) in parallel
+  // Load user data (profile, bookings, credits) in parallel
   useEffect(() => {
     const loadUserData = async () => {
       const supabase = supabaseBrowserClient()
@@ -177,7 +181,7 @@ export default function UserDashboard() {
         }
 
         // Load all data in parallel with timeouts - query profiles directly (user_role_summary view doesn't exist)
-        const [profileResult, bookingsResult, creditsResult, favoritesResult] = await Promise.allSettled([
+        const [profileResult, bookingsResult, creditsResult] = await Promise.allSettled([
           withTimeout(
             Promise.resolve(
               supabase
@@ -206,10 +210,6 @@ export default function UserDashboard() {
             }).then(res => res.ok ? res.json() : { success: false, credits: 0 }).catch(() => ({ success: false, credits: 0 })),
             10000
           ),
-          withTimeout(
-            Promise.resolve({ data: [] as any[], error: null }),
-            10000
-          )
         ])
 
         // Handle bookings first (needed for stats calculation)
@@ -220,7 +220,7 @@ export default function UserDashboard() {
         }
 
         // Handle favorites (needed for stats calculation)
-        let favoritesData: Provider[] = []
+        const favoritesData: Provider[] = []
         setFavoriteProviders([])
 
         // Handle profile - query profiles table directly (user_role_summary doesn't exist)
@@ -313,7 +313,9 @@ export default function UserDashboard() {
         // Load notifications
         loadNotifications()
       } catch (error) {
-        console.error('Error loading user data:', error)
+        const loadUserDataErrorMessage = error instanceof Error ? error.message : 'Error loading user data'
+        const loadUserDataError = error instanceof Error ? error : new Error(loadUserDataErrorMessage)
+        logger.error('Error loading user data', loadUserDataError)
       }
     }
 
@@ -389,7 +391,7 @@ export default function UserDashboard() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div data-tour="dashboard-welcome">
               <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back, {userProfile.name.split(' ')[0]}! 👋
+                Welcome back, {userProfile.name.split(' ')[0]}!
               </h1>
               <p className="mt-1 text-gray-600">
                 Manage your bookings, credits, and favorite providers
@@ -403,7 +405,8 @@ export default function UserDashboard() {
                 className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors"
                 disabled={notifications.loading}
               >
-                <span className="text-2xl">🔔</span>
+                <Bell aria-hidden className="h-6 w-6" />
+                <span className="sr-only">Refresh notifications</span>
                 {notifications.data && notifications.data.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {notifications.data.length}
@@ -455,11 +458,11 @@ export default function UserDashboard() {
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex flex-nowrap gap-6 px-6 overflow-x-auto overscroll-x-contain">
               {[
-                { id: 'overview' as const, label: 'Overview', icon: '📊' },
-                { id: 'bookings' as const, label: 'Bookings', icon: '📅' },
-                { id: 'credits' as const, label: 'Credits', icon: '💰' },
-                { id: 'favorites' as const, label: 'Favorites', icon: '❤️' },
-                { id: 'profile' as const, label: 'Profile', icon: '👤' }
+                { id: 'overview' as const, label: 'Overview', icon: <MapPin aria-hidden className="h-4 w-4" /> },
+                { id: 'bookings' as const, label: 'Bookings', icon: <Calendar aria-hidden className="h-4 w-4" /> },
+                { id: 'credits' as const, label: 'Credits', icon: <Coins aria-hidden className="h-4 w-4" /> },
+                { id: 'favorites' as const, label: 'Favorites', icon: <Star aria-hidden className="h-4 w-4" /> },
+                { id: 'profile' as const, label: 'Profile', icon: <User aria-hidden className="h-4 w-4" /> }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -490,7 +493,7 @@ export default function UserDashboard() {
                         <p className="text-blue-100">Total Bookings</p>
                         <p className="text-3xl font-bold">{bookings.length}</p>
                       </div>
-                      <span className="text-4xl">📅</span>
+                      <Calendar aria-hidden className="h-10 w-10 text-white/80" />
                     </div>
                   </div>
                   
@@ -502,7 +505,7 @@ export default function UserDashboard() {
                           ${credits ? (credits.balance_cents / 100).toFixed(2) : '0.00'}
                         </p>
                       </div>
-                      <span className="text-4xl">💰</span>
+                      <Coins aria-hidden className="h-10 w-10 text-white/80" />
                     </div>
                   </div>
                   
@@ -512,7 +515,7 @@ export default function UserDashboard() {
                         <p className="text-pink-100">Favorite Providers</p>
                         <p className="text-3xl font-bold">{favoriteProviders.length}</p>
                       </div>
-                      <span className="text-4xl">❤️</span>
+                      <Star aria-hidden className="h-10 w-10 text-white/80 fill-white/50" />
                     </div>
                   </div>
                 </div>
@@ -525,7 +528,7 @@ export default function UserDashboard() {
                       {bookings.slice(0, 3).map((booking) => (
                         <div key={booking.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
                           <div className="flex items-center gap-3">
-                            <span className="text-2xl">📋</span>
+                            <Clock aria-hidden className="h-5 w-5 text-blue-500" />
                             <div>
                               <p className="font-medium text-gray-900">{booking.service_name}</p>
                               <p className="text-sm text-gray-500">

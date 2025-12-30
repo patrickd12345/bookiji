@@ -7,6 +7,7 @@ import { featureFlags } from '@/config/featureFlags'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 import { assertVendorHasActiveSubscription, SubscriptionRequiredError } from '@/lib/guards/subscriptionGuard';
+import { SchedulingDisabledError, assertSchedulingEnabled } from '@/lib/guards/schedulingKillSwitch';
 
 interface BookingConfirmRequest {
   quote_id: string
@@ -32,6 +33,8 @@ async function confirmHandler(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
+    await assertSchedulingEnabled(supabase as any);
+
     const body: BookingConfirmRequest = await req.json()
     
     // Validate required fields
@@ -252,6 +255,12 @@ async function confirmHandler(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ ok: true, data: response })
 
   } catch (error) {
+    if (error instanceof SchedulingDisabledError) {
+      return NextResponse.json(
+        { code: error.code, error: error.message },
+        { status: error.statusCode }
+      )
+    }
     console.error('Booking confirmation error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },

@@ -1228,7 +1228,7 @@ async function main() {
     const customerId = pick(rng, customers)
     const serviceId = servicesByVendor[vendorId]
 
-    let event = { type, payload: null }
+    const event = { type, payload: null }
 
     if (type === 'create_booking') {
       const slotId = pick(rng, safeSlotsByVendor[vendorId])

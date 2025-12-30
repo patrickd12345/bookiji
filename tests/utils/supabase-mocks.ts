@@ -24,6 +24,7 @@ function createQueryChain(defaultThenResult: SupabaseResponse<any> = defaultList
       data: [],
       error: null,
       single: vi.fn(async () => ({ data: null, error: null })),
+      maybeSingle: vi.fn(async () => ({ data: null, error: null })),
       gte: vi.fn(() => ({
         data: [],
         error: null,

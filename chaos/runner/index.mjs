@@ -483,7 +483,7 @@ async function runSequence(plan, config, timebase) {
     console.log(`[SimCity] Time budget: ${plan.time_budget_seconds}s`)
   }
 
-  let sharedContext = {}
+  const sharedContext = {}
   let totalIterations = 0
   let totalRestarts = 0
 
@@ -911,7 +911,7 @@ async function queryStateForInvariants(invariants, kernel, runtimeContext) {
     // Query is already resolved in resolveInvariants, but resolve again in case context changed
     // Deep clone to avoid mutating the original
     const queryClone = JSON.parse(JSON.stringify(invariant.query))
-    let resolvedQuery = resolveTemplateDeep(queryClone, runtimeContext)
+    const resolvedQuery = resolveTemplateDeep(queryClone, runtimeContext)
     
     // For multi queries, ensure nested queries are also resolved
     if (resolvedQuery.type === 'multi' && resolvedQuery.queries) {

@@ -229,7 +229,7 @@ async function main() {
 
   const startedAt = Date.now()
   let executed = 0
-  let failures = []
+  const failures = []
   const MAX_LATENCY_MS = 3200
 
   // Snapshot telemetry: Event buffer and timer

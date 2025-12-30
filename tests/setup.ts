@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import { vi, beforeEach } from 'vitest'
 import { cleanup, waitFor } from '@testing-library/react'
 import { act } from 'react-dom/test-utils'
-import { createSupabaseClientMocks, resetSupabaseMock } from './utils/supabase-mocks'
+import { createSupabaseClientMocks, getSupabaseMock, resetSupabaseMock } from './utils/supabase-mocks'
 
 // Global test utilities to reduce act() warnings
 ;(global as any).waitFor = waitFor
@@ -48,6 +48,11 @@ process.env.TEST_BASE_URL = 'http://localhost:3000'
 // Centralized Supabase mocks
 // The mock instance is stored globally in supabase-mocks.ts and can be accessed via getSupabaseMock()
 createSupabaseClientMocks()
+
+// Ensure code that imports Supabase JS directly uses the shared mock client (prevents real GoTrueClient instances in tests)
+vi.mock('@supabase/supabase-js', () => ({
+  createClient: vi.fn(() => getSupabaseMock())
+}))
 
 // Mock state for controlling insert errors in tests
 const supabaseMockState = {

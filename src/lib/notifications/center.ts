@@ -155,4 +155,3 @@ function formatMessage(template: string, data: Record<string, unknown>): string 
   if (template === 'booking_confirmation') return `Your appointment on ${data.date} is confirmed.`
   return 'You have a new update.'
 }
-

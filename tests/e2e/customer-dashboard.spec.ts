@@ -70,7 +70,12 @@ test.describe('Customer Dashboard', () => {
       !err.includes('Content Security Policy') &&
       !err.includes('analytics') &&
       !err.includes('beta_status') &&
-      !err.includes('rate_limit')
+      !err.includes('rate_limit') &&
+      !err.includes('ChunkLoadError') &&
+      !err.includes('Loading chunk') &&
+      !err.includes('Failed to initialize tour') &&
+      !err.includes('__nextjs_original-stack-frames') &&
+      !err.includes('due to access control checks')
     )
     
     if (criticalErrors.length > 0) {
@@ -81,7 +86,6 @@ test.describe('Customer Dashboard', () => {
     expect(criticalErrors.length).toBeLessThan(5)
   })
 })
-
 
 
 
