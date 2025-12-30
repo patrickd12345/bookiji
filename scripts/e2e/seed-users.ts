@@ -90,10 +90,24 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+// Fix for Node 18+ / Undici localhost issues where it defaults to IPv6 ::1
+// but local Supabase/Docker usually listens on IPv4 127.0.0.1
+const finalSupabaseUrl = SUPABASE_URL?.replace('localhost', '127.0.0.1')
+
+const supabaseAdmin = createClient(finalSupabaseUrl || '', SUPABASE_SERVICE_ROLE_KEY || '', {
   auth: {
     autoRefreshToken: false,
     persistSession: false
+  },
+  global: {
+    // Increase timeout to avoid UND_ERR_HEADERS_TIMEOUT on slow connections/cold starts
+    fetch: (url, options) => {
+      return fetch(url, {
+        ...options,
+        // @ts-ignore - undici/node-fetch support signal, and we want to extend the timeout
+        signal: options?.signal || AbortSignal.timeout(60000) 
+      })
+    }
   }
 })
 
@@ -137,13 +151,17 @@ async function findUserByEmail(
         error = result.error
       } catch (err: any) {
         // Handle connection errors more gracefully
-        if (err.message?.includes('ECONNREFUSED') || err.message?.includes('fetch failed')) {
+        if (err.message?.includes('ECONNREFUSED') || 
+            err.message?.includes('fetch failed') || 
+            err.code === 'UND_ERR_HEADERS_TIMEOUT' || 
+            err.cause?.code === 'UND_ERR_HEADERS_TIMEOUT') {
           const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
           const isLocal = supabaseUrl && /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(supabaseUrl)
           
           if (isLocal) {
             throw new Error(
               `Cannot connect to local Supabase at ${supabaseUrl}\n` +
+              `Error: ${err.message} (${err.code || err.cause?.code})\n` +
               '\n' +
               'Local Supabase requires Docker. Options:\n' +
               '  1. Start Docker and run: pnpm db:start\n' +
@@ -155,11 +173,12 @@ async function findUserByEmail(
           } else {
             throw new Error(
               `Cannot connect to remote Supabase at ${supabaseUrl}\n` +
+              `Error: ${err.message} (${err.code || err.cause?.code})\n` +
               '\n' +
               'Check:\n' +
               '  1. SUPABASE_URL is correct\n' +
-              '  2. Network can reach Supabase\n' +
-              '  3. Project is active in Supabase dashboard\n' +
+              '  2. Network can reach Supabase (check VPN/Firewall)\n' +
+              '  3. Project is active in Supabase dashboard (paused projects timeout)\n' +
               '  4. API keys are valid\n' +
               '\n' +
               'Or skip seeding: E2E_SKIP_SEED=true pnpm e2e'
