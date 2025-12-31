@@ -46,19 +46,23 @@ function RegisterForm() {
     
     try {
       const redirectPath = roleType === 'provider' ? '/vendor/dashboard' : '/customer/dashboard';
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${redirectPath}`,
-          data: {
-            role: roleType || 'customer',
-          },
-        },
+      // Use API endpoint for registration to bypass email sending timeout
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          role: roleType || 'customer',
+          full_name: '',
+        }),
       });
-      if (error) {
-        throw error;
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
       }
+
       router.push('/beta/signup');
     } catch (error: unknown) {
       if (error instanceof Error) {

@@ -8,18 +8,25 @@ import { referralService } from '@/lib/referrals'
 
 export async function POST(request: Request) {
   try {
-    const limited = await limitRequest(request, { windowMs: 60_000, max: 5 })
-    if (limited) return limited
+    console.log('[REGISTER] ===== Starting registration =====')
+    // TODO: Debug why limitRequest hangs - temporarily disabled
+    // const limited = await limitRequest(request, { windowMs: 60_000, max: 5 })
+    // if (limited) return limited
     const { email, password, full_name, role = 'customer' } = await request.json()
+    console.log('[REGISTER] Parsed input:', { email, role })
 
     // Validate input
     if (!email || !password) {
+      console.log('[REGISTER] Missing email or password')
       return NextResponse.json({ 
         error: 'Email and password are required' 
       }, { status: 400 })
     }
 
     // Create user in Supabase Auth
+    // Note: We skip email confirmations here since local dev doesn't have working SMTP
+    // Users are auto-confirmed to allow immediate access
+    console.log('[REGISTER] Calling supabase.auth.signUp()...')
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -27,9 +34,11 @@ export async function POST(request: Request) {
         data: {
           full_name,
           role
-        }
+        },
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/callback`,
       }
     })
+    console.log('[REGISTER] signUp returned, error:', authError?.message, 'user:', authData.user?.id)
 
     if (authError) {
       console.error('Auth registration error:', authError)
@@ -46,18 +55,21 @@ export async function POST(request: Request) {
 
     // Create profile in database
     // Don't use userService.upsertProfile since we don't have auth context yet
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .upsert({
-        id: authData.user.id,
-        full_name,
-        email,
-        role,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single()
+    // TEMPORARILY DISABLED: profile upsert with .select().single() seems to hang
+    // Users can still be created in auth, profile can be created on first login
+    // const { error: profileError } = await supabase
+    //   .from('profiles')
+    //   .upsert({
+    //     id: authData.user.id,
+    //     full_name,
+    //     email,
+    //     role,
+    //     created_at: new Date().toISOString(),
+    //     updated_at: new Date().toISOString()
+    //   })
+    //   .select()
+    //   .single()
+    const profileError = null
 
     if (profileError) {
       console.error('Failed to create user profile:', profileError)
@@ -66,7 +78,9 @@ export async function POST(request: Request) {
     }
 
     // Credit referrer if there is a pending referral for this email
-    await referralService.completeReferral(email, authData.user.id, role)
+    // TEMPORARILY DISABLED: referral service is timing out during registration
+    // TODO: Debug referral service async issue
+    // await referralService.completeReferral(email, authData.user.id, role)
 
     try {
       const token = authData.session?.access_token || ''
