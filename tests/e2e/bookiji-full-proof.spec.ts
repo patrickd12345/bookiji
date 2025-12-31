@@ -183,13 +183,13 @@ test.describe('Bookiji Production Readiness Proof', () => {
     }
   })
 
-  test('PROVIDER PATH: Vendor can create and manage availability', async ({ page, auth }) => {
+  test('PROVIDER PATH: Vendor can create and manage availability', { tag: '@requires-supabase' }, async ({ page, auth }) => {
     await auth.loginAsVendor(E2E_VENDOR_EMAIL, E2E_VENDOR_PASSWORD)
     await page.goto('/vendor/schedule', { waitUntil: 'domcontentloaded' })
     await expect(page.locator('[data-test="vendor-scheduling-root"]')).toBeVisible({ timeout: 60000 })
   })
 
-  test('CUSTOMER PATH: Customer can search, select slot, and book', async ({ page, auth }) => {
+  test('CUSTOMER PATH: Customer can search, select slot, and book', { tag: '@requires-supabase' }, async ({ page, auth }) => {
     await auth.loginAsCustomer(E2E_CUSTOMER_EMAIL, E2E_CUSTOMER_PASSWORD)
 
     // Navigate to search/booking - use data-test selectors

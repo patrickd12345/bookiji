@@ -408,8 +408,10 @@ if (isLocalSupabase && process.env.E2E_SKIP_SEED !== 'true') {
         console.log('')
         console.log('⏭️  Auto-skipping seeding and continuing with tests...')
         console.log('   (Tests may fail if required users don\'t exist)')
+        console.log('   (Supabase-dependent tests will be automatically skipped)')
         console.log('   (Set E2E_NO_AUTO_START=true to skip auto-start attempts)')
         process.env.E2E_SKIP_SEED = 'true'
+        process.env.E2E_SKIP_SUPABASE_TESTS = 'true'
       }
     }
   }
@@ -443,7 +445,9 @@ if (process.env.E2E_SKIP_SEED !== 'true') {
       if (isLocalSupabase) {
         console.error('⚠️  Auto-skipping seeding and continuing with tests...')
         console.error('   (Tests may fail if required users don\'t exist)')
+        console.error('   (Supabase-dependent tests will be automatically skipped)')
         process.env.E2E_SKIP_SEED = 'true'
+        process.env.E2E_SKIP_SUPABASE_TESTS = 'true'
       } else {
         // Remote Supabase - this is more serious
         console.error('❌ Cannot connect to remote Supabase')

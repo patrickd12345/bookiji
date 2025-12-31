@@ -1,6 +1,8 @@
 import { test, expect } from '../fixtures/base'
+import { skipIfSupabaseUnavailable } from '../helpers/supabaseAvailability'
 
-test('vendor can reach dashboard', async ({ auth, page }) => {
+test('vendor can reach dashboard', { tag: '@requires-supabase' }, async ({ auth, page }) => {
+  await skipIfSupabaseUnavailable(test.info())
   await auth.loginAsVendor()
 
   const vendorDashboardRoot = page.locator('[data-test="dashboard-root"]')

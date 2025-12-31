@@ -1,9 +1,11 @@
 import { test, expect } from '../fixtures/base'
+import { skipIfSupabaseUnavailable } from '../helpers/supabaseAvailability'
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
 
-test.describe('Customer Dashboard', () => {
+test.describe('Customer Dashboard', { tag: '@requires-supabase' }, () => {
   test.beforeEach(async ({ page, auth }) => {
+    await skipIfSupabaseUnavailable(test.info())
     await auth.loginAsCustomer()
     await page.waitForURL(/\/customer\/dashboard/, { timeout: 30_000, waitUntil: 'domcontentloaded' })
     await expect(page.locator('[data-test="dashboard-root"]')).toBeVisible({ timeout: 30_000 })

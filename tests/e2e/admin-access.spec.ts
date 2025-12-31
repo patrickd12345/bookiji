@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test'
+import { skipIfSupabaseUnavailable } from '../helpers/supabaseAvailability'
 
-test.describe('Admin Access Test', () => {
+test.describe('Admin Access Test', { tag: '@requires-supabase' }, () => {
   const adminEmail = process.env.E2E_ADMIN_EMAIL || 'e2e-admin@bookiji.test'
   const adminPassword = process.env.E2E_ADMIN_PASSWORD || 'TestPassword123!'
 
   test('admin can log in and access mission control', async ({ page }) => {
+    await skipIfSupabaseUnavailable(test.info())
     // Step 1: Navigate to login page
     console.log('Step 1: Navigating to login page...')
     await page.goto('/login')
@@ -118,6 +120,7 @@ test.describe('Admin Access Test', () => {
   })
 
   test('admin check API endpoint works', async ({ page, request }) => {
+    await skipIfSupabaseUnavailable(test.info())
     // First, we need to log in to get a session
     await page.goto('/login')
     await page.fill('input[name="email"]', adminEmail)
