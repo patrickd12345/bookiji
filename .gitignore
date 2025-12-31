@@ -21,6 +21,8 @@ yarn.lock
 venv/
 env/
 env*
+# Exception: allow src/lib/env/ directory (contains utility functions, not env files)
+!src/lib/env/
 
 *.png
 
