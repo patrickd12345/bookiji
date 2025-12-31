@@ -61,42 +61,7 @@ jobs:
 
       - name: Summarize findings
         if: always()
-        shell: bash
-        run: |
-          if [ -f artifacts/doc-integrity-report.json ]; then
-            node <<'NODE'
-            const fs = require('fs');
-            const report = JSON.parse(fs.readFileSync('artifacts/doc-integrity-report.json', 'utf8'));
-            const totals = {
-              undocumented: report.undocumented_code?.length || 0,
-              missing: report.unimplemented_docs?.length || 0,
-              untested: report.untested_guarantees?.length || 0,
-              obsolete: report.obsolete_references?.length || 0,
-              ambiguous: report.ambiguous_claims?.length || 0,
-            };
-            const totalCount = Object.values(totals).reduce((a, b) => a + b, 0);
-            const status = totalCount === 0 ? 'clean' : 'violations';
-            console.log(`Documentation Integrity status: ${status}`);
-            console.log(
-              `Counts -> undocumented:${totals.undocumented}, missing:${totals.missing}, untested:${totals.untested}, obsolete:${totals.obsolete}, ambiguous:${totals.ambiguous}`
-            );
-            const preview = [
-              ...((report.unimplemented_docs || []).slice(0, 3).map((v) => `unimplemented: ${v}`)),
-              ...((report.undocumented_code || []).slice(0, 3).map((v) => `undocumented: ${v}`)),
-              ...((report.untested_guarantees || []).slice(0, 3).map((v) => `untested: ${v}`)),
-              ...((report.obsolete_references || []).slice(0, 2).map((v) => `obsolete: ${v}`)),
-              ...((report.ambiguous_claims || []).slice(0, 2).map((v) => `ambiguous: ${v}`)),
-            ].slice(0, 8);
-            if (preview.length) {
-              console.log('Top findings:');
-              for (const item of preview) {
-                console.log(`- ${item}`);
-              }
-            }
-            NODE
-          else
-            echo "No integrity report generated (tool likely failed before reporting)."
-          fi
+        run: node scripts/doc-integrity-summary.js
 
       - name: Upload documentation integrity artifacts
         if: always()
