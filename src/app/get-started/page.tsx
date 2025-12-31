@@ -1,22 +1,67 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthEntry from '@/components/AuthEntry';
 import { theme, combineClasses } from '@/config/theme';
 import { useAuthReady } from '@/hooks/useAuthReady';
+import { supabaseBrowserClient } from '@/lib/supabaseClient';
 
 export default function GetStartedPage() {
   const router = useRouter();
   const { ready, session } = useAuthReady();
+  const [checkingRoles, setCheckingRoles] = useState(false);
 
   useEffect(() => {
-    if (ready && session) {
-      router.replace('/customer/dashboard');
-    }
+    if (!ready || !session) return;
+
+    const checkUserRoles = async () => {
+      setCheckingRoles(true);
+      try {
+        const supabase = supabaseBrowserClient();
+        if (!supabase) {
+          router.replace('/choose-role');
+          return;
+        }
+
+        // Check if user has completed onboarding by checking for roles
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          router.replace('/choose-role');
+          return;
+        }
+
+        // Check user_role_summary to see if user has any roles
+        const { data: roleSummary } = await supabase
+          .from('user_role_summary')
+          .select('roles')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        // If no roles found, redirect to choose-role
+        if (!roleSummary || !roleSummary.roles || roleSummary.roles.length === 0) {
+          router.replace('/choose-role');
+          return;
+        }
+
+        // User has roles, redirect to dashboard
+        router.replace('/customer/dashboard');
+      } catch (error) {
+        console.error('Error checking user roles:', error);
+        // On error, redirect to choose-role to be safe
+        router.replace('/choose-role');
+      } finally {
+        setCheckingRoles(false);
+      }
+    };
+
+    checkUserRoles();
   }, [ready, session, router]);
 
   if (ready && session) {
+    if (checkingRoles) {
+      return null; // Don't render anything while checking
+    }
     return null; // Don't render anything while redirecting
   }
 
