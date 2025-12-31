@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '../../../../lib/supabaseServer'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
+const getSupabase = () => getServerSupabase()
 
 // GET /api/user/roles - Get user's roles
 export async function GET(request: NextRequest) {
   try {
+    const supabase = getSupabase()
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
       return NextResponse.json({ error: 'No authorization header' }, { status: 401 })
@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
 // POST /api/user/roles - Add a role to user
 export async function POST(request: NextRequest) {
   try {
+    const supabase = getSupabase()
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
       return NextResponse.json({ error: 'No authorization header' }, { status: 401 })
@@ -118,6 +119,7 @@ export async function POST(request: NextRequest) {
 // DELETE /api/user/roles - Remove a role from user
 export async function DELETE(request: NextRequest) {
   try {
+    const supabase = getSupabase()
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
       return NextResponse.json({ error: 'No authorization header' }, { status: 401 })

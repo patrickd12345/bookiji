@@ -1,8 +1,7 @@
 import { getServerSupabase } from '@/lib/supabaseServer'
 import { logger, errorToContext } from '@/lib/logger'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
+const getSupabase = () => getServerSupabase()
 import {
   type BookingStatus,
   type RefundStatus,
@@ -32,6 +31,7 @@ class BookingStateMachine {
       skipRefund?: boolean
     } = {}
   ): Promise<StateTransitionResult> {
+    const supabase = getSupabase()
     const { data: booking, error: fetchError } = await supabase
       .from('bookings')
       .select('*')
@@ -113,6 +113,7 @@ class BookingStateMachine {
   }
 
   public async getTransitionHistory(bookingId: string) {
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('booking_state_changes')
       .select(

@@ -222,7 +222,7 @@ export class StripeService {
   ): Promise<Stripe.Refund> {
     if (getIsMockMode()) {
       // Return mock refund for testing
-      return {
+      const mockRefund = {
         id: `re_mock_${Date.now()}`,
         object: 'refund',
         amount: amount || 100,
@@ -237,16 +237,15 @@ export class StripeService {
         livemode: false,
         balance_transaction: null,
         charge: null,
-        description: null,
+        description: undefined,
         failure_balance_transaction: null,
         failure_reason: null,
-        next_attrs: null,
         receipt_number: null,
-        reason: null,
+        reason: undefined,
         source_transfer_reversal: null,
         transfer_reversal: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any;
+      } as unknown as Stripe.Refund;
+      return mockRefund;
     }
 
     try {
@@ -283,7 +282,7 @@ export class StripeService {
   ): Stripe.Event {
     if (getIsMockMode()) {
       // Return mock event for testing
-      return {
+      const mockEvent = {
         id: 'evt_mock_webhook',
         object: 'event',
         api_version: '2024-06-20',
@@ -293,7 +292,8 @@ export class StripeService {
             id: 'pi_mock_webhook',
             object: 'payment_intent',
             status: 'succeeded',
-          },
+          } as Stripe.PaymentIntent,
+          previous_attributes: undefined,
         },
         livemode: false,
         pending_webhooks: 0,
@@ -302,8 +302,8 @@ export class StripeService {
           idempotency_key: null,
         },
         type: 'payment_intent.succeeded',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any;
+      } as unknown as Stripe.Event;
+      return mockEvent;
     }
 
     try {
@@ -345,7 +345,7 @@ export class StripeService {
   static async getCustomer(customerId: string): Promise<Stripe.Customer | null> {
     if (getIsMockMode()) {
       // Return mock customer for testing
-      return {
+      const mockCustomer = {
         id: customerId,
         object: 'customer',
         created: Date.now() / 1000,
@@ -354,8 +354,8 @@ export class StripeService {
         metadata: {
           source: 'bookiji_platform',
         },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any;
+      } as unknown as Stripe.Customer;
+      return mockCustomer;
     }
 
     try {
@@ -374,7 +374,7 @@ export class StripeService {
   static async createCustomer(email: string, name?: string): Promise<Stripe.Customer> {
     if (getIsMockMode()) {
       // Return mock customer for testing
-      return {
+      const mockCustomer = {
         id: `cus_mock_${Date.now()}`,
         object: 'customer',
         created: Date.now() / 1000,
@@ -384,8 +384,8 @@ export class StripeService {
         metadata: {
           source: 'bookiji_platform',
         },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any;
+      } as unknown as Stripe.Customer;
+      return mockCustomer;
     }
 
     try {

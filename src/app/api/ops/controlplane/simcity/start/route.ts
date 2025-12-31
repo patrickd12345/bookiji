@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { simCityStart } from '../../_lib/simcity'
+import { simCityStart, type SimCityConfig } from '../../_lib/simcity'
 import { assertSimCityAllowed } from '@/lib/env/operationalInvariants'
+
+interface SimCityStartRequestBody extends Partial<SimCityConfig> {
+  seed?: number
+  tickRateMs?: number
+}
 
 export async function POST(request: NextRequest) {
   // Enforce environment isolation: SimCity forbidden in production
@@ -11,8 +16,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 403 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let body: any
+  let body: SimCityStartRequestBody
   try {
     body = await request.json()
   } catch {

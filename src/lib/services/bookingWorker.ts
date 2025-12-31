@@ -2,8 +2,21 @@
 import { createClient } from '@supabase/supabase-js'
 import { featureFlags } from '@/config/featureFlags'
 import { logger, errorToContext } from '@/lib/logger'
+import type { Database } from '@/types/supabase'
+import type { PaymentOutboxEntry } from '@/lib/database/outbox'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
+
+type BookingRow = Database['public']['Tables']['bookings']['Row']
+
+interface BookingOutboxEvent extends Omit<PaymentOutboxEntry, 'payload'> {
+  event_data: {
+    booking_id: string
+    provider_id: string
+  }
+  status?: 'pending' | 'in_flight' | 'committed' | 'failed'
+  retry_count?: number
+}
 
 interface BookingWorkerConfig {
   pollIntervalMs: number
@@ -104,8 +117,7 @@ export class BookingWorker {
   /**
    * Process a single booking event
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async processBookingEvent(event: any): Promise<void> {
+  private async processBookingEvent(event: BookingOutboxEvent): Promise<void> {
     const { booking_id, provider_id } = event.event_data
 
     // Check if booking still exists and is in hold_placed state
@@ -163,8 +175,7 @@ export class BookingWorker {
   /**
    * Confirm a booking (transition to provider_confirmed)
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async confirmBooking(booking: any, event: any): Promise<void> {
+  private async confirmBooking(booking: BookingRow, event: BookingOutboxEvent): Promise<void> {
     try {
       // Update booking state
       const { error: updateError } = await supabase
@@ -190,8 +201,8 @@ export class BookingWorker {
           actor_type: 'system',
           actor_id: 'booking_worker',
           metadata: {
-            payment_intent: booking.stripe_payment_intent_id,
-            provider_id: booking.provider_id,
+            payment_intent: booking.payment_intent_id,
+            provider_id: booking.vendor_id,
             confirmation_time: new Date().toISOString(),
             worker_event_id: event.id
           }
@@ -208,8 +219,7 @@ export class BookingWorker {
   /**
    * Auto-cancel a booking due to timeout
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async autoCancelBooking(booking: any, event: any): Promise<void> {
+  private async autoCancelBooking(booking: BookingRow, event: BookingOutboxEvent): Promise<void> {
     try {
       // Update booking state
       const { error: updateError } = await supabase
@@ -236,8 +246,8 @@ export class BookingWorker {
           actor_type: 'system',
           actor_id: 'booking_worker',
           metadata: {
-            payment_intent: booking.stripe_payment_intent_id,
-            provider_id: booking.provider_id,
+            payment_intent: booking.payment_intent_id,
+            provider_id: booking.vendor_id,
             cancellation_reason: 'PROVIDER_TIMEOUT',
             timeout_minutes: this.config.timeoutMinutes,
             worker_event_id: event.id

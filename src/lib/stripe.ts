@@ -2,8 +2,7 @@ import Stripe from 'stripe'
 import { loadStripe } from '@stripe/stripe-js'
 import { getServerSupabase } from '@/lib/supabaseServer'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
+const getSupabase = () => getServerSupabase()
 
 // Create a function to get Stripe instance instead of creating it at module load
 let _stripe: Stripe | null = null
@@ -64,6 +63,7 @@ export async function createBookingPaymentIntent(amount: number, bookingId: stri
     { idempotencyKey: key }
   )
 
+  const supabase = getSupabase()
   await supabase.from('bookings').update({ idempotency_key: key }).eq('id', bookingId)
   return intent
 }

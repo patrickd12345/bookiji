@@ -1,8 +1,7 @@
 import { getServerSupabase } from '@/lib/supabaseServer'
 import { logger, errorToContext } from '@/lib/logger'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
+const getSupabase = () => getServerSupabase()
 import { refundPayment } from '@/lib/stripe'
 import { type RefundOptions, type RefundStatus } from '@/types/booking'
 
@@ -10,6 +9,7 @@ export async function processRefund(
   bookingId: string,
   options: RefundOptions = {}
 ): Promise<{ status: RefundStatus; amount?: number; transactionId?: string; error?: string }> {
+  const supabase = getSupabase()
   try {
     const { data: booking, error: fetchError } = await supabase
       .from('bookings')
