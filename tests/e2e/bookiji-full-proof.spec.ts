@@ -143,43 +143,69 @@ test.describe('Bookiji Production Readiness Proof', () => {
     }
 
     // Create or reuse a test service for the vendor
-    const { data: service, error: serviceError } = await supabase
+    // First try to find existing service
+    const { data: existingService } = await supabase
       .from('services')
-      .upsert({
-        provider_id: vendorProfileId,
-        name: 'E2E Proof Test Service',
-        description: 'Service created for production-readiness proof test',
-        category: 'test',
-        price: 50.00,
-        price_type: 'fixed',
-        duration_minutes: 60,
-        is_active: true
-      }, { onConflict: 'provider_id,name' })
       .select('id')
+      .eq('provider_id', vendorProfileId)
+      .eq('name', 'E2E Proof Test Service')
       .single()
 
-    if (serviceError) {
-      console.warn('E2E proof: service upsert warning', serviceError.message)
+    let serviceId: string | undefined
+    if (existingService) {
+      serviceId = existingService.id
+    } else {
+      // Insert new service if it doesn't exist
+      const { data: newService, error: serviceError } = await supabase
+        .from('services')
+        .insert({
+          provider_id: vendorProfileId,
+          name: 'E2E Proof Test Service',
+          description: 'Service created for production-readiness proof test',
+          category: 'test',
+          price: 50.00,
+          price_type: 'fixed',
+          duration_minutes: 60,
+          is_active: true
+        })
+        .select('id')
+        .single()
+
+      if (serviceError) {
+        console.warn('E2E proof: service creation warning', serviceError.message)
+      } else {
+        serviceId = newService?.id
+      }
     }
 
     // Create availability slot in far future
     const startTime = FAR_FUTURE_DATE
     const endTime = new Date(startTime.getTime() + 60 * 60 * 1000) // +1 hour
 
-    const { error: slotError } = await supabase
+    // Check if slot already exists
+    const { data: existingSlot } = await supabase
       .from('availability_slots')
-      .upsert({
-        provider_id: vendorProfileId,
-        start_time: startTime.toISOString(),
-        end_time: endTime.toISOString(),
-        is_available: true,
-        slot_type: 'regular'
-      }, {
-        onConflict: 'provider_id,start_time,end_time'
-      })
+      .select('id')
+      .eq('provider_id', vendorProfileId)
+      .eq('start_time', startTime.toISOString())
+      .eq('end_time', endTime.toISOString())
+      .single()
 
-    if (slotError && slotError.code !== '23505') {
-      console.warn('Slot creation warning:', slotError.message)
+    if (!existingSlot) {
+      // Insert new slot if it doesn't exist
+      const { error: slotError } = await supabase
+        .from('availability_slots')
+        .insert({
+          provider_id: vendorProfileId,
+          start_time: startTime.toISOString(),
+          end_time: endTime.toISOString(),
+          is_available: true,
+          slot_type: 'regular'
+        })
+
+      if (slotError && slotError.code !== '23505') {
+        console.warn('Slot creation warning:', slotError.message)
+      }
     }
   })
 

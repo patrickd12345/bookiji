@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3000",
+    "dev:setup": "pnpm install && pnpm db:start && pnpm dev",
     "dev:kill": "powershell -ExecutionPolicy Bypass -File scripts/kill-dev-server.ps1",
     "dev:cron": "tsx scripts/local-cron-scheduler.ts",
     "env:dev": "dotenv -e .env.development --",
@@ -30,7 +31,7 @@
     "test:integration": "vitest run tests/integration",
     "test:coverage": "vitest run --coverage",
     "e2e": "playwright test",
-    "e2e:all": "tsx scripts/e2e/run-e2e.ts",
+    "e2e:all": "pnpm test:run && pnpm e2e",
     "e2e:ui": "playwright test --ui",
     "e2e:debug": "playwright test --debug",
     "e2e:diagnose": "tsx scripts/e2e/diagnose-env.ts",

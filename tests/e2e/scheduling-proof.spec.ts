@@ -124,23 +124,30 @@ test.describe('Scheduling Proof', () => {
     const startTime = FAR_FUTURE_DATE
     const endTime = new Date(startTime.getTime() + 60 * 60 * 1000)
 
-    const { error: slotError } = await supabase
+    // Check if slot already exists
+    const { data: existingSlot } = await supabase
       .from('availability_slots')
-      .upsert(
-        {
+      .select('id')
+      .eq('provider_id', vendorProfileId)
+      .eq('start_time', startTime.toISOString())
+      .eq('end_time', endTime.toISOString())
+      .single()
+
+    if (!existingSlot) {
+      // Insert new slot if it doesn't exist
+      const { error: slotError } = await supabase
+        .from('availability_slots')
+        .insert({
           provider_id: vendorProfileId,
           start_time: startTime.toISOString(),
           end_time: endTime.toISOString(),
           is_available: true,
           slot_type: 'regular'
-        },
-        {
-          onConflict: 'provider_id,start_time,end_time'
-        }
-      )
+        })
 
-    if (slotError && slotError.code !== '23505') {
-      console.warn('Slot creation warning:', slotError.message)
+      if (slotError && slotError.code !== '23505') {
+        console.warn('Slot creation warning:', slotError.message)
+      }
     }
 
     slotDate = FAR_FUTURE_DATE_STR
