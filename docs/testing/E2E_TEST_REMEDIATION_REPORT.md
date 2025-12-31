@@ -1,8 +1,97 @@
 # E2E Test Remediation Report
 
-**Date:** 2025-12-30  
+**Last Updated:** 2025-01-27  
 **Test Run:** `pnpm e2e:all`  
-**Status:** Scripts updated, tests require Supabase to be running
+**Status:** Tests partially passing - Supabase connectivity required for full test suite
+
+## Latest Test Run Results (2025-01-27)
+
+**Command:** `pnpm e2e:all`  
+**Environment:** Windows 10, Docker not running  
+**Duration:** ~32.5 minutes
+
+### Test Results Summary
+- ✅ **25 tests passed** (tests that don't require Supabase/auth)
+- ❌ **16 tests failed** (all Supabase/auth-dependent tests)
+- ⏭️ **46 tests skipped**
+- ⚠️ **5 tests did not run**
+
+### Root Cause Analysis
+
+**Primary Issue: Supabase Not Accessible**
+- Docker Desktop is not running
+- Local Supabase instance at `http://127.0.0.1:54321` is not reachable
+- All authentication-dependent tests fail with connection timeouts
+
+**Secondary Issues:**
+- Tests attempting to auto-create users via `ensureUserExists()` fail because Supabase is unreachable
+- Some tests timeout on `waitForLoadState('networkidle')` suggesting dev server may be slow or unresponsive
+- Seeding was skipped (`E2E_SKIP_SEED=true`) but tests still attempt to connect to Supabase for user creation
+
+### Failed Test Categories
+
+1. **Authentication Tests** (3 failures)
+   - `auth.spec.ts: login works` - Cannot create/verify user without Supabase
+   - `admin-access.spec.ts: admin can log in and access mission control` - Requires Supabase
+   - `admin-access.spec.ts: admin check API endpoint works` - Requires Supabase
+
+2. **Customer Dashboard Tests** (5 failures)
+   - All customer dashboard tests fail because `loginAsCustomer()` cannot connect to Supabase
+   - Tests timeout in `beforeEach` hook when attempting user creation
+
+3. **Vendor Tests** (1 failure)
+   - `vendor.spec.ts: vendor can reach dashboard` - Requires authentication
+
+4. **Scheduling Proof Tests** (1 failure)
+   - `scheduling-proof.spec.ts: SCHEDULING PROOF` - Requires Supabase for slot management
+
+5. **Usability Tests** (5 failures)
+   - Multiple usability tests timeout on `waitForLoadState('networkidle')`
+   - May indicate dev server performance issues or network problems
+
+6. **Full Proof Tests** (1 failure)
+   - `bookiji-full-proof.spec.ts: PROVIDER PATH` - Requires Supabase
+
+### Error Patterns
+
+**Connection Timeout Errors:**
+```
+Error: Connection timeout to local Supabase at http://127.0.0.1:54321/auth/v1/admin/users?page=1&per_page=100
+Possible causes:
+  1. Supabase Docker containers not running (run: pnpm db:start)
+  2. Docker Desktop not running or accessible
+  3. Port conflict (check if port 55321 is in use)
+  4. Firewall blocking localhost connections
+```
+
+**Test Timeout Errors:**
+```
+Test timeout of 60000ms exceeded while running "beforeEach" hook
+Error: page.waitForLoadState: Test timeout of 60000ms exceeded
+```
+
+### Detailed Test Failure Breakdown
+
+| Test File | Test Name | Failure Reason | Fix Required |
+|-----------|-----------|----------------|--------------|
+| `auth.spec.ts` | login works | Cannot connect to Supabase for user creation | Start Supabase |
+| `admin-access.spec.ts` | admin can log in | Cannot connect to Supabase for admin user | Start Supabase |
+| `admin-access.spec.ts` | admin check API endpoint | Cannot connect to Supabase | Start Supabase |
+| `customer-dashboard.spec.ts` | should load customer dashboard | `loginAsCustomer()` timeout | Start Supabase |
+| `customer-dashboard.spec.ts` | should show customer navigation | `loginAsCustomer()` timeout | Start Supabase |
+| `customer-dashboard.spec.ts` | should display UserDashboard | `loginAsCustomer()` timeout | Start Supabase |
+| `customer-dashboard.spec.ts` | should handle authentication redirect | `loginAsCustomer()` timeout | Start Supabase |
+| `customer-dashboard.spec.ts` | should not show errors in console | `loginAsCustomer()` timeout | Start Supabase |
+| `vendor.spec.ts` | vendor can reach dashboard | Authentication timeout | Start Supabase |
+| `scheduling-proof.spec.ts` | SCHEDULING PROOF | Supabase connection timeout | Start Supabase |
+| `bookiji-full-proof.spec.ts` | PROVIDER PATH | Supabase connection timeout | Start Supabase |
+| `usability.spec.ts` | homepage has clear navigation | `networkidle` timeout | Check dev server |
+| `usability.spec.ts` | navigation buttons have clear labels | `networkidle` timeout | Check dev server |
+| `usability.spec.ts` | can complete basic user journey | `networkidle` timeout | Check dev server |
+| `usability.spec.ts` | mobile navigation is accessible | `networkidle` timeout | Check dev server |
+| `usability.spec.ts` | pages have clear headings | `networkidle` timeout | Check dev server |
+
+**Note:** All Supabase-related failures are expected when Supabase is not running. The usability test timeouts may indicate dev server performance issues and should be investigated separately.
 
 ## Summary
 
@@ -94,6 +183,28 @@ The following manual steps are now handled automatically by `pnpm e2e:all`:
      - Tests are more resilient to missing users (will create them automatically)
      - Note: User creation requires Supabase to be accessible (running or remote)
 
+### Immediate Actions Required
+
+1. **Start Supabase Before Running Tests**
+   ```bash
+   # Option 1: Start Docker Desktop, then:
+   pnpm db:start
+   
+   # Option 2: Use remote Supabase (if configured)
+   pnpm e2e:setup-remote
+   ```
+
+2. **Verify Supabase is Running**
+   ```bash
+   npx supabase status
+   # Should show: API URL, DB URL, etc.
+   ```
+
+3. **Re-run Tests with Supabase Running**
+   ```bash
+   pnpm e2e:all
+   ```
+
 ### Recommended Next Steps
 
 1. **Test the Updated Script**
@@ -109,15 +220,33 @@ The following manual steps are now handled automatically by `pnpm e2e:all`:
    ```
 
 2. **Verify Error Handling**
-   - Test with Supabase stopped
-   - Test with Supabase running
-   - Test with remote Supabase
+   - ✅ Test with Supabase stopped (completed - shows graceful degradation)
+   - ⏳ Test with Supabase running (pending - requires Docker)
+   - ⏳ Test with remote Supabase (pending - requires setup)
 
 3. **Improve Test Resilience** ✅ **COMPLETED**
    - ✅ Added user creation helper (`tests/helpers/ensureUser.ts`) that automatically creates users if they don't exist
    - ✅ Enhanced auth helper (`tests/helpers/auth.ts`) with better error messages when users are missing
    - ✅ Login methods now automatically ensure users exist before attempting login
    - ✅ Comprehensive error messages guide users to fix missing user issues
+   - ⚠️ **Issue Found**: Auto-creation still requires Supabase to be accessible - tests fail gracefully but cannot proceed without Supabase
+
+### Future Improvements
+
+1. **Better Supabase Detection**
+   - Pre-flight check before test execution
+   - Clear error message if Supabase is required but not available
+   - Option to skip Supabase-dependent tests automatically
+
+2. **Dev Server Performance**
+   - Investigate `networkidle` timeout issues in usability tests
+   - Consider using `domcontentloaded` instead of `networkidle` for faster tests
+   - Add dev server health check before running tests
+
+3. **Test Categorization**
+   - Tag tests that require Supabase vs. those that don't
+   - Allow running only non-Supabase tests when Supabase is unavailable
+   - Better test selection based on available infrastructure
 
 ## Files Modified
 
@@ -131,11 +260,67 @@ The following manual steps are now handled automatically by `pnpm e2e:all`:
 
 ## Testing Checklist
 
-- [x] Test `pnpm e2e:all` with Supabase running
-- [ ] Test `pnpm e2e:all` with Supabase stopped (should auto-skip seeding)
-- [ ] Test `pnpm e2e:all` with remote Supabase
+- [x] Test `pnpm e2e:all` with Supabase running (previous run)
+- [x] Test `pnpm e2e:all` with Supabase stopped (completed 2025-01-27 - shows graceful degradation)
+- [ ] Test `pnpm e2e:all` with remote Supabase (pending - requires setup)
 - [x] Verify error messages are clear and actionable
-- [x] Verify tests can run even when seeding is skipped (users will be auto-created)
+- [x] Verify tests can run even when seeding is skipped (partial - 25 tests pass, 16 fail due to Supabase dependency)
+- [ ] Verify all tests pass when Supabase is running (pending - requires Docker)
+
+## Current Status (2025-01-27)
+
+### What's Working ✅
+- **25 tests passing** - Tests that don't require Supabase/auth work correctly
+- **Graceful degradation** - Scripts handle Supabase unavailability without crashing
+- **Clear error messages** - Users get actionable guidance when Supabase is unavailable
+- **Auto-seeding skip** - Seeding is automatically skipped when Supabase is unreachable
+
+### What Needs Attention ⚠️
+- **16 tests failing** - All require Supabase to be running
+  - **Impact:** High - Prevents full test suite execution
+  - **Workaround:** Start Docker Desktop and run `pnpm db:start` before tests
+  - **Long-term:** Consider remote Supabase setup for CI/CD environments
+  
+- **Docker dependency** - Local Supabase requires Docker Desktop to be running
+  - **Impact:** Medium - Blocks local development testing
+  - **Workaround:** Use remote Supabase with `pnpm e2e:setup-remote`
+  - **Long-term:** Document remote Supabase setup as primary option for cloud environments
+  
+- **Dev server timeouts** - Some usability tests timeout on `networkidle` state
+  - **Impact:** Low - Only affects 5 usability tests, 25 other tests pass
+  - **Workaround:** Use `domcontentloaded` instead of `networkidle` for faster tests
+  - **Investigation needed:** Check if dev server is slow or if `networkidle` is too strict
+  
+- **User auto-creation limitation** - Cannot auto-create users when Supabase is unreachable (expected behavior, but tests fail)
+  - **Impact:** Medium - Tests fail gracefully but cannot proceed
+  - **Current behavior:** Correct - tests should fail if Supabase is unavailable
+  - **Enhancement opportunity:** Add test tags to skip Supabase-dependent tests automatically
+
+### Blockers
+
+1. **Docker not running** - Primary blocker for local Supabase
+   - **Severity:** Critical
+   - **Quick fix:** Start Docker Desktop, then `pnpm db:start`
+   - **Alternative:** Use remote Supabase (requires setup)
+   - **Detection:** Script already detects and warns, but tests still fail
+
+2. **No remote Supabase configured** - Alternative option not available
+   - **Severity:** Medium
+   - **Quick fix:** Run `pnpm e2e:setup-remote` to configure remote Supabase
+   - **Requirements:** Need Supabase project URL and service role key
+   - **Benefit:** Works without Docker, better for CI/CD
+
+3. **Dev server performance** - Some tests may be slow due to network conditions
+   - **Severity:** Low
+   - **Quick fix:** Increase timeout or use `domcontentloaded` instead of `networkidle`
+   - **Investigation:** Check if dev server is actually slow or if test expectations are too strict
+   - **Note:** May be environment-specific (network, system resources)
+
+### Next Run Requirements
+- Start Docker Desktop
+- Run `pnpm db:start` to start local Supabase
+- Or configure remote Supabase with `pnpm e2e:setup-remote`
+- Then re-run `pnpm e2e:all`
 
 ## New Features Added
 

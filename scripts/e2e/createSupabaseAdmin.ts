@@ -65,7 +65,7 @@ function createTimeoutFetch(timeoutMs: number = 60000): typeof fetch {
             '  1. Supabase project is paused or sleeping\n' +
             '  2. Network connectivity issues\n' +
             '  3. VPN or proxy intercepting requests\n' +
-            '  4. Invalid SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY\n' +
+            '  4. Invalid SUPABASE_URL or SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY)\n' +
             '\n' +
             'To verify:\n' +
             '  - Check Supabase dashboard: https://app.supabase.com\n' +

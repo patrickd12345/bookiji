@@ -14,3 +14,4 @@ CREATE POLICY "Service role can manage profiles" ON profiles
 
 
 
+

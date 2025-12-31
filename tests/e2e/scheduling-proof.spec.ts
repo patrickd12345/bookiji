@@ -33,7 +33,7 @@ ensureCredentialsPresent({
 const { email: E2E_VENDOR_EMAIL, password: E2E_VENDOR_PASSWORD } = E2E_VENDOR_USER
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
 
 // Use far-future date to avoid flakiness (2030)
 const FAR_FUTURE_DATE = new Date('2030-06-15T14:00:00Z')
@@ -62,7 +62,7 @@ test.describe('Scheduling Proof', () => {
 
   test.beforeAll(async () => {
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required for proof test')
+      throw new Error('SUPABASE_URL and SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY) required for proof test')
     }
 
     console.log('Connecting to Supabase at:', SUPABASE_URL)

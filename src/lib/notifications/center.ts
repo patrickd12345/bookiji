@@ -3,7 +3,7 @@ import { logger } from '@/lib/logger'
 import { sendEmail, sendSMS, sendPushNotification } from './providers'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseServiceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 // Use service role to bypass RLS for preference checks
 const supabase = createClient(supabaseUrl, supabaseServiceKey)

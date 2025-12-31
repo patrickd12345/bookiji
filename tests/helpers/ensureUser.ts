@@ -158,7 +158,7 @@ export async function ensureUserExists(userDef: E2EUserDefinition): Promise<{ cr
       `\n` +
       `This usually means:\n` +
       `  1. Supabase is not running (start with: pnpm db:start)\n` +
-      `  2. SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing/incorrect\n` +
+      `  2. SUPABASE_URL or SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY) is missing/incorrect\n` +
       `  3. Network cannot reach Supabase\n` +
       `\n` +
       `To fix:\n` +

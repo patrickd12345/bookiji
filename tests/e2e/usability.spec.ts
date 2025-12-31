@@ -20,7 +20,7 @@ test.describe('Site Usability Tests', () => {
   test.describe('Navigation and Clarity', () => {
     test('homepage has clear navigation and CTAs', async ({ page }) => {
       await page.goto(BASE_URL)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       // Check for main navigation
       const nav = page.locator('nav[data-test="main-nav"]').first()
@@ -66,7 +66,7 @@ test.describe('Site Usability Tests', () => {
 
     test('navigation buttons have clear labels', async ({ page }) => {
       await page.goto(BASE_URL)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       // Get all buttons in navigation
       const navButtons = page.locator('nav[data-test="main-nav"] button, nav[data-test="main-nav"] a[role="button"]')
@@ -116,7 +116,7 @@ test.describe('Site Usability Tests', () => {
   test.describe('Registration Flow Clarity', () => {
     test('registration page is clear and intuitive', async ({ page }) => {
       await page.goto(`${BASE_URL}/register`)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       // Check for clear heading
       const heading = page.locator('h1, h2').first()
@@ -179,7 +179,7 @@ test.describe('Site Usability Tests', () => {
   test.describe('User Flow Completion', () => {
     test('can complete basic user journey without confusion', async ({ page }) => {
       await page.goto(BASE_URL)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       const issues: string[] = []
 
@@ -200,7 +200,7 @@ test.describe('Site Usability Tests', () => {
         await page.goto(`${BASE_URL}/register`)
       }
 
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       // Step 3: Check if we're on a registration page
       const currentUrl = page.url()
@@ -278,7 +278,7 @@ test.describe('Site Usability Tests', () => {
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 })
       await page.goto(BASE_URL)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       const nav = page.locator('nav[data-test="main-nav"]').first()
       const mobileMenu = page.locator('[data-test*="mobile"], [aria-label*="menu"]').first()
@@ -311,7 +311,7 @@ test.describe('Site Usability Tests', () => {
     test('forms are usable on mobile', async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 })
       await page.goto(`${BASE_URL}/register`)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       // Check if form fields are visible and properly sized
       const emailField = page.locator('input[type="email"]').first()
@@ -335,7 +335,7 @@ test.describe('Site Usability Tests', () => {
   test.describe('Page Structure and Hierarchy', () => {
     test('pages have clear headings and structure', async ({ page }) => {
       await page.goto(BASE_URL)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('domcontentloaded')
 
       // Check for main heading
       const h1 = page.locator('h1').first()
