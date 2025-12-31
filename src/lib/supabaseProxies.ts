@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { getSupabaseAnonKey, getSupabaseServiceKey, getSupabaseUrl } from '@/lib/env/supabaseEnv'
 
 // Cache instances to avoid creating new clients on every property access
 let _adminClient: SupabaseClient | null = null
@@ -8,8 +9,8 @@ let _anonClient: SupabaseClient | null = null
 export const supabaseAdmin = new Proxy({} as any, {
   get: (target, prop) => {
     if (!_adminClient) {
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+      const url = getSupabaseUrl()
+      const key = getSupabaseServiceKey()
       
       if (!url || !key) {
         // Only throw if we are actually trying to use it (runtime)
@@ -38,8 +39,8 @@ export const supabaseAdmin = new Proxy({} as any, {
 export const supabaseAnon = new Proxy({} as any, {
   get: (target, prop) => {
     if (!_anonClient) {
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      const url = getSupabaseUrl()
+      const key = getSupabaseAnonKey()
       
       if (!url || !key) {
         throw new Error('Supabase anon configuration missing')

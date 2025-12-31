@@ -1,15 +1,12 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { getSupabaseUrl, getSupabaseServiceKey } from '@/lib/env/supabaseEnv';
 
 let _supabase: SupabaseClient | null = null;
 
 function getSupabase() {
   if (!_supabase) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    if (!url || !key) {
-      throw new Error('Supabase admin configuration missing (monitoring)');
-    }
+    const url = getSupabaseUrl();
+    const key = getSupabaseServiceKey();
     
     _supabase = createClient(url, key);
   }

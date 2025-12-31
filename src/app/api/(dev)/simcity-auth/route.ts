@@ -20,6 +20,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getAppEnv, isProduction } from '@/lib/env/assertAppEnv'
+import { getSupabaseAnonKey, getSupabaseServiceKey, getSupabaseUrl } from '@/lib/env/supabaseEnv'
 
 /**
  * Check if SimCity auth is enabled
@@ -147,8 +148,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseUrl = getSupabaseUrl()
+    const supabaseServiceKey = getSupabaseServiceKey()
 
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('[SIMCITY-AUTH] Missing Supabase credentials')
@@ -165,7 +166,7 @@ export async function GET(request: NextRequest) {
     const { userId, email, password } = await ensureSimCityUser(supabaseAdmin)
 
     // Create anon client to sign in and get session
-    const supabaseAnon = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '')
+    const supabaseAnon = createClient(supabaseUrl, getSupabaseAnonKey())
 
     // Sign in to get session token
     const { data: signInData, error: signInError } = await supabaseAnon.auth.signInWithPassword({

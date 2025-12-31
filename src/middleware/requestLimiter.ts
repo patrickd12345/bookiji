@@ -29,9 +29,10 @@ export function limitRequest(request: Request, config: LimiterConfig): NextRespo
   } catch {}
   // Supabase-backed limiter (preferred in prod); falls back to memory when unavailable
   try {
-    const { url, secretKey } = getSupabaseConfig() as { url: string; secretKey?: string }
-    if (url && secretKey) {
-      const s = createClient(url, secretKey, { auth: { persistSession: false } })
+    const { url, publishableKey, secretKey } = getSupabaseConfig() as { url: string; publishableKey: string; secretKey?: string }
+    const key = secretKey || publishableKey
+    if (url && key) {
+      const s = createClient(url, key, { auth: { persistSession: false } })
       const ip = getClientIp(request)
       const windowSec = Math.floor(config.windowMs / 1000)
       return (async () => {

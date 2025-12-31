@@ -13,9 +13,11 @@
 
 import { createClient } from '@supabase/supabase-js'
 
+import { getSupabaseUrl, getSupabaseServiceKey } from '@/lib/env/supabaseEnv'
+
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  getSupabaseUrl(),
+  getSupabaseServiceKey()
 )
 
 export interface VendorMetrics {

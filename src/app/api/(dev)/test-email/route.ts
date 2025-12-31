@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     } else {
       return NextResponse.json({ 
         success: false, 
-        error: 'Email sending failed' 
+        error: typeof result.error === 'string' ? result.error : 'Email sending failed'
       }, { status: 500 });
     }
   } catch (error) {

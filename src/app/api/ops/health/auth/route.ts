@@ -103,23 +103,35 @@ export async function GET() {
     // Test 4: Environment variables check
     const envCheck = {
       supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      supabaseAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      supabaseServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+      supabasePublishableKey: !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+      supabaseSecretKey: !!process.env.SUPABASE_SECRET_KEY,
+      legacyAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      legacyServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
     }
 
-    const allEnvPresent = Object.values(envCheck).every(v => v)
+    // Required for normal operation: URL + publishable key. Secret key is only required for admin/server operations.
+    const requiredEnvPresent = envCheck.supabaseUrl && envCheck.supabasePublishableKey
+    const adminEnvPresent = envCheck.supabaseSecretKey
+
+    const allEnvPresent = requiredEnvPresent && adminEnvPresent
     checks.environment = {
       status: allEnvPresent ? 'passed' : 'failed',
       variables: envCheck,
       message: allEnvPresent 
         ? 'All required environment variables present' 
-        : 'Some environment variables missing'
+        : requiredEnvPresent
+          ? 'Supabase client env present; admin env missing (server features may fail)'
+          : 'Some environment variables missing'
     }
 
-    if (!allEnvPresent) {
+    if (!requiredEnvPresent) {
       overallStatus = 'unhealthy'
       recommendations.push('Missing required Supabase environment variables')
-      recommendations.push('Verify NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set')
+      recommendations.push('Verify NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY are set')
+    } else if (!adminEnvPresent) {
+      overallStatus = overallStatus === 'healthy' ? 'degraded' : overallStatus
+      recommendations.push('Supabase admin key missing — server-side admin operations may fail')
+      recommendations.push('Set SUPABASE_SECRET_KEY for admin operations (or legacy SUPABASE_SERVICE_ROLE_KEY)')
     }
 
     if (recommendations.length === 0) {

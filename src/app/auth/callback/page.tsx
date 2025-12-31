@@ -24,6 +24,9 @@ export default function AuthCallbackPage() {
       }
 
       if (session) {
+        const redirectParam = new URLSearchParams(window.location.search).get('redirect')
+        const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : null
+
         // Check if user is admin and redirect accordingly
         try {
           const adminCheck = await fetch('/api/auth/check-admin', {
@@ -44,8 +47,8 @@ export default function AuthCallbackPage() {
           // Continue with normal redirect
         }
         
-        // Successful login - redirect to customer dashboard for non-admins
-        router.push('/customer/dashboard');
+        // Successful login - honor redirect parameter when present
+        router.push(redirectTo || '/customer/dashboard');
       } else {
         // No session found
         router.push('/login');

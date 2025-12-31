@@ -9,12 +9,14 @@ function getBrowserEnv() {
   // DIAGNOSTIC: Log environment configuration at module load
   console.warn('[SUPABASE CLIENT CONFIG]', {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    anon: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 10),
+    publishable: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.slice(0, 16),
+    anonLegacy: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 10),
     appEnv: process.env.NEXT_PUBLIC_APP_ENV,
     e2e: process.env.E2E,
     nextPublicE2e: process.env.NEXT_PUBLIC_E2E,
     hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    hasPublishableKey: !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    hasAnonKeyLegacy: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   })
 
   // Use environment-aware Supabase configuration
@@ -29,11 +31,12 @@ function getBrowserEnv() {
     // Fallback for browser context where APP_ENV might not be set yet
     // This maintains backward compatibility during migration
     let url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').split(/\s+/)[0].trim()
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     const publishableFallback = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    const anonKeyLegacy = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     let key =
-      anonKey ||
-      (publishableFallback && publishableFallback.startsWith('eyJ') ? publishableFallback : undefined)
+      publishableFallback ||
+      anonKeyLegacy ||
+      undefined
     
     // Local dev/E2E fallback: some dev servers may start without NEXT_PUBLIC_* env vars.
     // Only apply when running in a browser on localhost.
@@ -86,7 +89,8 @@ export function getBrowserSupabase(): SupabaseClient | null {
       urlPreview: url ? `${url.substring(0, 30)}...` : 'missing',
       allEnvVars: {
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'present' : 'missing',
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ? 'present' : 'missing',
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'present (legacy)' : 'missing',
         E2E: process.env.E2E,
         NEXT_PUBLIC_E2E: process.env.NEXT_PUBLIC_E2E
       }

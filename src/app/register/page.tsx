@@ -2,7 +2,6 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabaseBrowserClient } from '@/lib/supabaseClient';
 import Link from 'next/link';
 
 function RegisterForm() {
@@ -22,13 +21,6 @@ function RegisterForm() {
     setError('');
     setIsSubmitting(true);
     
-    const supabase = supabaseBrowserClient()
-    if (!supabase) {
-      setError('Unable to connect to authentication service. Please try again.');
-      setIsSubmitting(false);
-      return;
-    }
-    
     // Validate password length
     if (password.length < 8) {
       setError('Password must be at least 8 characters long.');
@@ -45,8 +37,6 @@ function RegisterForm() {
     }
     
     try {
-      const redirectPath = roleType === 'provider' ? '/vendor/dashboard' : '/customer/dashboard';
-      // Use API endpoint for registration to bypass email sending timeout
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,7 +53,8 @@ function RegisterForm() {
         throw new Error(data.error || 'Registration failed');
       }
 
-      router.push('/beta/signup');
+      // Redirect to login page with success message
+      router.push(`/login?registered=true&email=${encodeURIComponent(email)}`);
     } catch (error: unknown) {
       if (error instanceof Error) {
         // Provide more helpful error messages

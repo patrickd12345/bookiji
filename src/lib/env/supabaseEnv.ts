@@ -58,11 +58,27 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
   }
 
   if (isE2E) {
-    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || LOCAL_DEFAULT_URL;
+    const url =
+      process.env.SUPABASE_URL ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      process.env.LOCAL_SUPABASE_URL ||
+      LOCAL_DEFAULT_URL;
     const anonKey =
-      process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || LOCAL_DEFAULT_ANON_KEY;
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.SB_LOCAL_PUBLISHABLE_KEY ||
+      process.env.PUBLISHABLE_KEY ||
+      process.env.LOCAL_SUPABASE_ANON_KEY ||
+      LOCAL_DEFAULT_ANON_KEY;
     const serviceKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || LOCAL_DEFAULT_SERVICE_KEY;
+      process.env.SB_LOCAL_SECRET_KEY ||
+      process.env.SECRET_KEY ||
+      process.env.SUPABASE_SECRET_KEY ||
+      process.env.LOCAL_SUPABASE_SERVICE_KEY ||
+      process.env.SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      LOCAL_DEFAULT_SERVICE_KEY;
 
     if (debug) {
       console.warn('[SUPABASE ENV] E2E mode detected', {
@@ -88,17 +104,36 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
     // Supabase Local - standard demo keys
     return {
       // This repo runs Supabase API (Kong) on 55321 by default (see supabase/config.toml).
-      url: process.env.LOCAL_SUPABASE_URL || LOCAL_DEFAULT_URL,
-      anonKey: process.env.LOCAL_SUPABASE_ANON_KEY || LOCAL_DEFAULT_ANON_KEY,
-      serviceKey: process.env.LOCAL_SUPABASE_SERVICE_KEY ||
+      url: process.env.LOCAL_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || LOCAL_DEFAULT_URL,
+      anonKey:
+        process.env.SB_LOCAL_PUBLISHABLE_KEY ||
+        process.env.PUBLISHABLE_KEY ||
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+        process.env.LOCAL_SUPABASE_ANON_KEY ||
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+        LOCAL_DEFAULT_ANON_KEY,
+      serviceKey:
+        process.env.SB_LOCAL_SECRET_KEY ||
+        process.env.SECRET_KEY ||
+        process.env.SUPABASE_SECRET_KEY ||
+        process.env.LOCAL_SUPABASE_SERVICE_KEY ||
+        process.env.SERVICE_ROLE_KEY ||
+        process.env.SUPABASE_SERVICE_ROLE_KEY ||
         LOCAL_DEFAULT_SERVICE_KEY,
     };
   }
 
   if (env === 'staging') {
     const url = process.env.STAGING_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anonKey = process.env.STAGING_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const serviceKey = process.env.STAGING_SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const anonKey =
+      process.env.STAGING_SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const serviceKey =
+      process.env.STAGING_SUPABASE_SERVICE_KEY ||
+      process.env.STAGING_SUPABASE_SECRET_KEY ||
+      process.env.SUPABASE_SECRET_KEY ||
+      process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!url || !anonKey) {
       throw new Error(
@@ -116,8 +151,15 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
 
   if (env === 'prod') {
     const url = process.env.PROD_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anonKey = process.env.PROD_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const serviceKey = process.env.PROD_SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const anonKey =
+      process.env.PROD_SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const serviceKey =
+      process.env.PROD_SUPABASE_SERVICE_KEY ||
+      process.env.PROD_SUPABASE_SECRET_KEY ||
+      process.env.SUPABASE_SECRET_KEY ||
+      process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!url || !anonKey) {
       throw new Error(
