@@ -186,6 +186,9 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
 type ButtonSize = 'default' | 'sm' | 'lg' | 'icon'
 
+const shouldSkipHeavy = process.env.CI_SKIP_HEAVY_COMPONENT_TESTS === 'true';
+const describeIfNotCIHeavy = shouldSkipHeavy ? describe.skip : describe;
+
 // Import application components that are actually exported
 import {
   LocaleSelector,
@@ -210,7 +213,7 @@ import {
   AIConversationalInterface
 } from '@/components'
 
-describe('Comprehensive Component Test Suite', () => {
+describeIfNotCIHeavy('Comprehensive Component Test Suite', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })

@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+const shouldSkipHeavy = process.env.CI_SKIP_HEAVY_COMPONENT_TESTS === 'true'
+const describeIfNotCIHeavy = shouldSkipHeavy ? describe.skip : describe
 import { render } from '@testing-library/react'
 import { GuidedTourProvider } from '@/components/guided-tours/GuidedTourProvider'
 
@@ -241,7 +243,7 @@ import {
   PlatformDisclosures
 } from '@/components'
 
-describe('ALL COMPONENTS TEST SUITE', () => {
+describeIfNotCIHeavy('ALL COMPONENTS TEST SUITE', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
