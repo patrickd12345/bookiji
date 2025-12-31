@@ -8,6 +8,7 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
+import { fileURLToPath } from 'node:url'
 
 interface CIMetrics {
   timestamp: string
@@ -207,7 +208,8 @@ function exportCIMetrics() {
 /**
  * Main execution
  */
-if (require.main === module) {
+const isMainModule = process.argv[1] === fileURLToPath(import.meta.url)
+if (isMainModule) {
   try {
     exportCIMetrics()
     process.exit(0)
