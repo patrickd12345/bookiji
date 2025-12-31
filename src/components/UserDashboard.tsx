@@ -561,22 +561,28 @@ export default function UserDashboard() {
                 <div className="bg-white rounded-2xl shadow-sm p-6">
                   <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                     <div className="flex-1 relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <label htmlFor="search-bookings" className="sr-only">Search bookings</label>
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" aria-hidden="true" />
                       <input
+                        id="search-bookings"
                         type="text"
                         placeholder="Search bookings..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        aria-label="Search bookings by service or provider name"
                       />
                     </div>
                     
                     <div className="relative">
-                      <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <label htmlFor="filter-status" className="sr-only">Filter bookings by status</label>
+                      <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" aria-hidden="true" />
                       <select
+                        id="filter-status"
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value as 'all' | 'upcoming' | 'completed' | 'cancelled')}
                         className="pl-10 pr-8 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+                        aria-label="Filter bookings by status"
                       >
                         <option value="all">All Status</option>
                         <option value="upcoming">Upcoming</option>
@@ -619,7 +625,7 @@ export default function UserDashboard() {
                               </div>
                               <div className="flex items-center text-sm text-gray-500">
                                 <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
-                                <span>{booking.location}</span>
+                                <span aria-label={`Location: ${booking.location}`}>{booking.location}</span>
                               </div>
                             </div>
                             {booking.notes && (
@@ -632,12 +638,16 @@ export default function UserDashboard() {
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium cursor-help ${getStatusColor(booking.status)}`}>
-                                  {booking.status === 'upcoming' && <Clock className="w-3 h-3 mr-1" />}
-                                  {booking.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
-                                  {booking.status === 'cancelled' && <AlertCircle className="w-3 h-3 mr-1" />}
+                                <button
+                                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium cursor-help ${getStatusColor(booking.status)}`}
+                                  aria-label={`Booking status: ${booking.status}. ${getStatusDescription(booking.status)}`}
+                                  type="button"
+                                >
+                                  {booking.status === 'upcoming' && <Clock className="w-3 h-3 mr-1" aria-hidden="true" />}
+                                  {booking.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" aria-hidden="true" />}
+                                  {booking.status === 'cancelled' && <AlertCircle className="w-3 h-3 mr-1" aria-hidden="true" />}
                                   {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                                </div>
+                                </button>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p className="max-w-xs">{getStatusDescription(booking.status)}</p>
