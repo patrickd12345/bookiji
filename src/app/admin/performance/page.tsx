@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertTriangle, Database, Clock, DollarSign, Activity, Download, Trash2, Settings } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface PerformanceAlert {
   alert_type: string;
@@ -65,10 +66,10 @@ export default function PerformanceDashboard() {
         setAlerts(data.data.alerts || []);
         setInMemorySummary(data.data.inMemorySummary || null);
       } else {
-        console.error('Failed to fetch performance data:', data.error);
+        logger.error('Failed to fetch performance data:', { error: data.error });
       }
     } catch (error) {
-      console.error('Error fetching performance data:', error);
+      logger.error('Error fetching performance data:', { error });
     } finally {
       setLoading(false);
     }
@@ -103,7 +104,7 @@ export default function PerformanceDashboard() {
         alert(data.error || 'Action failed');
       }
     } catch (error) {
-      console.error('Error performing action:', error);
+      logger.error('Error performing action:', { error });
       alert('Error performing action');
     }
   };

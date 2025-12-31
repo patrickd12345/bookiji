@@ -14,6 +14,7 @@ import {
   Activity,
   Loader2
 } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 interface CronJob {
   id: string
@@ -114,7 +115,7 @@ export default function CronManagementPage() {
         setJobs(cronJobs)
       }
     } catch (error) {
-      console.error('Failed to load cron status:', error)
+      logger.error('Failed to load cron status:', { error })
       setJobs(cronJobs)
     } finally {
       setLoading(false)
@@ -129,7 +130,7 @@ export default function CronManagementPage() {
         setHistory(data.history || [])
       }
     } catch (error) {
-      console.error('Failed to load execution history:', error)
+      logger.error('Failed to load execution history:', { error })
     }
   }
 

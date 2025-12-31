@@ -6,6 +6,7 @@ import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { logger } from '@/lib/logger'
 
 interface Article {
   id?: string
@@ -36,7 +37,7 @@ export default function AdminFAQPage() {
       .select('id,title,is_published,slug')
       .order('updated_at', { ascending: false })
     if (error) {
-      console.error(error)
+      logger.error('Error fetching articles:', { error })
     } else {
       setArticles(data as Article[])
     }
@@ -83,7 +84,7 @@ export default function AdminFAQPage() {
           slug: form.slug
         })
         .eq('id', editing.id)
-      if (error) console.error(error)
+      if (error) logger.error('Error updating article:', { error })
     } else {
       // insert
       const { error } = await supabase.from('knowledge_base').insert([
@@ -94,7 +95,7 @@ export default function AdminFAQPage() {
           slug: form.slug
         }
       ])
-      if (error) console.error(error)
+      if (error) logger.error('Error creating article:', { error })
     }
     await fetchArticles()
     startEdit()
@@ -106,7 +107,7 @@ export default function AdminFAQPage() {
     if (!supabase) return
     
     const { error } = await supabase.from('knowledge_base').delete().eq('id', id)
-    if (error) console.error(error)
+    if (error) logger.error('Error deleting article:', { error })
     fetchArticles()
   }
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { AlertTriangle, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 interface SchedulingFlag {
   key: string
@@ -33,7 +34,7 @@ export default function SchedulingOperationsPage() {
       const data = await response.json()
       setFlag(data.flag)
     } catch (error) {
-      console.error('Error fetching flag:', error)
+      logger.error('Error fetching flag:', { error })
     } finally {
       setLoading(false)
     }
@@ -73,7 +74,7 @@ export default function SchedulingOperationsPage() {
       setReason('')
       setConfirmChecked(false)
     } catch (error) {
-      console.error('Error toggling scheduling:', error)
+      logger.error('Error toggling scheduling:', { error })
       alert(error instanceof Error ? error.message : 'Failed to toggle scheduling')
     } finally {
       setToggling(false)

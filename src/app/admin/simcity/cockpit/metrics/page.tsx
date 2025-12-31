@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { METRICS_REGISTRY } from '@/app/api/ops/controlplane/_lib/simcity-metrics'
 import { DEFAULT_DIALS } from '@/app/api/ops/controlplane/_lib/simcity-dials'
 import type { DialStatus, MetricId } from '@/app/api/ops/controlplane/_lib/simcity-types'
+import { logger } from '@/lib/logger'
 
 async function getMetricsData() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
@@ -22,7 +23,7 @@ async function getMetricsData() {
       dialStatuses: (data.dialStatuses || []) as DialStatus[],
     }
   } catch (error) {
-    console.error('Failed to fetch metrics data:', error)
+    logger.error('Failed to fetch metrics data:', { error })
     return {
       tick: 0,
       metrics: {} as Record<MetricId, number>,

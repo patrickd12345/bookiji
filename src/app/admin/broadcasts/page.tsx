@@ -7,6 +7,7 @@ import DataTable from '@/components/admin/DataTable'
 import { broadcasts } from '@/lib/mockData'
 import { exportToCSV, exportToJSON } from '@/lib/admin/exportUtils'
 import { X } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 interface VendorResponse {
   vendorName: string
@@ -56,7 +57,7 @@ export default function BroadcastsPage() {
         alert(result.error || 'Failed to create broadcast')
       }
     } catch (error) {
-      console.error('Create broadcast error:', error)
+      logger.error('Create broadcast error:', { error })
       alert('Error creating broadcast')
     }
   }
@@ -77,7 +78,7 @@ export default function BroadcastsPage() {
         alert(result.error || 'Failed to send notifications')
       }
     } catch (error) {
-      console.error('Notification error:', error)
+      logger.error('Notification error:', { error })
       alert('Error sending notifications')
     }
   }

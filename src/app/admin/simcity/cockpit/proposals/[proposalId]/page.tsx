@@ -7,6 +7,7 @@ import { AlertTriangle, Info, XCircle, User } from 'lucide-react'
 import type { PromotionDecision, DialStatus, GovernanceReason, OverrideRecord } from '@/app/api/ops/controlplane/_lib/simcity-types'
 import { METRICS_REGISTRY } from '@/app/api/ops/controlplane/_lib/simcity-metrics'
 import { DEFAULT_DIALS } from '@/app/api/ops/controlplane/_lib/simcity-dials'
+import { logger } from '@/lib/logger'
 
 async function getProposalDetail(proposalId: string) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
@@ -56,7 +57,7 @@ async function getProposalDetail(proposalId: string) {
       overrides,
     }
   } catch (error) {
-    console.error('Failed to fetch proposal detail:', error)
+    logger.error('Failed to fetch proposal detail:', { error })
     return {
       decision: null,
       error: error instanceof Error ? error.message : 'Unknown error',

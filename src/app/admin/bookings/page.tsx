@@ -7,6 +7,7 @@ import DataTable from '@/components/admin/DataTable'
 import { bookings } from '@/lib/mockData'
 import { exportToCSV, exportToJSON } from '@/lib/admin/exportUtils'
 import { X } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 export default function BookingsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -39,7 +40,7 @@ export default function BookingsPage() {
         alert(result.error || 'Failed to create booking')
       }
     } catch (error) {
-      console.error('Create booking error:', error)
+      logger.error('Create booking error:', { error })
       alert('Error creating booking')
     }
   }
@@ -59,7 +60,7 @@ export default function BookingsPage() {
         alert(result.error || 'Failed to send reminders')
       }
     } catch (error) {
-      console.error('Reminder error:', error)
+      logger.error('Reminder error:', { error })
       alert('Error sending reminders')
     }
   }

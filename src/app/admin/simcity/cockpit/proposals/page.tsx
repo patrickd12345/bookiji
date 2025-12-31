@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { VerdictBadge } from '@/components/simcity-cockpit/VerdictBadge'
 import { HashCopy } from '@/components/simcity-cockpit/HashCopy'
 import type { PromotionDecision, SimCityProposal } from '@/app/api/ops/controlplane/_lib/simcity-types'
+import { logger } from '@/lib/logger'
 
 async function getProposalsData() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
@@ -39,7 +40,7 @@ async function getProposalsData() {
       proposals: proposalsWithDecisions,
     }
   } catch (error) {
-    console.error('Failed to fetch proposals data:', error)
+    logger.error('Failed to fetch proposals data:', { error })
     return {
       proposals: [],
       error: error instanceof Error ? error.message : 'Unknown error',

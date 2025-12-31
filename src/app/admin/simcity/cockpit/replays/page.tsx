@@ -10,6 +10,7 @@ import type {
   ShadowComparisonReport,
   SimCityReplayVariant,
 } from '@/app/api/ops/controlplane/_lib/simcity-types'
+import { logger } from '@/lib/logger'
 
 async function getReplaysData() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
@@ -28,7 +29,7 @@ async function getReplaysData() {
       replays: data.replays || [],
     }
   } catch (error) {
-    console.error('Failed to fetch replays data:', error)
+    logger.error('Failed to fetch replays data:', { error })
     return {
       replays: [],
       error: error instanceof Error ? error.message : 'Unknown error',

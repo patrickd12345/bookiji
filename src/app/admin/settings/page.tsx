@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import SettingsForm from '@/components/admin/SettingsForm'
+import { logger } from '@/lib/logger'
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
@@ -24,7 +25,7 @@ export default function SettingsPage() {
           setSettings(data.settings)
         }
       })
-      .catch(err => console.error('Failed to load settings:', err))
+      .catch(err => logger.error('Failed to load settings:', { error: err }))
   }, [])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,7 +46,7 @@ export default function SettingsPage() {
         alert(data.error || 'Failed to update setting')
       }
     } catch (error) {
-      console.error('Update setting error:', error)
+      logger.error('Update setting error:', { error })
       alert('Error updating setting')
     } finally {
       setLoading({ ...loading, [key]: false })
@@ -81,7 +82,7 @@ export default function SettingsPage() {
         alert(data.error || `Failed to ${action}`)
       }
     } catch (error) {
-      console.error(`${action} error:`, error)
+      logger.error(`${action} error:`, { error })
       alert(`Error performing ${action}`)
     }
   }
