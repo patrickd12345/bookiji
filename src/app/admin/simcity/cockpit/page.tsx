@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { VerdictBadge } from '@/components/simcity-cockpit/VerdictBadge'
 import { HashCopy } from '@/components/simcity-cockpit/HashCopy'
 import type { PromotionDecision } from '@/app/api/ops/controlplane/_lib/simcity-types'
+import { logger } from '@/lib/logger'
 
 async function getOverviewData() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
@@ -21,7 +22,7 @@ async function getOverviewData() {
       decisions: (data.decisions || []) as PromotionDecision[],
     }
   } catch (error) {
-    console.error('Failed to fetch governance data:', error)
+    logger.error('Failed to fetch governance data:', { error })
     return {
       tick: 0,
       decisions: [] as PromotionDecision[],

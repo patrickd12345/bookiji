@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
       setIsAuthenticated(true)
     } catch (error) {
-      console.error('Admin check error:', error)
+      logger.error('Admin check error:', { error })
       setIsAuthenticated(false)
     } finally {
       setIsLoading(false)

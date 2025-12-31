@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { registerTour, useAutoTour } from '@/components/guided-tours/useGuidedTour'
+import { logger } from '@/lib/logger'
 import { 
   AlertTriangle,
   CheckCircle,
@@ -102,7 +103,7 @@ export default function AdminDisputesPage() {
         setDisputes(data.disputes || [])
       }
     } catch (error) {
-      console.error('Failed to load disputes:', error)
+      logger.error('Failed to load disputes:', { error })
     } finally {
       setLoading(false)
     }
@@ -116,7 +117,7 @@ export default function AdminDisputesPage() {
         setStats(data.stats)
       }
     } catch (error) {
-      console.error('Failed to load stats:', error)
+      logger.error('Failed to load stats:', { error })
     }
   }
 
@@ -143,7 +144,7 @@ export default function AdminDisputesPage() {
         loadStats()
       }
     } catch (error) {
-      console.error('Failed to resolve dispute:', error)
+      logger.error('Failed to resolve dispute:', { error })
     }
   }
 

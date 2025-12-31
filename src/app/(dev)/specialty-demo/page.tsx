@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { logger } from '@/lib/logger'
 
 export default function SpecialtyDemo() {
   const [selectedSpecialty, setSelectedSpecialty] = useState<{ id: string; name: string } | null>(null)
@@ -19,7 +20,7 @@ export default function SpecialtyDemo() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.warn('Vendor registration:', {
+    logger.info('Vendor registration:', {
       name: vendorName,
       email,
       specialty: selectedSpecialty

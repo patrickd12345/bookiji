@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { registerTour } from '@/lib/guidedTourRegistry'
 import { useAutoTour } from '@/lib/useAutoTour'
+import { logger } from '@/lib/logger'
 
 interface Proposal {
   id: string
@@ -26,7 +27,7 @@ export default function ServiceTypeProposalsPage() {
       const data = await res.json()
       if (data.ok) setProposals(data.data)
     } catch (e) {
-      console.error(e)
+      logger.error('Error loading proposals:', { error: e })
     } finally {
       setLoading(false)
     }
@@ -41,7 +42,7 @@ export default function ServiceTypeProposalsPage() {
       })
       loadProposals()
     } catch (e) {
-      console.error(e)
+      logger.error('Error updating proposal status:', { error: e })
     }
   }
 

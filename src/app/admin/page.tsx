@@ -5,6 +5,8 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import DashboardCards from '@/components/admin/DashboardCards'
 import { Loader2, RefreshCw } from 'lucide-react'
+import { logger } from '@/lib/logger'
+import { logger } from '@/lib/logger'
 
 // Hardcode stats for now to avoid import issues
 const dashboardStats = {
@@ -46,7 +48,7 @@ export default function AdminDashboard() {
         alert(data.error || 'Failed to refresh sitemap')
       }
     } catch (error) {
-      console.error('Error refreshing sitemap:', error)
+      logger.error('Error refreshing sitemap:', { error })
       alert('Error refreshing sitemap. Please try again.')
     } finally {
       setRefreshingSitemap(false)
