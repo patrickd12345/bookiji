@@ -314,24 +314,34 @@ export default function VendorRegistration({ onSuccess }: VendorRegistrationProp
                   
                   {hours.open && (
                     <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="time"
-                        value={hours.start_time}
-                        onChange={(e) => set('hours', {
-                          ...data.hours,
-                          [day]: { ...hours, start_time: e.target.value }
-                        })}
-                        className="border p-2 rounded text-sm"
-                      />
-                      <input
-                        type="time"
-                        value={hours.end_time}
-                        onChange={(e) => set('hours', {
-                          ...data.hours,
-                          [day]: { ...hours, end_time: e.target.value }
-                        })}
-                        className="border p-2 rounded text-sm"
-                      />
+                      <div>
+                        <label htmlFor={`start-${day}`} className="sr-only">Start time for {day}</label>
+                        <input
+                          id={`start-${day}`}
+                          type="time"
+                          value={hours.start_time}
+                          onChange={(e) => set('hours', {
+                            ...data.hours,
+                            [day]: { ...hours, start_time: e.target.value }
+                          })}
+                          className="border p-2 rounded text-sm"
+                          aria-label={`Start time for ${day}`}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={`end-${day}`} className="sr-only">End time for {day}</label>
+                        <input
+                          id={`end-${day}`}
+                          type="time"
+                          value={hours.end_time}
+                          onChange={(e) => set('hours', {
+                            ...data.hours,
+                            [day]: { ...hours, end_time: e.target.value }
+                          })}
+                          className="border p-2 rounded text-sm"
+                          aria-label={`End time for ${day}`}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>

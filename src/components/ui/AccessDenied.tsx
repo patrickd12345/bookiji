@@ -36,6 +36,7 @@ export function AccessDenied({
               <Button 
                 onClick={() => router.push('/')}
                 className="w-full bg-primary hover:bg-primary/90"
+                aria-label="Return to homepage"
               >
                 Return to Homepage
               </Button>
@@ -45,6 +46,7 @@ export function AccessDenied({
                 variant="outline"
                 onClick={() => router.push('/login')}
                 className="w-full"
+                aria-label="Sign in to access this area"
               >
                 Sign In
               </Button>

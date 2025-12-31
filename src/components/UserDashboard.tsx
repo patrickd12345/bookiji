@@ -401,8 +401,10 @@ export default function UserDashboard() {
                 onClick={loadNotifications}
                 className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors"
                 disabled={notifications.loading}
+                aria-label="Refresh notifications"
+                aria-live="polite"
               >
-                <Bell aria-hidden className="h-6 w-6" />
+                <Bell aria-hidden="true" className="h-6 w-6" />
                 <span className="sr-only">Refresh notifications</span>
                 {notifications.data && notifications.data.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -453,7 +455,7 @@ export default function UserDashboard() {
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow-sm border mb-8">
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex flex-nowrap gap-6 px-6 overflow-x-auto overscroll-x-contain">
+            <nav className="-mb-px flex flex-nowrap gap-6 px-6 overflow-x-auto overscroll-x-contain" role="tablist" aria-label="Dashboard navigation tabs">
               {[
                 { id: 'overview' as const, label: 'Overview', icon: <MapPin aria-hidden className="h-4 w-4" /> },
                 { id: 'bookings' as const, label: 'Bookings', icon: <Calendar aria-hidden className="h-4 w-4" /> },
@@ -470,6 +472,9 @@ export default function UserDashboard() {
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   )}
+                  aria-label={`Switch to ${tab.label} tab`}
+                  aria-selected={activeTab === tab.id}
+                  role="tab"
                 >
                   <span>{tab.icon}</span>
                   {tab.label}
@@ -599,22 +604,22 @@ export default function UserDashboard() {
                     >
                       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+                          <div className="w-12 h-12 bg-gray-200 rounded-xl" aria-hidden="true" role="presentation"></div>
                           <div className="flex-1">
                             <h3 className="font-semibold text-gray-900">{booking.service_name}</h3>
                             <p className="text-gray-600">{booking.provider_name}</p>
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
                               <div className="flex items-center text-sm text-gray-500">
-                                <Calendar className="w-4 h-4 mr-1" />
-                                {formatDate(booking.date)}
+                                <Calendar className="w-4 h-4 mr-1" aria-hidden="true" />
+                                <span>{formatDate(booking.date)}</span>
                               </div>
                               <div className="flex items-center text-sm text-gray-500">
-                                <Clock className="w-4 h-4 mr-1" />
-                                {booking.time}
+                                <Clock className="w-4 h-4 mr-1" aria-hidden="true" />
+                                <span>{booking.time}</span>
                               </div>
                               <div className="flex items-center text-sm text-gray-500">
-                                <MapPin className="w-4 h-4 mr-1" />
-                                {booking.location}
+                                <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
+                                <span>{booking.location}</span>
                               </div>
                             </div>
                             {booking.notes && (
