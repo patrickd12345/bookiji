@@ -51,6 +51,7 @@ export default function BookVendorPage() {
   type Slot = { date: string; time: string; value?: string; _fallback?: boolean }
   const [availabilitySlots, setAvailabilitySlots] = useState<Slot[]>([])
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
   const fetchVendorAndServices = useCallback(async () => {
     if (!vendorId) return;
@@ -220,6 +221,11 @@ export default function BookVendorPage() {
   }, [isE2E])
 
   const handleBooking = async () => {
+    // Prevent duplicate submissions
+    if (submitting) {
+      return
+    }
+
     const resolvedService = selectedService ?? services[0] ?? null
     const domDate = dateInputRef.current?.value || ''
     const domTime = timeSelectRef.current?.value || ''
@@ -231,6 +237,8 @@ export default function BookVendorPage() {
       alert('Please select service, date and time')
       return
     }
+
+    setSubmitting(true)
 
     const startTimeIso = resolvedTime.includes('T')
       ? resolvedTime
@@ -321,6 +329,8 @@ export default function BookVendorPage() {
         return
       }
       alert('Booking failed')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -474,11 +484,11 @@ export default function BookVendorPage() {
           {/* Book Button */}
           <button
             type="submit"
-            disabled={!isE2E && (!selectedService || !selectedDate || !selectedTime)}
+            disabled={submitting || (!isE2E && (!selectedService || !selectedDate || !selectedTime))}
             data-test="booking-submit"
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-shadow"
           >
-            Book Appointment
+            {submitting ? 'Booking...' : 'Book Appointment'}
           </button>
         </form>
       </div>

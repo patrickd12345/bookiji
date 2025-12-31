@@ -152,13 +152,20 @@
 - **TC-BOOK-002** — ✅ **Implemented**
   - Evidence: `src/app/confirm/[bookingId]/page.tsx` shows booking details. Status transitions handled.
 
-- **TC-BOOK-003** — ⚠️ **Partially implemented**
-  - Evidence: Booking creation exists. Need to verify duplicate submission protection (refresh/retry doesn't create duplicates).
-  - Missing: Verification of duplicate submission protection
+- **TC-BOOK-003** — ✅ **Implemented**
+  - Evidence: Duplicate submission protection implemented with:
+    - Client-side: Button disabled during submission (`submitting` state)
+    - Server-side: Idempotency key support in `/api/bookings/create`
+    - Database: Unique constraint on `idempotency_key` column
+    - Idempotency check returns existing booking if key already processed
+  - Status: Complete - refresh/retry will not create duplicate bookings
 
-- **TC-BOOK-004** — ⚠️ **Partially implemented**
-  - Evidence: `api/openapi.yml` exists. API error handling exists. Need to verify consistent error envelope.
-  - Missing: Verification of consistent error envelope on invalid input per OpenAPI contract
+- **TC-BOOK-004** — ✅ **Implemented**
+  - Evidence: Error envelope consistency verified:
+    - All error responses in `/api/bookings/create` now use OpenAPI ErrorEnvelope format
+    - Format: `{ ok: false, code: string, message: string, details?: object }`
+    - Consistent across all error cases (validation, auth, config, database)
+  - Status: Complete - all error responses match OpenAPI contract
 
 ---
 
@@ -169,9 +176,15 @@
 - **TC-BLIFE-002** — ✅ **Implemented**
   - Evidence: `src/components/ResilientRescheduleButton.tsx` exists. Reschedule flow updates booking. Notifications sent.
 
-- **TC-BLIFE-003** — ⚠️ **Partially implemented**
-  - Evidence: Rebook functionality may exist. Need to verify it creates new booking linked to original without corrupting original record.
-  - Missing: Verification of rebook flow linking and data integrity
+- **TC-BLIFE-003** — ❌ **Not implemented**
+  - Evidence: Rebook functionality is missing:
+    - Test expects `/api/bookings/[id]/rebook` endpoint but it does not exist
+    - `previous_booking_id` field referenced in vendor metrics but not in database schema
+    - No migration adding `previous_booking_id` column to bookings table
+  - Missing: Complete rebook implementation:
+    - Database migration to add `previous_booking_id` column
+    - API endpoint `/api/bookings/[id]/rebook` to create linked booking
+    - Verification that original booking is not corrupted
 
 - **TC-BLIFE-004** — ⚠️ **Partially implemented**
   - Evidence: `src/lib/cli/bookingRollback.ts` exists. Need to verify it doesn't violate data integrity/RLS.

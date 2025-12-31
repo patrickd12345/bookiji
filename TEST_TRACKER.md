@@ -314,10 +314,10 @@
   - Comments:
 - [ ] **TC-BOOK-002** — Confirm page shows correct booking details and status transitions correctly
   - Comments:
-- [ ] **TC-BOOK-003** — Duplicate submission protection: refresh/retry does not create duplicate bookings
-  - Comments:
-- [ ] **TC-BOOK-004** — OpenAPI/contract behavior: API returns consistent error envelope on invalid input
-  - Comments:
+- [x] **TC-BOOK-003** — Duplicate submission protection: refresh/retry does not create duplicate bookings
+  - Comments: ✅ Implemented - Client-side button disable + server-side idempotency key support
+- [x] **TC-BOOK-004** — OpenAPI/contract behavior: API returns consistent error envelope on invalid input
+  - Comments: ✅ Implemented - All error responses use ErrorEnvelope format per OpenAPI spec
 
 ### Invalidation Log (append-only)
 - YYYY-MM-DD — invalidated (code changed in scope): <short note>
@@ -344,7 +344,7 @@
 - [ ] **TC-BLIFE-002** — Reschedule flow updates booking once and notifies both parties
   - Comments:
 - [ ] **TC-BLIFE-003** — Rebook flow creates a new booking linked to original (if supported) without corrupting original record
-  - Comments:
+  - Comments: ❌ Not implemented - Endpoint `/api/bookings/[id]/rebook` missing, `previous_booking_id` column not in schema
 - [ ] **TC-BLIFE-004** — Rollback tooling (if present) does not violate data integrity / RLS
   - Comments:
 
