@@ -6,7 +6,6 @@ import Link from 'next/link'
 import DashboardCards from '@/components/admin/DashboardCards'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { logger } from '@/lib/logger'
-import { logger } from '@/lib/logger'
 
 // Hardcode stats for now to avoid import issues
 const dashboardStats = {
