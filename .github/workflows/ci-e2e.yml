@@ -319,9 +319,9 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          # Deploy to bookiji branch - creates Preview deployment (QA environment)
-          # User manually promotes Preview → Production in Vercel Dashboard
-          vercel deploy --yes
+          # Deploy to production (QA environment if qa branch is set as production branch)
+          # This will deploy to the configured production branch in Vercel
+          vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
 
   canary-rollback:
     name: Rollback on Failure
