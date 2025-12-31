@@ -8,9 +8,8 @@ Copy these from your `.env.local` to **Vercel Dashboard → Settings → Environ
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://uradoazoyhhozbemrccj.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyNTg1OTYsImV4cCI6MjA4MTgzNDU5Nn0.ofJNCe4yD3Z_ZgAuuPdHE6mKDJBqf5wbd5MU-MMILnQ
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_E5HX8sFsapD2Qn2fsdd1Kw_ikzHofuz
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjI1ODU5NiwiZXhwIjoyMDgxODM0NTk2fQ.ZqDpwTzkGbirFxrCXWP5FNE0ehNWkasa7AM6BnwVXkw
+SUPABASE_SECRET_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjI1ODU5NiwiZXhwIjoyMDgxODM0NTk2fQ.ZqDpwTzkGbirFxrCXWP5FNE0ehNWkasa7AM6BnwVXkw
 ```
 
 ### Additional Important Variables:
@@ -73,9 +72,8 @@ MAILERSEND_FROM_NAME=Bookiji
 
 4. **Verify Critical Variables Are Set**
    - ✅ `NEXT_PUBLIC_SUPABASE_URL`
-   - ✅ `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - ✅ `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - ✅ `SUPABASE_SERVICE_ROLE_KEY`
+   - ✅ `SUPABASE_SECRET_KEY`
 
 5. **Redeploy**
    - Go to Deployments tab
@@ -99,13 +97,10 @@ If you have Vercel CLI installed, you can also set them via command line:
 vercel env add NEXT_PUBLIC_SUPABASE_URL production
 # Paste: https://uradoazoyhhozbemrccj.supabase.co
 
-vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
-# Paste: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyNTg1OTYsImV4cCI6MjA4MTgzNDU5Nn0.ofJNCe4yD3Z_ZgAuuPdHE6mKDJBqf5wbd5MU-MMILnQ
-
 vercel env add NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY production
 # Paste: sb_publishable_E5HX8sFsapD2Qn2fsdd1Kw_ikzHofuz
 
-vercel env add SUPABASE_SERVICE_ROLE_KEY production
+vercel env add SUPABASE_SECRET_KEY production
 # Paste: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjI1ODU5NiwiZXhwIjoyMDgxODM0NTk2fQ.ZqDpwTzkGbirFxrCXWP5FNE0ehNWkasa7AM6BnwVXkw
 ```
 

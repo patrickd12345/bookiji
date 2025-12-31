@@ -18,7 +18,7 @@ test.describe('External deterministic chaos harness', () => {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
     if (!supabaseUrl) throw new Error('Missing SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)')
 
-    const supabaseServiceRoleKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY')
+    const supabaseServiceRoleKey = requireEnv('SUPABASE_SECRET_KEY')
 
     const seed = process.env.CHAOS_SEED ?? '812736'
     const duration = process.env.CHAOS_DURATION ?? '30'
@@ -40,7 +40,7 @@ test.describe('External deterministic chaos harness', () => {
         '-e',
         `SUPABASE_URL=${normalizeDockerHostUrl(supabaseUrl)}`,
         '-e',
-        `SUPABASE_SERVICE_ROLE_KEY=${supabaseServiceRoleKey}`,
+        `SUPABASE_SECRET_KEY=${supabaseServiceRoleKey}`,
         imageName,
         '--seed',
         seed,

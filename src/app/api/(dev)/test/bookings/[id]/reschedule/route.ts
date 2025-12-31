@@ -18,7 +18,7 @@ export async function POST(request: Request, context: { params: Promise<Record<s
     }
 
     const cfg = getSupabaseConfig()
-    if (!cfg.secretKey) return NextResponse.json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 })
+    if (!cfg.secretKey) return NextResponse.json({ error: 'Missing SUPABASE_SECRET_KEY' }, { status: 500 })
 
     const admin = createClient(cfg.url, cfg.secretKey, { auth: { persistSession: false, autoRefreshToken: false } })
     const { data, error } = await admin.rpc('reschedule_booking_atomically', {

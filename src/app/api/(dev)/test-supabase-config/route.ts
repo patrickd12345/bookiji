@@ -29,7 +29,7 @@ export async function GET() {
         {
           success: false,
           error: message,
-          requiredEnv: ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'],
+          requiredEnv: ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY'],
         },
         { status: 500 }
       )

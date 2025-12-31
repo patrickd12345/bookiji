@@ -13,7 +13,7 @@ export async function POST(request: Request, context: { params: Promise<Record<s
     const status = body?.status ?? 'confirmed'
 
     const cfg = getSupabaseConfig()
-    if (!cfg.secretKey) return NextResponse.json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 })
+    if (!cfg.secretKey) return NextResponse.json({ error: 'Missing SUPABASE_SECRET_KEY' }, { status: 500 })
 
     const admin = createClient(cfg.url, cfg.secretKey, { auth: { persistSession: false, autoRefreshToken: false } })
     const { error } = await admin.from('bookings').update({ status, updated_at: new Date().toISOString() }).eq('id', bookingId)

@@ -115,7 +115,7 @@ async function main() {
     'SUPABASE_URL': supabaseUrl,
     'NEXT_PUBLIC_SUPABASE_URL': supabaseUrl,
     'SUPABASE_ANON_KEY': anonKey,
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY': anonKey,
+    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY': anonKey,
     'SUPABASE_SECRET_KEY': serviceRoleKey,
     'SUPABASE_SERVICE_ROLE_KEY': serviceRoleKey,
     'E2E_BASE_URL': baseUrl,

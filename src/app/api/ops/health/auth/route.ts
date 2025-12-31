@@ -105,8 +105,6 @@ export async function GET() {
       supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
       supabasePublishableKey: !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
       supabaseSecretKey: !!process.env.SUPABASE_SECRET_KEY,
-      legacyAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      legacyServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
     }
 
     // Required for normal operation: URL + publishable key. Secret key is only required for admin/server operations.
@@ -131,7 +129,7 @@ export async function GET() {
     } else if (!adminEnvPresent) {
       overallStatus = overallStatus === 'healthy' ? 'degraded' : overallStatus
       recommendations.push('Supabase admin key missing — server-side admin operations may fail')
-      recommendations.push('Set SUPABASE_SECRET_KEY for admin operations (or legacy SUPABASE_SERVICE_ROLE_KEY)')
+      recommendations.push('Set SUPABASE_SECRET_KEY for admin operations')
     }
 
     if (recommendations.length === 0) {

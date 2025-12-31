@@ -5,7 +5,7 @@ import { getSupabaseMock } from '../utils/supabase-mocks'
 // Set up test environment variables
 beforeAll(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-publishable-key'
   process.env.STRIPE_SECRET_KEY = 'sk_test_123'
   process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test'
   process.env.OLLAMA_HOST = 'http://localhost:11434'

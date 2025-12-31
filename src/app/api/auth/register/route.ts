@@ -8,7 +8,18 @@ export async function POST(request: Request) {
     const limited = await limitRequest(request, { windowMs: 60_000, max: 5 })
     if (limited) return limited
 
-    const { email, password, full_name, role = 'customer' } = await request.json()
+    let body
+    try {
+      body = await request.json()
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError)
+      return NextResponse.json(
+        { error: 'Invalid request body. Expected JSON.' },
+        { status: 400 }
+      )
+    }
+
+    const { email, password, full_name, role = 'customer' } = body
 
     // Validate input
     if (!email || !password) {
@@ -18,23 +29,84 @@ export async function POST(request: Request) {
       )
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      )
+    }
+
+    // Validate password length
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters long' },
+        { status: 400 }
+      )
+    }
+
+    // Get Supabase configuration
+    let supabaseUrl: string
+    let serviceKey: string
+    try {
+      supabaseUrl = getSupabaseUrl()
+      serviceKey = getSupabaseServiceKey()
+      
+      // Validate that we have the required configuration
+      if (!supabaseUrl || !serviceKey) {
+        console.error('Missing Supabase configuration', { hasUrl: !!supabaseUrl, hasKey: !!serviceKey })
+        return NextResponse.json(
+          { error: 'Server configuration error. Please contact support.' },
+          { status: 500 }
+        )
+      }
+    } catch (configError) {
+      console.error('Supabase configuration error:', configError)
+      return NextResponse.json(
+        { error: 'Server configuration error. Please contact support.' },
+        { status: 500 }
+      )
+    }
+
     // Use Admin API to create user directly with email confirmed (skip email verification)
-    const supabaseAdmin = createClient(getSupabaseUrl(), getSupabaseServiceKey(), {
+    // Trim the service key in case there's whitespace
+    const trimmedServiceKey = serviceKey.trim()
+    
+    const supabaseAdmin = createClient(supabaseUrl, trimmedServiceKey, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     })
 
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
-      email,
+      email: email.trim().toLowerCase(),
       password,
       email_confirm: true, // Skip email confirmation
-      user_metadata: { full_name, role },
+      user_metadata: { full_name: full_name || '', role },
     })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      console.error('Supabase user creation error:', {
+        message: error.message,
+        status: error.status,
+        url: supabaseUrl,
+        keyPreview: trimmedServiceKey.substring(0, 20) + '...',
+        keyFormat: trimmedServiceKey.startsWith('eyJ') ? 'JWT' : trimmedServiceKey.startsWith('sb_') ? 'sb_format' : 'unknown',
+      })
+      // Provide more helpful error messages
+      let errorMessage = error.message
+      if (error.message.includes('already registered') || error.message.includes('already exists') || error.message.includes('User already registered')) {
+        errorMessage = 'This email is already registered. Please sign in instead.'
+      } else if (error.message.includes('Invalid API key') || error.message.includes('JWT')) {
+        errorMessage = 'Server configuration error. Please contact support.'
+        console.error('Service key validation failed - check SUPABASE_SECRET_KEY in environment')
+      } else if (error.message.includes('invalid') || error.message.includes('Invalid')) {
+        errorMessage = 'Invalid email or password format.'
+      }
+      return NextResponse.json({ error: errorMessage }, { status: 400 })
     }
 
     if (!data.user) {
+      console.error('User creation returned no user data')
       return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
     }
 

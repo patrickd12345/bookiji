@@ -11,6 +11,10 @@
 - **Truth comes from code and tests**: Do not invent architectural rules outside what runtime code enforces or tests fail when broken.
 - **No unauthorized SQL**: Follow `docs/development/DATABASE_MANAGEMENT_POLICY.md`: create Supabase migrations, push them with the CLI, and never issue raw SQL against production schema.
 - **Document updates**: When adding a new `.md` file, update `index.md` and ensure the file is referenced by `scripts/check-cursorrules-sync.mjs` by mentioning it there as appropriate.
+- **Supabase Key Model**: This project uses the NEW Supabase key model, NOT legacy keys. Always use:
+  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (not `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
+  - `SUPABASE_SECRET_KEY` (not `SUPABASE_SERVICE_ROLE_KEY`)
+  - Legacy keys (`SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) are only used as fallbacks for backward compatibility. See `docs/deployment/SUPABASE_MIGRATION_GUIDE.md` for details.
 
 ## Testing Requirements
 

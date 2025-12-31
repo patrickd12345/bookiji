@@ -10,13 +10,11 @@ function getBrowserEnv() {
   console.warn('[SUPABASE CLIENT CONFIG]', {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL,
     publishable: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.slice(0, 16),
-    anonLegacy: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 10),
     appEnv: process.env.NEXT_PUBLIC_APP_ENV,
     e2e: process.env.E2E,
     nextPublicE2e: process.env.NEXT_PUBLIC_E2E,
     hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
     hasPublishableKey: !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-    hasAnonKeyLegacy: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   })
 
   // Use environment-aware Supabase configuration
@@ -32,10 +30,8 @@ function getBrowserEnv() {
     // This maintains backward compatibility during migration
     let url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').split(/\s+/)[0].trim()
     const publishableFallback = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-    const anonKeyLegacy = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     let key =
       publishableFallback ||
-      anonKeyLegacy ||
       undefined
     
     // Local dev/E2E fallback: some dev servers may start without NEXT_PUBLIC_* env vars.
@@ -90,7 +86,6 @@ export function getBrowserSupabase(): SupabaseClient | null {
       allEnvVars: {
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ? 'present' : 'missing',
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'present (legacy)' : 'missing',
         E2E: process.env.E2E,
         NEXT_PUBLIC_E2E: process.env.NEXT_PUBLIC_E2E
       }

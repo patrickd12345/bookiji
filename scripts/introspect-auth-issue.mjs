@@ -24,13 +24,13 @@ envContent.split('\n').forEach(line => {
   if (line.startsWith('NEXT_PUBLIC_SUPABASE_URL=')) {
     supabaseUrl = line.split('=')[1].trim()
   }
-  if (line.startsWith('SUPABASE_SERVICE_ROLE_KEY=')) {
+  if (line.startsWith('SUPABASE_SECRET_KEY=')) {
     supabaseServiceKey = line.split('=')[1].trim()
   }
 })
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local')
+  console.error('Missing SUPABASE_URL or SUPABASE_SECRET_KEY in .env.local')
   process.exit(1)
 }
 

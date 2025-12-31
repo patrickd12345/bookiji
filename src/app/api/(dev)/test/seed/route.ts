@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Refusing to seed non-local Supabase: ${url ?? '(missing)'}` }, { status: 400 })
   }
   if (!secretKey) {
-    return NextResponse.json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY for E2E seeding' }, { status: 500 })
+    return NextResponse.json({ error: 'Missing SUPABASE_SECRET_KEY for E2E seeding' }, { status: 500 })
   }
 
   const admin = createClient(url, secretKey, { auth: { persistSession: false, autoRefreshToken: false } })

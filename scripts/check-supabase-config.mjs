@@ -26,13 +26,13 @@ const checks = {
     required: true,
   },
   anonKey: {
-    name: 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    value: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    name: 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+    value: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     required: true,
   },
   serviceKey: {
-    name: 'SUPABASE_SERVICE_ROLE_KEY',
-    value: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY,
+    name: 'SUPABASE_SECRET_KEY',
+    value: process.env.SUPABASE_SECRET_KEY,
     required: false,
   },
 };
@@ -109,7 +109,7 @@ if (allValid) {
   console.log('1. Create a .env.local file in the project root');
   console.log('2. Add your Supabase credentials:');
   console.log('   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co');
-  console.log('   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key');
+  console.log('   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key');
   console.log('3. Get these values from: https://app.supabase.com/project/_/settings/api');
   process.exit(1);
 }

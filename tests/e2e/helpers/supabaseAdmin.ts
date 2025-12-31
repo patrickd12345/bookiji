@@ -2,10 +2,10 @@ import { createSupabaseAdminClient } from '../../../scripts/e2e/createSupabaseAd
 
 export function getSupabaseAdmin() {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  const key = process.env.SUPABASE_SECRET_KEY
 
   if (!url) throw new Error('Missing SUPABASE_URL (expected local)')
-  if (!key) throw new Error('Missing SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY for backward compatibility)')
+  if (!key) throw new Error('Missing SUPABASE_SECRET_KEY')
 
   // Use the utility with timeout and IPv4 handling to prevent UND_ERR_HEADERS_TIMEOUT
   return createSupabaseAdminClient(url, key, {

@@ -2,7 +2,7 @@ import { Page } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY
 const E2E_VENDOR_EMAIL = process.env.E2E_VENDOR_EMAIL || 'e2e-vendor@bookiji.test'
 
 const FAR_FUTURE_DATE = '2030-06-15'
@@ -13,7 +13,7 @@ let cachedVendorProfileId: string | null = null
 async function resolveVendorProfileId() {
   if (cachedVendorProfileId) return cachedVendorProfileId
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('SUPABASE_URL and SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY) required for booking helper')
+    throw new Error('SUPABASE_URL and SUPABASE_SECRET_KEY required for booking helper')
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {

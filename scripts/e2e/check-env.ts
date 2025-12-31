@@ -14,7 +14,7 @@ const parsed = dotenv.parse(fs.readFileSync(envPath, 'utf8'))
 
 const supabaseUrl = parsed.SUPABASE_URL || parsed.NEXT_PUBLIC_SUPABASE_URL
 const serviceRoleKey = parsed.SUPABASE_SERVICE_ROLE_KEY
-const anonKey = parsed.SUPABASE_ANON_KEY || parsed.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const anonKey = parsed.SUPABASE_ANON_KEY || parsed.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 const baseUrl = parsed.E2E_BASE_URL || 'http://localhost:3000'
 
 const missing: string[] = []
@@ -27,7 +27,7 @@ function requireVar(name: string, value: string | undefined) {
 
 requireVar('SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)', supabaseUrl)
 requireVar('SUPABASE_SERVICE_ROLE_KEY', serviceRoleKey)
-requireVar('SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY)', anonKey)
+requireVar('SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)', anonKey)
 requireVar('E2E_BASE_URL', baseUrl)
 
 const isLocalSupabase = supabaseUrl?.includes('localhost') || supabaseUrl?.includes('127.0.0.1')

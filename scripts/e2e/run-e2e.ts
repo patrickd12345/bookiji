@@ -49,7 +49,7 @@ const requiredVars = [
   'SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_URL',
   'SUPABASE_SECRET_KEY', // or SUPABASE_SERVICE_ROLE_KEY for backward compatibility
-  'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY', // or NEXT_PUBLIC_SUPABASE_ANON_KEY for backward compatibility
+  'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY',
 ]
 
 // Detect cloud environment (more comprehensive)
@@ -100,7 +100,7 @@ const hasVar = (name: string, altName?: string): boolean => {
 
 // Check if we have all required vars from any source (with backward compatibility)
 const hasSupabaseSecretKey = hasVar('SUPABASE_SECRET_KEY', 'SUPABASE_SERVICE_ROLE_KEY')
-const hasSupabasePublishableKey = hasVar('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY')
+const hasSupabasePublishableKey = hasVar('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY')
 const hasAllRequiredVars = 
   hasVar('SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL') &&
   hasSupabaseSecretKey &&
@@ -121,7 +121,7 @@ if (fs.existsSync(envE2EPath)) {
   } 
   // Check if required vars are missing (with backward compatibility)
   const e2eHasSecretKey = !!(e2eEnv.SUPABASE_SECRET_KEY || e2eEnv.SUPABASE_SERVICE_ROLE_KEY)
-  const e2eHasPublishableKey = !!(e2eEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || e2eEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  const e2eHasPublishableKey = !!e2eEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
   const e2eHasUrl = !!(e2eEnv.SUPABASE_URL || e2eEnv.NEXT_PUBLIC_SUPABASE_URL)
   
   if (!e2eHasUrl || !e2eHasSecretKey || !e2eHasPublishableKey) {
@@ -218,7 +218,7 @@ if (needsSync) {
   // Use new variable names, with fallback to old names
   const supabaseUrl = allEnvVars.SUPABASE_URL || allEnvVars.NEXT_PUBLIC_SUPABASE_URL
   const supabaseSecretKey = allEnvVars.SUPABASE_SECRET_KEY || allEnvVars.SUPABASE_SERVICE_ROLE_KEY
-  const supabasePublishableKey = allEnvVars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || allEnvVars.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabasePublishableKey = allEnvVars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
   
   if (supabaseUrl) lines.push(`SUPABASE_URL=${supabaseUrl}`)
   if (supabaseUrl && supabaseUrl !== allEnvVars.NEXT_PUBLIC_SUPABASE_URL) {

@@ -8,7 +8,7 @@ const execAsync = promisify(exec)
 export async function POST(request: NextRequest) {
   try {
     // Get authenticated user
-    createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
 
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
         ...process.env,
         SIMCITY_PLANNER: 'stub',
         SUPABASE_URL: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
-        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
         // Use request hostname for subdomain support, fallback to env
         TARGET_URL: process.env.TARGET_URL || 
                     (request ? `https://${request.headers.get('host') || 'bookiji.com'}` : null) ||

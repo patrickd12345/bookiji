@@ -145,7 +145,7 @@ function checkEnvironmentVariables(): CheckResult {
   
   const optional = [
     'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
   ]
   
   const missing = required.filter(key => !process.env[key])
@@ -268,7 +268,7 @@ async function checkRemoteSupabase(): Promise<CheckResult> {
     const response = await fetch(`${supabaseUrl}/rest/v1/`, {
       signal: controller.signal,
       headers: {
-        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+        'apikey': process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '',
       },
     })
     clearTimeout(timeout)

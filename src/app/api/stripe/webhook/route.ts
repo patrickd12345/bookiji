@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY
   const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabaseServiceRoleKey = process.env.SUPABASE_SECRET_KEY
 
   if (!stripeSecretKey) {
     console.error('STRIPE_SECRET_KEY is not configured')
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
   }
 
   if (!supabaseServiceRoleKey) {
-    console.error('SUPABASE_SERVICE_ROLE_KEY is not configured')
+    console.error('SUPABASE_SECRET_KEY is not configured')
     return new NextResponse('Server Configuration Error', { status: 500 })
   }
 

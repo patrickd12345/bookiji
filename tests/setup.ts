@@ -31,7 +31,7 @@ process.env.DEPLOY_ENV = 'test'
 
 // Supabase Test Project (create a dedicated test project)
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://your-test-project.supabase.co'
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'your-test-project-anon-key'
+process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'your-test-project-publishable-key'
 
 // Stripe Test Mode (using test API keys)
 process.env.STRIPE_PUBLISHABLE_KEY = 'pk_test_your_key'

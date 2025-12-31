@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   try {
     // Create Supabase client inside handler with safety checks
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseKey = process.env.SUPABASE_SECRET_KEY
 
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json(

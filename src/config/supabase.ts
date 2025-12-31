@@ -45,12 +45,10 @@ export function getSupabaseConfig(): SupabaseConfig {
       url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://test.supabase.co',
       publishableKey:
         process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
         process.env.SUPABASE_ANON_KEY ||
         'test-publishable-key',
       secretKey:
         process.env.SUPABASE_SECRET_KEY ||
-        process.env.SUPABASE_SERVICE_ROLE_KEY ||
         'test-secret-key'
     };
   }
@@ -71,17 +69,13 @@ export function getSupabaseConfig(): SupabaseConfig {
   // - SUPABASE_SECRET_KEY (sb_secret_...)
   //
   // Legacy fallback:
-  // - NEXT_PUBLIC_SUPABASE_ANON_KEY (eyJ...)
-  // - SUPABASE_SERVICE_ROLE_KEY (eyJ...)
   const publishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     process.env.SUPABASE_ANON_KEY ||
     undefined;
 
   const secretKey =
     process.env.SUPABASE_SECRET_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
     undefined;
 
   if (!url || !publishableKey) {
@@ -116,14 +110,12 @@ export function getEnvironmentVariableNames() {
     current: {
       url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL' : 'MISSING',
       publishableKey:
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-          ? 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY legacy)'
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+          ? 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY'
           : 'MISSING',
       secretKey:
-        process.env.SUPABASE_SECRET_KEY ||
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-          ? 'SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY legacy)'
+        process.env.SUPABASE_SECRET_KEY
+          ? 'SUPABASE_SECRET_KEY'
           : 'MISSING'
     },
     recommended: {

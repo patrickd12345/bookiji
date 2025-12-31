@@ -29,7 +29,7 @@ function loadEnv() {
 loadEnv()
 
 const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').split(/\s+/)[0].trim()
-const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || '').trim()
+const supabaseServiceKey = (process.env.SUPABASE_SECRET_KEY || '').trim()
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Missing Supabase environment variables')
@@ -222,7 +222,7 @@ async function testAdminAccess() {
 
     // 5. Test login
     console.log('5️⃣ Testing login...')
-    const testClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '')
+    const testClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '')
     const { data: loginData, error: loginError } = await testClient.auth.signInWithPassword({
       email,
       password

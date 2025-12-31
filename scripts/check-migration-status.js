@@ -19,7 +19,7 @@ const newKeys = {
 
 const oldKeys = {
   url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  anonKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY
 };
 
@@ -33,7 +33,7 @@ console.log(`   SUPABASE_SECRET_KEY: ${newKeys.secretKey ? '✅ SET' : '❌ MISS
 
 console.log('\n🔄 LEGACY MODEL:');
 console.log(`   NEXT_PUBLIC_SUPABASE_URL: ${oldKeys.url ? '✅ SET' : '❌ MISSING'}`);
-console.log(`   NEXT_PUBLIC_SUPABASE_ANON_KEY: ${oldKeys.anonKey ? '✅ SET' : '❌ MISSING'}`);
+console.log(`   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${oldKeys.anonKey ? '✅ SET' : '❌ MISSING'}`);
 console.log(`   SUPABASE_SERVICE_ROLE_KEY: ${oldKeys.serviceRoleKey ? '✅ SET' : '❌ MISSING'}`);
 
 // Determine which model is active
@@ -72,7 +72,7 @@ if (newKeys.secretKey) {
 console.log('\n💡 RECOMMENDATIONS:');
 if (isNewModelActive) {
   console.log('   🎉 You can safely remove the legacy environment variables!');
-  console.log('   🧹 Clean up: Remove NEXT_PUBLIC_SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY');
+  console.log('   🧹 Clean up: Remove legacy keys if still present');
 } else if (isLegacyModelActive) {
   console.log('   ⚠️  Consider migrating to the new key model for future compatibility');
 } else {

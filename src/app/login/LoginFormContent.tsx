@@ -154,7 +154,7 @@ export default function LoginFormContent() {
         if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
           setError('Unable to connect to authentication server. Please check your internet connection and try again.');
         } else if (error.message.includes('Invalid API key')) {
-          setError('Authentication misconfigured (Invalid Supabase API key). Verify Vercel env vars: NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY, then redeploy.');
+          setError('Authentication misconfigured (Invalid Supabase API key). Verify Vercel env vars: NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, then redeploy.');
         } else if (error.message.includes('Invalid login credentials')) {
           setError('Invalid email or password. Please try again.');
         } else {

@@ -33,7 +33,7 @@ vi.mock('@supabase/supabase-js', () => ({
 // Set up environment variables and Supabase overrides
 beforeEach(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-publishable-key'
 
   const supabase = getSupabaseMock()
   supabase.rpc.mockImplementation(sbMocks.rpc)

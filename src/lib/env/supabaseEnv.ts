@@ -65,7 +65,6 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
       LOCAL_DEFAULT_URL;
     const anonKey =
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
       process.env.SUPABASE_ANON_KEY ||
       process.env.SB_LOCAL_PUBLISHABLE_KEY ||
       process.env.PUBLISHABLE_KEY ||
@@ -73,11 +72,10 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
       LOCAL_DEFAULT_ANON_KEY;
     const serviceKey =
       process.env.SB_LOCAL_SECRET_KEY ||
-      process.env.SECRET_KEY ||
       process.env.SUPABASE_SECRET_KEY ||
+      process.env.SECRET_KEY ||
       process.env.LOCAL_SUPABASE_SERVICE_KEY ||
       process.env.SERVICE_ROLE_KEY ||
-      process.env.SUPABASE_SERVICE_ROLE_KEY ||
       LOCAL_DEFAULT_SERVICE_KEY;
 
     if (debug) {
@@ -110,15 +108,13 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
         process.env.PUBLISHABLE_KEY ||
         process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
         process.env.LOCAL_SUPABASE_ANON_KEY ||
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
         LOCAL_DEFAULT_ANON_KEY,
       serviceKey:
         process.env.SB_LOCAL_SECRET_KEY ||
-        process.env.SECRET_KEY ||
         process.env.SUPABASE_SECRET_KEY ||
+        process.env.SECRET_KEY ||
         process.env.LOCAL_SUPABASE_SERVICE_KEY ||
         process.env.SERVICE_ROLE_KEY ||
-        process.env.SUPABASE_SERVICE_ROLE_KEY ||
         LOCAL_DEFAULT_SERVICE_KEY,
     };
   }
@@ -127,13 +123,11 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
     const url = process.env.STAGING_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey =
       process.env.STAGING_SUPABASE_ANON_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
     const serviceKey =
-      process.env.STAGING_SUPABASE_SERVICE_KEY ||
       process.env.STAGING_SUPABASE_SECRET_KEY ||
-      process.env.SUPABASE_SECRET_KEY ||
-      process.env.SUPABASE_SERVICE_ROLE_KEY;
+      process.env.STAGING_SUPABASE_SERVICE_KEY ||
+      process.env.SUPABASE_SECRET_KEY;
 
     if (!url || !anonKey) {
       throw new Error(
@@ -153,13 +147,11 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
     const url = process.env.PROD_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey =
       process.env.PROD_SUPABASE_ANON_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
     const serviceKey =
-      process.env.PROD_SUPABASE_SERVICE_KEY ||
       process.env.PROD_SUPABASE_SECRET_KEY ||
-      process.env.SUPABASE_SECRET_KEY ||
-      process.env.SUPABASE_SERVICE_ROLE_KEY;
+      process.env.PROD_SUPABASE_SERVICE_KEY ||
+      process.env.SUPABASE_SECRET_KEY;
 
     if (!url || !anonKey) {
       throw new Error(

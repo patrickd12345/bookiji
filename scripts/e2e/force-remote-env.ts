@@ -14,7 +14,7 @@ const requiredVars = [
   'SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_URL',
   'SUPABASE_SERVICE_ROLE_KEY',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
 ]
 
 // Check if all required vars are in process.env

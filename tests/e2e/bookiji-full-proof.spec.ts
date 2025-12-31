@@ -39,7 +39,7 @@ const { email: E2E_VENDOR_EMAIL, password: E2E_VENDOR_PASSWORD } = E2E_VENDOR_US
 const { email: E2E_CUSTOMER_EMAIL, password: E2E_CUSTOMER_PASSWORD } = E2E_CUSTOMER_USER
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY
 
 // Payment handling: Use mock mode or test Stripe keys
 const STRIPE_MOCK_MODE = process.env.STRIPE_MOCK_MODE === 'true' || !process.env.STRIPE_SECRET_KEY

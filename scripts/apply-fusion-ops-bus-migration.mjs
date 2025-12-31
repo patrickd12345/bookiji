@@ -24,12 +24,12 @@ if (supabaseUrl && supabaseUrl.includes(' ')) {
   // Multiple URLs detected, take the first one
   supabaseUrl = supabaseUrl.split(' ')[0].trim();
 }
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
 
 if (!supabaseUrl || !serviceRoleKey) {
   console.error('❌ Missing required environment variables:');
   console.error('   - NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✓' : '✗');
-  console.error('   - SUPABASE_SERVICE_ROLE_KEY:', serviceRoleKey ? '✓' : '✗');
+  console.error('   - SUPABASE_SECRET_KEY:', serviceRoleKey ? '✓' : '✗');
   process.exit(1);
 }
 
