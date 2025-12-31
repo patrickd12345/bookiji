@@ -201,7 +201,7 @@ export default function MyTicketsPage() {
   useAutoTour()
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8" data-tour="ticket-overview">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">My Support Tickets</h1>
         <p className="text-lg text-gray-600 mb-8">

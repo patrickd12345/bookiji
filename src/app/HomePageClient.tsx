@@ -85,12 +85,12 @@ export default function HomePageClient() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card to-muted/30" suppressHydrationWarning>
       {/* Language Selector */}
-      <div className="absolute top-4 left-4">
+      <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-40">
         <LocaleSelector variant="icon-only" />
       </div>
       
       {/* Guided Tour Button */}
-      <div className="fixed bottom-20 right-6 z-50">
+      <div className="fixed bottom-20 right-2 sm:right-6 z-50">
         <SimpleTourButton onClick={() => setShowTour(true)} />
       </div>
 
@@ -98,30 +98,15 @@ export default function HomePageClient() {
       <button
         ref={helpButtonRef}
         onClick={(e) => {
-          console.log('=== SUPPORT CHAT BUTTON CLICKED ===')
-          console.log('Event:', e)
-          console.log('Current showSupportChat state:', showSupportChat)
           e.preventDefault()
           e.stopPropagation()
-          const newState = !showSupportChat
-          console.log('Setting showSupportChat to:', newState)
-          setShowSupportChat(newState)
-          console.log('State updated, new state:', newState)
+          setShowSupportChat((prev) => !prev)
         }}
-        onMouseDown={(e) => {
-          console.log('Help button mouseDown:', e)
-          e.preventDefault()
-        }}
-        onMouseUp={(e) => {
-          console.log('Help button mouseUp:', e)
-        }}
-        onPointerDown={(e) => {
-          console.log('Help button pointerDown:', e)
-        }}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-fuchsia-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-fuchsia-700 transition-transform hover:scale-105 cursor-pointer z-[100]"
+        className="fixed bottom-6 right-6 w-14 h-14 sm:w-16 sm:h-16 bg-fuchsia-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-fuchsia-700 transition-transform hover:scale-105 cursor-pointer z-[100] touch-manipulation"
         style={{ 
           pointerEvents: 'auto',
-          zIndex: 100
+          zIndex: 100,
+          position: 'fixed'
         }}
         aria-label="Open Support Chat"
         type="button"
@@ -137,7 +122,7 @@ export default function HomePageClient() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 right-6 z-[60] w-[350px] h-[500px] bg-background rounded-xl shadow-2xl border border-border overflow-hidden"
+            className="fixed bottom-24 right-2 sm:right-6 z-[60] w-[calc(100vw-1rem)] sm:w-[350px] h-[500px] max-h-[calc(100vh-8rem)] bg-background rounded-xl shadow-2xl border border-border overflow-hidden"
           >
             <SupportChat onCloseAction={() => setShowSupportChat(false)} />
           </motion.div>
@@ -165,6 +150,7 @@ export default function HomePageClient() {
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                   onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleSearch()}
                   className="flex-1 px-6 py-4 text-lg border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background text-foreground placeholder-muted-foreground"
+                  data-testid="home-search-input"
                 />
                 <HydrationSafeButton 
                   onClick={handleSearch}
