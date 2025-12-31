@@ -78,10 +78,8 @@ E2E_ALLOW_REMOTE_SUPABASE=true
 # Remote Supabase Configuration
 SUPABASE_URL=https://your-test-project.supabase.co
 NEXT_PUBLIC_SUPABASE_URL=https://your-test-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key-here
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-SUPABASE_SECRET_KEY=your-service-role-key-here
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key-here
+SUPABASE_SECRET_KEY=your-secret-key-here
 
 # Test Credentials (managed by e2e:seed)
 E2E_VENDOR_EMAIL=e2e-vendor@bookiji.test
@@ -163,7 +161,7 @@ The Playwright config automatically enables cloud mode when:
 ### "Failed to seed e2e users"
 
 **Check:**
-1. `SUPABASE_SERVICE_ROLE_KEY` is set correctly
+1. `SUPABASE_SECRET_KEY` is set correctly
 2. Service role key has admin permissions
 3. Database migrations are applied
 4. Network can reach Supabase API

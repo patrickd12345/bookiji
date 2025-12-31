@@ -67,7 +67,7 @@ const refundHandler = async (req: NextRequest) => {
 
     // TODO: Implement actual Stripe refund
     // For now, simulate successful refund
-    console.log(`Would refund ${refundAmount} cents for booking ${booking_id}`)
+    console.warn(`Would refund ${refundAmount} cents for booking ${booking_id}`)
 
     // Update booking state
     const { error: updateError } = await supabase
@@ -130,7 +130,7 @@ const refundHandler = async (req: NextRequest) => {
         })
     }
 
-    console.log(`Refund processed for booking ${booking_id}: ${refundAmount} cents`)
+    console.warn(`Refund processed for booking ${booking_id}: ${refundAmount} cents`)
 
     return NextResponse.json({
       ok: true,

@@ -66,8 +66,8 @@ E2E=true
 E2E_ALLOW_REMOTE_SUPABASE=true  # Only if using remote Supabase
 SUPABASE_URL=your-url
 NEXT_PUBLIC_SUPABASE_URL=your-url
-SUPABASE_SERVICE_ROLE_KEY=your-key
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
+SUPABASE_SECRET_KEY=your-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-key
 ```
 
 ## Remote Supabase Detection

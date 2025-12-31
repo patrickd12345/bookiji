@@ -96,14 +96,14 @@ async function handleRequest(req: Request) {
 
     // Get authenticated user ID (if available)
     const userId = await getAuthenticatedUserId(req);
-    console.log('📨 Received support chat request:', { 
+    console.warn('📨 Received support chat request:', { 
       message: message.substring(0, 50), 
       hasEmail: !!email,
       hasUserId: !!userId 
     });
 
     const intent = classifyIntent(message);
-    console.log('🎯 Classified intent:', intent);
+    console.warn('🎯 Classified intent:', intent);
     
     // Handle common onboarding queries with helpful responses
     const onboardingPhrases = ['get me started', 'get started', 'how do i start', 'how to start', 'getting started', 'new user', 'first time', 'onboarding'];
@@ -112,7 +112,7 @@ async function handleRequest(req: Request) {
     let admin;
     try {
       admin = await getAdmin();
-      console.log('✅ Admin client initialized');
+      console.warn('✅ Admin client initialized');
     } catch (adminError) {
       console.error('❌ Failed to initialize admin client:', adminError);
       throw new Error('Database connection failed');
@@ -124,7 +124,7 @@ async function handleRequest(req: Request) {
     try {
       const provider = process.env.SUPPORT_LLM_PROVIDER || 'gemini';
       const embeddingProvider = process.env.SUPPORT_EMBEDDING_PROVIDER || 'openai';
-      console.log('🔧 Initializing LLM services:', { 
+      console.warn('🔧 Initializing LLM services:', { 
         llmProvider: provider, 
         embeddingProvider,
         hasGeminiKey: !!process.env.GEMINI_API_KEY,
@@ -134,7 +134,7 @@ async function handleRequest(req: Request) {
       
       llmService = getLLMService();
       embeddingService = getEmbeddingService();
-      console.log('✅ LLM services initialized successfully');
+      console.warn('✅ LLM services initialized successfully');
     } catch (configError) {
       console.error('❌ LLM service configuration error:', configError);
       const errorMsg = configError instanceof Error ? configError.message : String(configError);
@@ -153,9 +153,9 @@ async function handleRequest(req: Request) {
     
     try {
       // 1. Generate embedding for the query
-      console.log('📝 Generating embedding for query:', message.substring(0, 50));
+      console.warn('📝 Generating embedding for query:', message.substring(0, 50));
       const embedding = await embeddingService.getEmbedding(message);
-      console.log('✅ Embedding generated, dimensions:', embedding.length);
+      console.warn('✅ Embedding generated, dimensions:', embedding.length);
       
       // 2. Search vector store using RPC function
       const { data: searchResults, error: searchError } = await admin.rpc('kb_search', {
@@ -171,7 +171,7 @@ async function handleRequest(req: Request) {
       if (searchResults && searchResults.length > 0) {
         chunks = searchResults;
         top = chunks[0]?.score ?? 0;
-        console.log('✅ KB search results:', { 
+        console.warn('✅ KB search results:', { 
           chunks: chunks.length, 
           topScore: top, 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -199,7 +199,7 @@ async function handleRequest(req: Request) {
     const validChunks = chunks.filter((c: any) => c.score >= SIMILARITY_THRESHOLD);
     
     // Debug logging
-    console.log('Support chat debug:', {
+    console.warn('Support chat debug:', {
       top,
       cfg_LOW: cfg.LOW,
       cfg_OK: cfg.OK,
@@ -251,9 +251,9 @@ Be concise, helpful, and friendly.`;
 
       let answer: string;
       try {
-        console.log('🤖 Generating LLM answer for general question...');
+        console.warn('🤖 Generating LLM answer for general question...');
         answer = await llmService.generateAnswer(generalPrompt, message) || "I'm not sure how to answer that. Could you provide more details?";
-        console.log('✅ Generated LLM answer for general question');
+        console.warn('✅ Generated LLM answer for general question');
       } catch (llmError) {
         console.error('❌ LLM generation failed:', llmError);
         answer = "I'm having trouble processing your question right now. Please try again later.";
@@ -321,9 +321,9 @@ ${contextText}
 
       let answer: string;
       try {
-        console.log('🤖 Generating LLM answer with context...');
+        console.warn('🤖 Generating LLM answer with context...');
         answer = await llmService.generateAnswer(systemPrompt, message) || "I don't have enough information to answer that based on the current documentation.";
-        console.log('✅ Generated LLM answer:', { 
+        console.warn('✅ Generated LLM answer:', { 
           answerLength: answer.length, 
           answerPreview: answer.substring(0, 100), 
           confidence: top 
@@ -332,7 +332,7 @@ ${contextText}
         console.error('❌ LLM generation failed:', llmError);
         // Fallback to best chunk if LLM fails
         answer = validChunks[0]?.snippet || "I'm having trouble processing your question right now. Please try again later.";
-        console.log('⚠️ Using fallback answer from chunk');
+        console.warn('⚠️ Using fallback answer from chunk');
       }
 
       // Persist lightweight conversation for suggestion engine
@@ -364,7 +364,7 @@ ${contextText}
           console.warn('Non-fatal: failed to persist kb conversation', e);
         }
       } else {
-        console.log('⚠️ Skipping ticket creation - user not authenticated');
+        console.warn('⚠️ Skipping ticket creation - user not authenticated');
       }
 
       // Get sources for citation
@@ -407,7 +407,7 @@ ${contextText}
     } else {
       // For unauthenticated users, create a minimal ticket object for response
       ticket = { id: 'anonymous-' + Date.now() };
-      console.log('⚠️ Skipping ticket creation for escalation - user not authenticated');
+      console.warn('⚠️ Skipping ticket creation for escalation - user not authenticated');
     }
 
     // Persist conversation with the initial user message to enable suggestion generation later

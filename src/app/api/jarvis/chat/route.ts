@@ -15,6 +15,32 @@ import { getIncidentStatusSnapshot } from '@/lib/jarvis/status/getIncidentSnapsh
 import { getServerSupabase } from '@/lib/supabaseServer'
 import { getAppEnv } from '@/lib/env/assertAppEnv'
 
+interface Booking {
+  status: string
+  created_at: string
+}
+
+interface User {
+  role?: string | null
+}
+
+interface Vendor {
+  status?: string | null
+}
+
+interface Incident {
+  resolved?: boolean
+  severity?: string
+  incident_id?: string
+  sent_at?: string
+  env?: string
+}
+
+interface SystemFlag {
+  key: string
+  value: unknown
+}
+
 /**
  * Check if user is admin
  */
@@ -137,12 +163,12 @@ async function gatherBookijiState() {
       ? bookingsStats.value.data
       : []
     
-    const bookingsByStatus = bookings.reduce((acc: Record<string, number>, b: any) => {
+    const bookingsByStatus = bookings.reduce((acc: Record<string, number>, b: Booking) => {
       acc[b.status] = (acc[b.status] || 0) + 1
       return acc
     }, {})
 
-    const recentBookings = bookings.filter((b: any) => {
+    const recentBookings = bookings.filter((b: Booking) => {
       const createdAt = new Date(b.created_at)
       const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000
       return createdAt.getTime() > oneDayAgo
@@ -153,7 +179,7 @@ async function gatherBookijiState() {
       ? usersStats.value.data
       : []
     
-    const usersByRole = users.reduce((acc: Record<string, number>, u: any) => {
+    const usersByRole = users.reduce((acc: Record<string, number>, u: User) => {
       acc[u.role || 'customer'] = (acc[u.role || 'customer'] || 0) + 1
       return acc
     }, {})
@@ -163,7 +189,7 @@ async function gatherBookijiState() {
       ? vendorsStats.value.data
       : []
     
-    const vendorsByStatus = vendors.reduce((acc: Record<string, number>, v: any) => {
+    const vendorsByStatus = vendors.reduce((acc: Record<string, number>, v: Vendor) => {
       acc[v.status || 'active'] = (acc[v.status || 'active'] || 0) + 1
       return acc
     }, {})
@@ -173,12 +199,12 @@ async function gatherBookijiState() {
       ? recentIncidents.value.data
       : []
     
-    const unresolvedIncidents = incidents.filter((i: any) => !i.resolved).length
-    const sev1Incidents = incidents.filter((i: any) => i.severity === 'SEV-1').length
+    const unresolvedIncidents = incidents.filter((i: Incident) => !i.resolved).length
+    const sev1Incidents = incidents.filter((i: Incident) => i.severity === 'SEV-1').length
 
     // Process system flags
     const flags = systemFlags.status === 'fulfilled' && systemFlags.value.data
-      ? systemFlags.value.data.reduce((acc: Record<string, any>, f: any) => {
+      ? systemFlags.value.data.reduce((acc: Record<string, unknown>, f: SystemFlag) => {
           acc[f.key] = f.value
           return acc
         }, {})
@@ -210,7 +236,7 @@ async function gatherBookijiState() {
         recent_count: incidents.length,
         unresolved: unresolvedIncidents,
         sev1_count: sev1Incidents,
-        recent: incidents.slice(0, 5).map((i: any) => ({
+        recent: incidents.slice(0, 5).map((i: Incident) => ({
           id: i.incident_id,
           severity: i.severity,
           sent_at: i.sent_at,
@@ -235,10 +261,47 @@ async function gatherBookijiState() {
   }
 }
 
+interface BookijiState {
+  environment: string
+  timestamp: string
+  bookings?: {
+    total_recent: number
+    by_status: Record<string, number>
+    total_sampled: number
+  }
+  users?: {
+    total_sampled: number
+    by_role: Record<string, number>
+  }
+  vendors?: {
+    total_sampled: number
+    by_status: Record<string, number>
+  }
+  incidents?: {
+    recent_count: number
+    unresolved: number
+    sev1_count: number
+    recent: Array<{
+      id?: string
+      severity?: string
+      sent_at?: string
+      resolved?: boolean
+      env?: string
+    }>
+  }
+  system?: {
+    flags: Record<string, unknown>
+    scheduling_enabled: boolean
+    current_snapshot: unknown
+    current_incident: unknown
+  }
+  error?: string
+}
+
 /**
  * Generate chat response using LLM
  */
-async function generateChatResponse(query: string, context: any): Promise<string> {
+async function generateChatResponse(query: string, context: BookijiState): Promise<string> {
   const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY
   const model = process.env.GROQ_API_KEY ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini'
   const baseUrl = process.env.GROQ_API_KEY 

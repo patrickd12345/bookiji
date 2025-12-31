@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const baseUrl = host ? `${protocol}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'https://bookiji.com')
     const sitemapUrl = `${baseUrl}/sitemap.xml`;
     
-    console.log(`[Sitemap Refresh] Starting sitemap refresh at ${new Date().toISOString()}`);
+    console.warn(`[Sitemap Refresh] Starting sitemap refresh at ${new Date().toISOString()}`);
     
     // Fetch the sitemap to trigger regeneration
     const sitemapResponse = await fetch(sitemapUrl, {
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     const sitemapSize = sitemapContent.length;
     const urlCount = (sitemapContent.match(/<url>/g) || []).length;
     
-    console.log(`[Sitemap Refresh] Sitemap generated: ${urlCount} URLs, ${sitemapSize} bytes`);
+    console.warn(`[Sitemap Refresh] Sitemap generated: ${urlCount} URLs, ${sitemapSize} bytes`);
 
     // Submit to search engines (optional, but recommended)
     const submissions: Array<{ engine: string; success: boolean; message?: string }> = [];

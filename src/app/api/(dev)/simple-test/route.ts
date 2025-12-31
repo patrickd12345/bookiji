@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    console.log('🧪 Simple API test...')
+    console.warn('🧪 Simple API test...')
     
     return NextResponse.json({ 
       success: true, 

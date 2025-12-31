@@ -26,7 +26,7 @@ node chaos/scenarios/support_rag/support_rag_shadow_run.mjs \
 ## Environment Variables
 
 - `SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_URL`: Supabase instance URL
-- `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY`: Service role key
+- `SUPABASE_SECRET_KEY`: Service role key
 
 ## Question Corpus
 

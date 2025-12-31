@@ -226,7 +226,7 @@ The proof is **COMPLETE** only when:
 
 ### Seeding fails: "User creation error"
 - Check Supabase is running: `pnpm supabase:start`
-- Verify `SUPABASE_SERVICE_ROLE_KEY` is correct
+- Verify `SUPABASE_SECRET_KEY` is correct
 - Check Supabase logs for detailed errors
 
 ### Playwright tests fail: "User not found"
@@ -251,7 +251,7 @@ The proof is **COMPLETE** only when:
 ## Security Notes
 
 - **NEVER** run reset script in production
-- Reset script requires `SUPABASE_SERVICE_ROLE_KEY` (admin access)
+- Reset script requires `SUPABASE_SECRET_KEY` (admin access)
 - E2E users use test emails (`.test` domain)
 - All operations are logged for audit
 

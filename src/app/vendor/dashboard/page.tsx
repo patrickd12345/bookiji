@@ -235,6 +235,23 @@ export default function VendorDashboard() {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 pb-8">
         <SubscriptionManager />
+        
+        {/* Quick Actions */}
+        {activeTab === 'overview' && vendorId && (
+          <div className="mb-6 flex gap-4">
+            <Link href="/vendor/bookings/create">
+              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                + Create Booking
+              </Button>
+            </Link>
+            <Link href="/vendor/dashboard/subscription">
+              <Button variant="outline">
+                Manage Subscription
+              </Button>
+            </Link>
+          </div>
+        )}
+        
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* Decision-Informing Metrics */}

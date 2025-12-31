@@ -19,7 +19,7 @@ export default function SpecialtyDemo() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Vendor registration:', {
+    console.warn('Vendor registration:', {
       name: vendorName,
       email,
       specialty: selectedSpecialty

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripeOrThrow } from '@/lib/stripe'
 import { getServerSupabase } from '@/lib/supabaseServer'
+import { logger } from '@/lib/logger'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
@@ -141,7 +142,7 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('🎣 Webhook received:', event.type)
+      logger.debug('🎣 Webhook received:', { eventType: event.type })
     }
 
     try {

@@ -1,10 +1,10 @@
-import fs from "node:fs";
-import path from "node:path";
-import crypto from "node:crypto";
-import matter from "gray-matter";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as crypto from "node:crypto";
+import matter = require("gray-matter");
 import { createClient } from "@supabase/supabase-js";
 
-// Use anon key since service role key is having issues
+// Use publishable key for KB operations
 const USE_LOCAL = false;
 
 type Section = "faq" | "vendor" | "policy" | "troubleshooting";
@@ -12,34 +12,39 @@ type Locale = "en" | "fr";
 
 const ROOT = path.resolve(process.cwd(), "docs", "bookiji-kb");
 
-// Use anon key as a workaround
+// Use publishable key for KB operations
 const SUPABASE_URL = "https://lzgynywojluwdccqkeop.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6Z3lueXdvamx1d2RjY3FrZW9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMjAxOTUsImV4cCI6MjA2NTY5NjE5NX0.uJfA8r87NSlgATiXOeryGnixhL3ROOYFZY-lMAq5sMU";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6Z3lueXdvamx1d2RjY3FrZW9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMjAxOTUsImV4cCI6MjA2NTY5NjE5NX0.uJfA8r87NSlgATiXOeryGnixhL3ROOYFZY-lMAq5sMU";
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error("Missing SUPABASE_URL or SUPABASE_ANON_KEY");
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  console.error("Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY");
   process.exit(1);
 }
 
 const supabase = USE_LOCAL 
   ? createClient("http://127.0.0.1:54321", "demo-key")
-  : createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  : createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 // Debug: Log the configuration being used
-console.log('🔧 Supabase Configuration (Anon Key Workaround):');
+console.log('🔧 Supabase Configuration (Publishable Key):');
 console.log(`  USE_LOCAL: ${USE_LOCAL}`);
 console.log(`  SUPABASE_URL: ${SUPABASE_URL}`);
-console.log(`  SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(0, 20) + '...' : 'NOT SET'}`);
-console.log(`  Using client for: ${USE_LOCAL ? 'LOCAL' : 'REMOTE (ANON KEY)'}`);
+console.log(`  SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY ? SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...' : 'NOT SET'}`);
+console.log(`  Using client for: ${USE_LOCAL ? 'LOCAL' : 'REMOTE (PUBLISHABLE KEY)'}`);
 console.log('');
 
-function* walk(dir: string): Generator<string> {
+function walk(dir: string): string[] {
+  const results: string[] = [];
   const items = fs.readdirSync(dir, { withFileTypes: true });
   for (const it of items) {
     const p = path.join(dir, it.name);
-    if (it.isDirectory()) yield* walk(p);
-    else if (/\.(md|mdx)$/i.test(it.name)) yield p;
+    if (it.isDirectory()) {
+      results.push(...walk(p));
+    } else if (/\.(md|mdx)$/i.test(it.name)) {
+      results.push(p);
+    }
   }
+  return results;
 }
 
 function sha256(s: string): string {
@@ -124,7 +129,7 @@ async function main() {
   }
 
   let inserted = 0, updated = 0, skipped = 0, errors = 0;
-  const files = Array.from(walk(ROOT));
+  const files = walk(ROOT);
   if (files.length === 0) {
     console.log("No Markdown files found. Put .md/.mdx files under docs/bookiji-kb/");
     return;

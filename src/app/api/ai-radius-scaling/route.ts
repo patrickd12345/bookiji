@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     }
 
     if (process.env.NODE_ENV === 'development' && !ADSENSE_APPROVAL_MODE) {
-      console.log('🗺️ AI Radius Scaling Request:', { service, location, providerDensity, currentRadius })
+      console.warn('🗺️ AI Radius Scaling Request:', { service, location, providerDensity, currentRadius })
     }
 
     // Try AI-powered radius recommendation, gracefully fall back if unavailable
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     if (process.env.NODE_ENV === 'development' && !ADSENSE_APPROVAL_MODE) {
-      console.log('🗺️ AI Radius Recommendation:', recommendedRadius, 'km')
+      console.warn('🗺️ AI Radius Recommendation:', recommendedRadius, 'km')
     }
 
     return NextResponse.json({ 

@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     const receivedAt = new Date().toISOString();
 
     // Log feedback for debugging (remove in production)
-    console.log('KB Feedback received:', {
+    console.warn('KB Feedback received:', {
       id: feedbackId,
       query: body.query,
       locale: body.locale,

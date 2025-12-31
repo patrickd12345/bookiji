@@ -49,8 +49,8 @@
 NEXT_PUBLIC_APP_URL=https://bookiji.com
 CANONICAL_HOST=bookiji.com
 NEXT_PUBLIC_SUPABASE_URL=[production_supabase_url]
-NEXT_PUBLIC_SUPABASE_ANON_KEY=[production_anon_key]
-SUPABASE_SERVICE_ROLE_KEY=[production_service_key]
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[production_publishable_key]
+SUPABASE_SECRET_KEY=[production_secret_key]
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=[live_publishable_key]
 STRIPE_SECRET_KEY=[live_secret_key]
 NEXTAUTH_SECRET=[secure_random_key]

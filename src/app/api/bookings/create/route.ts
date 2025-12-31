@@ -86,10 +86,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 })
   }
 
-  const { providerId, serviceId, startTime, endTime, amountUSD, customerId, vendorAuthId } = body
+  const { providerId, serviceId, startTime, endTime, amountUSD, customerId, vendorAuthId, isVendorCreated } = body
 
   if (!providerId || !serviceId || !startTime || !endTime || amountUSD === undefined) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+  }
+
+  // Check if this is a vendor-created booking (payment-free)
+  const vendorCreated = isVendorCreated === true || isVendorCreated === 'true'
+  
+  // For vendor-created bookings, verify the user is the vendor
+  if (vendorCreated) {
+    // Get vendor profile to verify ownership
+    const { data: vendorProfile } = await supabase
+      .from('profiles')
+      .select('id, role')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    if (!vendorProfile || vendorProfile.role !== 'vendor' || vendorProfile.id !== providerId) {
+      return NextResponse.json({ 
+        error: 'Only the vendor can create vendor bookings',
+        hint: 'Vendor-created bookings must be created by the vendor themselves'
+      }, { status: 403 })
+    }
   }
 
   // Invariant VI-1: No Past Booking
@@ -134,21 +154,32 @@ export async function POST(req: NextRequest) {
   const resolvedCustomerId = customerProfileId || providerProfileId || 'e2e-customer'
   const resolvedProviderId = providerProfileId || resolvedCustomerId
 
-  // Stripe PaymentIntent
-  const intent = stripe
-    ? await stripe.paymentIntents.create({
-        amount: amountCents,
-        currency: 'usd',
-        metadata: {
-          providerId: String(resolvedProviderId),
-          serviceId: String(serviceId),
-          customerId: resolvedCustomerId
+  // For vendor-created bookings, skip payment intent creation
+  let intent: { id: string; client_secret: string | null } | null = null
+  
+  if (!vendorCreated) {
+    // Regular customer booking - create payment intent
+    intent = stripe
+      ? await stripe.paymentIntents.create({
+          amount: amountCents,
+          currency: 'usd',
+          metadata: {
+            providerId: String(resolvedProviderId),
+            serviceId: String(serviceId),
+            customerId: resolvedCustomerId
+          }
+        })
+      : {
+          id: 'pi_e2e_fallback',
+          client_secret: 'pi_e2e_fallback_secret'
         }
-      })
-    : {
-        id: 'pi_e2e_fallback',
-        client_secret: 'pi_e2e_fallback_secret'
-      }
+  } else {
+    // Vendor-created booking - no payment required
+    intent = {
+      id: 'vendor_created_no_payment',
+      client_secret: null
+    }
+  }
 
   const { data: booking, error } = await supabase
     .from('bookings')
@@ -159,8 +190,11 @@ export async function POST(req: NextRequest) {
       start_time: startTime,
       end_time: endTime,
       status: 'pending',
-      state: 'quoted',
-      total_amount: amountNumber
+      state: vendorCreated ? 'quoted' : 'quoted', // Both start as quoted
+      total_amount: amountNumber,
+      vendor_created: vendorCreated,
+      vendor_created_by: vendorCreated ? resolvedProviderId : null,
+      stripe_payment_intent_id: vendorCreated ? null : intent.id
     })
     .select()
     .single()
@@ -171,7 +205,9 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     booking,
-    clientSecret: intent.client_secret
+    clientSecret: intent.client_secret,
+    vendorCreated: vendorCreated,
+    requiresPayment: !vendorCreated
   })
   } catch (err) {
     console.error('Booking create exception', err)

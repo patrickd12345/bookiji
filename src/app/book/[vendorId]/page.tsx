@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { ADSENSE_APPROVAL_MODE } from '@/lib/adsense'
 import { isTruthyEnv } from '@/lib/env/isTruthyEnv'
+import { logger } from '@/lib/logger'
 
 interface Service {
   id: string
@@ -22,6 +23,17 @@ interface Vendor {
   email: string
 }
 
+const fallbackServices: Service[] = [
+  {
+    id: 'fallback-service',
+    name: 'Scheduling Proof Test Service',
+    description: 'Fallback service for booking',
+    duration_minutes: 60,
+    price_cents: 5000,
+    category: 'test'
+  }
+]
+
 export default function BookVendorPage() {
   const params = useParams<{ vendorId: string }>()
   const vendorId = params?.vendorId ?? ''
@@ -29,16 +41,6 @@ export default function BookVendorPage() {
   const isE2E = isTruthyEnv(process.env.NEXT_PUBLIC_E2E) || isTruthyEnv(process.env.E2E)
   
   const [vendor, setVendor] = useState<Vendor | null>(null)
-  const fallbackServices: Service[] = [
-    {
-      id: 'fallback-service',
-      name: 'Scheduling Proof Test Service',
-      description: 'Fallback service for booking',
-      duration_minutes: 60,
-      price_cents: 5000,
-      category: 'test'
-    }
-  ]
   const [services, setServices] = useState<Service[]>(fallbackServices)
   const [vendorProfileId, setVendorProfileId] = useState('')
   const [selectedService, setSelectedService] = useState<Service | null>(null)
@@ -109,7 +111,7 @@ export default function BookVendorPage() {
 
       setServices(normalizedServices)
     } catch (error) {
-      console.error('Error fetching vendor data:', error)
+      logger.error('Error fetching vendor data', error instanceof Error ? error : new Error(String(error)))
       setVendorProfileId(vendorId)
       setVendor({
         id: vendorId,
@@ -174,7 +176,7 @@ export default function BookVendorPage() {
         }
       }
     } catch (error) {
-      console.error('Error fetching availability:', error)
+      logger.error('Error fetching availability', error instanceof Error ? error : new Error(String(error)))
     }
 
     // Final fallback: ensure at least one far-future slot is present for E2E
@@ -241,7 +243,7 @@ export default function BookVendorPage() {
     if (!authUserId && !ADSENSE_APPROVAL_MODE && !isE2E) {
       try {
         const supabase = supabaseBrowserClient()
-        const { data } = supabase ? await supabase.auth.getUser() : { data: null as any }
+        const { data } = supabase ? await supabase.auth.getUser() : { data: { user: null } }
         authUserId = data?.user?.id ?? null
       } catch {
         // ignore
@@ -299,7 +301,7 @@ export default function BookVendorPage() {
       }
 
       const response = await fetchWithTimeout(isE2E ? 10000 : 60000)
-      const data = await response.json().catch(() => null as any)
+      const data = await response.json().catch(() => null as unknown)
 
       if (response.ok && data?.booking?.id && data?.clientSecret) {
         window.location.assign(`/pay/${data.booking.id}?client_secret=${data.clientSecret}`)
@@ -307,13 +309,13 @@ export default function BookVendorPage() {
       }
 
       if (!response.ok) {
-        console.error('Booking create failed', { status: response.status, data, payload })
+        logger.error('Booking create failed', undefined, { status: response.status, data, payload })
       }
 
       // E2E fallback: navigate to deterministic pay route even if API failed or route compile is slow.
       window.location.assign(fallbackPayUrl)
     } catch (error) {
-      console.error('Booking error:', error)
+      logger.error('Booking error', error instanceof Error ? error : new Error(String(error)))
       if (isE2E) {
         window.location.assign(fallbackPayUrl)
         return
@@ -328,7 +330,7 @@ export default function BookVendorPage() {
   }
 
   const vendorName = vendor?.full_name || 'our vendor'
-  const vendorEmail = vendor?.email || 'Not available'
+  const _vendorEmail = vendor?.email || 'Not available'
   const isVendorLoaded = !!vendor
 
   const FALLBACK_DATE = '2030-06-15'

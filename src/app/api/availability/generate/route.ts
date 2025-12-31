@@ -28,7 +28,7 @@ interface GoogleCalendarBusySlot {
 // This function will be the core of our availability generation.
 // For now, it's a placeholder.
 async function generateAvailability(providerId: string) {
-    console.log(`Generating availability for provider: ${providerId}`);
+    console.warn(`Generating availability for provider: ${providerId}`);
 
     // 1. Fetch Provider's Schedule Template from our DB
     const { data: schedule, error: scheduleError } = await supabase
@@ -41,7 +41,7 @@ async function generateAvailability(providerId: string) {
     }
 
     if (!schedule || schedule.length === 0) {
-        console.log('Provider has no schedule set. Skipping.');
+        console.warn('Provider has no schedule set. Skipping.');
         return { message: 'Provider has no schedule template.' };
     }
 
@@ -84,8 +84,8 @@ async function generateAvailability(providerId: string) {
 
     const busySlots = (freeBusyResponse.data.calendars?.primary.busy || []) as GoogleCalendarBusySlot[];
     
-    console.log('Fetched schedule:', schedule);
-    console.log('Fetched busy slots from Google:', busySlots);
+    console.warn('Fetched schedule:', schedule);
+    console.warn('Fetched busy slots from Google:', busySlots);
 
     // 4. Implement the logic to "subtract" busy times from the schedule template.
     const serviceDurationMinutes = 60; // Hardcoded for now

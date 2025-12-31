@@ -12,7 +12,7 @@
 #
 # CREDENTIAL DOMAINS (DO NOT CONFUSE):
 # - CLI Auth: sbp_... token from `supabase login` (stored by CLI, never in .env)
-# - App Credentials: SUPABASE_ANON_KEY, SERVICE_ROLE_KEY (in .env, for app runtime)
+# - App Credentials: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY (in .env, for app runtime)
 # - DB Credentials: Postgres password (for direct DB access, not used by CLI)
 
 param(
@@ -163,8 +163,8 @@ if (-not $anonKey -or -not $serviceKey) {
         Write-Host "⚠️  Could not parse API keys automatically" -ForegroundColor Yellow
         Write-Host "   Please retrieve manually from:" -ForegroundColor Yellow
         Write-Host "   https://supabase.com/dashboard/project/$stagingProjectRef/settings/api" -ForegroundColor Gray
-        $anonKey = Read-Host "Enter STAGING_SUPABASE_ANON_KEY"
-        $serviceKey = Read-Host "Enter STAGING_SUPABASE_SERVICE_KEY"
+        $anonKey = Read-Host "Enter STAGING_SUPABASE_PUBLISHABLE_KEY"
+        $serviceKey = Read-Host "Enter STAGING_SUPABASE_SECRET_KEY"
     }
 }
 
@@ -216,13 +216,13 @@ Write-Host ""
 Write-Host "# Staging Environment" -ForegroundColor Gray
 Write-Host "APP_ENV=staging" -ForegroundColor White
 Write-Host "STAGING_SUPABASE_URL=https://$stagingProjectRef.supabase.co" -ForegroundColor White
-Write-Host "STAGING_SUPABASE_ANON_KEY=$anonKey" -ForegroundColor White
-Write-Host "STAGING_SUPABASE_SERVICE_KEY=$serviceKey" -ForegroundColor White
+Write-Host "STAGING_SUPABASE_PUBLISHABLE_KEY=$anonKey" -ForegroundColor White
+Write-Host "STAGING_SUPABASE_SECRET_KEY=$serviceKey" -ForegroundColor White
 Write-Host ""
 Write-Host "For CI/CD, add these as secrets:" -ForegroundColor Cyan
 Write-Host "  - STAGING_SUPABASE_URL" -ForegroundColor Gray
-Write-Host "  - STAGING_SUPABASE_ANON_KEY" -ForegroundColor Gray
-Write-Host "  - STAGING_SUPABASE_SERVICE_KEY" -ForegroundColor Gray
+Write-Host "  - STAGING_SUPABASE_PUBLISHABLE_KEY" -ForegroundColor Gray
+Write-Host "  - STAGING_SUPABASE_SECRET_KEY" -ForegroundColor Gray
 Write-Host "  - APP_ENV=staging" -ForegroundColor Gray
 Write-Host ""
 

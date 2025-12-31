@@ -17,7 +17,7 @@ Create or update your `.env` file with:
 
 ```bash
 SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SUPABASE_SECRET_KEY=your_secret_key
 OPENAI_API_KEY=your_openai_api_key
 NEXT_PUBLIC_APP_URL=https://bookiji.com  # or http://localhost:3000 for local
 ```
@@ -125,7 +125,7 @@ curl http://localhost:3000/api/support/kb-status
 
 **Database errors:**
 - Ensure migrations are applied: `npx supabase db push`
-- Check Supabase connection: verify `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
+- Check Supabase connection: verify `SUPABASE_URL` and `SUPABASE_SECRET_KEY`
 
 ## 📊 Monitoring
 

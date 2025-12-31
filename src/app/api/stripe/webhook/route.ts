@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Supabase error' }, { status: 500 })
     }
 
-    console.log('Booking confirmed:', paymentIntentId)
+    console.warn('Booking confirmed:', paymentIntentId)
   } else if (event.type === 'checkout.session.completed') {
     await StripeService.handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session)
   } else if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {

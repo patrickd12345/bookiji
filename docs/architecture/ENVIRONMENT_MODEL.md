@@ -59,7 +59,7 @@ Bookiji uses three environments, each with distinct purposes and isolation guara
 **Supabase:**
 - Separate Supabase Cloud Project
 - URL: `STAGING_SUPABASE_URL`
-- Keys: `STAGING_SUPABASE_ANON_KEY`, `STAGING_SUPABASE_SERVICE_KEY`
+- Keys: `STAGING_SUPABASE_PUBLISHABLE_KEY`, `STAGING_SUPABASE_SECRET_KEY`
 
 **Data Durability:**
 - Medium - may be wiped for testing
@@ -88,7 +88,7 @@ Bookiji uses three environments, each with distinct purposes and isolation guara
 **Supabase:**
 - Separate Supabase Cloud Project
 - URL: `PROD_SUPABASE_URL`
-- Keys: `PROD_SUPABASE_ANON_KEY`, `PROD_SUPABASE_SERVICE_KEY`
+- Keys: `PROD_SUPABASE_PUBLISHABLE_KEY`, `PROD_SUPABASE_SECRET_KEY`
 
 **Data Durability:**
 - Absolute - never wipe, never corrupt
@@ -135,15 +135,15 @@ LOCAL_SUPABASE_SERVICE_KEY=eyJ...  # Standard demo key
 **Staging:**
 ```bash
 STAGING_SUPABASE_URL=https://xxxxx.supabase.co
-STAGING_SUPABASE_ANON_KEY=eyJ...
-STAGING_SUPABASE_SERVICE_KEY=eyJ...
+STAGING_SUPABASE_PUBLISHABLE_KEY=eyJ...
+STAGING_SUPABASE_SECRET_KEY=eyJ...
 ```
 
 **Production:**
 ```bash
 PROD_SUPABASE_URL=https://xxxxx.supabase.co
-PROD_SUPABASE_ANON_KEY=eyJ...
-PROD_SUPABASE_SERVICE_KEY=eyJ...
+PROD_SUPABASE_PUBLISHABLE_KEY=eyJ...
+PROD_SUPABASE_SECRET_KEY=eyJ...
 ```
 
 ### Stripe Configuration

@@ -1,6 +1,9 @@
 # 🌍 Bookiji - Universal Booking Platform
 
-**The world's first AI-powered, privacy-first universal booking platform with $1 commitment fees.**
+**Bookiji Scheduling: The vendor-first booking system that doesn't break under pressure—and proves it.**
+
+**For Customers:** AI-powered, privacy-first booking with $1 commitment fees.  
+**For Vendors:** Reliable scheduling system with payment-free booking creation, certification, and daily-use features.
 
 [![Tests](https://img.shields.io/badge/tests-278%2F278%20passing-brightgreen)](https://github.com/your-org/bookiji)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/your-org/bookiji)
@@ -340,7 +343,7 @@ This is a **short-lived chaos runner** that generates **deterministic event sequ
 1. Start local Supabase + app with E2E enabled (example): `E2E=true FORCE_LOCAL_DB=true pnpm dev`
 2. Build the harness image: `docker build -f chaos/Dockerfile -t bookiji-chaos chaos`
 3. Run one bounded execution (no volumes by default):
-   - `docker run --rm -e SUPABASE_URL=http://host.docker.internal:54321 -e SUPABASE_SERVICE_ROLE_KEY=... bookiji-chaos --seed 812736 --duration 30 --max-events 500 --concurrency 8 --target-url http://host.docker.internal:3000`
+   - `docker run --rm -e SUPABASE_URL=http://host.docker.internal:54321 -e SUPABASE_SECRET_KEY=... bookiji-chaos --seed 812736 --duration 30 --max-events 500 --concurrency 8 --target-url http://host.docker.internal:3000`
 
 Optional: write a failure artifact inside the container with `--out /tmp/failure.json` (mount a volume if you want it on the host).
 

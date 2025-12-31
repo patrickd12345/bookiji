@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
   
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    Deno.env.get('SUPABASE_SECRET_KEY')!
   )
   
   await supabase.from('slo_metrics').insert({
@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
 - name: Ingest SLO metrics
   run: |
     curl -X POST https://your-project.supabase.co/functions/v1/ingest-slo \
-      -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+      -H "Authorization: Bearer ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}" \
       -H "Content-Type: application/json" \
       -d @slo/slo-summary.json
 ```

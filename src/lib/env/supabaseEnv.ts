@@ -65,7 +65,6 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
       LOCAL_DEFAULT_URL;
     const anonKey =
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-      process.env.SUPABASE_ANON_KEY ||
       process.env.SB_LOCAL_PUBLISHABLE_KEY ||
       process.env.PUBLISHABLE_KEY ||
       process.env.LOCAL_SUPABASE_ANON_KEY ||
@@ -122,7 +121,7 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
   if (env === 'staging') {
     const url = process.env.STAGING_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey =
-      process.env.STAGING_SUPABASE_ANON_KEY ||
+      process.env.STAGING_SUPABASE_PUBLISHABLE_KEY ||
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
     const serviceKey =
       process.env.STAGING_SUPABASE_SECRET_KEY ||
@@ -132,7 +131,7 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
     if (!url || !anonKey) {
       throw new Error(
         'Missing staging Supabase credentials. ' +
-        'Required: STAGING_SUPABASE_URL and STAGING_SUPABASE_ANON_KEY'
+        'Required: STAGING_SUPABASE_URL and STAGING_SUPABASE_PUBLISHABLE_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)'
       );
     }
 
@@ -146,7 +145,7 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
   if (env === 'prod') {
     const url = process.env.PROD_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey =
-      process.env.PROD_SUPABASE_ANON_KEY ||
+      process.env.PROD_SUPABASE_PUBLISHABLE_KEY ||
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
     const serviceKey =
       process.env.PROD_SUPABASE_SECRET_KEY ||
@@ -156,7 +155,7 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
     if (!url || !anonKey) {
       throw new Error(
         'Missing production Supabase credentials. ' +
-        'Required: PROD_SUPABASE_URL and PROD_SUPABASE_ANON_KEY'
+        'Required: PROD_SUPABASE_URL and PROD_SUPABASE_PUBLISHABLE_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)'
       );
     }
 

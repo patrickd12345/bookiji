@@ -46,7 +46,7 @@ ADMIN_EMAILS=admin@yourdomain.com,ops@yourdomain.com
 
 # Supabase (if not already set)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SUPABASE_SECRET_KEY=your_secret_key
 ```
 
 ## 🔧 Step 3: Component Integration
@@ -223,7 +223,7 @@ supabase status
 
 # Verify environment variables
 echo $NEXT_PUBLIC_SUPABASE_URL
-echo $SUPABASE_SERVICE_ROLE_KEY
+echo $SUPABASE_SECRET_KEY
 ```
 
 #### 3. Alerts Not Triggering

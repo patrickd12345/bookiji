@@ -45,7 +45,6 @@ export function getSupabaseConfig(): SupabaseConfig {
       url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://test.supabase.co',
       publishableKey:
         process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-        process.env.SUPABASE_ANON_KEY ||
         'test-publishable-key',
       secretKey:
         process.env.SUPABASE_SECRET_KEY ||
@@ -64,14 +63,11 @@ export function getSupabaseConfig(): SupabaseConfig {
 
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-  // New key model (preferred):
+  // New key model (required):
   // - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (sb_publishable_...)
   // - SUPABASE_SECRET_KEY (sb_secret_...)
-  //
-  // Legacy fallback:
   const publishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
     undefined;
 
   const secretKey =

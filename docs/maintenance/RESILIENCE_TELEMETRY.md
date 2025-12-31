@@ -213,7 +213,7 @@ supabase db push
 ```bash
 # Required for telemetry endpoint
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SUPABASE_SECRET_KEY=your_secret_key
 ```
 
 ### 3. Component Integration

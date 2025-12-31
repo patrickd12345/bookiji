@@ -56,12 +56,8 @@ async function main() {
   console.log('Remote Supabase configuration for E2E runs\n')
 
   const supabaseUrl = await ask('Supabase project URL', currentEnv.SUPABASE_URL || currentEnv.NEXT_PUBLIC_SUPABASE_URL)
-  const serviceRoleKey = await ask('Supabase service role key', currentEnv.SUPABASE_SERVICE_ROLE_KEY)
-  const anonKey = await ask('Supabase publishable key', currentEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || currentEnv.SUPABASE_ANON_KEY)
-  const publishableKey = await ask(
-    'Supabase publishable key (press enter to reuse anon/public key)',
-    currentEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || anonKey
-  )
+  const serviceRoleKey = await ask('Supabase secret key', currentEnv.SUPABASE_SECRET_KEY)
+  const publishableKey = await ask('Supabase publishable key', currentEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)
   const baseUrl = await ask('E2E base URL', currentEnv.E2E_BASE_URL || 'http://localhost:3000')
 
   rl.close()
@@ -72,10 +68,8 @@ async function main() {
   const updates: [string, string][] = [
     ['SUPABASE_URL', supabaseUrl],
     ['NEXT_PUBLIC_SUPABASE_URL', supabaseUrl],
-    ['SUPABASE_SERVICE_ROLE_KEY', serviceRoleKey],
-    ['SUPABASE_ANON_KEY', anonKey],
-    ['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', anonKey],
-    ['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', publishableKey || anonKey],
+    ['SUPABASE_SECRET_KEY', serviceRoleKey],
+    ['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', publishableKey],
     ['E2E_ALLOW_REMOTE_SUPABASE', 'true'],
     ['E2E_BASE_URL', baseUrl]
   ]
@@ -92,9 +86,8 @@ async function main() {
 
   console.log('\n✅ .env.e2e updated for remote Supabase use:')
   console.log(` - SUPABASE_URL: ${supabaseUrl}`)
-  console.log(` - SUPABASE_SERVICE_ROLE_KEY: ${mask(serviceRoleKey)}`)
-  console.log(` - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${mask(anonKey)}`)
-  console.log(` - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${mask(publishableKey || anonKey)}`)
+  console.log(` - SUPABASE_SECRET_KEY: ${mask(serviceRoleKey)}`)
+  console.log(` - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${mask(publishableKey)}`)
   console.log(` - E2E_ALLOW_REMOTE_SUPABASE: true`)
   console.log('\nYou can now run:\n  pnpm e2e:check\n  pnpm e2e:seed\n  pnpm e2e')
 }

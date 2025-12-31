@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
             }
           }
         } catch (aiError) {
-          console.log('AI radius scaling failed, using density-based radius:', aiError);
+          console.warn('AI radius scaling failed, using density-based radius:', aiError);
           // Fall back to density-based radius
         }
 

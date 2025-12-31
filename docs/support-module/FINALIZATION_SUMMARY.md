@@ -14,7 +14,7 @@
 
 **Required Secrets:**
 - `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEY`
 - `OPENAI_API_KEY`
 - `NEXT_PUBLIC_APP_URL` (optional, defaults to https://bookiji.com)
 
@@ -119,7 +119,7 @@ SUPPORT_KB_SIMILARITY_THRESHOLD=0.7  # Minimum similarity score (0-1)
 
 # Required
 SUPABASE_URL=...
-SUPABASE_SERVICE_ROLE_KEY=...
+SUPABASE_SECRET_KEY=...
 OPENAI_API_KEY=...
 NEXT_PUBLIC_APP_URL=https://bookiji.com
 ```
@@ -142,7 +142,7 @@ npx supabase db push
 
 1. **Add GitHub Secrets:**
    - Go to Settings → Secrets and variables → Actions
-   - Add: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`
+   - Add: `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `OPENAI_API_KEY`
 
 2. **Run Initial Crawl:**
    ```bash

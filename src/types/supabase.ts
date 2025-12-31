@@ -127,6 +127,95 @@ export interface Database {
           created_at?: string
         }
       }
+      profiles: {
+        Row: {
+          id: string
+          auth_user_id: string
+          full_name: string
+          email: string
+          phone: string | null
+          avatar_url: string | null
+          role: 'customer' | 'vendor' | 'admin'
+          bio: string | null
+          portfolio_images: string[] | null
+          certifications: Json | null
+          languages: string[] | null
+          specializations: string[] | null
+          experience_years: number | null
+          hourly_rate: number | null
+          availability_schedule: Json | null
+          education: Json | null
+          professional_summary: string | null
+          service_area_radius: number | null
+          verified_at: string | null
+          verification_documents: string[] | null
+          social_links: Json | null
+          response_time_avg: number | null
+          completion_rate: number | null
+          profile_completion_score: number | null
+          rating: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          auth_user_id: string
+          full_name: string
+          email: string
+          phone?: string | null
+          avatar_url?: string | null
+          role?: 'customer' | 'vendor' | 'admin'
+          bio?: string | null
+          portfolio_images?: string[] | null
+          certifications?: Json | null
+          languages?: string[] | null
+          specializations?: string[] | null
+          experience_years?: number | null
+          hourly_rate?: number | null
+          availability_schedule?: Json | null
+          education?: Json | null
+          professional_summary?: string | null
+          service_area_radius?: number | null
+          verified_at?: string | null
+          verification_documents?: string[] | null
+          social_links?: Json | null
+          response_time_avg?: number | null
+          completion_rate?: number | null
+          profile_completion_score?: number | null
+          rating?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          auth_user_id?: string
+          full_name?: string
+          email?: string
+          phone?: string | null
+          avatar_url?: string | null
+          role?: 'customer' | 'vendor' | 'admin'
+          bio?: string | null
+          portfolio_images?: string[] | null
+          certifications?: Json | null
+          languages?: string[] | null
+          specializations?: string[] | null
+          experience_years?: number | null
+          hourly_rate?: number | null
+          availability_schedule?: Json | null
+          education?: Json | null
+          professional_summary?: string | null
+          service_area_radius?: number | null
+          verified_at?: string | null
+          verification_documents?: string[] | null
+          social_links?: Json | null
+          response_time_avg?: number | null
+          completion_rate?: number | null
+          profile_completion_score?: number | null
+          rating?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

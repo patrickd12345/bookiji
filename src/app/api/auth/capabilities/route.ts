@@ -3,8 +3,6 @@ import { createServerClient } from '@supabase/ssr'
 import { getSupabaseConfig } from '@/config/supabase'
 import { cookies } from 'next/headers'
 
-const INVARIANT_ENDPOINT = '/api/auth/capabilities'
-
 function createSupabase({ cookieStore }: { cookieStore: Awaited<ReturnType<typeof cookies>> }) {
   const config = getSupabaseConfig()
 

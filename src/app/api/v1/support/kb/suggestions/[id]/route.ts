@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from '@/config/supabase';
 import { getAgentFromAuth } from '@/lib/auth/agent';
+import { logger } from '@/lib/logger';
 
 async function appendChunk(admin: SupabaseClient, articleId: string, content: string, embed: (t:string[])=>Promise<number[][]>) {
   const [vec] = await embed([content]);
@@ -49,14 +50,14 @@ export async function PATCH(
 
   if (action === 'reject') {
     await admin.from('kb_suggestions').update({ status: 'rejected' }).eq('id', sug.id);
-    console.info('support.kb_suggest.rejected', { suggestion_id: sug.id });
+    logger.info('support.kb_suggest.rejected', { suggestion_id: sug.id });
     return NextResponse.json({ ok: true });
   }
 
   if (action === 'link' && articleId) {
     await appendChunk(admin, articleId, sug.answer, (t)=>import('@/lib/support/embeddings').then(m=>m.embed(t)));
     await admin.from('kb_suggestions').update({ status:'approved', target_article_id: articleId }).eq('id', sug.id);
-    console.info('support.kb_suggest.approved', { suggestion_id: sug.id, article_id: articleId });
+    logger.info('support.kb_suggest.approved', { suggestion_id: sug.id, article_id: articleId });
     return NextResponse.json({ ok: true, articleId });
   }
 
@@ -69,6 +70,6 @@ export async function PATCH(
 
   await appendChunk(admin, art.id, sug.answer, (t)=>import('@/lib/support/embeddings').then(m=>m.embed(t)));
   await admin.from('kb_suggestions').update({ status:'approved', target_article_id: art.id }).eq('id', sug.id);
-  console.info('support.kb_suggest.approved', { suggestion_id: sug.id, article_id: art.id, new_article: true, slug });
+  logger.info('support.kb_suggest.approved', { suggestion_id: sug.id, article_id: art.id, new_article: true, slug });
   return NextResponse.json({ ok: true, articleId: art.id, slug });
 }

@@ -24,7 +24,7 @@ cp .env.example .env.local
 
 # Edit .env.local with your keys:
 # - SUPABASE_URL
-# - SUPABASE_ANON_KEY  
+# - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY  
 # - MAPBOX_ACCESS_TOKEN
 # - OLLAMA_ENDPOINT=http://localhost:11434
 ```
@@ -107,7 +107,8 @@ This checks if Supabase CLI is authenticated. If it fails:
 ```bash
 # In .env.local
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+SUPABASE_SECRET_KEY=your-secret-key
 ```
 
 ### **3. Basic Schema (Optional)**
@@ -155,7 +156,7 @@ In Supabase Dashboard:
 // In your auth configuration
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 )
 ```
 
@@ -174,7 +175,8 @@ vercel
 
 ### **2. Environment Variables in Vercel**
 - `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SECRET_KEY`
 - `MAPBOX_ACCESS_TOKEN`
 - `OLLAMA_ENDPOINT` (if using cloud Ollama)
 

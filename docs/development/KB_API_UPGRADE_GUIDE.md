@@ -27,7 +27,7 @@ supabase functions deploy kb-index
 
 # 3. Set environment variables
 supabase secrets set SUPABASE_URL=your-project-url
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+supabase secrets set SUPABASE_SECRET_KEY=your-secret-key
 supabase secrets set OPENAI_API_KEY=your-openai-api-key
 ```
 

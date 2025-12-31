@@ -83,7 +83,7 @@ We leverage the existing `kb_*` tables with minor modifications for the crawler.
 6.  **Response:** Stream or return JSON with answer and source URLs.
 
 ## Security & Constraints
--   **API Keys:** Stored in `.env` (`OPENAI_API_KEY` or `GEMINI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`).
+-   **API Keys:** Stored in `.env` (`OPENAI_API_KEY` or `GEMINI_API_KEY`, `SUPABASE_SECRET_KEY`).
 -   **LLM Provider:** Configurable via `SUPPORT_LLM_PROVIDER` (default: `openai`, alternative: `gemini`).
 -   **Rate Limiting:** Crawler respects standard politeness (1 request/sec).
 -   **Content:** Only public, non-authenticated content is indexed.

@@ -17,10 +17,13 @@ export default function VendorPricingPage() {
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
-            A booking system that doesn&apos;t break under pressure—and proves it.
+            Bookiji Scheduling: Built for Vendors, Proven Under Pressure
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-600">
-            One plan. One price. Monthly.
+            The only booking system that doesn&apos;t break under pressure—and proves it with certification.
+          </p>
+          <p className="text-sm sm:text-base text-gray-500 mt-2">
+            Create bookings for customers instantly. No payment required. Customer confirmation only.
           </p>
         </div>
 
@@ -66,6 +69,18 @@ export default function VendorPricingPage() {
               <div className="ml-3">
                 <p className="text-base sm:text-lg font-medium text-gray-900">Zero double bookings</p>
                 <p className="text-sm sm:text-base text-gray-600">Proven slot exclusivity under concurrent demand</p>
+              </div>
+            </div>
+
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-base sm:text-lg font-medium text-gray-900">Payment-free vendor bookings</p>
+                <p className="text-sm sm:text-base text-gray-600">Create bookings for customers instantly—no payment required from you</p>
               </div>
             </div>
           </div>

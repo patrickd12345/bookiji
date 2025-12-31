@@ -17,7 +17,7 @@ export async function POST() {
   try {
     // Test embedding
     const [vec] = await embed(['How do I reschedule my booking?']);
-    console.log('Embedding created with dimension:', vec.length);
+    console.warn('Embedding created with dimension:', vec.length);
 
     // Test match_kb function directly
     const { data, error } = await admin.rpc('match_kb', {
@@ -31,7 +31,7 @@ export async function POST() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.log('match_kb raw result:', data);
+    console.warn('match_kb raw result:', data);
     
     return NextResponse.json({ 
       success: true,

@@ -18,30 +18,30 @@ const ROOT = path.resolve(process.cwd(), "docs", "bookiji-kb");
 
 // Explicit environment variables to bypass .env.local encoding issues
 const SUPABASE_URL = "https://lzgynywojluwdccqkeop.supabase.co";
-const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6Z3lueXdvamx1d2RjY3FrZW9wIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjE2OTA2MCwiZXhwIjoyMDcxNzQ1MDYwfQ.bicooXJcNGZlb8xzUIRdq1WaMVczoSnkmIQtVxjt-Gc";
+const SUPABASE_SECRET_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6Z3lueXdvamx1d2RjY3FrZW9wIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjE2OTA2MCwiZXhwIjoyMDcxNzQ1MDYwfQ.bicooXJcNGZlb8xzUIRdq1WaMVczoSnkmIQtVxjt-Gc";
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
+  console.error("Missing SUPABASE_URL or SUPABASE_SECRET_KEY");
   process.exit(1);
 }
 
 const supabase = USE_LOCAL 
   ? createClient("http://127.0.0.1:54321", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU")
-  : createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  : createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
 
 // Debug: Log the configuration being used
 console.log('🔧 Supabase Configuration:');
 console.log(`  USE_LOCAL: ${USE_LOCAL}`);
 console.log(`  SUPABASE_URL: ${SUPABASE_URL}`);
-console.log(`  SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY ? SUPABASE_SERVICE_ROLE_KEY.substring(0, 20) + '...' : 'NOT SET'}`);
+console.log(`  SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY ? SUPABASE_SECRET_KEY.substring(0, 20) + '...' : 'NOT SET'}`);
 console.log(`  Using client for: ${USE_LOCAL ? 'LOCAL' : 'REMOTE'}`);
 
 // Additional debugging
 console.log('\n🔍 Environment Debug:');
 console.log(`  process.env.SUPABASE_URL: ${process.env.SUPABASE_URL}`);
-console.log(`  process.env.SUPABASE_SERVICE_ROLE_KEY: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? process.env.SUPABASE_SERVICE_ROLE_KEY.substring(0, 20) + '...' : 'NOT SET'}`);
+console.log(`  process.env.SUPABASE_SECRET_KEY: ${process.env.SUPABASE_SECRET_KEY ? process.env.SUPABASE_SECRET_KEY.substring(0, 20) + '...' : 'NOT SET'}`);
 console.log(`  Direct SUPABASE_URL: ${SUPABASE_URL}`);
-console.log(`  Direct SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY ? SUPABASE_SERVICE_ROLE_KEY.substring(0, 20) + '...' : 'NOT SET'}`);
+console.log(`  Direct SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY ? SUPABASE_SECRET_KEY.substring(0, 20) + '...' : 'NOT SET'}`);
 console.log('');
 
 function* walk(dir: string): Generator<string> {

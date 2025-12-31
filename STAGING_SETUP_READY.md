@@ -33,8 +33,8 @@ supabase login
 This opens a browser for authentication. Complete the login flow.
 
 **Important:** This is CLI authentication (uses `sbp_...` token stored internally), **NOT** the same as:
-- `SUPABASE_ANON_KEY` (app runtime credential)
-- `SERVICE_ROLE_KEY` (app runtime credential)
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (app runtime credential)
+- `SUPABASE_SECRET_KEY` (app runtime credential)
 - Database password (for direct DB access)
 
 **If you see "Invalid access token format":**
@@ -79,16 +79,16 @@ After script completes, add to `.env.local`:
 ```env
 APP_ENV=staging
 STAGING_SUPABASE_URL=https://<STAGING_PROJECT_REF>.supabase.co
-STAGING_SUPABASE_ANON_KEY=<anon_key>
-STAGING_SUPABASE_SERVICE_KEY=<service_role_key>
+STAGING_SUPABASE_PUBLISHABLE_KEY=<publishable_key>
+STAGING_SUPABASE_SECRET_KEY=<secret_key>
 ```
 
 ### Step 4: Add CI Secrets
 
 In GitHub → Settings → Secrets and variables → Actions:
 - `STAGING_SUPABASE_URL`
-- `STAGING_SUPABASE_ANON_KEY`
-- `STAGING_SUPABASE_SERVICE_KEY`
+- `STAGING_SUPABASE_PUBLISHABLE_KEY`
+- `STAGING_SUPABASE_SECRET_KEY`
 
 Set `APP_ENV=staging` in CI workflow environment.
 

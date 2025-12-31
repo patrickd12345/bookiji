@@ -12,7 +12,7 @@ This document provides step-by-step instructions for setting up the Bookiji stag
    **Important:** CLI authentication is separate from app credentials:**
    - CLI uses `sbp_...` token (stored internally by CLI)
    - **DO NOT** set `SUPABASE_ACCESS_TOKEN` in `.env`
-   - **DO NOT** confuse with `SUPABASE_ANON_KEY` or `SERVICE_ROLE_KEY`
+   - **DO NOT** confuse with `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `SUPABASE_SECRET_KEY`
    - If you see "Invalid access token format" → run `supabase login`
 
 2. **Preflight Check (REQUIRED)**
@@ -80,8 +80,8 @@ Or get from dashboard:
 - https://supabase.com/dashboard/project/<STAGING_PROJECT_REF>/settings/api
 
 Save:
-- `anon` key → `STAGING_SUPABASE_ANON_KEY`
-- `service_role` key → `STAGING_SUPABASE_SERVICE_KEY`
+- `publishable` key (sb_publishable_...) → `STAGING_SUPABASE_PUBLISHABLE_KEY`
+- `secret` key (sb_secret_...) → `STAGING_SUPABASE_SECRET_KEY`
 
 ### Step 4: Apply Migrations
 
@@ -113,16 +113,16 @@ supabase db push
 ```env
 APP_ENV=staging
 STAGING_SUPABASE_URL=https://<STAGING_PROJECT_REF>.supabase.co
-STAGING_SUPABASE_ANON_KEY=<anon_key>
-STAGING_SUPABASE_SERVICE_KEY=<service_role_key>
+STAGING_SUPABASE_PUBLISHABLE_KEY=<publishable_key>
+STAGING_SUPABASE_SECRET_KEY=<secret_key>
 ```
 
 #### CI/CD (GitHub Secrets)
 
 Add these secrets:
 - `STAGING_SUPABASE_URL`
-- `STAGING_SUPABASE_ANON_KEY`
-- `STAGING_SUPABASE_SERVICE_KEY`
+- `STAGING_SUPABASE_PUBLISHABLE_KEY`
+- `STAGING_SUPABASE_SECRET_KEY`
 - `APP_ENV=staging` (as environment variable)
 
 **Critical:** Ensure CI never uses `PROD_*` variables.
@@ -202,10 +202,10 @@ supabase status
 
 **Wrong fixes (DO NOT DO):**
 - ❌ Setting `SUPABASE_ACCESS_TOKEN` in `.env`
-- ❌ Using `SUPABASE_ANON_KEY` for CLI
-- ❌ Using `SERVICE_ROLE_KEY` for CLI
+- ❌ Using `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for CLI
+- ❌ Using `SUPABASE_SECRET_KEY` for CLI
 
-**Remember:** CLI auth (`sbp_...` token) ≠ App credentials (`SUPABASE_ANON_KEY`, `SERVICE_ROLE_KEY`)
+**Remember:** CLI auth (`sbp_...` token) ≠ App credentials (`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`)
 
 ### "Migration history does not match"
 

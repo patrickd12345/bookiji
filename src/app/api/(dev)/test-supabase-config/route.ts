@@ -18,7 +18,7 @@ function classifyKey(key: string | undefined) {
 
 export async function GET() {
   try {
-    console.log('🔧 Testing Supabase Configuration...')
+    console.warn('🔧 Testing Supabase Configuration...')
     
     let config
     try {
@@ -37,9 +37,9 @@ export async function GET() {
 
     const supabase = createClient(config.url, config.publishableKey)
     
-    console.log('1️⃣ Supabase configuration:')
-    console.log(`   URL: ${config.url ? '✅ Set' : '❌ Missing'}`)
-    console.log(`   Publishable Key: ${config.publishableKey ? '✅ Set' : '❌ Missing'}`)
+    console.warn('1️⃣ Supabase configuration:')
+    console.warn(`   URL: ${config.url ? '✅ Set' : '❌ Missing'}`)
+    console.warn(`   Publishable Key: ${config.publishableKey ? '✅ Set' : '❌ Missing'}`)
     
     if (!config.url || !config.publishableKey) {
       return NextResponse.json({ 
@@ -50,22 +50,22 @@ export async function GET() {
     }
     
     // Test basic Supabase client creation
-    console.log('2️⃣ Testing Supabase client creation...')
+    console.warn('2️⃣ Testing Supabase client creation...')
     
     try {
-      console.log('   Supabase client created: ✅')
+      console.warn('   Supabase client created: ✅')
       
       // Test basic auth check
-      console.log('3️⃣ Testing basic auth check...')
+      console.warn('3️⃣ Testing basic auth check...')
       const { data: { user }, error } = await supabase.auth.getUser()
       
       if (error) {
-        console.log(`   Auth check error: ${error.message}`)
+        console.warn(`   Auth check error: ${error.message}`)
       } else {
-        console.log(`   Auth check: ${user ? '✅ User found' : '✅ No user (expected)'}`)
+        console.warn(`   Auth check: ${user ? '✅ User found' : '✅ No user (expected)'}`)
       }
       
-      console.log('🎉 Supabase configuration test completed!')
+      console.warn('🎉 Supabase configuration test completed!')
       
       return NextResponse.json({
         success: true,

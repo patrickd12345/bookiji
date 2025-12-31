@@ -31,24 +31,24 @@ for (const envPath of envPaths) {
 }
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY
 
 if (!SUPABASE_URL) {
   console.error('❌ Missing SUPABASE_URL')
   process.exit(1)
 }
 
-if (!SUPABASE_SERVICE_ROLE_KEY) {
-  console.error('❌ Missing SUPABASE_SERVICE_ROLE_KEY')
+if (!SUPABASE_SECRET_KEY) {
+  console.error('❌ Missing SUPABASE_SECRET_KEY')
   process.exit(1)
 }
 
 console.log('🔍 Testing Supabase admin connection...')
 console.log(`   URL: ${SUPABASE_URL}`)
-console.log(`   Key: ${SUPABASE_SERVICE_ROLE_KEY.substring(0, 20)}...`)
+console.log(`   Key: ${SUPABASE_SECRET_KEY.substring(0, 20)}...`)
 console.log('')
 
-const supabase = createSupabaseAdminClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+const supabase = createSupabaseAdminClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
   timeoutMs: 60000,
   forceIPv4: true
 })

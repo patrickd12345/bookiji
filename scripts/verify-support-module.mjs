@@ -77,7 +77,7 @@ if (allGood) {
 console.log('📝 Next Steps to Run & Test:\n');
 console.log('1. Set environment variables in .env:');
 console.log('   - SUPABASE_URL');
-console.log('   - SUPABASE_SERVICE_ROLE_KEY');
+console.log('   - SUPABASE_SECRET_KEY');
 console.log('   - OPENAI_API_KEY');
 console.log('   - NEXT_PUBLIC_APP_URL (optional)\n');
 

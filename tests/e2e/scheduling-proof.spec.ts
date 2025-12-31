@@ -33,7 +33,7 @@ ensureCredentialsPresent({
 const { email: E2E_VENDOR_EMAIL, password: E2E_VENDOR_PASSWORD } = E2E_VENDOR_USER
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY
 
 // Use far-future date to avoid flakiness (2030)
 const FAR_FUTURE_DATE = new Date('2030-06-15T14:00:00Z')
@@ -61,7 +61,7 @@ test.describe('Scheduling Proof', () => {
   let slotTime: string
 
   test.beforeAll(async () => {
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
       // Mark all tests in this suite to be skipped
       // Individual tests will be skipped when they run
       console.warn('⚠️  Supabase not configured - scheduling proof tests will be skipped')
@@ -69,7 +69,7 @@ test.describe('Scheduling Proof', () => {
     }
 
     console.log('Connecting to Supabase at:', SUPABASE_URL)
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
       auth: { autoRefreshToken: false, persistSession: false }
     })
 
@@ -155,7 +155,7 @@ test.describe('Scheduling Proof', () => {
   })
 
   test('SCHEDULING PROOF: Slots appear, first booking succeeds, second booking fails', { tag: '@requires-supabase' }, async ({ page }) => {
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
       test.info().skip(true, 'SUPABASE_URL and SUPABASE_SECRET_KEY required for proof test')
       return
     }

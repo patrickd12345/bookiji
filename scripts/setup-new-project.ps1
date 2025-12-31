@@ -53,7 +53,7 @@ Write-Host "✅ Database connection string ready" -ForegroundColor Green
 Write-Host "`n📝 Configuration Summary:" -ForegroundColor Yellow
 Write-Host "  NEXT_PUBLIC_SUPABASE_URL=https://${projectRef}.supabase.co"
 Write-Host "  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$publishableKey"
-Write-Host "  SUPABASE_SERVICE_ROLE_KEY=$serviceKey"
+Write-Host "  SUPABASE_SECRET_KEY=$serviceKey"
 Write-Host "  DATABASE_URL=$dbUrl"
 
 # Check migrations

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const envSchema = z.object({
   SUPABASE_URL: z.string().url(),
-  SUPABASE_ANON_KEY: z.string().min(1),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   RATE_LIMIT_PUBLIC: z.string().optional(),
   RATE_LIMIT_AUTH: z.string().optional(),
   RATE_LIMIT_BOOKING: z.string().optional(),
