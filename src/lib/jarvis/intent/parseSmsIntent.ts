@@ -8,7 +8,7 @@
  * Deterministic parser is the source of truth.
  */
 
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 
 import type { ParsedIntent } from '../types'
 
@@ -34,7 +34,7 @@ export async function parseSmsIntent(replyText: string): Promise<ParsedIntent> {
     context = llmContext
   } catch (error) {
     // LLM failure is non-fatal - we still have deterministic actions
-    logger.error('[Jarvis] LLM context extraction failed', error instanceof Error ? error : new Error(String(error)), { reply_text_length: replyText.length })
+    logger.error('[Jarvis] LLM context extraction failed', { ...errorToContext(error), reply_text_length: replyText.length })
   }
 
   return {

@@ -5,7 +5,7 @@
  */
 
 import { getServerSupabase } from '@/lib/supabaseServer'
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 
 export interface IncidentSummary {
   incident_id: string
@@ -36,7 +36,7 @@ export async function generateAndStoreSummary(incidentId: string): Promise<void>
       .single()
 
     if (incidentError || !incident) {
-      logger.error('[Jarvis] Error fetching incident for summary', new Error(incidentError?.message || 'Incident not found'), { incident_id: incidentId })
+      logger.error('[Jarvis] Error fetching incident for summary', { ...errorToContext(incidentError || new Error('Incident not found')), incident_id: incidentId })
       return
     }
 
@@ -48,7 +48,7 @@ export async function generateAndStoreSummary(incidentId: string): Promise<void>
       .order('occurred_at', { ascending: true })
 
     if (eventsError) {
-      logger.error('[Jarvis] Error fetching events for summary', new Error(eventsError.message), { incident_id: incidentId })
+      logger.error('[Jarvis] Error fetching events for summary', { ...errorToContext(eventsError), incident_id: incidentId })
       return
     }
 
@@ -128,6 +128,6 @@ export async function generateAndStoreSummary(incidentId: string): Promise<void>
         onConflict: 'incident_id'
       })
   } catch (error) {
-    logger.error('[Jarvis] Error generating summary', error instanceof Error ? error : new Error(String(error)), { incident_id: incidentId })
+    logger.error('[Jarvis] Error generating summary', { ...errorToContext(error), incident_id: incidentId })
   }
 }

@@ -1,5 +1,5 @@
 import { getServerSupabase } from '@/lib/supabaseServer'
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
@@ -59,7 +59,7 @@ export async function processRefund(
 
     return { status: 'completed', amount: refund.amount, transactionId: refund.id }
   } catch (error) {
-    logger.error('Refund processing error', error instanceof Error ? error : new Error(String(error)), { booking_id: bookingId })
+    logger.error('Refund processing error', { ...errorToContext(error), booking_id: bookingId })
 
     await supabase
       .from('bookings')

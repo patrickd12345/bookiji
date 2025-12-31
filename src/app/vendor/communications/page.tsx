@@ -113,7 +113,7 @@ export default function VendorCommunicationsPage() {
               {selectedTemplate ? `Edit: ${selectedTemplate.name}` : 'Select a template to edit'}
             </CardTitle>
             <CardDescription>
-              Use variables like {{customer_name}}, {{service_name}}, {{booking_date}}, etc.
+              Use variables like {'{{customer_name}}'}, {'{{service_name}}'}, {'{{booking_date}}'}, etc.
             </CardDescription>
           </CardHeader>
           <CardContent>

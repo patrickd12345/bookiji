@@ -6,7 +6,7 @@
  */
 
 import { sendSMS } from '@/lib/notifications/providers'
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 import type { IncidentSMS, ParsedReply, JarvisAssessment, IncidentSnapshot } from './types'
 
 /**
@@ -158,7 +158,7 @@ export async function parseSMSReply(
         return llmParsed
       }
     } catch (error) {
-      logger.error('LLM parsing failed, using regex fallback', error instanceof Error ? error : new Error(String(error)), { reply_text_length: replyText.length })
+      logger.error('LLM parsing failed, using regex fallback', { ...errorToContext(error), reply_text_length: replyText.length })
     }
   }
 

@@ -7,7 +7,7 @@
 
 import { getServerSupabase } from '@/lib/supabaseServer'
 import { getAppEnv } from '@/lib/env/assertAppEnv'
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 import type { IncidentSnapshot, JarvisAssessment, Environment } from '../types'
 import { getActivePlaybookState } from '../playbooks/state'
 import type { PlaybookState } from '../playbooks/types'
@@ -75,7 +75,7 @@ export async function getIncidentStatusSnapshot(
       active_playbook: activePlaybook || undefined
     }
   } catch (error) {
-    logger.error('[Jarvis] Error getting incident status snapshot', error instanceof Error ? error : new Error(String(error)))
+    logger.error('[Jarvis] Error getting incident status snapshot', errorToContext(error))
     return null
   }
 }
@@ -123,7 +123,7 @@ export async function getPreviousIncident(
       time_since_start: timeSinceStart
     }
   } catch (error) {
-    logger.error('[Jarvis] Error getting previous incident', error instanceof Error ? error : new Error(String(error)))
+    logger.error('[Jarvis] Error getting previous incident', errorToContext(error))
     return null
   }
 }

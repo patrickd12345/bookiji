@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js'
 import { featureFlags } from '@/config/featureFlags'
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
@@ -77,7 +77,7 @@ export class BookingWorker {
         .limit(10) // Process in batches
 
       if (error) {
-        logger.error('Failed to fetch pending events', new Error(error.message))
+        logger.error('Failed to fetch pending events', errorToContext(error))
         return
       }
 
@@ -91,13 +91,13 @@ export class BookingWorker {
         try {
           await this.processBookingEvent(event)
         } catch (eventError) {
-          logger.error('Failed to process event', eventError instanceof Error ? eventError : new Error(String(eventError)), { event_id: event.id })
+          logger.error('Failed to process event', { ...errorToContext(eventError), event_id: event.id })
           await this.markEventFailed(event.id, eventError instanceof Error ? eventError.message : 'Unknown error')
         }
       }
 
     } catch (error) {
-      logger.error('Error in processPendingBookings', error instanceof Error ? error : new Error(String(error)))
+      logger.error('Error in processPendingBookings', errorToContext(error))
     }
   }
 
@@ -200,7 +200,7 @@ export class BookingWorker {
       logger.info('Booking confirmed successfully', { booking_id: booking.id })
 
     } catch (error) {
-      logger.error('Failed to confirm booking', error instanceof Error ? error : new Error(String(error)), { booking_id: booking.id })
+      logger.error('Failed to confirm booking', { ...errorToContext(error), booking_id: booking.id })
       throw error
     }
   }
@@ -248,7 +248,7 @@ export class BookingWorker {
       logger.info('Booking auto-cancelled due to provider timeout', { booking_id: booking.id })
 
     } catch (error) {
-      logger.error('Failed to auto-cancel booking', error instanceof Error ? error : new Error(String(error)), { booking_id: booking.id })
+      logger.error('Failed to auto-cancel booking', { ...errorToContext(error), booking_id: booking.id })
       throw error
     }
   }

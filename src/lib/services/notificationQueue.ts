@@ -1,7 +1,7 @@
 import type { NotificationRequest } from '@/app/api/notifications/send/route';
 import { createClient } from '@supabase/supabase-js'
 import { getSupabaseConfig } from '@/config/supabase'
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 
 export interface NotificationAttemptResult {
   success: boolean;
@@ -55,7 +55,6 @@ export async function addToDeadLetterQueue(
   if (deadLetterQueue.length > DLQ_ALERT_THRESHOLD) {
     logger.error(
       `Dead letter queue size ${deadLetterQueue.length} exceeds threshold ${DLQ_ALERT_THRESHOLD}`,
-      undefined,
       { queue_size: deadLetterQueue.length, threshold: DLQ_ALERT_THRESHOLD }
     );
   }

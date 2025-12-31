@@ -10,7 +10,7 @@ import type { IncidentSnapshot, JarvisAssessment } from './types'
 import crypto from 'crypto'
 import { storeAcknowledged, storeIncidentResolved } from './observability/events'
 import { generateAndStoreSummary } from './observability/summary'
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 
 /**
  * Generate incident hash for duplicate detection
@@ -63,14 +63,14 @@ export async function wasRecentlySent(
 
     if (error && error.code !== 'PGRST116') {
       // Error reading - fail open (allow sending)
-      logger.error('Error checking recent incidents', new Error(error.message), { incident_hash: incidentHash })
+      logger.error('Error checking recent incidents', { ...errorToContext(error), incident_hash: incidentHash })
       return false
     }
 
     return !!data
   } catch (error) {
     // Fail open - allow sending if we can't check
-    logger.error('Exception checking recent incidents', error instanceof Error ? error : new Error(String(error)), { incident_hash: incidentHash })
+    logger.error('Exception checking recent incidents', { ...errorToContext(error), incident_hash: incidentHash })
     return false
   }
 }
@@ -111,7 +111,7 @@ export async function recordIncidentNotification(
       })
   } catch (error) {
     // Log but don't fail - notification already sent
-    logger.error('Error recording incident notification', error instanceof Error ? error : new Error(String(error)), { incident_id: incidentId })
+    logger.error('Error recording incident notification', { ...errorToContext(error), incident_id: incidentId })
   }
 }
 
@@ -141,7 +141,7 @@ export async function getUnrepliedIncidents(
       .order('sent_at', { ascending: false })
 
     if (error) {
-      logger.error('Error fetching unreplied incidents', new Error(error.message), { no_reply_window_minutes: noReplyWindowMinutes })
+      logger.error('Error fetching unreplied incidents', { ...errorToContext(error), no_reply_window_minutes: noReplyWindowMinutes })
       return []
     }
 
@@ -153,7 +153,7 @@ export async function getUnrepliedIncidents(
       assessment: incident.assessment as unknown as JarvisAssessment
     }))
   } catch (error) {
-    logger.error('Exception fetching unreplied incidents', error instanceof Error ? error : new Error(String(error)), { no_reply_window_minutes: noReplyWindowMinutes })
+    logger.error('Exception fetching unreplied incidents', { ...errorToContext(error), no_reply_window_minutes: noReplyWindowMinutes })
     return []
   }
 }
@@ -177,7 +177,7 @@ export async function markIncidentReplied(incidentId: string): Promise<void> {
     // Store acknowledged event
     await storeAcknowledged(incidentId, now)
   } catch (error) {
-    logger.error('Error marking incident as replied', error instanceof Error ? error : new Error(String(error)), { incident_id: incidentId })
+    logger.error('Error marking incident as replied', { ...errorToContext(error), incident_id: incidentId })
   }
 }
 
@@ -203,7 +203,7 @@ export async function markIncidentResolved(incidentId: string, terminalState: st
     // Generate and store summary
     await generateAndStoreSummary(incidentId)
   } catch (error) {
-    logger.error('Error marking incident as resolved', error instanceof Error ? error : new Error(String(error)), { incident_id: incidentId, terminal_state: terminalState })
+    logger.error('Error marking incident as resolved', { ...errorToContext(error), incident_id: incidentId, terminal_state: terminalState })
   }
 }
 

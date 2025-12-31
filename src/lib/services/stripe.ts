@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient';
-import { logger } from '@/lib/logger';
+import { logger, errorToContext } from '@/lib/logger';
 
 let _stripe: Stripe | null = null;
 let _isMockMode: boolean | null = null;
@@ -131,7 +131,7 @@ export class StripeService {
 
       return paymentIntent;
     } catch (error) {
-      logger.error('Error creating payment intent', error instanceof Error ? error : new Error(String(error)));
+      logger.error('Error creating payment intent', errorToContext(error));
       throw new Error(`Failed to create payment intent: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -201,7 +201,7 @@ export class StripeService {
       };
 
     } catch (error) {
-      logger.error('Error confirming payment', error instanceof Error ? error : new Error(String(error)));
+      logger.error('Error confirming payment', errorToContext(error));
       return {
         success: false,
         payment_intent_id: paymentIntentId,
@@ -268,7 +268,7 @@ export class StripeService {
       const refund = await stripe.refunds.create(refundData);
       return refund;
     } catch (error) {
-      logger.error('Error processing refund', error instanceof Error ? error : new Error(String(error)));
+      logger.error('Error processing refund', errorToContext(error));
       throw new Error(`Failed to process refund: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -311,7 +311,7 @@ export class StripeService {
       if (!stripe) throw new Error('Stripe client not initialized');
       return stripe.webhooks.constructEvent(payload, signature, secret);
     } catch (error) {
-      logger.error('Webhook signature verification failed', error instanceof Error ? error : new Error(String(error)));
+      logger.error('Webhook signature verification failed', errorToContext(error));
       throw new Error('Webhook signature verification failed');
     }
   }
@@ -363,7 +363,7 @@ export class StripeService {
       if (!stripe) throw new Error('Stripe client not initialized');
       return await stripe.customers.retrieve(customerId) as Stripe.Customer;
     } catch (error) {
-      logger.error('Error retrieving customer', error instanceof Error ? error : new Error(String(error)), { customer_id: customerId });
+      logger.error('Error retrieving customer', { ...errorToContext(error), customer_id: customerId });
       return null;
     }
   }
@@ -399,7 +399,7 @@ export class StripeService {
         },
       });
     } catch (error) {
-      logger.error('Error creating customer', error instanceof Error ? error : new Error(String(error)), { email, name });
+      logger.error('Error creating customer', { ...errorToContext(error), email, name });
       throw new Error(`Failed to create customer: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -473,7 +473,7 @@ export class StripeService {
       const subscriptionId = session.subscription as string;
       
       if (!providerId || !customerId || !subscriptionId) {
-          logger.error('Missing data in checkout session', undefined, { providerId, customerId, subscriptionId });
+          logger.error('Missing data in checkout session', { providerId, customerId, subscriptionId });
           return;
       }
 
@@ -551,7 +551,7 @@ export class StripeService {
         .single();
         
       if (!existing) {
-          logger.error('Subscription update for unknown customer', undefined, { customer_id: customerId });
+          logger.error('Subscription update for unknown customer', { customer_id: customerId });
           return;
       }
 
@@ -646,7 +646,7 @@ export class StripeService {
 
       return await stripe.subscriptions.update(subscriptionId, updateParams);
     } catch (error) {
-      logger.error('Error updating subscription', error instanceof Error ? error : new Error(String(error)));
+      logger.error('Error updating subscription', errorToContext(error));
       throw new Error(`Failed to update subscription: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -683,7 +683,7 @@ export class StripeService {
 
       return await stripe.subscriptions.cancel(subscriptionId);
     } catch (error) {
-      logger.error('Error canceling subscription', error instanceof Error ? error : new Error(String(error)));
+      logger.error('Error canceling subscription', errorToContext(error));
       throw new Error(`Failed to cancel subscription: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

@@ -5,7 +5,7 @@
  * This is where LLM absolutely belongs - structured reasoning over system state.
  */
 
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 import type { IncidentSnapshot, JarvisAssessment, Severity } from './types'
 
 /**
@@ -111,7 +111,7 @@ Format as JSON:
       confidence: Math.max(0, Math.min(1, parsed.confidence || 0.5))
     }
   } catch (error) {
-    logger.error('LLM assessment failed, using deterministic fallback', error instanceof Error ? error : new Error(String(error)), { env: snapshot.env })
+    logger.error('LLM assessment failed, using deterministic fallback', { ...errorToContext(error), env: snapshot.env })
     return deterministicAssessment(snapshot)
   }
 }

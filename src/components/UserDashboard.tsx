@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
+import { logger, errorToContext } from '@/lib/logger'
 import { NotificationResponse, NotificationError } from '@/types/notification'
 import { 
   User, 
@@ -37,7 +38,6 @@ import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { customerDashboardSteps, customerDashboardTourId } from '@/tours/dashboardNavigation'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { logger } from '@/lib/logger'
 
 interface UserProfile {
   id: string
@@ -150,8 +150,7 @@ export default function UserDashboard() {
       notifications.setData(data.notifications)
     } catch (error) {
       const notificationErrorMessage = error instanceof Error ? error.message : 'Failed to load notifications'
-      const notificationError = error instanceof Error ? error : new Error(notificationErrorMessage)
-      logger.error('Failed to load notifications', notificationError)
+      logger.error('Failed to load notifications', errorToContext(error))
       notifications.setError(notificationErrorMessage)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -313,9 +312,7 @@ export default function UserDashboard() {
         // Load notifications
         loadNotifications()
       } catch (error) {
-        const loadUserDataErrorMessage = error instanceof Error ? error.message : 'Error loading user data'
-        const loadUserDataError = error instanceof Error ? error : new Error(loadUserDataErrorMessage)
-        logger.error('Error loading user data', loadUserDataError)
+        logger.error('Error loading user data', errorToContext(error))
       }
     }
 

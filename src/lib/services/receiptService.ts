@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js'
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
@@ -100,7 +100,7 @@ export class ReceiptService {
       return receiptUrl
 
     } catch (error) {
-      logger.error('Failed to generate receipt for booking', error instanceof Error ? error : new Error(String(error)), { booking_id: bookingId })
+      logger.error('Failed to generate receipt for booking', { ...errorToContext(error), booking_id: bookingId })
       throw error
     }
   }
@@ -163,7 +163,7 @@ export class ReceiptService {
       }
 
     } catch (error) {
-      logger.error('Failed to get receipt data for booking', error instanceof Error ? error : new Error(String(error)), { booking_id: bookingId })
+      logger.error('Failed to get receipt data for booking', { ...errorToContext(error), booking_id: bookingId })
       return null
     }
   }
@@ -194,7 +194,7 @@ export class ReceiptService {
       logger.info('Would send SMS receipt to customer', { booking_id: bookingId })
 
     } catch (error) {
-      logger.error('Failed to send receipt notifications for booking', error instanceof Error ? error : new Error(String(error)), { booking_id: bookingId })
+      logger.error('Failed to send receipt notifications for booking', { ...errorToContext(error), booking_id: bookingId })
       // Don't throw - notifications are not critical to the core flow
     }
   }
@@ -213,7 +213,7 @@ export class ReceiptService {
         .order('created_at', { ascending: true })
 
       if (error) {
-        logger.error('Failed to fetch confirmed bookings', new Error(error.message))
+        logger.error('Failed to fetch confirmed bookings', errorToContext(new Error(error.message)))
         return
       }
 
@@ -228,12 +228,12 @@ export class ReceiptService {
           await this.generateReceipt(booking.id)
           await this.sendReceiptNotifications(booking.id)
         } catch (receiptError) {
-          logger.error('Failed to process receipt for booking', receiptError instanceof Error ? receiptError : new Error(String(receiptError)), { booking_id: booking.id })
+          logger.error('Failed to process receipt for booking', { ...errorToContext(receiptError), booking_id: booking.id })
         }
       }
 
     } catch (error) {
-      logger.error('Error in processConfirmedBookings', error instanceof Error ? error : new Error(String(error)))
+      logger.error('Error in processConfirmedBookings', errorToContext(error instanceof Error ? error : new Error(String(error))))
     }
   }
 }

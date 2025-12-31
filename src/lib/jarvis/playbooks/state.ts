@@ -6,7 +6,7 @@
  */
 
 import { getServerSupabase } from '@/lib/supabaseServer'
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 import type { PlaybookState } from './types'
 
 /**
@@ -43,7 +43,7 @@ export async function getActivePlaybookState(
 
     return null
   } catch (error) {
-    logger.error('[Jarvis] Error getting playbook state', error instanceof Error ? error : new Error(String(error)), { owner_phone: _ownerPhone })
+    logger.error('[Jarvis] Error getting playbook state', { ...errorToContext(error), owner_phone: _ownerPhone })
     return null
   }
 }
@@ -95,7 +95,7 @@ export async function savePlaybookState(
       onConflict: 'incident_id'
     })
   } catch (error) {
-    logger.error('[Jarvis] Error saving playbook state', error instanceof Error ? error : new Error(String(error)), { owner_phone: ownerPhone, playbook_id: state.playbook_id })
+    logger.error('[Jarvis] Error saving playbook state', { ...errorToContext(error), owner_phone: ownerPhone, playbook_id: state.playbook_id })
     // Don't throw - state persistence failure shouldn't break execution
   }
 }
@@ -146,7 +146,7 @@ export async function updatePlaybookState(
       }
     }
   } catch (error) {
-    logger.error('[Jarvis] Error updating playbook state', error instanceof Error ? error : new Error(String(error)), { playbook_id: state.playbook_id })
+    logger.error('[Jarvis] Error updating playbook state', { ...errorToContext(error), playbook_id: state.playbook_id })
   }
 }
 

@@ -12,13 +12,48 @@ test.describe('Admin Guard Tests', () => {
       if (currentUrl.includes('/login') || currentUrl.includes('/auth')) {
         console.log('✅ Admin guard working: redirected to auth');
       } else if (currentUrl.includes('/admin')) {
-        // Check if there's an access denied message
-        const bodyText = await page.locator('body').textContent() || '';
-        if (bodyText.toLowerCase().includes('access denied') || 
-            bodyText.toLowerCase().includes('unauthorized') ||
-            bodyText.toLowerCase().includes('forbidden')) {
-          console.log('✅ Admin guard working: access denied');
-        } else {
+        // Wait for page to load
+        await page.waitForLoadState('domcontentloaded');
+        await page.waitForTimeout(2000); // Wait for auth check to complete
+        
+        // Check for access denied message using multiple selectors
+        const accessDeniedSelectors = [
+          page.locator('text=/access denied/i'),
+          page.locator('text=/admin access required/i'),
+          page.locator('text=/don\'t have permission/i'),
+          page.locator('text=/unauthorized/i'),
+          page.locator('text=/forbidden/i'),
+          page.locator('[role="alert"]'),
+          page.locator('h1:has-text("Access Denied")'),
+          page.locator('h1:has-text("Admin Access Required")'),
+        ];
+        
+        let foundAccessDenied = false;
+        for (const selector of accessDeniedSelectors) {
+          const isVisible = await selector.isVisible({ timeout: 1000 }).catch(() => false);
+          if (isVisible) {
+            foundAccessDenied = true;
+            console.log('✅ Admin guard working: access denied message found');
+            break;
+          }
+        }
+        
+        // Also check body text as fallback
+        if (!foundAccessDenied) {
+          const bodyText = await page.locator('body').textContent() || '';
+          if (bodyText.toLowerCase().includes('access denied') || 
+              bodyText.toLowerCase().includes('admin access required') ||
+              bodyText.toLowerCase().includes('don\'t have permission') ||
+              bodyText.toLowerCase().includes('unauthorized') ||
+              bodyText.toLowerCase().includes('forbidden')) {
+            foundAccessDenied = true;
+            console.log('✅ Admin guard working: access denied message found in body text');
+          }
+        }
+        
+        if (!foundAccessDenied) {
+          // Take screenshot for debugging
+          await page.screenshot({ path: 'test-results/admin-guard-no-message.png', fullPage: true });
           console.log('⚠️  Admin page accessible without auth - check guard');
         }
       }

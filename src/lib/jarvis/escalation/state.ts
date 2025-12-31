@@ -6,7 +6,7 @@
  */
 
 import { getServerSupabase } from '@/lib/supabaseServer'
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 import type { EscalationContext } from './decideNextAction'
 import { storeAcknowledged } from '../observability/events'
 import { generateAndStoreSummary } from '../observability/summary'
@@ -39,7 +39,7 @@ export async function getEscalationContext(
       notificationCount: data.notification_count || 0
     }
   } catch (error) {
-    logger.error('[Jarvis] Error getting escalation context', error instanceof Error ? error : new Error(String(error)), { incident_id: incidentId })
+    logger.error('[Jarvis] Error getting escalation context', { ...errorToContext(error), incident_id: incidentId })
     return null
   }
 }
@@ -80,7 +80,7 @@ export async function updateEscalationAfterNotification(
       .update(updateData)
       .eq('incident_id', incidentId)
   } catch (error) {
-    logger.error('[Jarvis] Error updating escalation state', error instanceof Error ? error : new Error(String(error)), { incident_id: incidentId, is_first_notification: isFirstNotification })
+    logger.error('[Jarvis] Error updating escalation state', { ...errorToContext(error), incident_id: incidentId, is_first_notification: isFirstNotification })
     // Don't throw - escalation tracking failure shouldn't break notification
   }
 }
@@ -103,7 +103,7 @@ export async function markIncidentAcknowledged(incidentId: string): Promise<void
     // Store acknowledged event
     await storeAcknowledged(incidentId, now)
   } catch (error) {
-    logger.error('[Jarvis] Error marking incident as acknowledged', error instanceof Error ? error : new Error(String(error)), { incident_id: incidentId })
+    logger.error('[Jarvis] Error marking incident as acknowledged', { ...errorToContext(error), incident_id: incidentId })
   }
 }
 
@@ -130,7 +130,7 @@ export async function getUnacknowledgedIncidents(): Promise<Array<{
       .limit(10)
 
     if (error) {
-      logger.error('[Jarvis] Error getting unacknowledged incidents', new Error(error.message))
+      logger.error('[Jarvis] Error getting unacknowledged incidents', errorToContext(error))
       return []
     }
 
@@ -143,7 +143,7 @@ export async function getUnacknowledgedIncidents(): Promise<Array<{
       notification_count: incident.notification_count || 0
     }))
   } catch (error) {
-    logger.error('[Jarvis] Error getting unacknowledged incidents', error instanceof Error ? error : new Error(String(error)))
+    logger.error('[Jarvis] Error getting unacknowledged incidents', errorToContext(error))
     return []
   }
 }

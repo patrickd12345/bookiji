@@ -1,5 +1,5 @@
 import { getServerSupabase } from '@/lib/supabaseServer'
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
@@ -107,7 +107,7 @@ class BookingStateMachine {
 
       return { success: true, booking: updatedBooking, refundResult }
     } catch (error) {
-      logger.error('State transition error', error instanceof Error ? error : new Error(String(error)), { booking_id: bookingId, from_state: booking.status, to_state: newStatus })
+      logger.error('State transition error', { ...errorToContext(error), booking_id: bookingId, from_state: booking.status, to_state: newStatus })
       return { success: false, error: error instanceof Error ? error.message : 'State transition failed' }
     }
   }

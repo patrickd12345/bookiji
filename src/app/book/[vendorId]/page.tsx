@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { ADSENSE_APPROVAL_MODE } from '@/lib/adsense'
 import { isTruthyEnv } from '@/lib/env/isTruthyEnv'
-import { logger } from '@/lib/logger'
+import { logger, errorToContext } from '@/lib/logger'
 
 interface Service {
   id: string
@@ -111,7 +111,7 @@ export default function BookVendorPage() {
 
       setServices(normalizedServices)
     } catch (error) {
-      logger.error('Error fetching vendor data', error instanceof Error ? error : new Error(String(error)))
+      logger.error('Error fetching vendor data', errorToContext(error))
       setVendorProfileId(vendorId)
       setVendor({
         id: vendorId,
@@ -176,7 +176,7 @@ export default function BookVendorPage() {
         }
       }
     } catch (error) {
-      logger.error('Error fetching availability', error instanceof Error ? error : new Error(String(error)))
+      logger.error('Error fetching availability', errorToContext(error))
     }
 
     // Final fallback: ensure at least one far-future slot is present for E2E
@@ -309,13 +309,13 @@ export default function BookVendorPage() {
       }
 
       if (!response.ok) {
-        logger.error('Booking create failed', undefined, { status: response.status, data, payload })
+        logger.error('Booking create failed', { status: response.status, data, payload })
       }
 
       // E2E fallback: navigate to deterministic pay route even if API failed or route compile is slow.
       window.location.assign(fallbackPayUrl)
     } catch (error) {
-      logger.error('Booking error', error instanceof Error ? error : new Error(String(error)))
+      logger.error('Booking error', errorToContext(error))
       if (isE2E) {
         window.location.assign(fallbackPayUrl)
         return
