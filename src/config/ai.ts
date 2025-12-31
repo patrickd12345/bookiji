@@ -1,10 +1,14 @@
 /**
  * AI Service Configuration
  * Centralized configuration for AI service timeouts, retries, and fallbacks
+ * 
+ * ⚠️ IMPORTANT: Production uses Gemini 1.5 Flash as the in-house model.
+ * Ollama configuration is for local development/testing only.
  */
 
 export interface AIConfig {
   ollama: {
+    // ⚠️ LOCAL DEVELOPMENT ONLY - Production uses Gemini
     timeout: number
     maxRetries: number
     retryDelay: number

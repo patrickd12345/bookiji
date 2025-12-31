@@ -1,13 +1,19 @@
 # LLM Provider Configuration
 
+## Production Model
+
+**Gemini 1.5 Flash** is Bookiji's **in-house production model** for all AI features.
+
 ## Why Multiple Providers?
 
 The Support Module supports **4 providers** to maximize flexibility and cost savings:
 
-1. **Gemini 1.5 Flash** - FREE tier, ~$0.07/1M tokens (Recommended)
-2. **Groq** - FREE tier, extremely fast inference
-3. **DeepSeek** - Very low cost
-4. **OpenAI** - Reliable, widely used (more expensive)
+1. **Gemini 1.5 Flash** - FREE tier, ~$0.07/1M tokens (✅ **PRODUCTION - In-House Model**)
+2. **Groq** - FREE tier, extremely fast inference (Fallback)
+3. **DeepSeek** - Very low cost (Fallback)
+4. **OpenAI** - Reliable, widely used (more expensive) (Fallback)
+
+**Note:** Ollama is available for local development/testing only and is not used in production.
 
 ## Architecture
 

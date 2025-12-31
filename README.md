@@ -428,8 +428,8 @@ If you encounter build problems:
 - **Real-time subscriptions**
 
 ### **AI & ML**
-- **Ollama** for local LLM inference
-- **Railway** for production AI hosting
+- **Gemini 1.5 Flash** for production AI (in-house model)
+- **Ollama** for local development/testing only (optional)
 - **Intelligent fallbacks** for reliability
 
 ### **Payments & Notifications**

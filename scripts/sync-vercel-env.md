@@ -1,5 +1,10 @@
 # Sync Environment Variables to Vercel Production
 
+## ⚠️ SECURITY WARNING
+**NEVER commit credentials to version control!**  
+This file should only contain variable names and placeholders.  
+Copy actual values from your `.env.local` or secure credential storage.
+
 ## Critical Supabase Variables (Required for Authentication)
 
 Copy these from your `.env.local` to **Vercel Dashboard → Settings → Environment Variables**:
@@ -7,9 +12,9 @@ Copy these from your `.env.local` to **Vercel Dashboard → Settings → Environ
 ### Required Variables for Production:
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://uradoazoyhhozbemrccj.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_E5HX8sFsapD2Qn2fsdd1Kw_ikzHofuz
-SUPABASE_SECRET_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjI1ODU5NiwiZXhwIjoyMDgxODM0NTk2fQ.ZqDpwTzkGbirFxrCXWP5FNE0ehNWkasa7AM6BnwVXkw
+NEXT_PUBLIC_SUPABASE_URL=[your_supabase_url]
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[your_supabase_publishable_key]
+SUPABASE_SECRET_KEY=[your_supabase_secret_key]
 ```
 
 ### Additional Important Variables:
@@ -21,7 +26,7 @@ NEXT_PUBLIC_BASE_URL=https://bookiji.com
 CANONICAL_HOST=bookiji.com
 
 # Database
-DATABASE_URL=postgresql://postgres:Bookiji2024!@db.uradoazoyhhozbemrccj.supabase.co:5432/postgres
+DATABASE_URL=[your_database_url_with_credentials]
 
 # Stripe (if using payments)
 STRIPE_SECRET_KEY=[your_live_stripe_key]
@@ -34,23 +39,23 @@ NEXT_PUBLIC_MAPBOX_TOKEN=[your_mapbox_token]
 
 # AI/LLM
 SUPPORT_LLM_PROVIDER=groq
-GROQ_API_KEY=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
+GROQ_API_KEY=[your_groq_api_key]
 SUPPORT_EMBEDDING_PROVIDER=gemini
-GEMINI_API_KEY=AIzaSyCRZ_QGmKpeZI1cdWMh3fR_vHI4Xvdfx5c
+GEMINI_API_KEY=[your_gemini_api_key]
 
 # SEO
-INDEXNOW_KEY=6e58c0fca47b66297cec27a6d0c200e2
+INDEXNOW_KEY=[your_indexnow_key]
 
 # KB API
 API_BASE_URL=https://api.bookiji.com
-KB_API_KEY=b5adf5c6edb883932104c96c7a9969cc4c5142f732a7ebd41520c9736a7323fa
+KB_API_KEY=[your_kb_api_key]
 KB_RATE_LIMIT_PER_MIN=30
 
 # MailerSend
 MAILERSEND_SMTP_HOST=smtp.mailersend.net
 MAILERSEND_SMTP_PORT=587
-MAILERSEND_SMTP_USER=MS_0hxbtC@bookiji.com
-MAILERSEND_SMTP_PASS=mssp.sLKhPTo.vywj2lp077147oqz.k9nsVIT
+MAILERSEND_SMTP_USER=[your_mailersend_smtp_user]
+MAILERSEND_SMTP_PASS=[your_mailersend_smtp_password]
 MAILERSEND_FROM_EMAIL=no-reply@bookiji.com
 MAILERSEND_FROM_NAME=Bookiji
 ```
@@ -95,13 +100,13 @@ If you have Vercel CLI installed, you can also set them via command line:
 
 ```bash
 vercel env add NEXT_PUBLIC_SUPABASE_URL production
-# Paste: https://uradoazoyhhozbemrccj.supabase.co
+# Paste your Supabase URL from .env.local
 
 vercel env add NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY production
-# Paste: sb_publishable_E5HX8sFsapD2Qn2fsdd1Kw_ikzHofuz
+# Paste your Supabase publishable key from .env.local
 
 vercel env add SUPABASE_SECRET_KEY production
-# Paste: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjI1ODU5NiwiZXhwIjoyMDgxODM0NTk2fQ.ZqDpwTzkGbirFxrCXWP5FNE0ehNWkasa7AM6BnwVXkw
+# Paste your Supabase secret key from .env.local
 ```
 
 Then redeploy:

@@ -14,7 +14,7 @@ It should be treated as a running checklist before production launch.
 - [x] Consolidate lockfiles: `package-lock.json` vs `pnpm-lock.yaml` — pick one package manager.
 
 ## ⚡ Infrastructure
-- [ ] Verify MailerSend SMTP integration — credentials management, retries, and no secrets leaked.
+- [x] Verify MailerSend SMTP integration — credentials management, retries, and no secrets leaked. ✅ **COMPLETE** - Removed hardcoded credentials, added retry logic with exponential backoff, updated .gitignore
 - [x] Supabase migrations: unify into a linear migration history. Archive/remove ad hoc SQL fixes (`check_schema.sql`, `COMPREHENSIVE_DATABASE_FIX.sql`).
 - [x] Provide a proper Dockerfile for the app itself. Currently only `docker-compose.yml` + `llm/Dockerfile` exist.
 - [x] Ensure `docker-compose up` brings the full stack (app + db + services).
@@ -30,9 +30,9 @@ It should be treated as a running checklist before production launch.
 - [x] Clarify whether `PATENT_OUTLINE.md` is placeholder or actionable. (ACTIONABLE - contains specific technical claims)
 
 ## 🌐 App Code
-- [ ] Audit new `useAuthReady` hook — ensure no login/session race conditions remain.
-- [ ] Verify cron/automation scripts (`scripts/ai-test-loop.mjs`, `docs/SUPPORT_CRON_SETUP.md`) are wired into deployment or clearly marked experimental.
-- [ ] Clarify status of Ollama integration (`lib/ollama.ts`, `llm/`) — core feature or experiment?
+- [x] Audit new `useAuthReady` hook — ensure no login/session race conditions remain. ✅ **COMPLETE** - Enhanced with proper error handling, mounted checks, and race condition prevention
+- [x] Verify cron/automation scripts (`scripts/ai-test-loop.mjs`, `docs/SUPPORT_CRON_SETUP.md`) are wired into deployment or clearly marked experimental. ✅ **COMPLETE** - ai-test-loop.mjs marked as experimental, SUPPORT_CRON_SETUP.md documents production deployment
+- [x] Clarify status of Ollama integration (`lib/ollama.ts`, `llm/`) — core feature or experiment? ✅ **CLARIFIED** - Ollama is NOT used. Gemini is the in-house model for production. Ollama code exists for local development/testing only.
 
 ## 🎯 Specialty System Implementation - COMPLETED ✅
 - [x] **Admin Specialties Management** - Complete CRUD interface with hierarchical tree view

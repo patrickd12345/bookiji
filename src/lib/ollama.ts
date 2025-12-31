@@ -1,4 +1,8 @@
 // 🧠 Ollama Integration Service
+// ⚠️ LOCAL DEVELOPMENT ONLY - NOT FOR PRODUCTION ⚠️
+// 
+// This service is for local development and testing only.
+// Production uses Gemini 1.5 Flash as the in-house model.
 // Handles local AI interactions for Bookiji with robust timeout handling
 
 import fetch from 'node-fetch'

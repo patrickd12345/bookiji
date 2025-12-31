@@ -1,7 +1,16 @@
 #!/usr/bin/env node
 // scripts/ai-test-loop.mjs
+// 
+// ⚠️ EXPERIMENTAL DEVELOPMENT TOOL - NOT FOR PRODUCTION USE ⚠️
+// 
 // Iteratively run Vitest and, on failures, ask local Ollama for a git patch.
 // Apply the patch, then rerun until green or until MAX_ITERATIONS is reached.
+// 
+// This script is for local development only and should NOT be wired into
+// CI/CD pipelines or production deployments. It requires:
+// - Local Ollama instance running
+// - Git repository with write access
+// - Manual review of all automated changes
 
 import { spawnSync, execSync } from 'node:child_process'
 import process from 'node:process'

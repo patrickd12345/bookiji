@@ -6,7 +6,7 @@ This guide gets you up and running with Bookiji's streamlined development stack 
 
 - **Node.js 18+** - [Download here](https://nodejs.org)
 - **pnpm** - `npm install -g pnpm`
-- **Ollama** - [Download here](https://ollama.ai)
+- **Ollama** (Optional) - [Download here](https://ollama.ai) - For local development only. Production uses Gemini.
 
 ## ⚡ Quick Start (5 minutes)
 
@@ -51,9 +51,11 @@ pnpm dev
 - Test all features using demo buttons
 - Try AI conversational interface
 
-## 🧠 AI Setup (Ollama)
+## 🧠 AI Setup
 
-### **Install Ollama**
+**Note:** Production uses **Gemini 1.5 Flash** as the in-house model. Ollama is optional and only for local development/testing.
+
+### **Local Development: Ollama (Optional)**
 ```bash
 # macOS
 brew install ollama

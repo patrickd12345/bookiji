@@ -32,6 +32,42 @@ function getTransporter() {
   return _transporter
 }
 
+/**
+ * Retry helper with exponential backoff
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | unknown;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      
+      // Don't retry on the last attempt
+      if (attempt === maxRetries) {
+        break;
+      }
+      
+      // Calculate exponential backoff delay: 1s, 2s, 4s
+      const delay = initialDelay * Math.pow(2, attempt);
+      logger.warn(`Email send attempt ${attempt + 1} failed, retrying in ${delay}ms...`, {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        attempt: attempt + 1,
+        maxRetries,
+      });
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+}
+
 export async function sendEmail({
   to,
   subject,
@@ -41,7 +77,9 @@ export async function sendEmail({
   subject: string;
   html: string;
 }) {
-  try {
+  const maxRetries = Number(process.env.MAILERSEND_MAX_RETRIES || 3);
+  
+  return retryWithBackoff(async () => {
     const transporter = getTransporter()
     const result = await transporter.sendMail({
       from: `"${process.env.MAILERSEND_FROM_NAME || 'Bookiji'}" <${
@@ -56,9 +94,13 @@ export async function sendEmail({
     
     logger.info('Email sent successfully to:', { to, messageId: result.messageId });
     return result;
-  } catch (error) {
+  }, maxRetries).catch((error) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Failed to send email to:', to, 'Error:', errorMessage);
+    logger.error('Failed to send email after retries:', { 
+      to, 
+      error: errorMessage,
+      maxRetries,
+    });
     throw error;
-  }
+  });
 }

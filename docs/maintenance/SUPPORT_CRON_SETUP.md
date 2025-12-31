@@ -2,6 +2,18 @@
 
 This document describes how to set up automated cron jobs for the Bookiji support system.
 
+## ⚠️ Production Deployment Status
+
+**Status**: ✅ **PRODUCTION READY** - These cron jobs are designed for production deployment.
+
+The support system cron jobs are:
+- ✅ Documented for Supabase Edge Functions deployment
+- ✅ Documented for external cron services (Vercel, Railway, etc.)
+- ✅ Include security considerations and monitoring
+- ✅ Ready for production use
+
+**Note**: The `scripts/ai-test-loop.mjs` script is **EXPERIMENTAL** and should NOT be used in production. It's a local development tool only.
+
 ## Auto-Deduplication Cron Job
 
 The support system includes an auto-deduplication feature that runs hourly to check for duplicate KB suggestions.

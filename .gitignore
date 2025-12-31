@@ -110,3 +110,9 @@ temp_trace_extract/
 query
 
 start
+
+# Security: Files with credentials (should never be committed)
+1password-import.csv
+scripts/sync-vercel-env.md
+*.credentials.*
+*.secrets.*
