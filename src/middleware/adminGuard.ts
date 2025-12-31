@@ -58,7 +58,7 @@ export async function adminGuard(request: NextRequest) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role, org_id')
-      .eq('id', user.id)
+      .eq('auth_user_id', user.id)
       .single()
 
     if (profile?.role === 'admin') {
