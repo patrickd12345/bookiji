@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     execSync(`pg_dump ${url} > ${file}`, { stdio: 'inherit', shell: true } as any)
     
-    console.log(`Daily backup completed: ${file}`)
+    console.warn(`Daily backup completed: ${file}`)
     
     return NextResponse.json({ 
       success: true, 

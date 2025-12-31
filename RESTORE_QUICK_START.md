@@ -32,14 +32,14 @@ $env:SUPABASE_ACCESS_TOKEN = "sbp_4c001c2987d774293b514d4cd5885c8bee308b58"
 2. Copy:
    - **Project URL**: `https://uradoazoyhhozbemrccj.supabase.co`
    - **anon/public key**: For `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - **service_role key**: For `SUPABASE_SERVICE_ROLE_KEY`
+   - **service_role key**: For `SUPABASE_SECRET_KEY`
 
 ### Step 4: Update Environment
 Update `.env.local` with new project keys:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://uradoazoyhhozbemrccj.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[from dashboard]
-SUPABASE_SERVICE_ROLE_KEY=[from dashboard]
+SUPABASE_SECRET_KEY=[from dashboard]
 ```
 
 ## 📋 Project Information

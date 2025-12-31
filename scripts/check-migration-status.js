@@ -20,7 +20,7 @@ const newKeys = {
 const oldKeys = {
   url: process.env.NEXT_PUBLIC_SUPABASE_URL,
   anonKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY
+  serviceRoleKey: process.env.SUPABASE_SECRET_KEY
 };
 
 console.log('📋 Environment Variable Status:');
@@ -34,7 +34,7 @@ console.log(`   SUPABASE_SECRET_KEY: ${newKeys.secretKey ? '✅ SET' : '❌ MISS
 console.log('\n🔄 LEGACY MODEL:');
 console.log(`   NEXT_PUBLIC_SUPABASE_URL: ${oldKeys.url ? '✅ SET' : '❌ MISSING'}`);
 console.log(`   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${oldKeys.anonKey ? '✅ SET' : '❌ MISSING'}`);
-console.log(`   SUPABASE_SERVICE_ROLE_KEY: ${oldKeys.serviceRoleKey ? '✅ SET' : '❌ MISSING'}`);
+console.log(`   SUPABASE_SECRET_KEY: ${oldKeys.serviceRoleKey ? '✅ SET' : '❌ MISSING'}`);
 
 // Determine which model is active
 const isNewModelActive = !!(newKeys.url && newKeys.publishableKey && newKeys.secretKey);

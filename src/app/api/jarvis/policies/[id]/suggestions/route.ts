@@ -16,6 +16,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: _id } = await params
+    
     // Check Phase 5 feature flag
     if (process.env.JARVIS_PHASE5_SUGGESTIONS_ENABLED !== 'true') {
       return NextResponse.json(

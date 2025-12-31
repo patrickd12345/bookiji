@@ -38,14 +38,14 @@ export async function POST(request: Request) {
 
     // 3. Add a listener to save new tokens when they are refreshed
     oauth2Client.on('tokens', async (tokens) => {
-      console.log('Google tokens are being refreshed.');
+      console.warn('Google tokens are being refreshed.');
       const updateData: { access_token: string, expiry_date: string, refresh_token?: string } = {
         access_token: tokens.access_token!,
         expiry_date: new Date(tokens.expiry_date!).toISOString(),
       };
 
       if (tokens.refresh_token) {
-        console.log('A new refresh token was provided.');
+        console.warn('A new refresh token was provided.');
         updateData.refresh_token = tokens.refresh_token;
       }
       
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       if (error) {
         console.error('Failed to save refreshed tokens to database:', error);
       } else {
-        console.log('Successfully saved refreshed tokens.');
+        console.warn('Successfully saved refreshed tokens.');
       }
     });
 

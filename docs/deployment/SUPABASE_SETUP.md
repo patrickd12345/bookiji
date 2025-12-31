@@ -10,7 +10,7 @@
 # Required - Get from Supabase project settings
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<YOUR_SUPABASE_PUBLISHABLE_KEY>
-SUPABASE_SECRET_KEY=<YOUR_SUPABASE_SERVICE_ROLE_KEY>
+SUPABASE_SECRET_KEY=<YOUR_SUPABASE_SECRET_KEY>
 
 # Optional - for full functionality
 NEXT_PUBLIC_APP_URL=http://localhost:3000

@@ -33,7 +33,7 @@ export async function POST() {
   let vec: number[];
   try {
     [vec] = await embed([content]);
-    console.log('Embedding created with dimension:', vec.length);
+    console.warn('Embedding created with dimension:', vec.length);
   } catch (e) {
     console.error('Embedding failed:', e);
     vec = new Array(768).fill(0);
@@ -68,7 +68,7 @@ export async function POST() {
     }
   }
   
-  console.log('Chunk created/updated successfully');
+  console.warn('Chunk created/updated successfully');
 
   return NextResponse.json({ ok: true });
 }

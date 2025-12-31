@@ -61,7 +61,7 @@ export async function GET(
     }
 
     // Get incident snapshot for badge and layer resolution
-    const { data: incident, error: incidentError } = await supabase
+    const { data: incident } = await supabase
       .from('jarvis_incidents')
       .select('snapshot')
       .eq('incident_id', incidentId)

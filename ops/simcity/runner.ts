@@ -13,7 +13,7 @@ dotenv.config({ path: path.join(__dirname, '../../.env') })
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SECRET_KEY!
 )
 
 const POLL_INTERVAL = 5000
@@ -84,7 +84,7 @@ async function startRun(request: any) {
     '--name', containerName,
     '--network', 'host',
     '-e', `SUPABASE_URL=${process.env.SUPABASE_URL}`,
-    '-e', `SUPABASE_SERVICE_ROLE_KEY=${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+    '-e', `SUPABASE_SECRET_KEY=${process.env.SUPABASE_SECRET_KEY}`,
     'chaos-harness',
     '--target-url', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
     '--tier', request.tier,

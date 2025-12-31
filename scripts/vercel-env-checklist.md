@@ -2,7 +2,7 @@
 
 ## ✅ Currently Set (from your list):
 - `NEXT_PUBLIC_SUPABASE_URL` ✅
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` ✅
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` ✅
 - `NEXT_PUBLIC_APP_URL` ✅
 - `NEXT_PUBLIC_BASE_URL` ✅
 - `NODE_ENV` ✅
@@ -16,7 +16,7 @@
 - Used as fallback if ANON_KEY is missing
 - Some newer Supabase features may require it
 
-### 2. `SUPABASE_SERVICE_ROLE_KEY` (Critical for Server-Side)
+### 2. `SUPABASE_SECRET_KEY` (Critical for Server-Side)
 **Value:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjI1ODU5NiwiZXhwIjoyMDgxODM0NTk2fQ.ZqDpwTzkGbirFxrCXWP5FNE0ehNWkasa7AM6BnwVXkw`
 - Required for server-side operations
 - Admin operations, migrations, etc.
@@ -31,9 +31,9 @@ Since values are masked, verify they match your `.env.local`:
    https://uradoazoyhhozbemrccj.supabase.co
    ```
 
-2. **NEXT_PUBLIC_SUPABASE_ANON_KEY** should be:
+2. **NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY** should be:
    ```
-   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyNTg1OTYsImV4cCI6MjA4MTgzNDU5Nn0.ofJNCe4yD3Z_ZgAuuPdHE6mKDJBqf5wbd5MU-MMILnQ
+   sb_publishable_E5HX8sFsapD2Qn2fsdd1Kw_ikzHofuz
    ```
 
 3. **NEXT_PUBLIC_APP_URL** should be (for production):
@@ -58,7 +58,7 @@ In Vercel Dashboard → Settings → Environment Variables:
    - Environment: Production (and Preview/Development if needed)
 
 3. Click "Add New" again
-4. Add `SUPABASE_SERVICE_ROLE_KEY`
+4. Add `SUPABASE_SECRET_KEY`
    - Value: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjI1ODU5NiwiZXhwIjoyMDgxODM0NTk2fQ.ZqDpwTzkGbirFxrCXWP5FNE0ehNWkasa7AM6BnwVXkw`
    - Environment: Production (and Preview/Development if needed)
 

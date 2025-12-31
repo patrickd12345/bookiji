@@ -23,7 +23,7 @@ const IGNORE_QUERY_PARAMS = true; // Normalize URLs by removing query params
 // Initialize Clients
 const config = getSupabaseConfig();
 if (!config.secretKey) {
-  console.error('Missing SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY');
+  console.error('Missing SUPABASE_SECRET_KEY');
   process.exit(1);
 }
 

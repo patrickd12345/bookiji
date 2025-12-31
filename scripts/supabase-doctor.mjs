@@ -91,7 +91,7 @@ if (!cliAuthenticated) {
   console.error('Fix: Run `supabase login`');
   console.error('');
   console.error('Note: This is CLI authentication (sbp_... token), separate from:');
-  console.error('  - Application credentials (SUPABASE_ANON_KEY, SERVICE_ROLE_KEY)');
+  console.error('  - Application credentials (NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY)');
   console.error('  - Database credentials (Postgres password)');
   console.error('');
   console.error('See: docs/development/SUPABASE_CLI_AUTH.md');

@@ -14,7 +14,7 @@ export async function GET() {
 
   try {
     // Test 1: Ollama Connection
-    console.log('🧪 Testing Ollama connection...')
+    console.warn('🧪 Testing Ollama connection...')
     const startTime = Date.now()
     const isAvailable = await ollamaService.isAvailable()
     testResults.ollamaConnection = isAvailable
@@ -26,7 +26,7 @@ export async function GET() {
     }
 
     // Test 2: AI Chat
-    console.log('🧪 Testing AI Chat...')
+    console.warn('🧪 Testing AI Chat...')
     const chatStart = Date.now()
     try {
       const chatResponse = await ollamaService.generate(
@@ -39,7 +39,7 @@ export async function GET() {
     }
 
     // Test 3: AI Radius Scaling
-    console.log('🧪 Testing AI Radius Scaling...')
+    console.warn('🧪 Testing AI Radius Scaling...')
     const radiusStart = Date.now()
     try {
       const radiusResponse = await ollamaService.generate(
@@ -52,7 +52,7 @@ export async function GET() {
     }
 
     // Test 4: AI Persona
-    console.log('🧪 Testing AI Persona...')
+    console.warn('🧪 Testing AI Persona...')
     const personaStart = Date.now()
     try {
       const personaResponse = await ollamaService.generate(
@@ -74,7 +74,7 @@ export async function GET() {
 
     const overallSuccess = successCount >= 3 // At least 3 out of 4 tests must pass
 
-    console.log('🧪 AI Integration Test Results:', {
+    console.warn('🧪 AI Integration Test Results:', {
       success: overallSuccess,
       testsPassed: successCount,
       totalTests: 4,

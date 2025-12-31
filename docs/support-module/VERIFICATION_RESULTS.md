@@ -36,7 +36,7 @@ The following need to be set in `.env` or `.env.local`:
 
 ```bash
 SUPABASE_URL=<your_supabase_url>
-SUPABASE_SERVICE_ROLE_KEY=<your_service_role_key>
+SUPABASE_SECRET_KEY=<your_secret_key>
 OPENAI_API_KEY=<your_openai_api_key>
 NEXT_PUBLIC_APP_URL=http://localhost:3000  # or production URL
 ```

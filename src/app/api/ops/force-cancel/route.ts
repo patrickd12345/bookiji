@@ -95,7 +95,7 @@ const forceCancelHandler = async (req: NextRequest) => {
     // If customer should be refunded, process refund
     if (refund_customer && booking.price_cents && booking.price_cents > 0) {
       // TODO: Implement actual Stripe refund
-      console.log(`Would refund ${booking.price_cents} cents for force-cancelled booking ${booking_id}`)
+      console.warn(`Would refund ${booking.price_cents} cents for force-cancelled booking ${booking_id}`)
 
       // Update to refunded state
       await supabase
@@ -124,7 +124,7 @@ const forceCancelHandler = async (req: NextRequest) => {
         })
     }
 
-    console.log(`Force-cancelled booking ${booking_id} with reason: ${reason}`)
+    console.warn(`Force-cancelled booking ${booking_id} with reason: ${reason}`)
 
     return NextResponse.json({
       ok: true,

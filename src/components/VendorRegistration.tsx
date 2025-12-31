@@ -128,7 +128,8 @@ export default function VendorRegistration({ onSuccess }: VendorRegistrationProp
 
       setBusy(false)
       onSuccess?.()
-      router.replace('/vendor/dashboard')
+      // Redirect to onboarding complete page for subscription selection
+      router.replace('/vendor/onboarding/complete')
     } catch (err) {
       setBusy(false)
       setError(err instanceof Error ? err.message : 'Failed to save vendor profile')

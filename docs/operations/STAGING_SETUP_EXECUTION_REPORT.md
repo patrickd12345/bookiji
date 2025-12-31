@@ -21,7 +21,7 @@
    
    **Critical distinction:**
    - CLI auth uses `sbp_...` token (stored by CLI internally)
-   - **NOT** the same as `SUPABASE_ANON_KEY` or `SERVICE_ROLE_KEY`
+   - **NOT** the same as `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `SUPABASE_SECRET_KEY`
    - **DO NOT** set `SUPABASE_ACCESS_TOKEN` in `.env`
    - If CLI commands fail with token errors → **ONLY** fix is `supabase login`
 
@@ -103,16 +103,16 @@ After setup completes, add to `.env.local`:
 ```env
 APP_ENV=staging
 STAGING_SUPABASE_URL=https://<STAGING_PROJECT_REF>.supabase.co
-STAGING_SUPABASE_ANON_KEY=<anon_key_from_step_4>
-STAGING_SUPABASE_SERVICE_KEY=<service_role_key_from_step_4>
+STAGING_SUPABASE_PUBLISHABLE_KEY=<publishable_key_from_step_4>
+STAGING_SUPABASE_SECRET_KEY=<secret_key_from_step_4>
 ```
 
 ### Step 6: Add CI Secrets
 
 In GitHub Settings → Secrets and variables → Actions, add:
 - `STAGING_SUPABASE_URL`
-- `STAGING_SUPABASE_ANON_KEY`
-- `STAGING_SUPABASE_SERVICE_KEY`
+- `STAGING_SUPABASE_PUBLISHABLE_KEY`
+- `STAGING_SUPABASE_SECRET_KEY`
 
 Set `APP_ENV=staging` in CI workflow environment variables.
 

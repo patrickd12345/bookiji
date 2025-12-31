@@ -84,7 +84,7 @@ Update your `.env.local` and deployment environment variables:
 SUPABASE_URL=https://uradoazoyhhozbemrccj.supabase.co
 NEXT_PUBLIC_SUPABASE_URL=https://uradoazoyhhozbemrccj.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[Get from new project dashboard]
-SUPABASE_SERVICE_ROLE_KEY=[Get from new project dashboard]
+SUPABASE_SECRET_KEY=[Get from new project dashboard]
 ```
 
 ### Step 6: Get New Project API Keys
@@ -93,7 +93,7 @@ SUPABASE_SERVICE_ROLE_KEY=[Get from new project dashboard]
 2. Copy:
    - **Project URL**: `https://uradoazoyhhozbemrccj.supabase.co`
    - **anon/public key**: Use as `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - **service_role key**: Use as `SUPABASE_SERVICE_ROLE_KEY`
+   - **service_role key**: Use as `SUPABASE_SECRET_KEY`
 
 ### Step 7: Verify Restoration
 

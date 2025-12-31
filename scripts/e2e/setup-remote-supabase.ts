@@ -90,16 +90,16 @@ async function main() {
     process.exit(1)
   }
   
-  const anonKey = await question('Anon/Public API Key: ')
-  if (!anonKey) {
-    console.error('❌ Anon key is required')
+  const publishableKey = await question('Publishable API Key (sb_publishable_...): ')
+  if (!publishableKey) {
+    console.error('❌ Publishable key is required')
     rl.close()
     process.exit(1)
   }
   
-  const serviceRoleKey = await question('Service Role API Key: ')
+  const serviceRoleKey = await question('Secret API Key (sb_secret_...): ')
   if (!serviceRoleKey) {
-    console.error('❌ Service role key is required')
+    console.error('❌ Secret key is required')
     rl.close()
     process.exit(1)
   }
@@ -114,10 +114,8 @@ async function main() {
     'E2E_ALLOW_REMOTE_SUPABASE': 'true',
     'SUPABASE_URL': supabaseUrl,
     'NEXT_PUBLIC_SUPABASE_URL': supabaseUrl,
-    'SUPABASE_ANON_KEY': anonKey,
-    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY': anonKey,
+    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY': publishableKey,
     'SUPABASE_SECRET_KEY': serviceRoleKey,
-    'SUPABASE_SERVICE_ROLE_KEY': serviceRoleKey,
     'E2E_BASE_URL': baseUrl,
     'BASE_URL': baseUrl,
     'E2E': 'true',

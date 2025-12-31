@@ -30,7 +30,7 @@ The support system includes an auto-deduplication feature that runs hourly to ch
 
      try {
        const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-       const supabaseServiceKey = Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+       const supabaseServiceKey = Deno.env.get('SUPABASE_SECRET_KEY')!
        const adminApiKey = Deno.env.get('ADMIN_API_KEY')!
 
        // Verify admin API key

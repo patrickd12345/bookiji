@@ -6,7 +6,7 @@ const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabas
 
 export async function GET() {
   try {
-    console.log('🔍 Checking existing database tables...')
+    console.warn('🔍 Checking existing database tables...')
     
     // Try to query each table individually to see what exists
     const tableChecks = [
@@ -30,18 +30,18 @@ export async function GET() {
           .limit(1)
         
         results[tableName] = !error
-        console.log(`${tableName}: ${!error ? '✅' : '❌'} ${error?.message || ''}`)
+        console.warn(`${tableName}: ${!error ? '✅' : '❌'} ${error?.message || ''}`)
       } catch (err) {
         results[tableName] = false
-        console.log(`${tableName}: ❌ ${err}`)
+        console.warn(`${tableName}: ❌ ${err}`)
       }
     }
     
     const existingTables = Object.keys(results).filter(table => results[table])
     const missingTables = Object.keys(results).filter(table => !results[table])
     
-    console.log('✅ Existing tables:', existingTables)
-    console.log('❌ Missing tables:', missingTables)
+    console.warn('✅ Existing tables:', existingTables)
+    console.warn('❌ Missing tables:', missingTables)
 
     return NextResponse.json({
       success: true,

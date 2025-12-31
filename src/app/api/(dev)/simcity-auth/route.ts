@@ -21,6 +21,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getAppEnv, isProduction } from '@/lib/env/assertAppEnv'
 import { getSupabaseAnonKey, getSupabaseServiceKey, getSupabaseUrl } from '@/lib/env/supabaseEnv'
+import type { Database } from '@/types/supabase'
 
 /**
  * Check if SimCity auth is enabled
@@ -51,7 +52,7 @@ function isSimCityAuthEnabled(): boolean {
 /**
  * Create or get SimCity test user
  */
-async function ensureSimCityUser(supabaseAdmin: ReturnType<typeof createClient<any, 'public'>>) {
+async function ensureSimCityUser(supabaseAdmin: ReturnType<typeof createClient<Database, 'public'>>) {
   const email = 'simcity-staging@bookiji.test'
   const password = process.env.SIMCITY_TEST_PASSWORD || `SimCityTest${Date.now()}!`
 
@@ -94,11 +95,13 @@ async function ensureSimCityUser(supabaseAdmin: ReturnType<typeof createClient<a
       await supabaseAdmin
         .from('profiles')
         .upsert({
-          user_id: newUser.user.id,
-          is_synthetic: true,
+          auth_user_id: newUser.user.id,
+          email,
+          full_name: 'SimCity Chaos Test User',
+          role: 'customer',
           created_at: new Date().toISOString()
         }, {
-          onConflict: 'user_id'
+          onConflict: 'auth_user_id'
         })
     } catch (e) {
       // Profile creation may fail if RLS blocks - log but continue
@@ -160,7 +163,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Create admin client
-    const supabaseAdmin = createClient<any, 'public'>(supabaseUrl, supabaseServiceKey)
+    const supabaseAdmin = createClient<Database, 'public'>(supabaseUrl, supabaseServiceKey)
 
     // Ensure SimCity user exists
     const { userId, email, password } = await ensureSimCityUser(supabaseAdmin)

@@ -19,7 +19,7 @@ pnpm seed:pilot
 ```
 
 Notes:
-- Requires `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`.
+- Requires `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SECRET_KEY` in `.env.local`.
 - Script is designed to be **safe to re-run** (idempotent behavior).
 
 ## If production data recovery becomes mandatory

@@ -100,8 +100,8 @@ Production-ready admin cockpit with comprehensive operational visibility, RLS er
 ```bash
 # Required for admin access
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
+SUPABASE_SECRET_KEY=your_secret_key
 
 # Optional: Customize rate limits
 ADMIN_RATE_LIMIT=60

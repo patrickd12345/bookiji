@@ -54,7 +54,7 @@ A centralized utility that:
 
 ### Before
 ```typescript
-const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
@@ -68,7 +68,7 @@ import { createSupabaseAdminClient } from './createSupabaseAdmin'
 
 const supabaseAdmin = createSupabaseAdminClient(
   SUPABASE_URL!,
-  SUPABASE_SERVICE_ROLE_KEY!,
+  SUPABASE_SECRET_KEY!,
   {
     timeoutMs: 60000, // 60 second timeout
     forceIPv4: true   // Force IPv4 to avoid IPv6 issues
@@ -115,7 +115,7 @@ pnpm e2e:seed
    ```bash
    # Verify these are set correctly
    echo $SUPABASE_URL
-   echo $SUPABASE_SERVICE_ROLE_KEY
+   echo $SUPABASE_SECRET_KEY
    ```
 
 5. **For Remote Supabase**
@@ -123,7 +123,7 @@ pnpm e2e:seed
    - Check API keys are valid
    - Test with curl:
      ```bash
-     curl -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+     curl -H "Authorization: Bearer $SUPABASE_SECRET_KEY" \
           $SUPABASE_URL/rest/v1/
      ```
 

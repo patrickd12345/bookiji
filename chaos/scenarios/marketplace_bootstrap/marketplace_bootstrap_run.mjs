@@ -125,13 +125,12 @@ async function main() {
   // Supabase Setup
   const supabaseUrlRaw = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
   const rawKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_SECRET_KEY ||
     process.env.SUPABASE_SERVICE_KEY ||
     ''
 
   if (!supabaseUrlRaw) throw new Error('SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) env is required')
-  if (!rawKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SECRET_KEY) env is required')
+  if (!rawKey) throw new Error('SUPABASE_SECRET_KEY env is required')
 
   const supabaseServiceKey = rawKey.replace(/^Bearer\s+/i, '').trim()
   const supabaseUrl = supabaseUrlRaw.replace(/\/+$/, '')

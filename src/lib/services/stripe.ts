@@ -492,13 +492,47 @@ export class StripeService {
           planId = sub.items.data[0]?.price.id;
       }
 
+      // Get plan details
+      let planType = 'free'
+      let billingCycle = 'monthly'
+      let trialStart = null
+      let trialEnd = null
+      
+      if (stripe) {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId)
+          status = sub.status
+          currentPeriodEnd = new Date(sub.current_period_end * 1000).toISOString()
+          planId = sub.items.data[0]?.price.id
+          trialStart = sub.trial_start ? new Date(sub.trial_start * 1000).toISOString() : null
+          trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null
+          
+          // Try to determine plan type
+          if (planId) {
+            const { data: plan } = await supabase
+              .from('subscription_plans')
+              .select('plan_type, billing_cycle')
+              .or(`stripe_price_id_monthly.eq.${planId},stripe_price_id_annual.eq.${planId}`)
+              .single()
+            
+            if (plan) {
+              planType = plan.plan_type
+              billingCycle = plan.billing_cycle
+            }
+          }
+      }
+
       await supabase.from('vendor_subscriptions').upsert({
           provider_id: providerId,
           stripe_customer_id: customerId,
           stripe_subscription_id: subscriptionId,
           subscription_status: status,
+          current_period_start: stripe ? new Date((await stripe.subscriptions.retrieve(subscriptionId)).current_period_start * 1000).toISOString() : new Date().toISOString(),
           current_period_end: currentPeriodEnd,
           plan_id: planId,
+          plan_type: planType,
+          billing_cycle: billingCycle,
+          trial_start: trialStart,
+          trial_end: trialEnd,
           updated_at: new Date().toISOString()
       }, { onConflict: 'provider_id' });
   }
@@ -521,11 +555,136 @@ export class StripeService {
           return;
       }
 
+      // Get plan details from subscription
+      const priceId = subscription.items.data[0]?.price.id
+      let planType = 'free'
+      let billingCycle = 'monthly'
+      
+      // Try to determine plan type from price ID or metadata
+      if (priceId) {
+        // Check if we can determine from price ID pattern or query subscription_plans
+        const supabaseForPlan = createSupabaseServerClient()
+        const { data: plan } = await supabaseForPlan
+          .from('subscription_plans')
+          .select('plan_type, billing_cycle')
+          .or(`stripe_price_id_monthly.eq.${priceId},stripe_price_id_annual.eq.${priceId}`)
+          .single()
+        
+        if (plan) {
+          planType = plan.plan_type
+          billingCycle = plan.billing_cycle
+        }
+      }
+
+      // Check if subscription has trial period
+      const trialStart = subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null
+      const trialEnd = subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null
+
       await supabase.from('vendor_subscriptions').update({
           subscription_status: subscription.status,
           current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-          plan_id: subscription.items.data[0]?.price.id,
+          current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+          plan_id: priceId,
+          plan_type: planType,
+          billing_cycle: billingCycle,
+          trial_start: trialStart,
+          trial_end: trialEnd,
+          cancel_at_period_end: subscription.cancel_at_period_end || false,
           updated_at: new Date().toISOString()
       }).eq('stripe_customer_id', customerId);
+  }
+
+  /**
+   * Update subscription (e.g., change plan, cancel at period end)
+   */
+  static async updateSubscription(
+    subscriptionId: string,
+    params: {
+      cancel_at_period_end?: boolean
+      items?: Array<{ price: string; quantity?: number }>
+      metadata?: Record<string, string>
+    }
+  ): Promise<Stripe.Subscription> {
+    if (getIsMockMode()) {
+      return {
+        id: subscriptionId,
+        object: 'subscription',
+        status: params.cancel_at_period_end ? 'active' : 'active',
+        cancel_at_period_end: params.cancel_at_period_end || false,
+        current_period_end: Date.now() / 1000 + 2592000, // 30 days
+        current_period_start: Date.now() / 1000,
+        customer: 'cus_mock',
+        items: {
+          object: 'list',
+          data: [],
+          has_more: false,
+          url: '',
+        },
+        livemode: false,
+        metadata: params.metadata || {},
+        created: Date.now() / 1000,
+      } as unknown as Stripe.Subscription;
+    }
+
+    try {
+      const stripe = getStripe();
+      if (!stripe) throw new Error('Stripe client not initialized');
+
+      const updateParams: Stripe.SubscriptionUpdateParams = {};
+      
+      if (params.cancel_at_period_end !== undefined) {
+        updateParams.cancel_at_period_end = params.cancel_at_period_end;
+      }
+      
+      if (params.items) {
+        updateParams.items = params.items;
+      }
+      
+      if (params.metadata) {
+        updateParams.metadata = params.metadata;
+      }
+
+      return await stripe.subscriptions.update(subscriptionId, updateParams);
+    } catch (error) {
+      logger.error('Error updating subscription', error instanceof Error ? error : new Error(String(error)));
+      throw new Error(`Failed to update subscription: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Cancel subscription immediately
+   */
+  static async cancelSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
+    if (getIsMockMode()) {
+      return {
+        id: subscriptionId,
+        object: 'subscription',
+        status: 'canceled',
+        cancel_at_period_end: false,
+        canceled_at: Date.now() / 1000,
+        current_period_end: Date.now() / 1000,
+        current_period_start: Date.now() / 1000 - 2592000,
+        customer: 'cus_mock',
+        items: {
+          object: 'list',
+          data: [],
+          has_more: false,
+          url: '',
+        },
+        livemode: false,
+        metadata: {},
+        created: Date.now() / 1000,
+      } as unknown as Stripe.Subscription;
+    }
+
+    try {
+      const stripe = getStripe();
+      if (!stripe) throw new Error('Stripe client not initialized');
+
+      return await stripe.subscriptions.cancel(subscriptionId);
+    } catch (error) {
+      logger.error('Error canceling subscription', error instanceof Error ? error : new Error(String(error)));
+      throw new Error(`Failed to cancel subscription: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 }

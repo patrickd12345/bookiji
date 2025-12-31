@@ -1,5 +1,6 @@
 // Simple guided tour implementation
 // No external dependencies to prevent build issues
+import { logger } from './logger'
 
 export interface TourStep {
   id: string;
@@ -38,33 +39,33 @@ export class Tour {
   }
 
   start(): void {
-    console.log('Guided tour started (stub implementation)');
+    logger.debug('Guided tour started (stub implementation)');
   }
 
   complete(): void {
-    console.log('Tour completed');
+    logger.debug('Tour completed');
   }
 
   cancel(): void {
-    console.log('Tour cancelled');
+    logger.debug('Tour cancelled');
   }
 
   show(stepId?: string): void {
-    console.log('Showing tour step:', stepId);
+    logger.debug('Showing tour step:', { stepId });
   }
 
   hide(): void {
-    console.log('Tour hidden');
+    logger.debug('Tour hidden');
   }
 }
 
 // Backward compatibility exports
 export const BookijiTour = {
-  resetTour: () => console.log('Tour reset'),
+  resetTour: () => logger.debug('Tour reset'),
   start: () => new Tour().start(),
-  complete: () => console.log('Tour completed'),
-  show: (stepId?: string) => console.log('Showing step:', stepId),
-  hide: () => console.log('Tour hidden')
+  complete: () => logger.debug('Tour completed'),
+  show: (stepId?: string) => logger.debug('Showing step:', { stepId }),
+  hide: () => logger.debug('Tour hidden')
 };
 
 export default Tour; 

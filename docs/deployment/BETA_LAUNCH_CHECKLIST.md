@@ -87,8 +87,8 @@
 # Beta Environment
 NEXT_PUBLIC_APP_URL=https://beta.bookiji.com
 NEXT_PUBLIC_SUPABASE_URL=[beta_supabase_url]
-NEXT_PUBLIC_SUPABASE_ANON_KEY=[beta_anon_key]
-SUPABASE_SERVICE_ROLE_KEY=[beta_service_key]
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[beta_publishable_key]
+SUPABASE_SECRET_KEY=[beta_secret_key]
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=[test_publishable_key]
 STRIPE_SECRET_KEY=[test_secret_key]
 NEXTAUTH_SECRET=[secure_random_key]

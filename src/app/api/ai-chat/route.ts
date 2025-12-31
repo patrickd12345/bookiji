@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('🤖 AI Chat Request:', message)
+      console.warn('🤖 AI Chat Request:', message)
     }
 
     // Check if Ollama is available first
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
     const responseTime = Date.now() - startTime
     if (process.env.NODE_ENV === 'development') {
-      console.log(`🤖 AI Response (${responseTime}ms):`, aiResponse.substring(0, 100) + '…')
+      console.warn(`🤖 AI Response (${responseTime}ms):`, aiResponse.substring(0, 100) + '…')
     }
 
     return NextResponse.json({

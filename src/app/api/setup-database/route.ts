@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 export async function POST() {
   try {
-    console.log('🔧 Generating complete Bookiji database setup...')
+    console.warn('🔧 Generating complete Bookiji database setup...')
     
     // Complete database setup SQL including all tables and relationships
     const completeSetupSQL = `
@@ -423,7 +423,7 @@ INSERT INTO public.user_credits (user_id, balance_cents, total_purchased_cents, 
 -- 3. Begin building your booking flow!
 `;
 
-    console.log('✅ Complete database setup SQL generated')
+    console.warn('✅ Complete database setup SQL generated')
     
     return NextResponse.json({
       success: true,

@@ -4,7 +4,7 @@ import { getSupabaseConfig } from '@/config/supabase'
 
 export async function GET() {
 	try {
-		console.log('🧪 Testing profiles table access after fix...')
+		console.warn('🧪 Testing profiles table access after fix...')
 
 		const config = getSupabaseConfig()
 		if (!config.url || !config.publishableKey) {

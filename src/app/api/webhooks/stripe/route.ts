@@ -67,7 +67,7 @@ async function webhookHandler(req: NextRequest): Promise<NextResponse> {
       )
     }
 
-    console.log(`Processing webhook: ${event.type}`)
+    console.warn(`Processing webhook: ${event.type}`)
 
     // Handle the event
     switch (event.type) {
@@ -84,7 +84,7 @@ async function webhookHandler(req: NextRequest): Promise<NextResponse> {
         break
       
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        console.warn(`Unhandled event type: ${event.type}`)
     }
 
     return NextResponse.json({ received: true })
@@ -129,7 +129,7 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promis
       .single()
 
     if (existingOutbox) {
-      console.log(`Payment intent ${paymentIntent.id} already processed, skipping`)
+      console.warn(`Payment intent ${paymentIntent.id} already processed, skipping`)
       return
     }
 
@@ -185,7 +185,7 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promis
         }
       })
 
-    console.log(`Booking ${booking.id} confirmed via payment success`)
+    console.warn(`Booking ${booking.id} confirmed via payment success`)
 
   } catch (error) {
     console.error('Error handling payment success:', error)
@@ -302,7 +302,7 @@ async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent): Promis
         }
       })
 
-    console.log(`Booking ${booking.id} cancelled due to payment failure`)
+    console.warn(`Booking ${booking.id} cancelled due to payment failure`)
 
   } catch (error) {
     console.error('Error handling payment failure:', error)
@@ -417,7 +417,7 @@ async function handlePaymentCanceled(paymentIntent: Stripe.PaymentIntent): Promi
         }
       })
 
-    console.log(`Booking ${booking.id} cancelled due to payment cancellation`)
+    console.warn(`Booking ${booking.id} cancelled due to payment cancellation`)
 
   } catch (error) {
     console.error('Error handling payment cancellation:', error)

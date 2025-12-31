@@ -5,7 +5,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
 export async function POST() {
   try {
-    console.log('🚨 Emergency fix: Removing profiles table recursion...')
+    console.warn('🚨 Emergency fix: Removing profiles table recursion...')
     
     // 1. Drop all problematic recursive policies
     const dropPolicies = `
@@ -55,13 +55,13 @@ export async function POST() {
 
     // Execute the fixes
     const { error: dropError } = await supabase.rpc('exec_sql', { sql: dropPolicies })
-    if (dropError) console.log('Drop policies result:', dropError)
+    if (dropError) console.warn('Drop policies result:', dropError)
 
     const { error: createError } = await supabase.rpc('exec_sql', { sql: createSimplePolicies })
-    if (createError) console.log('Create policies result:', createError)
+    if (createError) console.warn('Create policies result:', createError)
 
     const { error: fixError } = await supabase.rpc('exec_sql', { sql: fixOtherTables })
-    if (fixError) console.log('Fix other tables result:', fixError)
+    if (fixError) console.warn('Fix other tables result:', fixError)
 
     // Test if the fix worked
     const { data: testData, error: testError } = await supabase
@@ -78,7 +78,7 @@ export async function POST() {
       }, { status: 500 })
     }
 
-    console.log('✅ Profiles table recursion fixed successfully!')
+    console.warn('✅ Profiles table recursion fixed successfully!')
     return NextResponse.json({ 
       success: true, 
       message: 'Profiles table recursion fixed',

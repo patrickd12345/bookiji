@@ -48,7 +48,7 @@ if (!fs.existsSync(envLocalPath) && fs.existsSync(envLocalBakPath)) {
 const requiredVars = [
   'SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_URL',
-  'SUPABASE_SECRET_KEY', // or SUPABASE_SERVICE_ROLE_KEY for backward compatibility
+  'SUPABASE_SECRET_KEY',
   'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY',
 ]
 
@@ -99,7 +99,7 @@ const hasVar = (name: string, altName?: string): boolean => {
 }
 
 // Check if we have all required vars from any source (with backward compatibility)
-const hasSupabaseSecretKey = hasVar('SUPABASE_SECRET_KEY', 'SUPABASE_SERVICE_ROLE_KEY')
+const hasSupabaseSecretKey = hasVar('SUPABASE_SECRET_KEY')
 const hasSupabasePublishableKey = hasVar('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY')
 const hasAllRequiredVars = 
   hasVar('SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL') &&
@@ -120,7 +120,7 @@ if (fs.existsSync(envE2EPath)) {
     syncReason = 'localhost in cloud environment'
   } 
   // Check if required vars are missing (with backward compatibility)
-  const e2eHasSecretKey = !!(e2eEnv.SUPABASE_SECRET_KEY || e2eEnv.SUPABASE_SERVICE_ROLE_KEY)
+  const e2eHasSecretKey = !!e2eEnv.SUPABASE_SECRET_KEY
   const e2eHasPublishableKey = !!e2eEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
   const e2eHasUrl = !!(e2eEnv.SUPABASE_URL || e2eEnv.NEXT_PUBLIC_SUPABASE_URL)
   
@@ -217,7 +217,7 @@ if (needsSync) {
   lines.push('# Supabase Configuration')
   // Use new variable names, with fallback to old names
   const supabaseUrl = allEnvVars.SUPABASE_URL || allEnvVars.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseSecretKey = allEnvVars.SUPABASE_SECRET_KEY || allEnvVars.SUPABASE_SERVICE_ROLE_KEY
+  const supabaseSecretKey = allEnvVars.SUPABASE_SECRET_KEY
   const supabasePublishableKey = allEnvVars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
   
   if (supabaseUrl) lines.push(`SUPABASE_URL=${supabaseUrl}`)

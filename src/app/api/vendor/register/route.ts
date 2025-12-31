@@ -6,7 +6,7 @@ const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabas
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🚀 Processing vendor registration...')
+    console.warn('🚀 Processing vendor registration...')
     
     // Parse FormData to handle file uploads
     const formData = await request.formData()
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('📋 Vendor registration data:', {
+    console.warn('📋 Vendor registration data:', {
       business_name: vendorData.business_name,
       email: vendorData.email,
       serviceCount: vendorData.services.length,
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
       // For demo purposes, create mock URLs
       const mockImageUrl = `/uploads/vendors/${vendorId}/${image.name}`
       uploadedImageUrls.push(mockImageUrl)
-      console.log(`📸 Mock image upload: ${image.name} (${image.size} bytes)`)
+      console.warn(`📸 Mock image upload: ${image.name} (${image.size} bytes)`)
     }
 
     // Create comprehensive vendor profile
@@ -159,10 +159,10 @@ export async function POST(request: NextRequest) {
     })
 
     // Send verification email (mock)
-    console.log('📧 Mock verification email sent to:', vendorData.email)
+    console.warn('📧 Mock verification email sent to:', vendorData.email)
 
     // Log for admin notification
-    console.log('👔 Mock admin notification - new vendor registration pending approval')
+    console.warn('👔 Mock admin notification - new vendor registration pending approval')
 
     // Return success response
     return NextResponse.json({

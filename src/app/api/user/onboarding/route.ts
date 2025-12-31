@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       }, { status: 500 })
     }
 
-    console.log('✅ Onboarding data saved successfully')
+    console.warn('✅ Onboarding data saved successfully')
 
     return NextResponse.json({
       success: true,

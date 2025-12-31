@@ -22,7 +22,7 @@ import { join } from 'path'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY
 
 // ========================================
 // 🚨 HARD ENVIRONMENT GATES - SAFETY FIRST
@@ -122,7 +122,7 @@ if (!SUPABASE_URL) {
   process.exit(1)
 }
 
-if (!SUPABASE_SERVICE_ROLE_KEY) {
+if (!SUPABASE_SECRET_KEY) {
   console.error('❌ ERROR: SUPABASE_SECRET_KEY is required')
   process.exit(1)
 }
@@ -160,7 +160,7 @@ async function main() {
   console.log('📋 Environment:', APP_ENV)
   console.log('')
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
     auth: {
       autoRefreshToken: false,
       persistSession: false

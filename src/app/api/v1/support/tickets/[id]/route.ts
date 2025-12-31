@@ -6,6 +6,7 @@ import { redactPII } from '@/lib/support/redact';
 import { qaFromTranscript } from '@/lib/support/summarize';
 import { embed } from '@/lib/support/embeddings';
 import { searchKb } from '@/lib/support/rag';
+import { logger } from '@/lib/logger';
 
 export async function GET(
   req: Request,
@@ -49,7 +50,7 @@ async function maybeCreateKbSuggestion(
   
   // Enable by default in non-production unless explicitly disabled
   const enabled = (process.env.SUPPORT_KB_SUGGEST_ENABLED ?? (process.env.NODE_ENV !== 'production' ? 'true' : 'false')) === 'true';
-  if (!enabled) { console.info('kb_suggest: disabled'); return; }
+  if (!enabled) { logger.debug('kb_suggest: disabled'); return; }
 
   // Fetch ticket for fallback context
   const { data: ticketRow } = await admin.from('support_tickets').select('subject,body').eq('id', ticketId).single();
@@ -64,12 +65,12 @@ async function maybeCreateKbSuggestion(
       similarity_to_best: 0,
       status: 'pending'
     }).select('id,status');
-    console.info('kb_suggest: fallback inserted', reason, ins.data, ins.error);
+    logger.debug('kb_suggest: fallback inserted', { reason, data: ins.data, error: ins.error });
     return;
   };
 
   const transcript = await buildTranscript(admin, ticketId);
-  console.info('kb_suggest: transcript_len', transcript.length);
+  logger.debug('kb_suggest: transcript_len', { length: transcript.length });
   if (!transcript.length) return insertFallback('no_transcript');
 
   try {
@@ -77,7 +78,7 @@ async function maybeCreateKbSuggestion(
     const qa = await qaFromTranscript(transcript);
     const question = redactPII(qa.question);
     const answer   = redactPII(qa.answer);
-    console.info('kb_suggest: qa', { q: question.slice(0,80), a: answer.slice(0,80) });
+    logger.debug('kb_suggest: qa', { q: question.slice(0,80), a: answer.slice(0,80) });
 
     // Embeddings
     const [qEmb] = await embed([question]);
@@ -86,7 +87,7 @@ async function maybeCreateKbSuggestion(
     // Nearest match to existing KB to estimate duplication
     const hits = await searchKb(admin, qEmb, 1, 0.0);
     const similarity = hits[0]?.similarity ?? 0;
-    console.info('kb_suggest: best_sim', similarity);
+    logger.debug('kb_suggest: best_sim', { similarity });
     
     // Threshold from env or default
     const dupThreshold = Number(process.env.SUPPORT_KB_DUP_THRESHOLD ?? 0.90);
@@ -104,7 +105,7 @@ async function maybeCreateKbSuggestion(
       q_embedding: qEmb,
       a_embedding: aEmb
     }).select('id,status');
-    console.info('kb_suggest: inserted', ins.data, ins.error);
+    logger.debug('kb_suggest: inserted', { data: ins.data, error: ins.error });
     if (ins.error) throw ins.error;
   } catch (e) {
     console.error('kb_suggest: error, using fallback', e);
@@ -150,7 +151,7 @@ export async function PATCH(
 
     try { 
       await maybeCreateKbSuggestion(admin, id, intentSafe); 
-      console.info('support.kb_suggest.created', { ticket_id: id });
+      logger.info('support.kb_suggest.created', { ticket_id: id });
     } catch (e) {
       console.error('Failed to enrich KB suggestion', { ticket_id: id, error: e });
     }

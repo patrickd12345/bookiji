@@ -287,8 +287,8 @@ The following manual steps are now handled automatically by `pnpm e2e:all`:
    - Prevents timeouts on slow networks or dev servers
 
 3. **Environment Variables Updated** - Migrated to new variable names with backward compatibility
-   - `SUPABASE_SECRET_KEY` (with fallback to `SUPABASE_SERVICE_ROLE_KEY`)
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (with fallback to `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
+   - `SUPABASE_SECRET_KEY`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
 4. **Improved Supabase Detection** - Added `tests/helpers/supabaseAvailability.ts`
    - Helper functions to check Supabase availability

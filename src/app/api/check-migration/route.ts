@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const supabase = createSupabaseServerClient()
     
-    console.log('🔍 Checking database migration status...')
+    console.warn('🔍 Checking database migration status...')
     
     // Check if profiles table exists and has beta_status column
     let columns: Array<{ column_name: string }> | null = null
@@ -32,10 +32,10 @@ export async function GET() {
           .limit(1)
         
         if (testError) {
-          console.log('❌ Profiles table not accessible:', testError.message)
+          console.warn('❌ Profiles table not accessible:', testError.message)
           profilesTableExists = false
         } else {
-          console.log('✅ Profiles table accessible')
+          console.warn('✅ Profiles table accessible')
           
           // Try to select beta_status to see if it exists
           try {
@@ -45,25 +45,25 @@ export async function GET() {
               .limit(1)
             
             if (betaError && betaError.message.includes('column') && betaError.message.includes('does not exist')) {
-              console.log('⚠️ beta_status column does not exist in profiles table')
+              console.warn('⚠️ beta_status column does not exist in profiles table')
               hasBetaStatus = false
             } else if (betaError) {
-              console.log('❌ Error checking beta_status column:', betaError.message)
+              console.warn('❌ Error checking beta_status column:', betaError.message)
             } else {
-              console.log('✅ beta_status column exists in profiles table')
+              console.warn('✅ beta_status column exists in profiles table')
               hasBetaStatus = true
             }
           } catch (betaCheckError) {
-            console.log('❌ Exception checking beta_status column:', betaCheckError)
+            console.warn('❌ Exception checking beta_status column:', betaCheckError)
           }
         }
       } catch (error) {
-        console.log('❌ Exception accessing profiles table:', error)
+        console.warn('❌ Exception accessing profiles table:', error)
         profilesTableExists = false
       }
     } else if (columns) {
       hasBetaStatus = columns.some((col) => col.column_name === 'beta_status')
-      console.log(`📊 Profiles table columns: ${columns.map((col) => col.column_name).join(', ')}`)
+      console.warn(`📊 Profiles table columns: ${columns.map((col) => col.column_name).join(', ')}`)
     }
     
     // Check user_role_summary view
@@ -75,13 +75,13 @@ export async function GET() {
         .limit(1)
       
       if (viewError) {
-        console.log('❌ user_role_summary view not accessible:', viewError.message)
+        console.warn('❌ user_role_summary view not accessible:', viewError.message)
       } else {
-        console.log('✅ user_role_summary view accessible')
+        console.warn('✅ user_role_summary view accessible')
         userRoleSummaryExists = true
       }
     } catch (error) {
-      console.log('❌ Exception accessing user_role_summary view:', error)
+      console.warn('❌ Exception accessing user_role_summary view:', error)
     }
     
     const migrationStatus = {
@@ -115,7 +115,7 @@ export async function GET() {
       migrationStatus.recommendations.push('Database schema is up to date')
     }
     
-    console.log('📋 Migration status:', migrationStatus)
+    console.warn('📋 Migration status:', migrationStatus)
     
     return NextResponse.json({
       success: true,

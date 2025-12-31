@@ -119,13 +119,11 @@ SUPABASE_SECRET_KEY=sb_secret_...
 ```typescript
 // In supabaseClient.ts
 const supabasePublishableKey = 
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 // In supabaseServerClient.ts  
 const supabaseSecretKey = 
-  process.env.SUPABASE_SECRET_KEY || 
-  process.env.SUPABASE_SERVICE_ROLE_KEY;
+  process.env.SUPABASE_SECRET_KEY;
 ```
 
 ### **Configuration Management**
@@ -186,9 +184,7 @@ export const isUsingNewKeyModel = (): boolean => {
 
 ### **Rollback Procedure**
 ```bash
-# If immediate rollback is needed, simply set the old keys:
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_anon_...
-SUPABASE_SERVICE_ROLE_KEY=sb_service_role_...
+# Note: Legacy keys are no longer supported. Use only the new key model.
 
 # The system will automatically fall back to legacy keys
 ```

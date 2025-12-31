@@ -99,8 +99,8 @@ Start-Sleep -Seconds 10
 curl.exe --max-time 10 http://localhost:55321/auth/v1/health
 
 # Check admin API (requires service role key)
-$env:SUPABASE_SERVICE_ROLE_KEY = "your-service-role-key-here"
-curl.exe -H "Authorization: Bearer $env:SUPABASE_SERVICE_ROLE_KEY" http://localhost:55321/auth/v1/admin/users?per_page=1
+$env:SUPABASE_SECRET_KEY = "your-secret-key-here"
+curl.exe -H "Authorization: Bearer $env:SUPABASE_SECRET_KEY" http://localhost:55321/auth/v1/admin/users?per_page=1
 ```
 
 **Expected Output:**

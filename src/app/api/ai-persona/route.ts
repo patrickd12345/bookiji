@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('👤 AI Persona Request:', { message, persona, service })
+      console.warn('👤 AI Persona Request:', { message, persona, service })
     }
 
     // Generate AI response based on customer persona
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     )
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('👤 AI Persona Response:', aiResponse.substring(0, 100) + '…')
+      console.warn('👤 AI Persona Response:', aiResponse.substring(0, 100) + '…')
     }
 
     return NextResponse.json({

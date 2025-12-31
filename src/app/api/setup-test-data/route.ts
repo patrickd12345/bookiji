@@ -7,7 +7,7 @@ import { randomUUID } from 'crypto'
 
 export async function POST() {
   try {
-    console.log('🔧 Generating extensive test data...')
+    console.warn('🔧 Generating extensive test data...')
 
     const vendorAddresses = [
       {
@@ -286,7 +286,7 @@ export async function POST() {
       bookings.push(booking)
     }
 
-    console.log('✅ Test data generation complete')
+    console.warn('✅ Test data generation complete')
     return NextResponse.json({
       success: true,
       message: 'Test data created',

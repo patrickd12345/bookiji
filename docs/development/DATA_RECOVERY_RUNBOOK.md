@@ -42,7 +42,7 @@ Required environment variables (names only, no values committed):
 
 Optional recovery-only variables:
 - `SUPABASE_URL_RECOVERY`
-- `SUPABASE_SERVICE_ROLE_KEY_RECOVERY`
+- `SUPABASE_SECRET_KEY_RECOVERY`
 - `SUPABASE_DB_PASSWORD_RECOVERY` (for `supabase` CLI)
 - `SUPABASE_ACCESS_TOKEN_RECOVERY` (if required by CLI)
 - `STORAGE_ENDPOINT_RECOVERY`

@@ -134,7 +134,7 @@ For GitHub Actions and other CI, use secrets:
 ```yaml
 env:
   SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
-  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
+  SUPABASE_SECRET_KEY: ${{ secrets.E2E_SUPABASE_SECRET_KEY }}
   E2E_ALLOW_REMOTE_SUPABASE: true
 ```
 

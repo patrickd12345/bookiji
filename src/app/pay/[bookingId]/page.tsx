@@ -157,7 +157,7 @@ function PaymentPageContent() {
       }
     };
     fetchBooking();
-  }, [bookingId, user]);
+  }, [bookingId, user, searchParams]);
 
   if (!bookingId) {
     return <div className="p-8 text-red-600">Invalid booking id</div>

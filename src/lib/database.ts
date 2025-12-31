@@ -7,6 +7,7 @@ import type {
   CreditTransaction, 
   CreditPackage 
 } from '../types/global'
+import { logger } from './logger'
 
 // Types for database operations
 export interface UserProfile {
@@ -513,7 +514,7 @@ export async function getCreditPackages(): Promise<{ success: boolean; packages?
 export const initializeDatabase = async () => {
   try {
     // For development, return true to indicate successful connection
-    console.log('🔌 Using test database configuration')
+    logger.info('🔌 Using test database configuration')
     return true
   } catch (error) {
     console.error('Failed to initialize database:', error)

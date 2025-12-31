@@ -3,6 +3,7 @@ import { getServerSupabase } from './supabaseServer'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 import { createCommitmentFeePaymentIntent } from './stripe'
+import { logger } from './logger'
 
 export interface BookingRequest {
   customerId: string
@@ -36,7 +37,7 @@ export class BookingEngine {
   // Create a new booking and payment intent
   static async createBooking(request: BookingRequest): Promise<BookingResult> {
     try {
-      console.log('🚀 Creating booking for:', request)
+      logger.info('🚀 Creating booking for:', { request })
 
       // 1. Find available slot
       const slot = await this.findAvailableSlot(request)

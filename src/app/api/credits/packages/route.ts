@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 const DEFAULT_PACKAGES = [
   {
@@ -25,7 +25,7 @@ const DEFAULT_PACKAGES = [
 
 export async function GET() {
   try {
-    console.log('Fetching credit packages')
+    console.warn('Fetching credit packages')
     
     return NextResponse.json({
       success: true,

@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { addCredits, getCreditPackages } from './database'
 import { CreditPackage } from '../types/global.d'
 import { stripe as defaultStripe } from '@/lib/stripe'
+import { logger } from './logger'
 
 export interface CreditsPurchaseRequest {
   userId: string
@@ -54,7 +55,7 @@ export class CreditsPurchaseHandlerImpl implements CreditsPurchaseHandler {
         }, { status: 400 })
       }
 
-      console.log('💳 Creating credit purchase for user:', userId)
+      logger.info('💳 Creating credit purchase for user:', { userId })
 
       let amountCents: number
       let creditsCents: number
@@ -120,7 +121,7 @@ export class CreditsPurchaseHandlerImpl implements CreditsPurchaseHandler {
         },
       })
 
-      console.log('💳 Credit purchase payment intent created:', paymentIntent.id)
+      logger.info('💳 Credit purchase payment intent created:', { paymentIntentId: paymentIntent.id })
 
       return NextResponse.json({
         success: true,

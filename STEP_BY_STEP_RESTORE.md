@@ -116,7 +116,7 @@ If you need to verify or get the secret key:
 2. Copy the keys:
    - **Project URL**: `https://uradoazoyhhozbemrccj.supabase.co`
    - **anon/public key**: For `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - **service_role key**: For `SUPABASE_SERVICE_ROLE_KEY`
+   - **service_role key**: For `SUPABASE_SECRET_KEY`
 
 **✅ Step 4 Complete when:** You have all API keys
 
@@ -141,8 +141,8 @@ NEXT_PUBLIC_SUPABASE_URL=https://uradoazoyhhozbemrccj.supabase.co
 
 # API Keys (from Step 4 or NEW_PROJECT_SETUP_COMPLETE.md)
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_E5HX8sFsapD2Qn2fsdd1Kw_ikzHofuz
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyNTg1OTYsImV4cCI6MjA4MTgzNDU5Nn0.ofJNCe4yD3Z_ZgAuuPdHE6mKDJBqf5wbd5MU-MMILnQ
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjI1ODU5NiwiZXhwIjoyMDgxODM0NTk2fQ.ZqDpwTzkGbirFxrCXWP5FNE0ehNWkasa7AM6BnwVXkw
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_E5HX8sFsapD2Qn2fsdd1Kw_ikzHofuz
+SUPABASE_SECRET_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyYWRvYXpveWhob3piZW1yY2NqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjI1ODU5NiwiZXhwIjoyMDgxODM0NTk2fQ.ZqDpwTzkGbirFxrCXWP5FNE0ehNWkasa7AM6BnwVXkw
 
 # Database
 DATABASE_URL=postgresql://postgres:Bookiji2024!@db.uradoazoyhhozbemrccj.supabase.co:5432/postgres
@@ -216,7 +216,7 @@ If you're using Vercel:
 2. Update these variables:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SUPABASE_SECRET_KEY`
    - `DATABASE_URL`
 3. Redeploy your application
 

@@ -4,6 +4,7 @@ import { getSupabaseConfig } from '@/config/supabase';
 import { searchKb } from '@/lib/support/rag';
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient';
 import { requireAdmin } from '@/lib/auth/requireAdmin';
+import { logger } from '@/lib/logger';
 
 /**
  * Admin-only route to auto-deduplicate KB suggestions against newest KB
@@ -76,7 +77,7 @@ export async function POST(_req: Request) {
             article_id: bestMatch.article_id,
             similarity: bestMatch.similarity
           });
-          console.info('support.kb_suggest.duplicate', { 
+          logger.info('support.kb_suggest.duplicate', { 
             suggestion_id: item.id, 
             article_id: bestMatch.article_id,
             similarity: bestMatch.similarity

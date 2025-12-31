@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getSupabaseConfig } from '@/config/supabase'
 import { isTruthyEnv } from '@/lib/env/isTruthyEnv'
+import { logger } from './logger'
 
 export interface CreditsBalanceResponse {
   success: boolean
@@ -79,7 +80,7 @@ export class CreditsBalanceHandlerImpl implements CreditsBalanceHandler {
           )
         }
         
-        console.log("Fetching credit balance for user (from query param):", userId)
+        logger.info("Fetching credit balance for user (from query param):", { userId })
         
         const mockCredits = {
           user_id: userId,

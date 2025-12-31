@@ -16,13 +16,13 @@ if (Test-Path $envFile) {
 }
 
 $supabaseUrl = $env:NEXT_PUBLIC_SUPABASE_URL -or $env:SUPABASE_URL
-$supabaseServiceKey = $env:SUPABASE_SERVICE_ROLE_KEY -or $env:SUPABASE_SECRET_KEY
+$supabaseServiceKey = $env:SUPABASE_SECRET_KEY
 
 if (-not $supabaseUrl -or -not $supabaseServiceKey) {
     Write-Host "❌ Missing Supabase environment variables" -ForegroundColor Red
     Write-Host "Please ensure .env.local contains:" -ForegroundColor Yellow
     Write-Host "  NEXT_PUBLIC_SUPABASE_URL=..." -ForegroundColor Yellow
-    Write-Host "  SUPABASE_SERVICE_ROLE_KEY=..." -ForegroundColor Yellow
+    Write-Host "  SUPABASE_SECRET_KEY=..." -ForegroundColor Yellow
     exit 1
 }
 

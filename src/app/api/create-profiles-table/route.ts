@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 export async function POST() {
   try {
-    console.log('🔧 Creating profiles table...')
+    console.warn('🔧 Creating profiles table...')
     
     // Create the profiles table (simplified version)
     const createProfilesTable = `
@@ -59,12 +59,12 @@ export async function POST() {
     `
     
     // Execute the SQL (you'll need to do this manually in Supabase Dashboard)
-    console.log('📝 SQL to run in Supabase Dashboard:')
-    console.log(createProfilesTable)
-    console.log(enableRLS)
-    console.log(createPolicies)
-    console.log(createTriggerFunction)
-    console.log(createTrigger)
+    console.warn('📝 SQL to run in Supabase Dashboard:')
+    console.warn(createProfilesTable)
+    console.warn(enableRLS)
+    console.warn(createPolicies)
+    console.warn(createTriggerFunction)
+    console.warn(createTrigger)
     
     return NextResponse.json({
       success: true,

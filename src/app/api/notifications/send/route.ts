@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     })
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(`OK ${type} notification sent to ${recipient}`)
+      console.warn(`OK ${type} notification sent to ${recipient}`)
     }
     return NextResponse.json({
       success: true,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { UserCredits } from '../types/global.d'
+import { logger } from './logger'
 
 const TIER_THRESHOLDS = {
   bronze: 0,
@@ -17,7 +18,7 @@ export function makeCreditsStatusHandler(creditsGetter: (userId: string) => Prom
     }
 
     const result: { success: boolean; credits?: UserCredits; error?: string } = await creditsGetter(userId)
-    console.log('API ROUTE getUserCredits result:', result)
+    logger.debug('API ROUTE getUserCredits result:', { result })
     if (!result || typeof result.success !== 'boolean') {
       return NextResponse.json({ error: 'Failed to fetch credits (no result)', success: false }, { status: 500 })
     }

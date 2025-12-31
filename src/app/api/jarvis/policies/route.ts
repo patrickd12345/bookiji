@@ -7,7 +7,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createPolicy, listPolicies, validatePolicyConfig } from '@/lib/jarvis/policy/registry'
-import { getServerSupabase } from '@/lib/supabaseServer'
 
 /**
  * POST /api/jarvis/policies

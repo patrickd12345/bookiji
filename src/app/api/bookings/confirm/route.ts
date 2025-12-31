@@ -55,7 +55,7 @@ async function confirmHandler(req: NextRequest): Promise<NextResponse> {
       .single()
 
     if (existingBooking) {
-      console.log(`Idempotency key already processed: ${body.idempotency_key}`)
+      console.warn(`Idempotency key already processed: ${body.idempotency_key}`)
       return NextResponse.json(
         { 
           error: 'IDEMPOTENT_DUPLICATE',

@@ -140,7 +140,7 @@ function checkPlaywrightBrowsers(): CheckResult {
 function checkEnvironmentVariables(): CheckResult {
   const required = [
     'SUPABASE_URL',
-    'SUPABASE_SERVICE_ROLE_KEY',
+    'SUPABASE_SECRET_KEY',
   ]
   
   const optional = [
@@ -169,7 +169,7 @@ function checkEnvironmentVariables(): CheckResult {
       message: `Missing: ${missing.join(', ')}`,
       fix: missing.includes('SUPABASE_URL')
         ? 'Set SUPABASE_URL to your remote Supabase project URL'
-        : 'Set SUPABASE_SERVICE_ROLE_KEY from your Supabase project settings',
+        : 'Set SUPABASE_SECRET_KEY from your Supabase project settings',
     }
   }
   

@@ -35,16 +35,16 @@ const DOCS_CONFIG = {
 
 // NEW keys from JWT secret rotation
 const SUPABASE_URL = "https://lzgynywojluwdccqkeop.supabase.co";
-const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6Z3lueXdvamx1d2RjY3FrZW9wIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjE2OTA2MCwiZXhwIjoyMDcxNzQ1MDYwfQ.bicooXJcNGZlb8xzUIRdq1WaMVczoSnkmIQtVxjt-Gc";
+const SUPABASE_SECRET_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6Z3lueXdvamx1d2RjY3FrZW9wIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjE2OTA2MCwiZXhwIjoyMDcxNzQ1MDYwfQ.bicooXJcNGZlb8xzUIRdq1WaMVczoSnkmIQtVxjt-Gc";
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
+  console.error("Missing SUPABASE_URL or SUPABASE_SECRET_KEY");
   process.exit(1);
 }
 
 const supabase = USE_LOCAL
   ? createClient("http://127.0.0.1:54321", "demo-key")
-  : createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  : createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
 
 console.log('🚀 Comprehensive KB Bootstrap Starting...');
 console.log(`  Target: ${USE_LOCAL ? 'LOCAL' : 'REMOTE'}`);

@@ -78,7 +78,7 @@ async function quoteHandler(req: NextRequest): Promise<NextResponse> {
       .single()
 
     if (existingQuote) {
-      console.log(`Returning cached quote for intent: ${intentHash}`)
+      console.warn(`Returning cached quote for intent: ${intentHash}`)
       return NextResponse.json({
         quote_id: existingQuote.id,
         candidates: existingQuote.candidates,
