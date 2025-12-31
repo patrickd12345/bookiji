@@ -22,6 +22,10 @@
 - Prefer executable verification (unit, integration, e2e) to prose. If you add an invariant to `docs/invariants.md`, point to the test(s) that already cover it.
 - Run targeted test suites described in `docs/testing/SELECTOR_MAP.md` and the Playwright contracts when shipping API or UI changes.
 
+## Pre-Commit Checks
+
+- **Always run pre-commit on modified files only**: At the end of each execution, automatically stage and run pre-commit checks on only the files that were modified during the session. Use `git add` to stage the modified files, then run `pnpm lint-staged` to execute ESLint fixes on the staged files. This ensures code quality without running checks on the entire codebase.
+
 ## Database Workflow
 
 1. Generate a migration with `supabase migration new <name>`.
