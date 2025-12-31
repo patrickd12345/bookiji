@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
+import { Button } from '@/components/ui/button'
 import { VendorCalendar, VendorAnalytics, GuidedTourManager } from '@/components'
 import { SubscriptionManager } from '@/components/SubscriptionManager'
 import VendorMetricsDashboard from '@/components/VendorMetricsDashboard'
@@ -236,17 +237,22 @@ export default function VendorDashboard() {
       <div className="max-w-7xl mx-auto px-4 pb-8">
         <SubscriptionManager />
         
-        {/* Quick Actions */}
+        {/* Quick Actions - Mobile Optimized */}
         {activeTab === 'overview' && vendorId && (
-          <div className="mb-6 flex gap-4">
-            <Link href="/vendor/bookings/create">
-              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+          <div className="mb-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <Link href="/vendor/bookings/create" className="flex-1 sm:flex-initial">
+              <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                 + Create Booking
               </Button>
             </Link>
-            <Link href="/vendor/dashboard/subscription">
-              <Button variant="outline">
+            <Link href="/vendor/dashboard/subscription" className="flex-1 sm:flex-initial">
+              <Button variant="outline" className="w-full sm:w-auto">
                 Manage Subscription
+              </Button>
+            </Link>
+            <Link href="/vendor/bookings" className="flex-1 sm:flex-initial">
+              <Button variant="outline" className="w-full sm:w-auto">
+                View All Bookings
               </Button>
             </Link>
           </div>

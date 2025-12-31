@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Building2, Calendar, Bell, Shield, CreditCard } from 'lucide-react'
 import Link from 'next/link'
+import NotificationSettings from '@/components/vendor/NotificationSettings'
 
 interface VendorProfile {
   id: string
@@ -92,7 +93,7 @@ export default function VendorSettingsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 max-w-4xl">
+    <div className="container mx-auto py-4 sm:py-8 max-w-4xl px-4">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
         <p className="text-gray-600 mt-1">Manage your business profile and preferences</p>
@@ -211,15 +212,7 @@ export default function VendorSettingsPage() {
         </TabsContent>
 
         <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>Configure how you receive notifications</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600">Notification preferences coming soon.</p>
-            </CardContent>
-          </Card>
+          <NotificationSettings />
         </TabsContent>
 
         <TabsContent value="subscription">

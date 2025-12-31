@@ -11,6 +11,39 @@ BEGIN;
 -- 1. ENHANCE VENDOR_SUBSCRIPTIONS TABLE
 -- ========================================
 
+-- Check which column name is used (vendor_id or provider_id)
+DO $$ 
+DECLARE
+    v_has_vendor_id BOOLEAN;
+    v_has_provider_id BOOLEAN;
+    v_vendor_column_name TEXT;
+BEGIN
+    -- Check which column exists
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'vendor_subscriptions' 
+        AND column_name = 'vendor_id'
+    ) INTO v_has_vendor_id;
+    
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'vendor_subscriptions' 
+        AND column_name = 'provider_id'
+    ) INTO v_has_provider_id;
+    
+    -- Determine which column name to use
+    IF v_has_vendor_id THEN
+        v_vendor_column_name := 'vendor_id';
+    ELSIF v_has_provider_id THEN
+        v_vendor_column_name := 'provider_id';
+    ELSE
+        RAISE EXCEPTION 'vendor_subscriptions table does not have vendor_id or provider_id column';
+    END IF;
+    
+    -- Store for later use in policies
+    -- (We'll use vendor_id as the standard since the later migration uses it)
+END $$;
+
 -- Add missing columns if they don't exist
 DO $$ 
 BEGIN
@@ -150,28 +183,54 @@ ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;
 -- ========================================
 
 -- Vendor subscription features policies
-CREATE POLICY IF NOT EXISTS "Vendors can view own subscription features"
-ON vendor_subscription_features
-FOR SELECT
-USING (
-    EXISTS (
-        SELECT 1 FROM vendor_subscriptions vs
-        JOIN profiles p ON p.id = vs.provider_id
-        WHERE vs.id = vendor_subscription_features.subscription_id
-        AND p.auth_user_id = auth.uid()
-    )
-);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE schemaname = 'public' 
+        AND tablename = 'vendor_subscription_features'
+        AND policyname = 'Vendors can view own subscription features'
+    ) THEN
+        CREATE POLICY "Vendors can view own subscription features"
+        ON vendor_subscription_features
+        FOR SELECT
+        USING (
+            EXISTS (
+                SELECT 1 FROM vendor_subscriptions vs
+                WHERE vs.id = vendor_subscription_features.subscription_id
+                AND vs.vendor_id = auth.uid()
+            )
+        );
+    END IF;
 
-CREATE POLICY IF NOT EXISTS "Service role can manage subscription features"
-ON vendor_subscription_features
-FOR ALL
-USING (auth.jwt() ->> 'role' = 'service_role');
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE schemaname = 'public' 
+        AND tablename = 'vendor_subscription_features'
+        AND policyname = 'Service role can manage subscription features'
+    ) THEN
+        CREATE POLICY "Service role can manage subscription features"
+        ON vendor_subscription_features
+        FOR ALL
+        USING (auth.jwt() ->> 'role' = 'service_role');
+    END IF;
+END $$;
 
 -- Subscription plans policies (public read)
-CREATE POLICY IF NOT EXISTS "Anyone can view active subscription plans"
-ON subscription_plans
-FOR SELECT
-USING (is_active = true);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE schemaname = 'public' 
+        AND tablename = 'subscription_plans'
+        AND policyname = 'Anyone can view active subscription plans'
+    ) THEN
+        CREATE POLICY "Anyone can view active subscription plans"
+        ON subscription_plans
+        FOR SELECT
+        USING (is_active = true);
+    END IF;
+END $$;
 
 -- ========================================
 -- 6. CREATE HELPER FUNCTIONS
@@ -270,15 +329,31 @@ ON vendor_subscriptions(trial_end) WHERE trial_end IS NOT NULL;
 -- ========================================
 
 -- Ensure updated_at trigger exists for vendor_subscription_features
-CREATE TRIGGER IF NOT EXISTS update_vendor_subscription_features_updated_at
-    BEFORE UPDATE ON vendor_subscription_features
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'update_vendor_subscription_features_updated_at'
+    ) THEN
+        CREATE TRIGGER update_vendor_subscription_features_updated_at
+        BEFORE UPDATE ON vendor_subscription_features
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
 
 -- Ensure updated_at trigger exists for subscription_plans
-CREATE TRIGGER IF NOT EXISTS update_subscription_plans_updated_at
-    BEFORE UPDATE ON subscription_plans
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'update_subscription_plans_updated_at'
+    ) THEN
+        CREATE TRIGGER update_subscription_plans_updated_at
+        BEFORE UPDATE ON subscription_plans
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
 
 COMMIT;

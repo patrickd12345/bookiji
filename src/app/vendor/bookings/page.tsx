@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Calendar, Clock, User, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -127,7 +127,7 @@ export default function VendorBookingsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 max-w-6xl">
+    <div className="container mx-auto py-4 sm:py-8 max-w-6xl px-4">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Bookings</h1>

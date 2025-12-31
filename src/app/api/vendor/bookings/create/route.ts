@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     // Invariant III-1: Vendor must have active subscription
     try {
       await assertVendorHasActiveSubscription(vendorProfile.id)
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.json({
         error: 'Active subscription required',
         hint: 'Please subscribe to create bookings'

@@ -7,7 +7,7 @@
 
 type LogLevel = 'info' | 'warn' | 'error' | 'debug'
 
-interface LogContext {
+export interface LogContext {
   [key: string]: unknown
 }
 
@@ -54,3 +54,13 @@ export const logger = new Logger()
 
 // Export class for testing
 export { Logger }
+
+/**
+ * Helper function to convert an error (or any value) to LogContext format
+ */
+export function errorToContext(error: unknown): LogContext {
+  if (error instanceof Error) {
+    return { error: error.message, stack: error.stack, name: error.name }
+  }
+  return { error: String(error) }
+}

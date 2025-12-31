@@ -35,7 +35,6 @@ export default function VendorSubscriptionPage() {
   const [loading, setLoading] = useState(true)
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [plans, setPlans] = useState<Plan[]>([])
-  const [selectedPlan, setSelectedPlan] = useState<string>('')
 
   useEffect(() => {
     fetchSubscriptionStatus()
@@ -123,7 +122,7 @@ export default function VendorSubscriptionPage() {
   )
 
   return (
-    <div className="container mx-auto py-8 max-w-4xl">
+    <div className="container mx-auto py-4 sm:py-8 max-w-4xl px-4">
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Subscription Management</CardTitle>

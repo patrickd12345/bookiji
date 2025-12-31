@@ -147,8 +147,8 @@ export default function CreateVendorBookingPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 max-w-2xl">
-      <Card>
+    <div className="container mx-auto py-4 sm:py-8 max-w-2xl px-4">
+      <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Create New Booking</CardTitle>
           <CardDescription>
@@ -160,7 +160,7 @@ export default function CreateVendorBookingPage() {
             {/* Customer Selection */}
             <div className="space-y-2">
               <Label htmlFor="customer">Customer *</Label>
-              <Select value={selectedCustomer} onValueChange={setSelectedCustomer} required>
+              <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
@@ -177,7 +177,7 @@ export default function CreateVendorBookingPage() {
             {/* Service Selection */}
             <div className="space-y-2">
               <Label htmlFor="service">Service *</Label>
-              <Select value={selectedService} onValueChange={setSelectedService} required>
+              <Select value={selectedService} onValueChange={setSelectedService}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select service" />
                 </SelectTrigger>
