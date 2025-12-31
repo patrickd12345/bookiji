@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 const reportPath = path.join(process.cwd(), 'artifacts', 'doc-integrity-report.json');
 
