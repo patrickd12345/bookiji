@@ -83,7 +83,7 @@ export const OWNER_DEFAULT_V1: SleepPolicy = {
   wakeThresholdSeverity: 'SEV-1', // Only SEV-1 can wake during quiet hours
   maxSilentMinutes: DEFAULT_SEVERITY_RULES['SEV-1'].maxSilentMinutes ?? 120, // 2 hours max silence even in quiet hours for SEV-1
   escalationIntervalsMinutes: DEFAULT_SEVERITY_RULES['SEV-1'].escalationIntervalsMinutes,
-  maxNotificationsPerIncident: GLOBAL_MAX_NOTIFICATION_CAP, // Hard cap: never send more than 5 SMS per incident
+  maxNotificationsPerIncident: 5, // Hard cap: never send more than 5 SMS per incident
   severityRules: DEFAULT_SEVERITY_RULES
 }
 

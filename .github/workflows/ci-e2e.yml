@@ -37,12 +37,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: pnpm install --frozen-lockfile
 
       - name: Environment isolation guard
         env:
@@ -107,7 +112,7 @@ jobs:
         run: |
           npx supabase stop || true
           npx supabase start --debug
-          npm run db:push
+          pnpm -s db:push
 
       - name: Detect preview or local
         id: target
@@ -120,7 +125,7 @@ jobs:
 
       - name: Start dev server (local only)
         if: steps.target.outputs.baseURL == 'http://localhost:3000'
-        run: npm run dev &
+        run: pnpm -s dev &
       
       - name: Wait for server
         run: npx wait-on ${{ steps.target.outputs.baseURL }}
@@ -220,15 +225,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: pnpm install --frozen-lockfile
 
       - name: Epistemic gates (deploy-blockers)
-        run: npm run ci:epistemic
+        run: pnpm -s ci:epistemic
 
       - name: Deploy canary
         env:
@@ -253,12 +263,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: pnpm install --frozen-lockfile
       - run: npx playwright install --with-deps chromium
 
       # Note: Linter warning about needs.canary-deploy.outputs.url is a false positive
@@ -293,11 +308,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - run: npm ci --legacy-peer-deps
+      - run: pnpm install --frozen-lockfile
 
       - name: Download canary analysis
         uses: actions/download-artifact@v4
@@ -334,11 +354,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - run: npm ci --legacy-peer-deps
+      - run: pnpm install --frozen-lockfile
 
       - name: Download canary analysis
         uses: actions/download-artifact@v4
@@ -377,22 +402,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - run: npm ci --legacy-peer-deps
+      - run: pnpm install --frozen-lockfile
       - run: npx playwright install --with-deps chromium
 
       - name: Start Supabase
         run: |
           npx supabase stop || true
           npx supabase start --debug
-          npm run db:push
+          pnpm -s db:push
 
       - name: Start dev server
-        run: npm run dev &
+        run: pnpm -s dev &
       
       - name: Wait for services
         run: |
