@@ -5,8 +5,25 @@ import { cookies } from 'next/headers'
 import Stripe from 'stripe'
 import { getSupabaseConfig } from '@/config/supabase'
 import { isTruthyEnv } from '@/lib/env/isTruthyEnv'
-import { buildIdempotencyKey } from '@/lib/notifications/intentDispatcher'
-import { randomUUID } from 'crypto'
+
+// Standardized error response helper
+function createErrorResponse(
+  error: string,
+  status: number,
+  code?: string,
+  hint?: string,
+  details?: unknown
+): NextResponse {
+  return NextResponse.json(
+    {
+      error,
+      ...(code && { code }),
+      ...(hint && { hint }),
+      ...(details && typeof details === 'object' && details !== null ? { details } : details ? { details } : {})
+    },
+    { status }
+  )
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,11 +32,7 @@ export async function POST(req: NextRequest) {
 
   if (!stripeSecretKey && !isE2E) {
     console.error('STRIPE_SECRET_KEY is not configured')
-    return NextResponse.json({ 
-      ok: false,
-      code: 'CONFIGURATION_ERROR',
-      message: 'Payment configuration error'
-    }, { status: 500 })
+    return createErrorResponse('Payment configuration error', 500, 'PAYMENT_CONFIG_ERROR')
   }
 
   const stripe = stripeSecretKey
@@ -30,11 +43,7 @@ export async function POST(req: NextRequest) {
 
   const config = getSupabaseConfig()
   if (!config.secretKey) {
-    return NextResponse.json({ 
-      ok: false,
-      code: 'CONFIGURATION_ERROR',
-      message: 'Supabase service key not configured'
-    }, { status: 500 })
+    return createErrorResponse('Supabase service key not configured', 500, 'CONFIG_ERROR')
   }
 
   // Service role client for profile lookup + booking insert
@@ -71,11 +80,7 @@ export async function POST(req: NextRequest) {
   if (authError || !user) {
     if (!isE2E) {
       console.warn('Booking create auth failed', { authError })
-      return NextResponse.json({ 
-        ok: false,
-        code: 'AUTHENTICATION_ERROR',
-        message: 'Not authenticated'
-      }, { status: 401 })
+      return createErrorResponse('Not authenticated', 401, 'AUTH_REQUIRED', 'Please log in to create a booking')
     }
     // E2E mode: return deterministic stub without touching DB/RLS (keeps smoke tests stable)
     return NextResponse.json({
@@ -91,62 +96,25 @@ export async function POST(req: NextRequest) {
   interface BookingRequestBody {
     service_id?: string
     customer_id?: string
+    idempotencyKey?: string
     [key: string]: unknown
   }
   let body: BookingRequestBody
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ 
-      ok: false,
-      code: 'VALIDATION_ERROR',
-      message: 'Invalid JSON payload'
-    }, { status: 400 })
+    return createErrorResponse('Invalid JSON payload', 400, 'INVALID_JSON', 'Request body must be valid JSON')
   }
 
-  const { providerId, serviceId, startTime, endTime, amountUSD, customerId, vendorAuthId, isVendorCreated, idempotency_key } = body
+  const { providerId, serviceId, startTime, endTime, amountUSD, customerId, vendorAuthId, isVendorCreated, idempotencyKey } = body
 
   if (!providerId || !serviceId || !startTime || !endTime || amountUSD === undefined) {
-    return NextResponse.json({ 
-      ok: false,
-      code: 'VALIDATION_ERROR',
-      message: 'Missing required fields: providerId, serviceId, startTime, endTime, amountUSD'
-    }, { status: 400 })
-  }
-
-  // Generate or use provided idempotency key
-  const idempotencyKey = idempotency_key as string || buildIdempotencyKey({
-    intentType: 'booking_create',
-    userId: user.id,
-    payload: {
-      providerId,
-      serviceId,
-      startTime,
-      endTime,
-      amountUSD
-    }
-  })
-
-  // Check for existing booking with this idempotency key
-  const { data: existingBooking } = await supabase
-    .from('bookings')
-    .select('id, status, state, stripe_payment_intent_id, vendor_created')
-    .eq('idempotency_key', idempotencyKey)
-    .maybeSingle()
-
-  if (existingBooking) {
-    // Return existing booking result (idempotent)
-    const existingIntent = existingBooking.stripe_payment_intent_id
-      ? (stripe ? await stripe.paymentIntents.retrieve(existingBooking.stripe_payment_intent_id).catch(() => null) : null)
-      : null
-
-    return NextResponse.json({
-      booking: existingBooking,
-      clientSecret: existingIntent?.client_secret || null,
-      vendorCreated: existingBooking.vendor_created || false,
-      requiresPayment: !existingBooking.vendor_created && !!existingIntent,
-      idempotent: true
-    }, { status: 200 })
+    return createErrorResponse(
+      'Missing required fields',
+      400,
+      'VALIDATION_ERROR',
+      'Please provide: providerId, serviceId, startTime, endTime, and amountUSD'
+    )
   }
 
   // Check if this is a vendor-created booking (payment-free)
@@ -162,12 +130,12 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (!vendorProfile || vendorProfile.role !== 'vendor' || vendorProfile.id !== providerId) {
-      return NextResponse.json({ 
-        ok: false,
-        code: 'AUTHORIZATION_ERROR',
-        message: 'Only the vendor can create vendor bookings',
-        details: { hint: 'Vendor-created bookings must be created by the vendor themselves' }
-      }, { status: 403 })
+      return createErrorResponse(
+        'Only the vendor can create vendor bookings',
+        403,
+        'FORBIDDEN',
+        'Vendor-created bookings must be created by the vendor themselves'
+      )
     }
   }
 
@@ -177,20 +145,22 @@ export async function POST(req: NextRequest) {
   const bookingStart = new Date(startTime as string)
   
   if (bookingStart <= now) {
-    return NextResponse.json({
-      ok: false,
-      code: 'VALIDATION_ERROR',
-      message: 'Cannot create booking in the past'
-    }, { status: 400 })
+    return createErrorResponse(
+      'Cannot create booking in the past',
+      400,
+      'VALIDATION_ERROR',
+      'Booking start time must be in the future'
+    )
   }
 
   const amountNumber = Number(amountUSD)
   if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
-    return NextResponse.json({ 
-      ok: false,
-      code: 'VALIDATION_ERROR',
-      message: 'Invalid amount'
-    }, { status: 400 })
+    return createErrorResponse(
+      'Invalid amount',
+      400,
+      'VALIDATION_ERROR',
+      'Amount must be a positive number'
+    )
   }
 
   const amountCents = Math.round(amountNumber * 100)
@@ -212,15 +182,73 @@ export async function POST(req: NextRequest) {
   const providerProfileId = providerId as string | null
 
   if (!customerProfileId && !isE2E) {
-    return NextResponse.json({ 
-      ok: false,
-      code: 'VALIDATION_ERROR',
-      message: 'Customer profile not found'
-    }, { status: 400 })
+    return createErrorResponse(
+      'Customer profile not found',
+      400,
+      'PROFILE_NOT_FOUND',
+      'Please ensure you are logged in with a valid account'
+    )
   }
 
   const resolvedCustomerId = customerProfileId || providerProfileId || 'e2e-customer'
   const resolvedProviderId = providerProfileId || resolvedCustomerId
+
+  // Check for duplicate booking using idempotency key or booking parameters
+  // Duplicate detection: same customer + provider + service + start_time within 5 minutes
+  const duplicateWindowStart = new Date(bookingStart.getTime() - 5 * 60 * 1000) // 5 minutes before
+  const duplicateWindowEnd = new Date(bookingStart.getTime() + 5 * 60 * 1000) // 5 minutes after
+
+  if (idempotencyKey) {
+    // Check by idempotency key first (most reliable)
+    const { data: existingByKey } = await supabase
+      .from('bookings')
+      .select('id, customer_id, provider_id, service_id, start_time, stripe_payment_intent_id')
+      .eq('idempotency_key', idempotencyKey)
+      .maybeSingle()
+
+    if (existingByKey) {
+      // Return existing booking (idempotent response)
+      const existingIntent = existingByKey.stripe_payment_intent_id
+        ? await (stripe?.paymentIntents.retrieve(existingByKey.stripe_payment_intent_id).catch(() => null))
+        : null
+
+      return NextResponse.json({
+        booking: existingByKey,
+        clientSecret: existingIntent?.client_secret || null,
+        vendorCreated: vendorCreated,
+        requiresPayment: !vendorCreated,
+        duplicate: true
+      }, { status: 200 })
+    }
+  }
+
+  // Check for duplicate by booking parameters (within 5 minute window)
+  const { data: existingByParams } = await supabase
+    .from('bookings')
+    .select('id, customer_id, provider_id, service_id, start_time, stripe_payment_intent_id, idempotency_key')
+    .eq('customer_id', resolvedCustomerId)
+    .eq('provider_id', resolvedProviderId)
+    .eq('service_id', serviceId)
+    .gte('start_time', duplicateWindowStart.toISOString())
+    .lte('start_time', duplicateWindowEnd.toISOString())
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (existingByParams && existingByParams.length > 0) {
+    const existing = existingByParams[0]
+    // If booking was created within last 5 minutes, return it as duplicate
+    const existingIntent = existing.stripe_payment_intent_id
+      ? await (stripe?.paymentIntents.retrieve(existing.stripe_payment_intent_id).catch(() => null))
+      : null
+
+    return NextResponse.json({
+      booking: existing,
+      clientSecret: existingIntent?.client_secret || null,
+      vendorCreated: vendorCreated,
+      requiresPayment: !vendorCreated,
+      duplicate: true
+    }, { status: 200 })
+  }
 
   // For vendor-created bookings, skip payment intent creation
   let intent: { id: string; client_secret: string | null } | null = null
@@ -249,6 +277,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Generate idempotency key if not provided
+  const finalIdempotencyKey = idempotencyKey || `booking_${resolvedCustomerId}_${resolvedProviderId}_${serviceId}_${startTime}_${Date.now()}`
+
   const { data: booking, error } = await supabase
     .from('bookings')
     .insert({
@@ -263,41 +294,41 @@ export async function POST(req: NextRequest) {
       vendor_created: vendorCreated,
       vendor_created_by: vendorCreated ? resolvedProviderId : null,
       stripe_payment_intent_id: vendorCreated ? null : intent.id,
-      idempotency_key: idempotencyKey
+      idempotency_key: finalIdempotencyKey
     })
     .select()
     .single()
 
   if (error) {
-    // Check if it's a duplicate idempotency key error
+    // Check if it's a unique constraint violation on idempotency_key
     if (error.code === '23505' && error.message.includes('idempotency_key')) {
-      // Race condition: another request with same key succeeded
+      // Duplicate idempotency key - fetch existing booking
       const { data: existingBooking } = await supabase
         .from('bookings')
-        .select('id, status, state, stripe_payment_intent_id, vendor_created')
-        .eq('idempotency_key', idempotencyKey)
+        .select('id, customer_id, provider_id, service_id, start_time, stripe_payment_intent_id')
+        .eq('idempotency_key', finalIdempotencyKey)
         .maybeSingle()
 
       if (existingBooking) {
         const existingIntent = existingBooking.stripe_payment_intent_id
-          ? (stripe ? await stripe.paymentIntents.retrieve(existingBooking.stripe_payment_intent_id).catch(() => null) : null)
+          ? await (stripe?.paymentIntents.retrieve(existingBooking.stripe_payment_intent_id).catch(() => null))
           : null
 
         return NextResponse.json({
           booking: existingBooking,
           clientSecret: existingIntent?.client_secret || null,
-          vendorCreated: existingBooking.vendor_created || false,
-          requiresPayment: !existingBooking.vendor_created && !!existingIntent,
-          idempotent: true
+          vendorCreated: vendorCreated,
+          requiresPayment: !vendorCreated,
+          duplicate: true
         }, { status: 200 })
       }
     }
-
-    return NextResponse.json({ 
-      ok: false,
-      code: 'DATABASE_ERROR',
-      message: error.message
-    }, { status: 500 })
+    return createErrorResponse(
+      error.message || 'Failed to create booking',
+      500,
+      'DATABASE_ERROR',
+      'An error occurred while saving your booking. Please try again.'
+    )
   }
 
   return NextResponse.json({
@@ -308,10 +339,11 @@ export async function POST(req: NextRequest) {
   })
   } catch (err) {
     console.error('Booking create exception', err)
-    return NextResponse.json({ 
-      ok: false,
-      code: 'INTERNAL_ERROR',
-      message: err instanceof Error ? err.message : 'Internal error'
-    }, { status: 500 })
+    return createErrorResponse(
+      err instanceof Error ? err.message : 'Internal error',
+      500,
+      'INTERNAL_ERROR',
+      'An unexpected error occurred. Please try again later.'
+    )
   }
 }

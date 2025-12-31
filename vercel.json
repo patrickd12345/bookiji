@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/jarvis-monitor",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/notifications/batch/process",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

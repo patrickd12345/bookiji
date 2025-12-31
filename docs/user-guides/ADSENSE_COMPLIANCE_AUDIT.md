@@ -265,9 +265,18 @@ Transparency Measures:
 - [x] Platform disclosures explaining business model
 - [x] Clear fee explanations and transparency
 - [x] Professional site design and navigation
-- [x] AdSense integration with consent controls
+- [x] AdSense approval mode infrastructure (auth bypass, console suppression)
+- [x] `ads.txt` file configured with publisher ID
 - [x] User data controls and rights
 - [x] Third-party service disclosures
+- [x] Analytics integration (PostHog, Hotjar, Vercel)
+
+### ⚠️ Pending Actions
+- [ ] AdSense script embedding in HTML (infrastructure ready, script pending)
+- [ ] Google site verification meta tag
+- [ ] CSP configuration for AdSense domains
+
+**Note**: See `docs/user-guides/ADSENSE_VERIFICATION_REPORT.md` for detailed verification of implementation status.
 
 ### 📋 Ongoing Monitoring
 - [ ] Regular policy reviews and updates

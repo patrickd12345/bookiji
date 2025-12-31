@@ -36,11 +36,11 @@
 - **Batching Queue**: Database table with processing functions
 - **Batch Processing**: 
   - Time-based batching (5-minute windows)
-  - Size-based batching (max 10 notifications)
   - Automatic expiration handling
 - **Cron Integration**: Vercel cron configured (`vercel.json`)
-  - Runs every 5 minutes
+  - Runs every 5 minutes at `/api/notifications/batch/process`
   - Processes expired batches automatically
+  - Protected with `CRON_SECRET` authentication
 
 ### 4. Integration ✅
 - **Notification Center**: Integrated batching into `src/lib/notifications/center.ts`
@@ -119,11 +119,12 @@ pnpm db:push
 ## 🎯 **Next Steps (Optional)**
 
 ### Notifications 2.0
-1. ✅ Generate VAPID keys and add to environment
-2. ✅ Test push subscription flow
-3. ✅ Verify cron job is running (Vercel automatically handles this)
-4. Monitor notification delivery rates
-5. Add notification analytics dashboard
+1. ✅ Generate VAPID keys - Keys generated, add to environment variables
+2. ✅ Cron job configured - Added to `vercel.json` (runs every 5 minutes)
+3. ✅ Web push implementation - Fully implemented with `web-push` package
+4. ⏳ Test push subscription flow (requires VAPID keys in environment)
+5. Monitor notification delivery rates
+6. Add notification analytics dashboard
 
 ### i18n
 1. **Priority**: Fill remaining 15 incomplete locales (480 translations)
@@ -143,8 +144,10 @@ pnpm db:push
 - [x] API endpoints created
 - [x] Web-push library installed
 - [x] Batching implementation complete
-- [x] Cron job configured
-- [ ] Test push subscription flow (requires VAPID keys)
+- [x] Cron job configured in `vercel.json`
+- [x] VAPID keys generated (add to environment)
+- [x] Documentation updated with setup instructions
+- [ ] Test push subscription flow (requires VAPID keys in environment)
 - [ ] Test notification delivery
 - [ ] Test batching behavior
 - [ ] Test notification clicks

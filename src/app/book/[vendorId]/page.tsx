@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../../../../hooks/useAuth'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { ADSENSE_APPROVAL_MODE } from '@/lib/adsense'
 import { isTruthyEnv } from '@/lib/env/isTruthyEnv'
 import { logger, errorToContext } from '@/lib/logger'
+import { BookingErrorDisplay } from '@/components/BookingErrorDisplay'
 
 interface Service {
   id: string
@@ -36,6 +37,7 @@ const fallbackServices: Service[] = [
 
 export default function BookVendorPage() {
   const params = useParams<{ vendorId: string }>()
+  const router = useRouter()
   const vendorId = params?.vendorId ?? ''
   const { user } = useAuth()
   const isE2E = isTruthyEnv(process.env.NEXT_PUBLIC_E2E) || isTruthyEnv(process.env.E2E)
@@ -52,6 +54,11 @@ export default function BookVendorPage() {
   const [availabilitySlots, setAvailabilitySlots] = useState<Slot[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null)
+  const [error, setError] = useState<{ error: string; code?: string; hint?: string; details?: unknown } | null>(null)
+  const [availabilityLoading, setAvailabilityLoading] = useState(false)
+  const [availabilityError, setAvailabilityError] = useState(false)
+  const submissionRef = useRef(false)
 
   const fetchVendorAndServices = useCallback(async () => {
     if (!vendorId) return;
@@ -125,17 +132,30 @@ export default function BookVendorPage() {
     }
   }, [vendorId])
 
-  // Fetch availability slots from the server
-  const fetchAvailability = useCallback(async () => {
+  // Fetch availability slots from the server with retry/backoff
+  const fetchAvailability = useCallback(async (retryCount = 0) => {
     if (!vendorId || !vendorProfileId) return;
     
+    setAvailabilityLoading(true)
+    setAvailabilityError(false)
+    
     let slotsSet = false
+    const maxRetries = 3
+    const baseDelay = 1000 // 1 second
+    
     try {
       const res = await fetch('/api/availability/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ providerId: vendorProfileId })
       })
+
+      if (!res.ok && retryCount < maxRetries) {
+        // Exponential backoff: 1s, 2s, 4s
+        const delay = baseDelay * Math.pow(2, retryCount)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        return fetchAvailability(retryCount + 1)
+      }
 
       const data = await res.json()
 
@@ -150,18 +170,25 @@ export default function BookVendorPage() {
         })
         setAvailabilitySlots(slots)
         slotsSet = true
+        setAvailabilityError(false)
         return
       }
 
       // Fallback: read availability_slots directly for the provider to unblock E2E
       const supabase = supabaseBrowserClient()
       if (supabase) {
-        const { data: slotData } = await supabase
+        const { data: slotData, error: slotError } = await supabase
           .from('availability_slots')
           .select('start_time')
           .eq('provider_id', vendorProfileId)
           .eq('is_available', true)
           .order('start_time', { ascending: true })
+
+        if (slotError && retryCount < maxRetries) {
+          const delay = baseDelay * Math.pow(2, retryCount)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          return fetchAvailability(retryCount + 1)
+        }
 
         if (Array.isArray(slotData)) {
           const slots = slotData.map(({ start_time }) => {
@@ -174,10 +201,19 @@ export default function BookVendorPage() {
           })
           setAvailabilitySlots(slots)
           slotsSet = true
+          setAvailabilityError(false)
         }
       }
     } catch (error) {
       logger.error('Error fetching availability', errorToContext(error))
+      if (retryCount < maxRetries) {
+        const delay = baseDelay * Math.pow(2, retryCount)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        return fetchAvailability(retryCount + 1)
+      }
+      setAvailabilityError(true)
+    } finally {
+      setAvailabilityLoading(false)
     }
 
     // Final fallback: ensure at least one far-future slot is present for E2E
@@ -221,8 +257,8 @@ export default function BookVendorPage() {
   }, [isE2E])
 
   const handleBooking = async () => {
-    // Prevent duplicate submissions
-    if (submitting) {
+    // Prevent double submission
+    if (submissionRef.current || submitting) {
       return
     }
 
@@ -234,11 +270,19 @@ export default function BookVendorPage() {
     const resolvedTime = selectedTime || domTime
 
     if (!resolvedService || !resolvedDate || !resolvedTime) {
-      alert('Please select service, date and time')
+      setError({
+        error: 'Please select service, date and time',
+        code: 'VALIDATION_ERROR',
+        hint: 'All fields are required to complete your booking'
+      })
       return
     }
 
-    setSubmitting(true)
+    // Generate idempotency key if not already set (for this booking attempt)
+    const currentIdempotencyKey = idempotencyKey || `booking_${Date.now()}_${Math.random().toString(36).substring(7)}`
+    if (!idempotencyKey) {
+      setIdempotencyKey(currentIdempotencyKey)
+    }
 
     const startTimeIso = resolvedTime.includes('T')
       ? resolvedTime
@@ -270,10 +314,22 @@ export default function BookVendorPage() {
       }
 
       if (!authUserId) {
-        alert('Please log in to book an appointment')
+        setError({
+          error: 'Please log in to book an appointment',
+          code: 'AUTH_REQUIRED',
+          hint: 'You need to be logged in to create a booking'
+        })
         return
       }
     }
+
+    // Set submitting state and prevent double clicks
+    submissionRef.current = true
+    setSubmitting(true)
+    setError(null)
+
+    // Optimistic navigation preparation (will be executed if booking succeeds)
+    let optimisticNavigation: (() => void) | null = null
 
     try {
       const payload = {
@@ -289,7 +345,8 @@ export default function BookVendorPage() {
             )
             return new Date(start.getTime() + durationMinutes * 60 * 1000).toISOString()
           })(),
-          amountUSD: 1 // deterministic booking fee for E2E
+          amountUSD: 1, // deterministic booking fee for E2E
+          idempotencyKey: currentIdempotencyKey
         }
 
       const fetchWithTimeout = async (timeoutMs: number) => {
@@ -311,26 +368,75 @@ export default function BookVendorPage() {
       const response = await fetchWithTimeout(isE2E ? 10000 : 60000)
       const data = await response.json().catch(() => null as unknown)
 
-      if (response.ok && data?.booking?.id && data?.clientSecret) {
-        window.location.assign(`/pay/${data.booking.id}?client_secret=${data.clientSecret}`)
+      if (response.ok && data?.booking?.id) {
+        // Success - navigate to payment page
+        const paymentUrl = data?.clientSecret
+          ? `/pay/${data.booking.id}?client_secret=${data.clientSecret}`
+          : fallbackPayUrl
+        
+        optimisticNavigation = () => {
+          router.push(paymentUrl)
+        }
+        optimisticNavigation()
         return
       }
 
+      // Handle error response
       if (!response.ok) {
+        const errorData = data && typeof data === 'object' && 'error' in data
+          ? data as { error: string; code?: string; hint?: string; details?: unknown }
+          : { error: 'Booking creation failed', code: 'UNKNOWN_ERROR' }
+        
         logger.error('Booking create failed', { status: response.status, data, payload })
+        setError(errorData)
+        setSubmitting(false)
+        submissionRef.current = false
+        return
       }
 
       // E2E fallback: navigate to deterministic pay route even if API failed or route compile is slow.
-      window.location.assign(fallbackPayUrl)
-    } catch (error) {
-      logger.error('Booking error', errorToContext(error))
       if (isE2E) {
-        window.location.assign(fallbackPayUrl)
+        router.push(fallbackPayUrl)
         return
       }
-      alert('Booking failed')
+
+      setError({
+        error: 'Unexpected response from server',
+        code: 'UNEXPECTED_RESPONSE',
+        hint: 'Please try again or contact support if the problem persists'
+      })
+    } catch (error) {
+      logger.error('Booking error', errorToContext(error))
+      
+      // Rollback optimistic navigation if it was set
+      if (optimisticNavigation) {
+        // Navigation already happened, but we can show error
+        setError({
+          error: 'Booking may have been created but payment failed',
+          code: 'PAYMENT_ERROR',
+          hint: 'Please check your bookings or try again'
+        })
+      } else {
+        if (isE2E) {
+          router.push(fallbackPayUrl)
+          return
+        }
+        
+        const isNetworkError = error instanceof Error && (
+          error.name === 'AbortError' ||
+          error.message.includes('fetch') ||
+          error.message.includes('network')
+        )
+        
+        setError({
+          error: isNetworkError ? 'Network error occurred' : 'Booking failed',
+          code: isNetworkError ? 'NETWORK_ERROR' : 'BOOKING_ERROR',
+          hint: isNetworkError ? 'Please check your connection and try again' : 'An error occurred while creating your booking'
+        })
+      }
     } finally {
       setSubmitting(false)
+      submissionRef.current = false
     }
   }
 
@@ -387,6 +493,22 @@ export default function BookVendorPage() {
               : `Book your appointment with ${vendorName}. Pick a service and a time that works for you.`}
           </p>
 
+          {/* Error Display */}
+          {error && (
+            <BookingErrorDisplay
+              error={error}
+              onRetry={() => {
+                setError(null)
+                if (submissionRef.current) {
+                  submissionRef.current = false
+                  setSubmitting(false)
+                }
+                void handleBooking()
+              }}
+              onDismiss={() => setError(null)}
+            />
+          )}
+
           {!isVendorLoaded && (
             <div className="mb-6 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
               Vendor details are still loading. You can select a date and time once availability appears.
@@ -394,7 +516,26 @@ export default function BookVendorPage() {
           )}
 
           <div className="mb-4 text-sm text-gray-600">
-            {availabilitySlots.length === 0 ? 'No availability yet - check back soon.' : 'Select a date and time to book.'}
+            {availabilityLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span>Loading availability...</span>
+              </div>
+            ) : availabilityError ? (
+              <div className="flex items-center gap-2">
+                <span className="text-red-600">Failed to load availability.</span>
+                <button
+                  onClick={() => void fetchAvailability()}
+                  className="text-blue-600 hover:text-blue-800 underline text-sm"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : availabilitySlots.length === 0 ? (
+              'No availability yet - check back soon.'
+            ) : (
+              'Select a date and time to book.'
+            )}
           </div>
 
           {/* Services Selection */}
@@ -437,7 +578,7 @@ export default function BookVendorPage() {
                 onInput={(e) => setSelectedDate((e.currentTarget as HTMLInputElement).value)}
                 ref={dateInputRef}
                 min={new Date().toISOString().split('T')[0]}
-                disabled={false}
+                disabled={submitting || loading}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
@@ -464,7 +605,7 @@ export default function BookVendorPage() {
                 }}
                 data-test="booking-time-slot"
                 ref={timeSelectRef}
-                disabled={false}
+                disabled={submitting || loading || availabilityLoading}
                 size={Math.max(1, effectiveSlots.length + 1)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -486,9 +627,16 @@ export default function BookVendorPage() {
             type="submit"
             disabled={submitting || (!isE2E && (!selectedService || !selectedDate || !selectedTime))}
             data-test="booking-submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-shadow"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-shadow flex items-center justify-center gap-2"
           >
-            {submitting ? 'Booking...' : 'Book Appointment'}
+            {submitting ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>Creating booking...</span>
+              </>
+            ) : (
+              'Book Appointment'
+            )}
           </button>
         </form>
       </div>
