@@ -108,7 +108,7 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run E2E tests
-        run: pnpm exec playwright test tests/e2e/production-smoke.spec.ts --project=chromium
+        run: pnpm exec playwright test tests/e2e/production-smoke.spec.ts --project=chromium --reporter=html
         env:
           E2E: "true"
           E2E_SKIP_SEED: "true"
