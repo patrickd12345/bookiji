@@ -16,12 +16,12 @@ import { getReservation } from '@/lib/core-infrastructure/reservationService'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { reservationId: string } }
+  { params }: { params: Promise<{ reservationId: string }> }
 ) {
   try {
     // Authenticate partner
     const authResult = await authenticatePartner(request)
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.data) {
       return NextResponse.json<ApiError>(
         {
           error: {
@@ -35,12 +35,12 @@ export async function GET(
     }
     
     const { partnerId } = authResult.data
-    const reservationId = params.reservationId
+    const { reservationId } = await params
     
     // Get reservation
     const reservationResult = await getReservation(reservationId, partnerId)
     
-    if (!reservationResult.success) {
+    if (!reservationResult.success || !reservationResult.data) {
       if (reservationResult.error === 'RESERVATION_NOT_FOUND') {
         return NextResponse.json<ApiError>(
           {
@@ -92,7 +92,7 @@ export async function GET(
       requesterId: reservation.requesterId,
       createdAt: reservation.createdAt,
       expiresAt: reservation.expiresAt,
-      stateHistory: reservation.stateHistory || [],
+      stateHistory: [], // TODO: Fetch state history from database
       paymentState: reservation.paymentState,
       bookingId: reservation.bookingId,
       failureReason: reservation.failureReason,

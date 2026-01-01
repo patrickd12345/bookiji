@@ -17,12 +17,12 @@ import { computeAvailability } from '@/lib/core-infrastructure/availabilityEngin
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { vendorId: string } }
+  { params }: { params: Promise<{ vendorId: string }> }
 ) {
   try {
     // Authenticate partner
     const authResult = await authenticatePartner(request)
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.data) {
       return NextResponse.json<ApiError>(
         {
           error: {
@@ -91,7 +91,7 @@ export async function GET(
       )
     }
     
-    const vendorId = params.vendorId
+    const { vendorId } = await params
     
     // Compute availability
     const availabilityResult = await computeAvailability({
@@ -103,7 +103,7 @@ export async function GET(
       partnerId,
     })
     
-    if (!availabilityResult.success) {
+    if (!availabilityResult.success || !availabilityResult.data) {
       if (availabilityResult.error === 'VENDOR_NOT_FOUND') {
         return NextResponse.json<ApiError>(
           {
