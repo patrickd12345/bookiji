@@ -108,8 +108,7 @@ export default function SimCityDashboard() {
       } else {
         setFetchError(data.error || 'Failed to fetch status');
       }
-    } catch (error) {
-      console.error('Failed to fetch status:', error);
+    } catch (_error) {
       setFetchError('SimCity backend unreachable — check server logs.');
     }
   };
@@ -127,13 +126,12 @@ export default function SimCityDashboard() {
         if (payload.type !== 'keepalive') {
           setEvents(prev => [...prev.slice(-99), payload]); // Keep last 100 events
         }
-      } catch (error) {
-        console.error('Failed to parse event:', error);
+      } catch (_error) {
+        // Failed to parse event
       }
     };
 
-    eventSourceRef.current.onerror = (error) => {
-      console.error('EventSource error:', error);
+    eventSourceRef.current.onerror = (_error) => {
       setFetchError('Live events connection lost — attempting to reconnect.');
     };
   };
@@ -167,8 +165,7 @@ export default function SimCityDashboard() {
         setScenarioError(data.error || 'Failed to create scenario');
         setScenarioSuggestions(data.suggestions || []);
       }
-    } catch (error) {
-      console.error('Failed to create scenario:', error);
+    } catch (_error) {
       setScenarioError('Failed to create scenario — check server logs.');
     } finally {
       setIsCreatingScenario(false);
@@ -211,8 +208,7 @@ export default function SimCityDashboard() {
       } else {
         setFetchError(data.error || 'Failed to start simulation');
       }
-    } catch (error) {
-      console.error('Failed to start simulation:', error);
+    } catch (_error) {
       setFetchError('SimCity backend unreachable — check server logs.');
     }
   };
@@ -233,8 +229,7 @@ export default function SimCityDashboard() {
         setFetchError(null);
         fetchStatus();
       }
-    } catch (error) {
-      console.error('Failed to start simulation:', error);
+    } catch (_error) {
       setFetchError('SimCity backend unreachable — check server logs.');
     }
   };
@@ -256,8 +251,7 @@ export default function SimCityDashboard() {
         setFetchError(null);
         fetchStatus();
       }
-    } catch (error) {
-      console.error('Failed to stop simulation:', error);
+    } catch (_error) {
       setFetchError('SimCity backend unreachable — check server logs.');
     }
   };
@@ -276,8 +270,7 @@ export default function SimCityDashboard() {
       } else {
         setFetchError('Failed to update policies');
       }
-    } catch (error) {
-      console.error('Failed to update policies:', error);
+    } catch (_error) {
       setFetchError('SimCity backend unreachable — check server logs.');
     }
   };

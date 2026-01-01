@@ -55,9 +55,8 @@ export default function SpecialtiesPage() {
       } else {
         alert('Failed to load specialties')
       }
-    } catch (error) {
-      console.error('Error loading specialties:', error)
-              alert('Failed to load specialties')
+    } catch (_error) {
+      alert('Failed to load specialties')
     } finally {
       setLoading(false)
     }
@@ -142,8 +141,7 @@ export default function SpecialtiesPage() {
         const error = await response.json()
         alert(error.error || 'Failed to create specialty')
       }
-    } catch (error) {
-      console.error('Error creating specialty:', error)
+    } catch (_error) {
       alert('Failed to create specialty')
     }
   }
@@ -167,8 +165,7 @@ export default function SpecialtiesPage() {
         const error = await response.json()
         alert(error.error || 'Failed to update specialty')
       }
-    } catch (error) {
-      console.error('Error updating specialty:', error)
+    } catch (_error) {
       alert('Failed to update specialty')
     }
   }
@@ -190,8 +187,7 @@ export default function SpecialtiesPage() {
         const error = await response.json()
         alert(error.error || 'Failed to delete specialty')
       }
-    } catch (error) {
-      console.error('Error deleting specialty:', error)
+    } catch (_error) {
       alert('Failed to delete specialty')
     }
   }

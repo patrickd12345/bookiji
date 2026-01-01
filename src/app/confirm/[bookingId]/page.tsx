@@ -41,8 +41,8 @@ function ConfirmationPageContent() {
         if (data.success) {
           setBooking(data.booking);
         }
-      } catch (error) {
-        console.error('Error fetching booking:', error);
+      } catch (_error) {
+        // Error fetching booking
       } finally {
         setLoading(false);
       }

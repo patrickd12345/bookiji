@@ -34,8 +34,8 @@ export default function ChooseRolePage() {
             return
           }
         }
-      } catch (error) {
-        console.error('Error checking admin status:', error)
+      } catch (_error) {
+        // Error checking admin status - continue
       } finally {
         setCheckingAdmin(false)
       }
@@ -113,8 +113,8 @@ export default function ChooseRolePage() {
       } else {
         throw new Error('Failed to update roles')
       }
-    } catch (error) {
-      console.error('Error updating roles:', error)
+    } catch (_error) {
+      // Error updating roles
       setIsSubmitting(false)
     }
   }

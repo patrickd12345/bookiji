@@ -27,8 +27,11 @@ export default function UnansweredPage() {
       .from('support_unanswered_questions')
       .select('*')
       .order('created_at', { ascending: false })
-    if (error) console.error(error)
-    else setItems(data as Unanswered[])
+    if (error) {
+      // Error loading unanswered questions
+    } else {
+      setItems(data as Unanswered[])
+    }
     setLoading(false)
   }, [])
 
@@ -44,7 +47,9 @@ export default function UnansweredPage() {
       .from('support_unanswered_questions')
       .update({ processed: true, processed_at: new Date().toISOString() })
       .eq('id', id)
-    if (error) console.error(error)
+    if (error) {
+      // Error marking question as processed
+    }
     fetchItems()
   }
 

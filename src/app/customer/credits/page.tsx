@@ -34,8 +34,8 @@ export default function CustomerCreditsPage() {
             setTransactions(data.credits.recent_transactions || [])
           }
         }
-      } catch (error) {
-        console.error('Error loading credits:', error)
+      } catch (_error) {
+        // Error loading credits
       } finally {
         setLoading(false)
       }

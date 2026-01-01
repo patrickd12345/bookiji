@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     let body: CreateReservationRequest
     try {
       body = await request.json()
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.json<ApiError>(
         {
           error: {

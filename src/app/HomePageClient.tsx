@@ -52,15 +52,12 @@ export default function HomePageClient() {
 
   // Debug: Log when component mounts and button is available
   useEffect(() => {
-    console.log('HomePageClient mounted')
+    // Debug logging removed for production
     if (helpButtonRef.current) {
-      console.log('Help button element found:', helpButtonRef.current)
       // Test if button is clickable
-      helpButtonRef.current.addEventListener('click', (e) => {
-        console.log('Direct event listener fired!', e)
+      helpButtonRef.current.addEventListener('click', (_e) => {
+        // Event listener for debugging
       }, { capture: true })
-    } else {
-      console.warn('Help button element NOT found in DOM')
     }
   }, [])
 
@@ -79,7 +76,6 @@ export default function HomePageClient() {
   const handleDemo = () => {
     setShowDemo(true)
     // You can implement actual demo functionality here
-    console.log('Opening demo')
   }
 
   return (
@@ -262,7 +258,7 @@ export default function HomePageClient() {
                       lastValue = radius
                       if (timeout) clearTimeout(timeout)
                       timeout = setTimeout(() => {
-                        console.log('Radius changed:', radius)
+                        // Radius change handler
                         timeout = null
                       }, 150)
                     }

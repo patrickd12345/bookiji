@@ -8,7 +8,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import type {
-  GetAvailabilityRequest,
   GetAvailabilityResponse,
   ApiError,
 } from '@/types/core-infrastructure'

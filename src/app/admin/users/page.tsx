@@ -61,7 +61,6 @@ export default function UsersManagementPage() {
       const { data } = await response.json()
       setUsers(data || [])
     } catch (error) {
-      console.error('Error loading users:', error)
       setError(error instanceof Error ? error.message : 'Unknown error')
     } finally {
       setLoading(false)
@@ -136,7 +135,6 @@ export default function UsersManagementPage() {
       ))
       setEditingUserId(null)
     } catch (error) {
-      console.error('Error saving user:', error)
       setError(error instanceof Error ? error.message : 'Failed to save')
     } finally {
       setSaving(false)
