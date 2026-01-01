@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   try {
     // Authenticate partner
     const authResult = await authenticatePartner(request)
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.data) {
       return NextResponse.json<ApiError>(
         {
           error: {
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       idempotencyKey: body.idempotencyKey,
     })
     
-    if (!reservationResult.success) {
+    if (!reservationResult.success || !reservationResult.data) {
       if (reservationResult.error === 'SLOT_ALREADY_RESERVED') {
         return NextResponse.json<ApiError>(
           {
