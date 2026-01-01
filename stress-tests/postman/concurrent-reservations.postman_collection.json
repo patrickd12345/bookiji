@@ -1,0 +1,73 @@
+{
+  "info": {
+    "name": "Concurrent Reservations Stress Test",
+    "description": "Fire 20 concurrent POST /v1/reservations calls with same slot_id",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Reservation (Template)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate unique partner_booking_ref",
+              "pm.variables.set('partner_booking_ref', 'test-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9));",
+              "",
+              "// Set same slot for all requests",
+              "const futureDate = new Date();",
+              "futureDate.setHours(futureDate.getHours() + 2);",
+              "pm.variables.set('slot_start', futureDate.toISOString());",
+              "",
+              "const endDate = new Date(futureDate);",
+              "endDate.setHours(endDate.getHours() + 1);",
+              "pm.variables.set('slot_end', endDate.toISOString());"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Partner-API-Key",
+            "value": "{{PARTNER_API_KEY}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"vendorId\": \"{{VENDOR_ID}}\",\n  \"slotStartTime\": \"{{slot_start}}\",\n  \"slotEndTime\": \"{{slot_end}}\",\n  \"requesterId\": \"{{REQUESTER_ID}}\",\n  \"partnerBookingRef\": \"{{partner_booking_ref}}\",\n  \"idempotencyKey\": \"{{partner_booking_ref}}\"\n}"
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/v1/reservations",
+          "host": ["{{BASE_URL}}"],
+          "path": ["api", "v1", "reservations"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "PARTNER_API_KEY",
+      "value": ""
+    },
+    {
+      "key": "VENDOR_ID",
+      "value": ""
+    },
+    {
+      "key": "REQUESTER_ID",
+      "value": ""
+    }
+  ]
+}
