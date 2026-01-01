@@ -1,0 +1,111 @@
+name: App Cron Jobs (GitHub)
+
+on:
+  schedule:
+    # Every 5 minutes (Jarvis + notification batch processing)
+    - cron: "*/5 * * * *"
+    # Nightly maintenance jobs
+    - cron: "0 2 * * *" # KB auto-dedupe
+    - cron: "0 4 * * *" # KB ensure embeddings
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Which cron job to run"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - jarvis-monitor
+          - notifications-batch
+          - kb-auto-dedupe
+          - kb-ensure-embeddings
+
+concurrency:
+  group: app-cron-jobs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  jarvis-monitor:
+    name: Jarvis monitor (every 5 min)
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '*/5 * * * *') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.job == 'jarvis-monitor' || inputs.job == 'all'))
+    steps:
+      - name: Call /api/cron/jarvis-monitor
+        env:
+          CRON_BASE_URL: ${{ vars.CRON_BASE_URL || 'https://www.bookiji.com' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET || secrets.VERCEL_CRON_SECRET }}
+        run: |
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "Missing CRON_SECRET / VERCEL_CRON_SECRET"
+            exit 1
+          fi
+          curl -fsSL \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${CRON_BASE_URL}/api/cron/jarvis-monitor"
+
+  notifications-batch:
+    name: Notifications batch processing (every 5 min)
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '*/5 * * * *') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.job == 'notifications-batch' || inputs.job == 'all'))
+    steps:
+      - name: Call /api/notifications/batch/process
+        env:
+          CRON_BASE_URL: ${{ vars.CRON_BASE_URL || 'https://www.bookiji.com' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET || secrets.VERCEL_CRON_SECRET }}
+        run: |
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "Missing CRON_SECRET / VERCEL_CRON_SECRET"
+            exit 1
+          fi
+          curl -fsSL \
+            -X POST \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            --data '{}' \
+            "${CRON_BASE_URL}/api/notifications/batch/process"
+
+  kb-auto-dedupe:
+    name: KB auto-dedupe (nightly)
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 2 * * *') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.job == 'kb-auto-dedupe' || inputs.job == 'all'))
+    steps:
+      - name: Call /api/cron/kb-auto-dedupe
+        env:
+          CRON_BASE_URL: ${{ vars.CRON_BASE_URL || 'https://www.bookiji.com' }}
+          CRON_SECRET: ${{ secrets.VERCEL_CRON_SECRET || secrets.CRON_SECRET }}
+        run: |
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "Missing VERCEL_CRON_SECRET / CRON_SECRET"
+            exit 1
+          fi
+          curl -fsSL \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${CRON_BASE_URL}/api/cron/kb-auto-dedupe"
+
+  kb-ensure-embeddings:
+    name: KB ensure embeddings (nightly)
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 4 * * *') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.job == 'kb-ensure-embeddings' || inputs.job == 'all'))
+    steps:
+      - name: Call /api/cron/kb-ensure-embeddings
+        env:
+          CRON_BASE_URL: ${{ vars.CRON_BASE_URL || 'https://www.bookiji.com' }}
+          CRON_SECRET: ${{ secrets.VERCEL_CRON_SECRET || secrets.CRON_SECRET }}
+        run: |
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "Missing VERCEL_CRON_SECRET / CRON_SECRET"
+            exit 1
+          fi
+          curl -fsSL \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${CRON_BASE_URL}/api/cron/kb-ensure-embeddings"
+
