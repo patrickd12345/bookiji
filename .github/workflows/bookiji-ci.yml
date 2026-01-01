@@ -111,6 +111,7 @@ jobs:
           name: playwright-report-${{ matrix.browser }}
           path: playwright-report/
           retention-days: 5
+          if-no-files-found: ignore
 
       - name: Upload Snapshots
         if: always()
@@ -119,6 +120,7 @@ jobs:
           name: snapshots-${{ matrix.browser }}
           path: test-results/**/*.png
           retention-days: 7
+          if-no-files-found: ignore
 
       # ------------------------------
       # Auto snapshot update on PRs
@@ -131,8 +133,9 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/upload-artifact@v4
         with:
-          name: updated-snapshots
+          name: updated-snapshots-${{ matrix.browser }}
           path: test-results/**/*.png
+          if-no-files-found: ignore
 
       # ------------------------------
       # PR Comments on Failure
