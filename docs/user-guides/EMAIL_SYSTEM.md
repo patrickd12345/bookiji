@@ -142,12 +142,23 @@ pnpm vitest run
 1. **SMTP Authentication Failed**
    - Check `MAILERSEND_SMTP_USER` and `MAILERSEND_SMTP_PASS`
    - Verify domain verification in MailerSend dashboard
+   - **Gmail-specific**: If using Gmail SMTP, you must use an App Password (not your regular password). Enable 2FA in your Google Account, then generate an App Password at https://myaccount.google.com/apppasswords
 
-2. **Connection Timeout**
+2. **Gmail Error 535-5.7.8 (BadCredentials)**
+   - This error occurs when Gmail rejects authentication
+   - **Solution**: Use a Gmail App Password instead of your regular password
+   - Steps:
+     1. Enable 2-Step Verification in your Google Account
+     2. Go to https://myaccount.google.com/apppasswords
+     3. Generate an App Password for "Mail"
+     4. Use this 16-character password (without spaces) as `SMTP_PASS`
+   - **Note**: The project uses MailerSend by default, which avoids Gmail authentication issues
+
+3. **Connection Timeout**
    - Check `MAILERSEND_SMTP_HOST` and `MAILERSEND_SMTP_PORT`
    - Verify firewall/network settings
 
-3. **Email Not Delivered**
+4. **Email Not Delivered**
    - Check spam folder
    - Verify sender domain reputation
    - Review MailerSend delivery logs

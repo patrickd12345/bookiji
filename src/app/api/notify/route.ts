@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
+import { sendEmail } from '@/lib/mailer'
 
 export async function POST(req: Request) {
   try {
@@ -9,38 +9,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
     }
 
-    const {
-      SMTP_HOST = 'smtp.gmail.com',
-      SMTP_PORT = '465',
-      SMTP_USER,
-      SMTP_PASS,
-    } = process.env
-
-    if (!SMTP_USER || !SMTP_PASS) {
-      console.error('SMTP credentials missing')
-      return NextResponse.json({ error: 'Server not configured' }, { status: 500 })
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: Number(SMTP_PORT),
-      secure: Number(SMTP_PORT) === 465, // true for 465, false for other ports
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-      },
-    })
-
-    await transporter.sendMail({
-      from: `Bookiji <${SMTP_USER}>`,
+    await sendEmail({
       to: 'Pilotmontreal@gmail.com',
       subject: 'New Bookiji waiting list signup',
-      text: `New subscriber: ${email}`,
+      html: `<p>New subscriber: <strong>${email}</strong></p>`,
     })
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error(err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Email send error:', err)
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    
+    // Provide helpful error message for Gmail authentication issues
+    if (errorMessage.includes('535') || errorMessage.includes('BadCredentials') || errorMessage.includes('EAUTH')) {
+      return NextResponse.json({ 
+        error: 'Email authentication failed. If using Gmail, ensure you are using an App Password (not your regular password). See: https://support.google.com/accounts/answer/185833',
+        details: errorMessage
+      }, { status: 500 })
+    }
+    
+    return NextResponse.json({ error: 'Internal server error', details: errorMessage }, { status: 500 })
   }
 } 
