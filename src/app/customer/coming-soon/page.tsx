@@ -24,8 +24,8 @@ export default function CustomerComingSoonPage() {
         setSubmitted(true)
         setEmail('')
       }
-    } catch (error) {
-      console.error('Failed to submit email:', error)
+    } catch (_error) {
+      // Failed to submit email
     } finally {
       setIsSubmitting(false)
     }

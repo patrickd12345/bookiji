@@ -18,7 +18,7 @@ export default function AuthCallbackPage() {
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (error) {
-        console.error('Error during auth callback:', error.message);
+        // Error during auth callback - redirecting to login
         router.push('/login?error=auth');
         return;
       }
@@ -42,9 +42,8 @@ export default function AuthCallbackPage() {
               return
             }
           }
-        } catch (adminError) {
-          console.warn('Failed to check admin status:', adminError)
-          // Continue with normal redirect
+        } catch (_adminError) {
+          // Failed to check admin status - continue with normal redirect
         }
         
         // Successful login - honor redirect parameter when present

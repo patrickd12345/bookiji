@@ -90,7 +90,6 @@ export default function BetaSignup() {
       const isVendorFlow = referrer.includes('vendor') || referrer.includes('business')
       
       if (!isVendorFlow) {
-        console.log('Redirecting non-vendor user to dashboard')
         router.push('/customer/dashboard')
         return
       }

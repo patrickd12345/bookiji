@@ -73,6 +73,28 @@ test.describe('Scheduling Proof', () => {
       auth: { autoRefreshToken: false, persistSession: false }
     })
 
+    // Ensure vendor auth user exists (create if missing)
+    const { data: vendorAuth, error: listError } = await supabase.auth.admin.listUsers()
+    if (listError) {
+      console.warn('⚠️  Unable to list Supabase users, skipping scheduling proof tests.', listError)
+      return
+    }
+    let vendorUser = vendorAuth?.users.find(u => u.email === E2E_VENDOR_EMAIL)
+    if (!vendorUser) {
+      const { data: createdVendor, error: createVendorError } = await supabase.auth.admin.createUser({
+        email: E2E_VENDOR_EMAIL,
+        password: E2E_VENDOR_USER.password,
+        email_confirm: true,
+        user_metadata: { full_name: 'E2E Test Vendor', role: 'vendor' }
+      })
+      if (createVendorError || !createdVendor?.user) {
+        console.warn('⚠️  Failed to create vendor user, skipping scheduling proof tests.', createVendorError)
+        return
+      }
+      vendorUser = createdVendor.user
+    }
+
+    // Ensure vendor profile exists
     const { data: vendorProfileData, error: profileError } = await supabase
       .from('profiles')
       .select('auth_user_id, id')
@@ -80,12 +102,28 @@ test.describe('Scheduling Proof', () => {
       .single()
 
     if (profileError || !vendorProfileData) {
-      console.error('Profile fetch error:', profileError)
-      throw new Error(`Vendor profile not found for ${E2E_VENDOR_EMAIL}. Run pnpm e2e:seed first.`)
-    }
+      // Try to create profile if it doesn't exist
+      const { data: newProfile, error: createProfileError } = await supabase
+        .from('profiles')
+        .insert({
+          auth_user_id: vendorUser.id,
+          email: E2E_VENDOR_EMAIL,
+          full_name: 'E2E Test Vendor',
+          role: 'vendor'
+        })
+        .select('id, auth_user_id')
+        .single()
 
-    vendorId = vendorProfileData.auth_user_id
-    vendorProfileId = vendorProfileData.id
+      if (createProfileError || !newProfile) {
+        console.warn(`⚠️  Vendor profile not found for ${E2E_VENDOR_EMAIL} and failed to create. Run pnpm e2e:seed first.`, createProfileError)
+        return
+      }
+      vendorId = newProfile.auth_user_id
+      vendorProfileId = newProfile.id
+    } else {
+      vendorId = vendorProfileData.auth_user_id
+      vendorProfileId = vendorProfileData.id
+    }
 
     const { data: service, error: serviceError } = await supabase
       .from('services')

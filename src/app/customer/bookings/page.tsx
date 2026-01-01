@@ -38,8 +38,8 @@ export default function CustomerBookingsPage() {
 
         if (error) throw error
         setBookings(data || [])
-      } catch (error) {
-        console.error('Error loading bookings:', error)
+      } catch (_error) {
+        // Error loading bookings
       } finally {
         setLoading(false)
       }

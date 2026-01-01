@@ -34,8 +34,8 @@ export default function SupportTicketsPage() {
       const res = await fetch('/api/support/tickets/list?status=open')
       const data = await res.json()
       if (data.ok) setTickets(data.data)
-    } catch (e) {
-      console.error(e)
+    } catch (_e) {
+      // Error loading tickets
     } finally {
       setLoading(false)
     }
@@ -46,8 +46,8 @@ export default function SupportTicketsPage() {
       const res = await fetch(`/api/support/tickets/${ticketId}/messages`)
       const data = await res.json()
       if (data.ok) setMessages(data.data)
-    } catch (e) {
-      console.error(e)
+    } catch (_e) {
+      // Error loading messages
     }
   }
 

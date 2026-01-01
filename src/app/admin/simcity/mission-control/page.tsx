@@ -169,8 +169,8 @@ export default function MissionControlPage() {
       
       setEvents(eventsData.data || []);
       setMetrics(metricsData.data);
-    } catch (err) {
-      console.error('Failed to fetch data', err);
+    } catch (_err) {
+      // Failed to fetch data
     }
   };
 
@@ -178,7 +178,6 @@ export default function MissionControlPage() {
     try {
       const res = await fetch('/api/ops/simcity/run-requests');
       if (!res.ok) {
-        console.error('Failed to fetch requests:', res.statusText);
         setRequests([]);
         return;
       }
@@ -189,8 +188,7 @@ export default function MissionControlPage() {
       if (requestsArray.length > 0 && !selectedRunId) {
         setSelectedRunId(requestsArray[0].run_id);
       }
-    } catch (err) {
-      console.error('Failed to fetch requests', err);
+    } catch (_err) {
       setRequests([]); // Set to empty array on error
     }
   };
@@ -209,8 +207,8 @@ export default function MissionControlPage() {
         })
       });
       fetchRequests();
-    } catch (err) {
-      console.error('Failed to start run', err);
+    } catch (_err) {
+      // Failed to start run
     }
   };
 

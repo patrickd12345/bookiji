@@ -55,7 +55,6 @@ async function getShadowReport(window: string = '1h') {
       note: data.note,
     }
   } catch (error) {
-    console.error('Failed to fetch shadow report:', error)
     return {
       report: null,
       error: error instanceof Error ? error.message : 'Unknown error',

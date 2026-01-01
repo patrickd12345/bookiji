@@ -68,8 +68,7 @@ export default function SuggestionsPage() {
       } else {
         alert('Failed to load suggestions')
       }
-    } catch (error) {
-      console.error('Error loading suggestions:', error)
+    } catch (_error) {
       alert('Failed to load suggestions')
     } finally {
       setLoading(false)
@@ -83,8 +82,8 @@ export default function SuggestionsPage() {
         const data = await response.json()
         setSpecialties(data.items || [])
       }
-    } catch (error) {
-      console.error('Error loading specialties:', error)
+    } catch (_error) {
+      // Error loading specialties
     }
   }
 
@@ -117,8 +116,7 @@ export default function SuggestionsPage() {
         const error = await response.json()
         alert(error.error || 'Failed to review suggestion')
       }
-    } catch (error) {
-      console.error('Error reviewing suggestion:', error)
+    } catch (_error) {
       alert('Failed to review suggestion')
     }
   }

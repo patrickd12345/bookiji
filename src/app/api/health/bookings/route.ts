@@ -16,7 +16,7 @@ export async function GET() {
     const startTime = Date.now()
     
     // Perform a lightweight query to check booking system health
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('bookings')
       .select('id')
       .limit(1)

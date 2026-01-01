@@ -60,8 +60,7 @@ export default function VendorsPage() {
       } else {
         alert(data.error || 'Action failed')
       }
-    } catch (error) {
-      console.error('Bulk action error:', error)
+    } catch (_error) {
       alert('Error performing bulk action')
     }
   }
@@ -85,8 +84,7 @@ export default function VendorsPage() {
       } else {
         alert(data.error || 'Failed to send newsletter')
       }
-    } catch (error) {
-      console.error('Newsletter error:', error)
+    } catch (_error) {
       alert('Error sending newsletter')
     }
   }
