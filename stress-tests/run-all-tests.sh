@@ -74,8 +74,8 @@ echo "=========================================="
 echo ""
 
 echo "Test 2.1: Vendor Confirmation Delay..."
-if command -v playwright &> /dev/null; then
-  playwright test stress-tests/playwright/vendor-confirmation-delay.spec.ts > "$REPORT_DIR/2.1-vendor-confirmation-delay.log" 2>&1 || true
+if command -v pnpm &> /dev/null && pnpm exec playwright --version &> /dev/null; then
+  pnpm exec playwright test stress-tests/playwright/vendor-confirmation-delay.spec.ts > "$REPORT_DIR/2.1-vendor-confirmation-delay.log" 2>&1 || true
   echo "✅ Test executed (check log for results)"
 else
   echo "⚠️  SKIPPED (Playwright not installed)"
@@ -84,8 +84,8 @@ fi
 echo ""
 
 echo "Test 2.2: Requester Authorization Delay..."
-if command -v playwright &> /dev/null; then
-  playwright test stress-tests/playwright/requester-auth-delay.spec.ts > "$REPORT_DIR/2.2-requester-auth-delay.log" 2>&1 || true
+if command -v pnpm &> /dev/null && pnpm exec playwright --version &> /dev/null; then
+  pnpm exec playwright test stress-tests/playwright/requester-auth-delay.spec.ts > "$REPORT_DIR/2.2-requester-auth-delay.log" 2>&1 || true
   echo "✅ Test executed (check log for results)"
 else
   echo "⚠️  SKIPPED (Playwright not installed)"
@@ -94,8 +94,8 @@ fi
 echo ""
 
 echo "Test 2.3: Idle Reservation Expiry..."
-if command -v playwright &> /dev/null; then
-  playwright test stress-tests/playwright/idle-expiry.spec.ts > "$REPORT_DIR/2.3-idle-expiry.log" 2>&1 || true
+if command -v pnpm &> /dev/null && pnpm exec playwright --version &> /dev/null; then
+  pnpm exec playwright test stress-tests/playwright/idle-expiry.spec.ts > "$REPORT_DIR/2.3-idle-expiry.log" 2>&1 || true
   echo "✅ Test executed (check log for results)"
 else
   echo "⚠️  SKIPPED (Playwright not installed)"
