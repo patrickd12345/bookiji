@@ -40,9 +40,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - run: pnpm install --frozen-lockfile
 
       - name: Environment isolation guard
         env:
@@ -79,7 +83,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           # yamllint disable-line rule:truthy
           CI_PREDICTIVE_OFF: ${{ vars.CI_PREDICTIVE_OFF }}
-        run: npx tsx scripts/predict-tests.ts
+        run: pnpm exec tsx scripts/predict-tests.ts
         continue-on-error: true
 
       - name: Read test plan
@@ -101,7 +105,7 @@ jobs:
           fi
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
 
       - name: Start Supabase
         run: |
@@ -120,10 +124,10 @@ jobs:
 
       - name: Start dev server (local only)
         if: steps.target.outputs.baseURL == 'http://localhost:3000'
-        run: npm run dev &
+        run: pnpm dev &
       
       - name: Wait for server
-        run: npx wait-on ${{ steps.target.outputs.baseURL }}
+        run: pnpm exec wait-on ${{ steps.target.outputs.baseURL }}
 
       - name: Run Playwright tests
         env:
@@ -133,11 +137,11 @@ jobs:
             echo "Running selected tests: ${{ steps.test-plan.outputs.tests }}"
             IFS=',' read -ra TEST_ARRAY <<< "${{ steps.test-plan.outputs.tests }}"
             for test in "${TEST_ARRAY[@]}"; do
-              npx playwright test "$test" --project=${{ matrix.browser }} --shard=${{ matrix.shardIndex }}/${{ matrix.totalShards }} || true
+              pnpm exec playwright test "$test" --project=${{ matrix.browser }} --shard=${{ matrix.shardIndex }}/${{ matrix.totalShards }} || true
             done
           else
             echo "Running all tests"
-            npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shardIndex }}/${{ matrix.totalShards }}
+            pnpm exec playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shardIndex }}/${{ matrix.totalShards }}
           fi
 
       - name: Upload report
@@ -171,14 +175,14 @@ jobs:
 
       - name: Update test history
         if: always()
-        run: npx tsx scripts/update-test-history.ts
+        run: pnpm exec tsx scripts/update-test-history.ts
         continue-on-error: true
 
       - name: Quarantine flaky tests
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx tsx scripts/quarantine-flaky-tests.ts
+        run: pnpm exec tsx scripts/quarantine-flaky-tests.ts
         continue-on-error: true
 
       - name: Upload test history
@@ -195,7 +199,7 @@ jobs:
           CI_JOB_TYPE: e2e-${{ matrix.browser }}-shard${{ matrix.shardIndex }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
-        run: npx tsx scripts/export-ci-metrics.ts
+        run: pnpm exec tsx scripts/export-ci-metrics.ts
 
       - name: Upload CI metrics
         if: always()
@@ -223,18 +227,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - run: pnpm install --frozen-lockfile
 
       - name: Epistemic gates (deploy-blockers)
-        run: npm run ci:epistemic
+        run: pnpm ci:epistemic
 
       - name: Deploy canary
         env:
           CANARY_VERSION: canary-${{ github.sha }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: npx tsx scripts/deploy-canary.ts
+        run: pnpm exec tsx scripts/deploy-canary.ts
 
       - name: Store canary URL
         id: canary
@@ -256,10 +264,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
-      - run: npx playwright install --with-deps chromium
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
 
       # Note: Linter warning about needs.canary-deploy.outputs.url is a false positive
       # The output is set conditionally in the canary-deploy job
@@ -268,11 +280,11 @@ jobs:
           # @ts-ignore - Job output, set conditionally in canary-deploy job
           BASE_URL: ${{ needs.canary-deploy.outputs.url || 'https://www.bookiji.com' }}
           NODE_ENV: production
-        run: npx playwright test tests/e2e/production-smoke.spec.ts --project=chromium
+        run: pnpm exec playwright test tests/e2e/production-smoke.spec.ts --project=chromium
 
       - name: Analyze canary results
         if: always()
-        run: npx tsx scripts/analyze-canary.ts
+        run: pnpm exec tsx scripts/analyze-canary.ts
 
       - name: Upload canary analysis
         if: always()
@@ -359,7 +371,7 @@ jobs:
       - name: Rollback deployment
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: npx tsx scripts/rollback.ts
+        run: pnpm exec tsx scripts/rollback.ts
 
   email-testing:
     name: Email Inbox Testing
@@ -380,27 +392,31 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - run: npm ci --legacy-peer-deps
-      - run: npx playwright install --with-deps chromium
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
 
       - name: Start Supabase
         run: |
-          npx supabase stop || true
-          npx supabase start --debug
-          npm run db:push
+          pnpm exec supabase stop || true
+          pnpm exec supabase start --debug
+          pnpm db:push
 
       - name: Start dev server
-        run: npm run dev &
+        run: pnpm dev &
       
       - name: Wait for services
         run: |
-          npx wait-on http://localhost:3000
-          npx wait-on http://localhost:8025
+          pnpm exec wait-on http://localhost:3000
+          pnpm exec wait-on http://localhost:8025
 
       - name: Run email tests
         env:
           BASE_URL: http://localhost:3000
           MAILHOG_URL: http://localhost:8025
-        run: npx playwright test tests/e2e/email-real.spec.ts --project=chromium
+        run: pnpm exec playwright test tests/e2e/email-real.spec.ts --project=chromium
