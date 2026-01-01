@@ -7,36 +7,84 @@ on:
   pull_request:
     branches: [ main, bookiji ]
 
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+permissions:
+  contents: read
+  deployments: read
 
 jobs:
-  deploy-preview:
+  resolve-base-url:
     runs-on: ubuntu-latest
     outputs:
-      preview_url: ${{ steps.vercel.outputs.preview_url }}
+      base_url: ${{ steps.resolve.outputs.base_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Deploy to Vercel
-        id: vercel
-        uses: amondnet/vercel-action@v25
+      - name: Resolve deployment URL
+        id: resolve
+        uses: actions/github-script@v7
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          scope: ${{ secrets.VERCEL_ORG_ID }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sha = context.sha;
+            const ref = context.ref || '';
+            const branch = ref.startsWith('refs/heads/') ? ref.replace('refs/heads/', '') : '';
 
-      - name: Wait for deployment
-        run: |
-          echo "Deployment URL: ${{ steps.vercel.outputs.preview_url }}"
-          # Allow time for the deployment to be ready
-          sleep 30
+            // For production branch pushes, avoid protected vercel.app URLs.
+            if (context.eventName === 'push' && (branch === 'bookiji' || branch === 'main')) {
+              core.setOutput('base_url', 'https://www.bookiji.com');
+              core.info(`Using production base URL for ${branch} push: https://www.bookiji.com`);
+              return;
+            }
+
+            const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+            const pickUrlFromStatuses = (statuses) => {
+              for (const st of statuses) {
+                const url = st.environment_url || st.target_url || '';
+                if (typeof url === 'string' && url.startsWith('http') && !url.includes('localhost')) return url;
+              }
+              return '';
+            };
+
+            let baseUrl = '';
+            const maxAttempts = 60; // ~10 minutes
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+              const deployments = await github.paginate(github.rest.repos.listDeployments, {
+                owner,
+                repo,
+                sha,
+                per_page: 100,
+              });
+
+              deployments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+              for (const dep of deployments) {
+                const statusesResp = await github.rest.repos.listDeploymentStatuses({
+                  owner,
+                  repo,
+                  deployment_id: dep.id,
+                  per_page: 10,
+                });
+                const url = pickUrlFromStatuses(statusesResp.data || []);
+                if (url) {
+                  baseUrl = url;
+                  break;
+                }
+              }
+
+              if (baseUrl) break;
+              core.info(`No deployment URL yet for ${sha.slice(0, 7)} (attempt ${attempt}/${maxAttempts})...`);
+              await sleep(10_000);
+            }
+
+            if (!baseUrl) {
+              throw new Error(`Could not resolve a deployment URL for ${sha}`);
+            }
+
+            core.setOutput('base_url', baseUrl);
+            core.info(`Resolved base URL: ${baseUrl}`);
 
   e2e-tests:
-    needs: deploy-preview
+    needs: resolve-base-url
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -64,7 +112,7 @@ jobs:
       - name: Run E2E tests
         run: pnpm exec playwright test --project=${{ matrix.browser }}
         env:
-          BASE_URL: ${{ needs.deploy-preview.outputs.preview_url }}
+          BASE_URL: ${{ needs.resolve-base-url.outputs.base_url }}
 
       - name: Upload test results
         if: always()
@@ -83,7 +131,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `❌ **E2E Tests Failed (${{ matrix.browser }})**\n\nTested on: ${{ needs.deploy-preview.outputs.preview_url }}\n\nView the [test results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).`
+              body: `❌ **E2E Tests Failed (${{ matrix.browser }})**\n\nTested on: ${{ needs.resolve-base-url.outputs.base_url }}\n\nView the [test results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).`
             })
 
   report-results:
