@@ -1,0 +1,13 @@
+EXECUTION STATUS: COMPLETED
+ARTIFACTS PRODUCED: stress-test-results-20260101-133214/
+FAILURES:
+  BLOCKER: Missing @supabase/supabase-js dependency (tests 3.1, 3.4)
+  BLOCKER: Service unreachable ECONNREFUSED (tests 4.1, 3.3)
+  HIGH: Missing env vars PARTNER_API_KEY, VENDOR_ID, REQUESTER_ID (tests 1.1, 1.2)
+  HIGH: Missing tool newman (tests 1.1, 1.2)
+  HIGH: Missing tool playwright (tests 2.1, 2.2, 2.3)
+  HIGH: Missing env var STRIPE_SECRET_KEY (tests 3.2, 5.3)
+  MED: Missing env vars SUPABASE credentials (test 5.2)
+  MED: Missing reservation_id argument (test 5.4)
+FINAL VERDICT: EXECUTION BLOCKED BY MISSING PREREQUISITES
+ONE-LINE SUMMARY: 9/18 tests executed; 9 blocked by missing deps/env/tools; service unreachable
