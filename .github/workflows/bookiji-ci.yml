@@ -36,33 +36,38 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
 
       # ------------------------------
       # Supabase local test env
       # ------------------------------
       - name: Install Supabase CLI
-        run: npm install -g supabase
+        run: pnpm add -g supabase
 
       - name: Start Supabase services
         run: |
-          npx supabase stop || true
-          npx supabase start --debug
+          pnpm exec supabase stop || true
+          pnpm exec supabase start --debug
         env:
           SUPABASE_HOST: 127.0.0.1
 
       - name: Run DB migrations
-        run: npm run db:push
+        run: pnpm db:push
 
       # ------------------------------
       # Detect Vercel Preview or Local
@@ -82,11 +87,11 @@ jobs:
       - name: Start local Next.js server
         if: ${{ steps.target.outputs.url == 'http://localhost:3000' }}
         run: |
-          npm run build
-          nohup npm run start &
+          pnpm build
+          nohup pnpm start &
       - name: Wait for server
         if: ${{ steps.target.outputs.url == 'http://localhost:3000' }}
-        run: npx wait-on http://localhost:3000
+        run: pnpm exec wait-on http://localhost:3000
 
       # ------------------------------
       # Run Playwright Tests
@@ -94,7 +99,7 @@ jobs:
       - name: Run E2E Tests — ${{ matrix.browser }}
         env:
           BASE_URL: ${{ steps.target.outputs.url }}
-        run: npx playwright test --project=${{ matrix.browser }} --reporter=list
+        run: pnpm exec playwright test --project=${{ matrix.browser }} --reporter=list
 
       # ------------------------------
       # Upload Playwright Report
@@ -106,6 +111,7 @@ jobs:
           name: playwright-report-${{ matrix.browser }}
           path: playwright-report/
           retention-days: 5
+          if-no-files-found: ignore
 
       - name: Upload Snapshots
         if: always()
@@ -114,20 +120,22 @@ jobs:
           name: snapshots-${{ matrix.browser }}
           path: test-results/**/*.png
           retention-days: 7
+          if-no-files-found: ignore
 
       # ------------------------------
       # Auto snapshot update on PRs
       # ------------------------------
       - name: Auto-Update Snapshots
         if: ${{ failure() && github.event_name == 'pull_request' }}
-        run: npx playwright test --update-snapshots || true
+        run: pnpm exec playwright test --update-snapshots || true
 
       - name: Upload Updated Snapshots (PR only)
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/upload-artifact@v4
         with:
-          name: updated-snapshots
+          name: updated-snapshots-${{ matrix.browser }}
           path: test-results/**/*.png
+          if-no-files-found: ignore
 
       # ------------------------------
       # PR Comments on Failure

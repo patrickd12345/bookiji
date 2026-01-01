@@ -81,6 +81,8 @@ This canonical site map surfaces every Markdown document in the repository by di
 - [docs/api/README.md](api/README.md)
 
 #### Architecture
+- [docs/architecture/CORE_INFRASTRUCTURE_DESIGN.md](architecture/CORE_INFRASTRUCTURE_DESIGN.md) - Core infrastructure design for availability, reservations, bookings, and payments coordination
+- [docs/architecture/FAILURE_COMPENSATION_MATRIX.md](architecture/FAILURE_COMPENSATION_MATRIX.md) - Failure scenarios, compensation actions, and reversibility guarantees
 - [docs/architecture/database-policy.md](architecture/database-policy.md) - Database Management Policy (DBMP) - comprehensive database policy and table classification rules
 - [docs/architecture/ENVIRONMENT_MODEL.md](architecture/ENVIRONMENT_MODEL.md) - Environment isolation model and operational invariants
 
