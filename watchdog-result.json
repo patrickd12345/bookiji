@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-01-01T04:23:15.442Z",
+  "targetUrl": "https://www.bookiji.com",
+  "checks": [
+    {
+      "name": "health_endpoint",
+      "passed": true,
+      "details": {
+        "status": "healthy",
+        "timestamp": "2026-01-01T04:23:15.348Z",
+        "version": "unknown",
+        "environment": "production"
+      }
+    },
+    {
+      "name": "booking_api",
+      "passed": false,
+      "error": "HTTP 404",
+      "details": {
+        "status": 404,
+        "statusText": "Not Found"
+      }
+    },
+    {
+      "name": "error_budget",
+      "passed": true,
+      "details": {
+        "configured": false
+      }
+    }
+  ],
+  "overall": "degraded",
+  "incidentCreated": false
+}

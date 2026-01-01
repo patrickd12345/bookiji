@@ -72,7 +72,7 @@ async function checkHealthEndpoint(url: string): Promise<WatchdogCheck> {
  */
 async function checkBookingAPI(baseUrl: string): Promise<WatchdogCheck> {
   try {
-    // Try a lightweight endpoint
+    // Check the booking health endpoint
     const healthUrl = `${baseUrl}/api/health/bookings`
     const response = await fetch(healthUrl, {
       method: 'GET',
@@ -82,16 +82,30 @@ async function checkBookingAPI(baseUrl: string): Promise<WatchdogCheck> {
     })
 
     if (!response.ok) {
+      // Try to get error details from response
+      let errorDetails: unknown
+      try {
+        errorDetails = await response.json()
+      } catch {
+        errorDetails = { status: response.status, statusText: response.statusText }
+      }
+      
       return {
         name: 'booking_api',
         passed: false,
         error: `HTTP ${response.status}`,
+        details: errorDetails,
       }
     }
 
+    // Parse response to check if it's actually healthy
+    const data = await response.json().catch(() => ({}))
+    const isHealthy = data.status === 'healthy' || response.status === 200
+
     return {
       name: 'booking_api',
-      passed: true,
+      passed: isHealthy,
+      details: data,
     }
   } catch (error) {
     return {
@@ -515,7 +529,8 @@ async function main() {
   }
 }
 
-if (require.main === module) {
+// Check if this is the main module (ESM way)
+if (import.meta.url === `file://${process.argv[1]}`) {
   main()
 }
 
