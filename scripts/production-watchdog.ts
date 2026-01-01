@@ -515,7 +515,8 @@ async function main() {
   }
 }
 
-if (require.main === module) {
+// Check if this is the main module (ESM way)
+if (import.meta.url === `file://${process.argv[1]}`) {
   main()
 }
 
