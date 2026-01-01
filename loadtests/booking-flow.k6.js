@@ -5,10 +5,12 @@ import { Rate } from 'k6/metrics'
 // Custom metrics
 const errorRate = new Rate('errors')
 
+const TARGET_VUS = parseInt(__ENV.VUS || '100', 10)
+
 export const options = {
   stages: [
-    { duration: '30s', target: 50 },   // Ramp up to 50 users
-    { duration: '1m', target: 100 },   // Stay at 100 users
+    { duration: '30s', target: Math.floor(TARGET_VUS * 0.5) },   // Ramp up to 50% of target
+    { duration: '1m', target: TARGET_VUS },   // Stay at target VUs
     { duration: '30s', target: 0 },    // Ramp down
   ],
   thresholds: {
@@ -54,6 +56,7 @@ export default function () {
     const params = {
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${__ENV.PARTNER_API_KEY}`,
       },
     }
 

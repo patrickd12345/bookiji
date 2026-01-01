@@ -1,6 +1,88 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { NextRequest } from 'next/server'
-import { getSupabaseMock } from '../utils/supabase-mocks'
+
+const availabilitySlot = {
+  id: 'mock-slot-id',
+  provider_id: 'test-provider-123',
+  start_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  end_time: new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(),
+  is_available: true,
+}
+
+const bookingRecord = {
+  id: 'mock-booking-id',
+  customer_id: 'mock-customer-id',
+  provider_id: 'test-provider-123',
+  service_id: 'test-service-123',
+  start_time: availabilitySlot.start_time,
+  end_time: availabilitySlot.end_time,
+  status: 'pending',
+  state: 'quoted',
+  total_amount: 25,
+  vendor_created: false,
+  vendor_created_by: null,
+  stripe_payment_intent_id: 'pi_mock',
+  idempotency_key: 'mock-idempotency-key',
+}
+
+const supabaseMockClient = {
+  auth: {
+    getUser: vi.fn(async () => ({ data: { user: { id: 'user-123' } }, error: null })),
+  },
+  from: vi.fn((table: string) => {
+    if (table === 'availability_slots') {
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn(async () => ({ data: availabilitySlot, error: null })),
+              })),
+            })),
+          })),
+          maybeSingle: vi.fn(async () => ({ data: availabilitySlot, error: null })),
+        })),
+      }
+    }
+    if (table === 'bookings') {
+      return {
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              gte: vi.fn(() => ({
+                lte: vi.fn(() => ({
+                  order: vi.fn(() => ({
+                    limit: vi.fn(async () => ({ data: [], error: null })),
+                  })),
+                })),
+              })),
+            })),
+          })),
+          single: vi.fn(async () => ({ data: null, error: null })),
+          maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+        })),
+        update: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            select: vi.fn(() => ({
+              single: vi.fn(async () => ({ data: bookingRecord, error: null })),
+            })),
+          })),
+        })),
+      }
+    }
+    return { select: vi.fn(async () => ({ data: [], error: null })) }
+  }),
+  rpc: vi.fn(async () => ({
+    data: [
+      {
+        success: true,
+        booking_id: bookingRecord.id,
+        error_message: null,
+      },
+    ],
+    error: null,
+  })),
+}
 
 vi.mock('next/headers', () => ({
   cookies: vi.fn(async () => ({
@@ -9,11 +91,11 @@ vi.mock('next/headers', () => ({
 }))
 
 vi.mock('@supabase/ssr', () => ({
-  createServerClient: vi.fn(() => getSupabaseMock())
+  createServerClient: vi.fn(() => supabaseMockClient)
 }))
 
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: vi.fn(() => getSupabaseMock())
+  createClient: vi.fn(() => supabaseMockClient)
 }))
 
 vi.mock('stripe', () => ({
@@ -28,39 +110,17 @@ vi.mock('stripe', () => ({
   }))
 }))
 
-// Mock Stripe (SDK used by the route)
-vi.mock('stripe', () => ({
-  default: class Stripe {
-    paymentIntents = {
-      create: vi.fn(async () => ({ id: 'pi_mock', client_secret: 'cs_mock' }))
-    }
-    constructor() {}
-  }
+vi.mock('@/config/supabase', () => ({
+  getSupabaseConfig: vi.fn(() => ({
+    url: 'http://test.supabase.co',
+    publishableKey: 'test-publishable-key',
+    secretKey: 'test-secret-key'
+  }))
 }))
-
-// Mock is already applied globally via setup.ts
 
 const TEST_BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
 
 describe('POST /api/bookings/create', () => {
-  beforeEach(() => {
-    const supabase = getSupabaseMock()
-    supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-123' } }, error: null } as any)
-    const baseFrom = supabase.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
-    supabase.from.mockImplementation((table: string) => {
-      if (table === 'bookings') {
-        return {
-          insert: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: vi.fn(async () => ({ data: { id: 'booking-123' }, error: null }))
-            }))
-          }))
-        } as any
-      }
-      return baseFrom(table)
-    })
-  })
-
   it('should create a booking', async () => {
     const now = new Date()
     const futureStart = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24h from now

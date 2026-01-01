@@ -337,15 +337,24 @@ async function main() {
     const actionRoll = rng()
     let action = null
 
-    if (actionRoll < 0.25) {
-      action = 'send_book_A'
+    // Mix of RPC and API calls to test both paths
+    if (actionRoll < 0.15) {
+      action = 'send_book_A_rpc'
+    } else if (actionRoll < 0.3) {
+      action = 'send_book_B_rpc'
+    } else if (actionRoll < 0.4) {
+      action = 'send_book_A_api'
     } else if (actionRoll < 0.5) {
-      action = 'send_book_B'
-    } else if (actionRoll < 0.65) {
-      action = 'retry_book_A'
+      action = 'send_book_B_api'
+    } else if (actionRoll < 0.6) {
+      action = 'retry_book_A_rpc'
+    } else if (actionRoll < 0.7) {
+      action = 'retry_book_B_rpc'
     } else if (actionRoll < 0.8) {
-      action = 'retry_book_B'
-    } else if (actionRoll < 0.9) {
+      action = 'retry_book_A_api'
+    } else if (actionRoll < 0.85) {
+      action = 'retry_book_B_api'
+    } else if (actionRoll < 0.95) {
       action = 'restart_simcity'
     } else {
       action = 'no_op'
@@ -354,10 +363,14 @@ async function main() {
     lastAction = action
 
     // Execute action
-    if (action === 'send_book_A' || action === 'retry_book_A') {
-      await sendBook(restBase, supabaseHeaders, intentA)
-    } else if (action === 'send_book_B' || action === 'retry_book_B') {
-      await sendBook(restBase, supabaseHeaders, intentB)
+    if (action === 'send_book_A_rpc' || action === 'retry_book_A_rpc') {
+      await sendBookRPC(restBase, supabaseHeaders, intentA)
+    } else if (action === 'send_book_B_rpc' || action === 'retry_book_B_rpc') {
+      await sendBookRPC(restBase, supabaseHeaders, intentB)
+    } else if (action === 'send_book_A_api' || action === 'retry_book_A_api') {
+      await sendBookAPI(targetUrl, intentA, customer1Id)
+    } else if (action === 'send_book_B_api' || action === 'retry_book_B_api') {
+      await sendBookAPI(targetUrl, intentB, customer2Id)
     } else if (action === 'restart_simcity') {
       restartCount++
       // Simulate restart: small delay to simulate process crash/restart
@@ -383,11 +396,20 @@ async function main() {
 
       const stateBeforeIdempotency = await queryGroundTruth(restBase, supabaseHeaders, slotId, vendorId)
 
-      // Send retry again
-      if (action === 'retry_book_A' || (step % 10 === 0 && rng() < 0.5)) {
-        await sendBook(restBase, supabaseHeaders, intentA)
+      // Send retry again (mix of RPC and API)
+      const useAPI = rng() < 0.5
+      if (action === 'retry_book_A_rpc' || action === 'retry_book_A_api' || (step % 10 === 0 && rng() < 0.5)) {
+        if (useAPI) {
+          await sendBookAPI(targetUrl, intentA, customer1Id)
+        } else {
+          await sendBookRPC(restBase, supabaseHeaders, intentA)
+        }
       } else {
-        await sendBook(restBase, supabaseHeaders, intentB)
+        if (useAPI) {
+          await sendBookAPI(targetUrl, intentB, customer2Id)
+        } else {
+          await sendBookRPC(restBase, supabaseHeaders, intentB)
+        }
       }
 
       // Wait for potential state changes
@@ -487,7 +509,7 @@ async function queryGroundTruth(restBase, supabaseHeaders, slotId, vendorId) {
   }
 }
 
-async function sendBook(restBase, supabaseHeaders, intent) {
+async function sendBookRPC(restBase, supabaseHeaders, intent) {
   // Use atomic RPC function to claim slot and create booking
   // This is fire-and-forget - do NOT wait for response
   // SimCity treats delivery as at-least-once.
@@ -507,6 +529,36 @@ async function sendBook(restBase, supabaseHeaders, intent) {
     }
   }).catch(() => {
     // Ignore errors - fire and forget
+  })
+}
+
+async function sendBookAPI(targetUrl, intent, customerAuthId) {
+  // Call the actual API endpoint /api/bookings/create
+  // This tests the full API path including slot lookup and atomic function call
+  // Fire-and-forget: don't await response
+  
+  // Generate idempotency key from intent for consistency
+  const idempotencyKey = `sc1-${intent.intent_id}`
+  
+  fetchJson(`${targetUrl}/api/bookings/create`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+      // Note: In E2E mode, API may not require auth. For production testing,
+      // we would need to create auth sessions, but for SimCity we rely on E2E mode
+    },
+    body: {
+      providerId: intent.providerId,
+      serviceId: intent.serviceId,
+      startTime: intent.startTime,
+      endTime: intent.endTime,
+      amountUSD: intent.amountUSD,
+      customerId: intent.customer,
+      idempotencyKey: idempotencyKey
+    }
+  }).catch(() => {
+    // Ignore errors - fire and forget
+    // In a real scenario, we might log these to verify BOOKING_CONFLICT responses
   })
 }
 

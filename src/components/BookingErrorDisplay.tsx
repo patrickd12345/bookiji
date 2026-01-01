@@ -23,28 +23,41 @@ export function BookingErrorDisplay({ error, onRetry, onDismiss }: BookingErrorD
     onDismiss?.()
   }
 
-  const isRetryable = error.code && ['NETWORK_ERROR', 'TIMEOUT', 'INTERNAL_ERROR'].includes(error.code)
+  const isRetryable = error.code && ['NETWORK_ERROR', 'TIMEOUT', 'INTERNAL_ERROR', 'BOOKING_CONFLICT'].includes(error.code)
+  
+  // Special handling for booking conflicts
+  const isBookingConflict = error.code === 'BOOKING_CONFLICT'
 
   return (
     <div
-      className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800"
+      className={`mb-6 rounded-lg border p-4 ${
+        isBookingConflict 
+          ? 'border-orange-200 bg-orange-50 text-orange-800' 
+          : 'border-red-200 bg-red-50 text-red-800'
+      }`}
       role="alert"
       data-test="booking-error"
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="font-semibold text-red-900 mb-1">Booking Error</h3>
+          <h3 className={`font-semibold mb-1 ${isBookingConflict ? 'text-orange-900' : 'text-red-900'}`}>
+            {isBookingConflict ? 'Time Slot Unavailable' : 'Booking Error'}
+          </h3>
           <p className="text-sm mb-2">{error.error}</p>
           {error.hint && (
-            <p className="text-xs text-red-700 mb-2">{error.hint}</p>
+            <p className={`text-xs mb-2 ${isBookingConflict ? 'text-orange-700' : 'text-red-700'}`}>
+              {error.hint}
+            </p>
           )}
-          {error.code && (
+          {error.code && !isBookingConflict && (
             <p className="text-xs text-red-600 font-mono">Error Code: {error.code}</p>
           )}
         </div>
         <button
           onClick={handleDismiss}
-          className="ml-4 text-red-600 hover:text-red-800"
+          className={`ml-4 hover:opacity-70 ${
+            isBookingConflict ? 'text-orange-600' : 'text-red-600'
+          }`}
           aria-label="Dismiss error"
         >
           ×
@@ -53,9 +66,13 @@ export function BookingErrorDisplay({ error, onRetry, onDismiss }: BookingErrorD
       {isRetryable && onRetry && (
         <button
           onClick={onRetry}
-          className="mt-3 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
+          className={`mt-3 px-4 py-2 text-white rounded-md transition-colors text-sm font-medium ${
+            isBookingConflict
+              ? 'bg-orange-600 hover:bg-orange-700'
+              : 'bg-red-600 hover:bg-red-700'
+          }`}
         >
-          Retry
+          {isBookingConflict ? 'Select Different Time' : 'Retry'}
         </button>
       )}
     </div>

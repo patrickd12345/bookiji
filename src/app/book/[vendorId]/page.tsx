@@ -388,7 +388,23 @@ export default function BookVendorPage() {
           : { error: 'Booking creation failed', code: 'UNKNOWN_ERROR' }
         
         logger.error('Booking create failed', { status: response.status, data, payload })
-        setError(errorData)
+        
+        // Handle booking conflict: refresh availability and show user-friendly message
+        if (errorData.code === 'BOOKING_CONFLICT') {
+          // Clear selected time slot since it's no longer available
+          setSelectedTime('')
+          // Refresh availability to show updated slots
+          await fetchAvailability()
+          // Show error with conflict-specific message
+          setError({
+            ...errorData,
+            error: 'This time slot was just booked by another customer',
+            hint: 'Please select a different time from the updated availability below.'
+          })
+        } else {
+          setError(errorData)
+        }
+        
         setSubmitting(false)
         submissionRef.current = false
         return

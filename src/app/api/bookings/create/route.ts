@@ -280,29 +280,126 @@ export async function POST(req: NextRequest) {
   // Generate idempotency key if not provided
   const finalIdempotencyKey = idempotencyKey || `booking_${resolvedCustomerId}_${resolvedProviderId}_${serviceId}_${startTime}_${Date.now()}`
 
-  const { data: booking, error } = await supabase
-    .from('bookings')
-    .insert({
-      customer_id: resolvedCustomerId,
-      provider_id: resolvedProviderId,
-      service_id: serviceId,
-      start_time: startTime,
-      end_time: endTime,
-      status: 'pending',
-      state: vendorCreated ? 'quoted' : 'quoted', // Both start as quoted
-      total_amount: amountNumber,
-      vendor_created: vendorCreated,
-      vendor_created_by: vendorCreated ? resolvedProviderId : null,
-      stripe_payment_intent_id: vendorCreated ? null : intent.id,
-      idempotency_key: finalIdempotencyKey
+  // Find the availability slot for this provider and time range
+  const { data: slot, error: slotError } = await supabase
+    .from('availability_slots')
+    .select('id, provider_id, start_time, end_time, is_available')
+    .eq('provider_id', resolvedProviderId)
+    .eq('start_time', startTime)
+    .eq('end_time', endTime)
+    .eq('is_available', true)
+    .maybeSingle()
+
+  if (slotError) {
+    console.error('Error finding availability slot:', slotError)
+    return createErrorResponse(
+      'Failed to find availability slot',
+      500,
+      'DATABASE_ERROR',
+      'An error occurred while checking availability. Please try again.'
+    )
+  }
+
+  if (!slot) {
+    return createErrorResponse(
+      'Time slot not available',
+      404,
+      'SLOT_NOT_FOUND',
+      'This time slot is no longer available. Please select another time.'
+    )
+  }
+
+  // Generate booking ID
+  const bookingId = crypto.randomUUID()
+
+  // Use atomic function to claim slot and create booking
+  const { data: atomicResult, error: atomicError } = await supabase
+    .rpc('claim_slot_and_create_booking', {
+      p_slot_id: slot.id,
+      p_booking_id: bookingId,
+      p_customer_id: resolvedCustomerId,
+      p_provider_id: resolvedProviderId,
+      p_service_id: serviceId,
+      p_total_amount: amountNumber
     })
+
+  if (atomicError) {
+    console.error('Error calling atomic booking function:', atomicError)
+    return createErrorResponse(
+      'Failed to create booking',
+      500,
+      'DATABASE_ERROR',
+      'An error occurred while creating your booking. Please try again.'
+    )
+  }
+
+  // Extract result from RPC response (array format)
+  const result = Array.isArray(atomicResult) ? atomicResult[0] : atomicResult
+
+  if (!result || !result.success) {
+    const errorMessage = result?.error_message || 'Failed to claim slot'
+    
+    // Map atomic function errors to specific error codes
+    let errorCode = 'BOOKING_ERROR'
+    let status = 500
+    let hint = 'An error occurred while creating your booking. Please try again.'
+
+    if (errorMessage.includes('Slot is not available')) {
+      errorCode = 'BOOKING_CONFLICT'
+      status = 409
+      hint = 'This time slot was just booked by another customer. Please select a different time.'
+    } else if (errorMessage.includes('Slot not found')) {
+      errorCode = 'SLOT_NOT_FOUND'
+      status = 404
+      hint = 'This time slot is no longer available. Please select another time.'
+    } else if (errorMessage.includes('Slot provider mismatch')) {
+      errorCode = 'VALIDATION_ERROR'
+      status = 400
+      hint = 'Invalid slot selection. Please try again.'
+    } else if (errorMessage.includes('Cannot create booking in the past')) {
+      errorCode = 'VALIDATION_ERROR'
+      status = 400
+      hint = 'Cannot create booking in the past. Please select a future time.'
+    }
+
+    return createErrorResponse(
+      errorMessage,
+      status,
+      errorCode,
+      hint
+    )
+  }
+
+  const createdBookingId = result.booking_id
+
+  if (!createdBookingId) {
+    return createErrorResponse(
+      'Failed to create booking',
+      500,
+      'DATABASE_ERROR',
+      'An error occurred while creating your booking. Please try again.'
+    )
+  }
+
+  // Update booking with additional fields (state, payment intent, idempotency key, vendor flags)
+  const { data: booking, error: updateError } = await supabase
+    .from('bookings')
+    .update({
+      state: 'quoted',
+      stripe_payment_intent_id: vendorCreated ? null : intent.id,
+      idempotency_key: finalIdempotencyKey,
+      vendor_created: vendorCreated,
+      vendor_created_by: vendorCreated ? resolvedProviderId : null
+    })
+    .eq('id', createdBookingId)
     .select()
     .single()
 
-  if (error) {
-    // Check if it's a unique constraint violation on idempotency_key
-    if (error.code === '23505' && error.message.includes('idempotency_key')) {
-      // Duplicate idempotency key - fetch existing booking
+  if (updateError) {
+    console.error('Error updating booking with additional fields:', updateError)
+    
+    // Check for duplicate idempotency key (in case update failed due to unique constraint)
+    if (updateError.code === '23505' && updateError.message.includes('idempotency_key')) {
       const { data: existingBooking } = await supabase
         .from('bookings')
         .select('id, customer_id, provider_id, service_id, start_time, stripe_payment_intent_id')
@@ -323,11 +420,30 @@ export async function POST(req: NextRequest) {
         }, { status: 200 })
       }
     }
+    
+    // Booking was created but update failed - still return the booking
+    // Fetch it without the additional fields
+    const { data: fallbackBooking } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', createdBookingId)
+      .single()
+
+    if (fallbackBooking) {
+      return NextResponse.json({
+        booking: fallbackBooking,
+        clientSecret: intent.client_secret,
+        vendorCreated: vendorCreated,
+        requiresPayment: !vendorCreated,
+        warning: 'Booking created but some fields may not be updated'
+      })
+    }
+
     return createErrorResponse(
-      error.message || 'Failed to create booking',
+      'Failed to update booking',
       500,
       'DATABASE_ERROR',
-      'An error occurred while saving your booking. Please try again.'
+      'Booking was created but update failed. Please contact support.'
     )
   }
 

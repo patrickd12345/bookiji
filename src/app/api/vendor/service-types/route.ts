@@ -5,12 +5,11 @@ import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
 import { cookies } from 'next/headers'
 
 /**
- * GET /api/vendor/settings
+ * GET /api/vendor/service-types
  * 
- * Returns vendor settings (timezone, notification preferences, visibility flags).
- * If settings row does not exist, returns sensible defaults (does NOT 404).
- * 
- * Structure prepared for future PATCH without implementing mutation yet.
+ * Returns the list of service types (categories) the vendor offers.
+ * Uses distinct query to avoid duplicates, stable ordering, minimal payload.
+ * Joins only through valid foreign keys (services.provider_id -> profiles.id).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -57,28 +56,15 @@ export async function GET(request: NextRequest) {
       user = sessionResult.data.session.user
     }
 
-    // After authenticating the caller, switch to the service-role client so
-    // downstream queries bypass RLS (safe because we've already validated the user)
-    const supabaseAdmin = createSupabaseServerClient()
-
     // Get vendor profile - verify role is 'vendor'
-    let { data: profile, error: profileError } = await supabaseAdmin
+    // Use service role client for queries after authentication to bypass RLS
+    // (We've already validated the user, so this is safe)
+    const supabaseAdmin = createSupabaseServerClient()
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('id, role, preferences')
+      .select('id, role')
       .eq('auth_user_id', user.id)
       .maybeSingle()
-
-    // Older environments may not have the preferences column yet; fall back gracefully
-    if (profileError?.code === '42703') {
-      console.warn('[vendor/settings] preferences column missing; falling back to id/role only')
-      const fallback = await supabaseAdmin
-        .from('profiles')
-        .select('id, role')
-        .eq('auth_user_id', user.id)
-        .maybeSingle()
-      profile = fallback.data ? { ...fallback.data, preferences: null } as typeof profile : null
-      profileError = fallback.error
-    }
 
     if (profileError) {
       console.error('Error fetching profile:', profileError)
@@ -89,32 +75,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden - Vendor access required' }, { status: 403 })
     }
 
-    // Extract settings from profile preferences or use defaults
-    // Preferences is JSONB, so we can store settings there
-    const preferences = (profile.preferences as Record<string, unknown>) || {}
-    
-    // Return settings with sensible defaults if not present
-    // Structure prepared for future PATCH endpoint
+    const vendorId = profile.id
+
+    // Get distinct service categories for this vendor
+    // Use distinct on category, stable ordering, minimal payload (only category)
+    // Use service role client for queries (already authenticated user)
+    const { data: services, error: servicesError } = await supabaseAdmin
+      .from('services')
+      .select('category')
+      .eq('provider_id', vendorId)
+      .eq('is_active', true)
+      .order('category', { ascending: true })
+
+    if (servicesError) {
+      console.error('Error fetching services:', servicesError)
+      return NextResponse.json({ error: 'Failed to fetch service types' }, { status: 500 })
+    }
+
+    // Extract distinct categories (database distinct would be better, but Supabase client doesn't support it directly)
+    // So we dedupe in memory after stable ordering
+    const uniqueCategories = Array.from(
+      new Set((services || []).map(s => s.category).filter(Boolean))
+    ).sort()
+
     return NextResponse.json({
-      timezone: preferences.timezone as string || 'UTC',
-      notification_preferences: {
-        email_enabled: preferences.email_enabled as boolean ?? true,
-        sms_enabled: preferences.sms_enabled as boolean ?? false,
-        booking_reminders: preferences.booking_reminders as boolean ?? true,
-        new_bookings: preferences.new_bookings as boolean ?? true,
-        cancellations: preferences.cancellations as boolean ?? true,
-      },
-      visibility_flags: {
-        profile_public: preferences.profile_public as boolean ?? true,
-        show_ratings: preferences.show_ratings as boolean ?? true,
-        show_bookings_count: preferences.show_bookings_count as boolean ?? true,
-      },
-      // Store raw preferences for future PATCH compatibility
-      _preferences: preferences
+      service_types: uniqueCategories
     })
 
   } catch (error) {
-    console.error('Error in GET /api/vendor/settings:', error)
+    console.error('Error in GET /api/vendor/service-types:', error)
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Internal server error'

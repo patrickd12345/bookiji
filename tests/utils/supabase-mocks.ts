@@ -76,6 +76,14 @@ function createQueryChain(defaultThenResult: SupabaseResponse<any> = defaultList
 }
 
 export function createMockSupabaseClient() {
+  // Track query state for availability_slots lookup
+  let slotQueryState: {
+    providerId?: string
+    startTime?: string
+    endTime?: string
+    isAvailable?: boolean
+  } = {}
+
   const buildFromChain = (table: string) => {
     const readChain = createQueryChain(defaultListResponse)
     const mutationChain = createQueryChain(defaultSingleResponse)
@@ -104,6 +112,114 @@ export function createMockSupabaseClient() {
       ...thenable(upsertResult),
     }
 
+    // Special handling for availability_slots queries
+    if (table === 'availability_slots') {
+      const slotChain: any = {
+        select: vi.fn((columns: string) => {
+          // Reset query state when select is called
+          slotQueryState = {}
+          return {
+            eq: vi.fn((column: string, value: any) => {
+              if (column === 'provider_id') slotQueryState.providerId = value
+              if (column === 'start_time') slotQueryState.startTime = value
+              if (column === 'end_time') slotQueryState.endTime = value
+              if (column === 'is_available') slotQueryState.isAvailable = value
+              return slotChain
+            }),
+            maybeSingle: vi.fn(async () => {
+              // Return a slot if all required fields match
+              if (
+                slotQueryState.providerId &&
+                slotQueryState.startTime &&
+                slotQueryState.endTime &&
+                slotQueryState.isAvailable === true
+              ) {
+                return {
+                  data: {
+                    id: 'mock-slot-id',
+                    provider_id: slotQueryState.providerId,
+                    start_time: slotQueryState.startTime,
+                    end_time: slotQueryState.endTime,
+                    is_available: true,
+                  },
+                  error: null,
+                }
+              }
+              return { data: null, error: null }
+            }),
+            single: vi.fn(async () => ({ data: null, error: null })),
+          }
+        }),
+        eq: vi.fn(() => slotChain),
+        maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+        single: vi.fn(async () => ({ data: null, error: null })),
+      }
+      return slotChain
+    }
+
+    // Special handling for bookings table
+    if (table === 'bookings') {
+      const bookingsChain: any = {
+        select: vi.fn((columns: string) => {
+          const selectChain: any = {
+            eq: vi.fn((column: string, value: any) => {
+              selectChain[`eq_${column}`] = value
+              return selectChain
+            }),
+            gte: vi.fn((column: string, value: any) => {
+              selectChain[`gte_${column}`] = value
+              return selectChain
+            }),
+            lte: vi.fn((column: string, value: any) => {
+              selectChain[`lte_${column}`] = value
+              return selectChain
+            }),
+            order: vi.fn((column: string, options?: any) => {
+              selectChain.orderBy = { column, options }
+              return selectChain
+            }),
+            limit: vi.fn(async (count: number) => {
+              // Return empty array for duplicate check (no existing bookings)
+              return { data: [], error: null }
+            }),
+            single: vi.fn(async () => ({ data: null, error: null })),
+            maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+          }
+          return selectChain
+        }),
+        update: vi.fn((values: any) => ({
+          eq: vi.fn(() => ({
+            select: vi.fn(() => ({
+              single: vi.fn(async () => ({
+                data: {
+                  id: 'mock-booking-id',
+                  customer_id: 'mock-customer-id',
+                  provider_id: 'mock-provider-id',
+                  service_id: 'mock-service-id',
+                  start_time: '2025-01-02T10:00:00Z',
+                  end_time: '2025-01-02T11:00:00Z',
+                  status: 'pending',
+                  state: 'quoted',
+                  total_amount: 25,
+                  stripe_payment_intent_id: 'pi_mock',
+                  idempotency_key: 'mock-idempotency-key',
+                  vendor_created: false,
+                  vendor_created_by: null,
+                  ...values,
+                },
+                error: null,
+              })),
+            })),
+          })),
+        })),
+        insert: vi.fn(() => insertBuilder),
+        eq: vi.fn(() => bookingsChain),
+        single: readChain.single,
+        maybeSingle: readChain.maybeSingle,
+      }
+      return bookingsChain
+    }
+
     return {
       select: readChain.select,
       eq: readChain.eq,
@@ -125,6 +241,9 @@ export function createMockSupabaseClient() {
     }
   }
 
+  // Create from function that can be spied on but actually calls buildFromChain
+  const fromMock = vi.fn().mockImplementation((table: string) => buildFromChain(table))
+  
   const mockSupabaseClient = {
     auth: {
       getSession: vi.fn(() => Promise.resolve({ data: { session: null }, error: null })),
@@ -140,8 +259,25 @@ export function createMockSupabaseClient() {
         deleteUser: vi.fn(() => Promise.resolve({ error: null })),
       },
     },
-    from: vi.fn((table: string) => buildFromChain(table)),
-    rpc: vi.fn(async () => ({ data: null, error: null })),
+    from: fromMock,
+    rpc: vi.fn(async (functionName: string, args?: any) => {
+      // Handle claim_slot_and_create_booking RPC call
+      if (functionName === 'claim_slot_and_create_booking') {
+        // Return the expected table format: [{ success: true, booking_id, error_message: null }]
+        return {
+          data: [
+            {
+              success: true,
+              booking_id: args?.p_booking_id || 'mock-booking-id',
+              error_message: null,
+            },
+          ],
+          error: null,
+        }
+      }
+      // Default RPC response for other functions
+      return { data: null, error: null }
+    }),
     storage: {
       from: vi.fn(() => ({
         upload: vi.fn(async () => ({ data: null, error: null })),
