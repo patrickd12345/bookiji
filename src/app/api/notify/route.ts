@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
+import { sendEmail } from '@/lib/mailer'
 
 export async function POST(req: Request) {
   try {
@@ -9,38 +9,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid email' }, { status: 400 })
     }
 
-    const {
-      SMTP_HOST = 'smtp.gmail.com',
-      SMTP_PORT = '465',
-      SMTP_USER,
-      SMTP_PASS,
-    } = process.env
-
-    if (!SMTP_USER || !SMTP_PASS) {
-      console.error('SMTP credentials missing')
-      return NextResponse.json({ error: 'Server not configured' }, { status: 500 })
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: Number(SMTP_PORT),
-      secure: Number(SMTP_PORT) === 465, // true for 465, false for other ports
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-      },
-    })
-
-    await transporter.sendMail({
-      from: `Bookiji <${SMTP_USER}>`,
+    await sendEmail({
       to: 'Pilotmontreal@gmail.com',
       subject: 'New Bookiji waiting list signup',
-      text: `New subscriber: ${email}`,
+      html: `<p>New subscriber: <strong>${email}</strong></p>`,
     })
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error(err)
+    console.error('Failed to send notification email:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 } 
