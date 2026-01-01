@@ -5,6 +5,9 @@ import { cookies } from 'next/headers'
 import Stripe from 'stripe'
 import { getSupabaseConfig } from '@/config/supabase'
 import { isTruthyEnv } from '@/lib/env/isTruthyEnv'
+import { SchedulingDisabledError, assertSchedulingEnabled } from '@/lib/guards/schedulingKillSwitch'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase'
 
 // Standardized error response helper
 function createErrorResponse(
@@ -50,6 +53,16 @@ export async function POST(req: NextRequest) {
   const supabase = createClient(config.url, config.secretKey, {
     auth: { autoRefreshToken: false, persistSession: false }
   })
+
+  // Invariant INV-5 (Admin & Ops): booking endpoints must enforce the scheduling kill switch.
+  try {
+    await assertSchedulingEnabled(supabase as SupabaseClient<Database>)
+  } catch (error) {
+    if (error instanceof SchedulingDisabledError) {
+      return createErrorResponse(error.message, 503, error.code)
+    }
+    throw error
+  }
 
   // Require auth session from Supabase cookies
   const cookieStore = await cookies()

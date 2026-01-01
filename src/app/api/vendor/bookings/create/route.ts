@@ -19,12 +19,31 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}))
     const { customerId, serviceId, startTime, endTime, amountUSD, notes } = body
 
+    // Invariant INV-1 (Retries & Idempotency): state-changing endpoints must handle idempotency.
+    // Accept either request header or body fields (preferred: Idempotency-Key header).
+    const idempotencyKey =
+      request.headers.get('Idempotency-Key') ||
+      request.headers.get('idempotency-key') ||
+      body?.idempotencyKey ||
+      body?.idempotency_key ||
+      null
+
     // Validate required fields
     if (!customerId || !serviceId || !startTime || !endTime || amountUSD === undefined) {
       return NextResponse.json({ 
         error: 'Missing required fields',
         hint: 'Required: customerId, serviceId, startTime, endTime, amountUSD'
       }, { status: 400 })
+    }
+
+    if (!idempotencyKey) {
+      return NextResponse.json(
+        {
+          error: 'Missing idempotency key',
+          hint: 'Provide Idempotency-Key header (recommended) or idempotencyKey in body'
+        },
+        { status: 400 }
+      )
     }
 
     const supabase = createSupabaseServerClient()
@@ -97,6 +116,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
     }
 
+    // Idempotency: if this key was already used, return the existing booking.
+    const { data: existingBooking } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('idempotency_key', idempotencyKey)
+      .maybeSingle()
+
+    if (existingBooking) {
+      return NextResponse.json({
+        success: true,
+        booking: existingBooking,
+        message: 'Booking already created for this idempotency key.',
+        duplicate: true
+      }, { status: 200 })
+    }
+
     // Create booking (vendor-created, no payment required)
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
@@ -111,8 +146,8 @@ export async function POST(request: NextRequest) {
         total_amount: amountNumber,
         vendor_created: true,
         vendor_created_by: vendorProfile.id,
-        notes: notes || null,
-        stripe_payment_intent_id: null // No payment for vendor-created bookings
+        idempotency_key: idempotencyKey,
+        notes: notes || null
       })
       .select()
       .single()

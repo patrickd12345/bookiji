@@ -6,6 +6,8 @@ import { supabaseAdmin } from '@/lib/supabaseProxies'
 interface ToggleSchedulingRequest {
   enabled: boolean
   reason: string
+  idempotencyKey?: string
+  idempotency_key?: string
 }
 
 /**
@@ -18,6 +20,12 @@ interface ToggleSchedulingRequest {
  */
 export async function POST(req: NextRequest) {
   try {
+    // INV (Retries & Idempotency): state-changing endpoints must handle idempotency keys.
+    const idempotencyKey =
+      req.headers.get('Idempotency-Key') ||
+      req.headers.get('idempotency-key') ||
+      null
+
     // Get admin user
     const supabase = createSupabaseServerClient()
     const { data: { session } } = await supabase.auth.getSession()
@@ -39,6 +47,17 @@ export async function POST(req: NextRequest) {
 
     // Parse request body
     const body: ToggleSchedulingRequest = await req.json()
+
+    const bodyIdempotencyKey =
+      body.idempotencyKey || body.idempotency_key || null
+    const finalIdempotencyKey = idempotencyKey || bodyIdempotencyKey
+
+    if (!finalIdempotencyKey) {
+      return NextResponse.json(
+        { error: 'Missing idempotency key', hint: 'Provide Idempotency-Key header (recommended)' },
+        { status: 400 }
+      )
+    }
     
     if (typeof body.enabled !== 'boolean') {
       return NextResponse.json(
@@ -62,6 +81,30 @@ export async function POST(req: NextRequest) {
       .single()
 
     const oldValue = currentFlag?.value ?? true
+
+    // Idempotency: if we already processed this request, return a stable response.
+    const { data: existingAuditEntry } = await supabaseAdmin
+      .from('audit_log')
+      .select('id, created_at, meta')
+      .eq('actor_id', adminUser.id)
+      .eq('action', 'SYSTEM_FLAG_CHANGED')
+      .contains('meta', { idempotency_key: finalIdempotencyKey })
+      .maybeSingle()
+
+    if (existingAuditEntry) {
+      return NextResponse.json({
+        success: true,
+        idempotent: true,
+        message: 'Request already processed for this idempotency key.',
+        flag: {
+          key: 'scheduling_enabled',
+          value: oldValue,
+          updated_at: currentFlag?.updated_at ?? null,
+          updated_by: currentFlag?.updated_by ?? null,
+          reason: currentFlag?.reason ?? null
+        }
+      })
+    }
 
     // Update flag
     const { data: updatedFlag, error: updateError } = await supabaseAdmin
@@ -94,6 +137,7 @@ export async function POST(req: NextRequest) {
         action: 'SYSTEM_FLAG_CHANGED',
         reason: body.reason.trim(),
         meta: {
+          idempotency_key: finalIdempotencyKey,
           flag: 'scheduling_enabled',
           old_value: oldValue,
           new_value: body.enabled
