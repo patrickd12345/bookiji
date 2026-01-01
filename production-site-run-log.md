@@ -97,10 +97,11 @@ Production site is operational with one minor issue detected:
 
 ## Recommendations
 
-1. **Fix Booking API Health Check**
-   - The watchdog script checks `/api/health/bookings` which returns 404
-   - Either create this endpoint or update the watchdog script to use a different endpoint
-   - This is causing a false "degraded" status
+1. **✅ FIXED: Booking API Health Check**
+   - Created `/api/health/bookings` endpoint at `src/app/api/health/bookings/route.ts`
+   - Updated watchdog script to properly handle the endpoint response
+   - **Status:** Code fix complete, awaiting deployment to production
+   - Once deployed, the watchdog will show "healthy" status
 
 2. **Configure Latency SLO**
    - Set up latency SLO targets for `api_booking` service
@@ -160,10 +161,11 @@ Production site is operational with one minor issue detected:
 
 ## Next Steps
 
-1. Investigate the `/api/health/bookings` endpoint - determine if it should exist or if the watchdog check should be updated
-2. Configure missing SLO targets (latency and error rate)
-3. Establish baseline metrics for performance monitoring
-4. Continue regular monitoring and document any issues
+1. ✅ **COMPLETED:** Created `/api/health/bookings` endpoint - ready for deployment
+2. Deploy the new endpoint to production (will resolve the "degraded" status)
+3. Configure missing SLO targets (latency and error rate)
+4. Establish baseline metrics for performance monitoring
+5. Continue regular monitoring and document any issues
 
 ---
 
