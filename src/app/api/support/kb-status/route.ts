@@ -2,15 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from '@/config/supabase';
 
-const config = getSupabaseConfig();
-const supabase = createClient(config.url, config.secretKey!);
-
 /**
  * Lightweight observability endpoint for KB crawler status
  * Returns: last crawl time, article count, chunk count
  */
 export async function GET(_req: NextRequest) {
   try {
+    // IMPORTANT: Do not evaluate env vars / create Supabase clients at module load.
+    // Next.js can import route modules during `next build` ("Collecting page data").
+    const config = getSupabaseConfig();
+    const supabase = createClient(config.url, config.secretKey!);
+
     // Get last crawl timestamp (most recent last_crawled_at)
     const { data: lastCrawl, error: _crawlError } = await supabase
       .from('kb_articles')

@@ -15,10 +15,13 @@ import { createClient } from '@supabase/supabase-js'
 
 import { getSupabaseUrl, getSupabaseServiceKey } from '@/lib/env/supabaseEnv'
 
-const supabase = createClient(
-  getSupabaseUrl(),
-  getSupabaseServiceKey()
-)
+function getSupabaseAdmin() {
+  // IMPORTANT: Do not evaluate env vars / create clients at module load.
+  // Next.js can import server modules during `next build` ("Collecting page data").
+  return createClient(getSupabaseUrl(), getSupabaseServiceKey(), {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
 
 export interface VendorMetrics {
   activation_completed: boolean
@@ -31,6 +34,8 @@ export interface VendorMetrics {
 }
 
 export async function getVendorMetrics(vendorId: string): Promise<VendorMetrics> {
+  const supabase = getSupabaseAdmin()
+
   // Get vendor profile
   const { data: profile } = await supabase
     .from('profiles')

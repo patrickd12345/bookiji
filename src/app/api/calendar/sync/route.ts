@@ -2,9 +2,12 @@ import { google } from 'googleapis'
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
 
-const supabase = createSupabaseServerClient()
-
 export async function POST(request: Request) {
+  // IMPORTANT: Do not create Supabase clients at module load.
+  // Next.js can import route modules during `next build` ("Collecting page data"),
+  // and env assertions inside Supabase client creation would fail the build.
+  const supabase = createSupabaseServerClient()
+
   const { profileId } = await request.json()
 
   if (!profileId) {

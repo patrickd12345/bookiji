@@ -197,6 +197,7 @@
     "dotenv-cli": "^7.4.2",
     "eslint": "^9",
     "eslint-config-next": "15.5.7",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "gray-matter": "^4.0.3",
     "husky": "^9.0.0",
     "js-yaml": "^4.1.0",
