@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     await transporter.sendMail({
       from: `Bookiji <${SMTP_USER}>`,
-      to: 'pilotmontreal@gmail.com',
+      to: 'Pilotmontreal@gmail.com',
       subject: 'New Bookiji waiting list signup',
       text: `New subscriber: ${email}`,
     })
