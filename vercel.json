@@ -1,20 +1,3 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/kb-auto-dedupe",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/kb-ensure-embeddings",
-      "schedule": "0 4 * * *"
-    },
-    {
-      "path": "/api/cron/jarvis-monitor",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/notifications/batch/process",
-      "schedule": "*/5 * * * *"
-    }
-  ]
+  
 }
