@@ -68,7 +68,8 @@ describe('GET /api/availability/{providerId} - Layer 2: API E2E Tests (System Tr
     // Note: This test assumes the endpoint exists
     // If the endpoint path is different, adjust accordingly
     try {
-      const { GET } = await import('@/app/api/availability/search/route')
+      const _mod = (await import('@/app/api/availability/search/route')) as any
+      const GET = _mod.GET as any
       const response = await GET(mockRequest)
       const data = await response.json()
 
@@ -115,7 +116,8 @@ describe('GET /api/availability/{providerId} - Layer 2: API E2E Tests (System Tr
     )
 
     try {
-      const { GET } = await import('@/app/api/availability/search/route')
+      const _mod = (await import('@/app/api/availability/search/route')) as any
+      const GET = _mod.GET as any
       const response = await GET(mockRequest)
       expect([404, 400]).toContain(response.status)
     } catch (error) {

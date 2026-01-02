@@ -44,7 +44,7 @@ describe('POST /api/(dev)/test/bookings/[id]/reschedule - Layer 2: API E2E (Syst
         error_message: null
       }],
       error: null
-    })
+    } as any)
 
     // Mock booking retrieval after reschedule
     mock.from.mockImplementationOnce((table: string) => {
@@ -89,7 +89,7 @@ describe('POST /api/(dev)/test/bookings/[id]/reschedule - Layer 2: API E2E (Syst
 
     // Set E2E=true for test endpoint
     process.env.E2E = 'true'
-    process.env.NODE_ENV = 'development'
+    ;(process.env as any).NODE_ENV = 'development'
 
     try {
       const { POST } = await import('@/app/api/(dev)/test/bookings/[id]/reschedule/route')
@@ -122,7 +122,7 @@ describe('POST /api/(dev)/test/bookings/[id]/reschedule - Layer 2: API E2E (Syst
         error_message: 'Slot is not available'
       }],
       error: null
-    })
+    } as any)
 
     const mockRequest = new Request(
       `${TEST_BASE_URL}/api/test/bookings/${bookingId}/reschedule`,
@@ -140,7 +140,7 @@ describe('POST /api/(dev)/test/bookings/[id]/reschedule - Layer 2: API E2E (Syst
     )
 
     process.env.E2E = 'true'
-    process.env.NODE_ENV = 'development'
+    ;(process.env as any).NODE_ENV = 'development'
 
     try {
       const { POST } = await import('@/app/api/(dev)/test/bookings/[id]/reschedule/route')
@@ -172,7 +172,7 @@ describe('POST /api/(dev)/test/bookings/[id]/reschedule - Layer 2: API E2E (Syst
     )
 
     process.env.E2E = 'true'
-    process.env.NODE_ENV = 'development'
+    ;(process.env as any).NODE_ENV = 'development'
 
     try {
       const { POST } = await import('@/app/api/(dev)/test/bookings/[id]/reschedule/route')

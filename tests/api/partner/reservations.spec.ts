@@ -201,7 +201,7 @@ describe('Partner Reservations API - Layer 2: API E2E (System Truth)', () => {
           return {
             success: false,
             error: 'SLOT_ALREADY_RESERVED'
-          }
+          } as any
         }
         return {
           success: true,
@@ -211,7 +211,7 @@ describe('Partner Reservations API - Layer 2: API E2E (System Truth)', () => {
             createdAt: new Date().toISOString(),
             expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString()
           }
-        }
+        } as any
       })
 
       const mockRequest = new NextRequest(
