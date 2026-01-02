@@ -42,9 +42,9 @@ export default function BookingsPage() {
 
   const handleExport = () => {
     if (exportFormat === 'csv') {
-      exportToCSV(bookings, 'bookings')
+      exportToCSV(rows, 'bookings')
     } else {
-      exportToJSON(bookings, 'bookings')
+      exportToJSON(rows, 'bookings')
     }
   }
 

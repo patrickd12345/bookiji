@@ -267,7 +267,8 @@ async function notifySlack(
       await storeNotificationSent(incidentId, 'slack')
     }
   } catch (error) {
-    logger.error('[Slack] Incident notification failed', error instanceof Error ? error : new Error(String(error)), {
+    logger.error('[Slack] Incident notification failed', {
+      error: error instanceof Error ? error.message : String(error),
       incident_id: incidentId
     })
   }

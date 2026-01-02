@@ -18,7 +18,7 @@ export async function insertLedgerEntry(entry: Partial<CreditLedgerEntry>): Prom
     };
 
     const { data, error } = await supabase
-      .from<CreditLedgerEntry>('credit_ledger_entries')
+      .from('credit_ledger_entries')
       .insert(payload)
       .select()
       .single();
@@ -40,7 +40,7 @@ export async function insertLedgerEntry(entry: Partial<CreditLedgerEntry>): Prom
 
 export async function fetchLedgerEntries(owner_type: 'customer' | 'provider', owner_id: string): Promise<CreditLedgerEntry[]> {
   const { data, error } = await supabase
-    .from<CreditLedgerEntry>('credit_ledger_entries')
+    .from('credit_ledger_entries')
     .select('*')
     .eq('owner_type', owner_type)
     .eq('owner_id', owner_id)

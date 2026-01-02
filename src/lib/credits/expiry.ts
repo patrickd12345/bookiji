@@ -29,7 +29,7 @@ export async function createForfeitureIntent(params: {
     };
 
     const { data, error } = await supabase
-      .from<CreditIntent>('credit_intents')
+      .from('credit_intents')
       .insert(payload)
       .select()
       .single();

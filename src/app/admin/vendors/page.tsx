@@ -55,9 +55,9 @@ export default function VendorsPage() {
 
   const handleExport = () => {
     if (exportFormat === 'csv') {
-      exportToCSV(vendors, 'vendors')
+      exportToCSV(rows, 'vendors')
     } else {
-      exportToJSON(vendors, 'vendors')
+      exportToJSON(rows, 'vendors')
     }
   }
 
