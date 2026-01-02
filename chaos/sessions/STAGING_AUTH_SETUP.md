@@ -56,8 +56,8 @@ APP_ENV=staging  # or 'local', or undefined
 
 # Required Supabase credentials (from .env.local)
 NEXT_PUBLIC_SUPABASE_URL=<staging-supabase-url>
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<staging-publishable-key>
-SUPABASE_SECRET_KEY=<staging-secret-key>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<staging-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<staging-service-role-key>
 ```
 
 ## How SimCity Should Authenticate
@@ -191,7 +191,6 @@ Once authentication is verified:
 2. Run preflight verifier before each chaos run
 3. Observe authenticated requests reaching business logic
 4. Verify incidents are created with authenticated context
-
 
 
 

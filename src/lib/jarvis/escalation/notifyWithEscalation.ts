@@ -17,6 +17,13 @@ import {
   storeNotificationSent,
   storeNotificationSuppressed
 } from '../observability/events'
+import { logger } from '@/lib/logger'
+
+import { getServerSupabase } from '@/lib/supabaseServer'
+import {
+  postIncidentNotification,
+  postSeverityChangeUpdate
+} from '@/lib/slack/notifier'
 
 export interface EscalationNotificationResult {
   sent: boolean
@@ -73,6 +80,7 @@ export async function notifyWithEscalation(
     if (smsResult.success) {
       await updateEscalationAfterNotification(incidentId, true)
       await storeNotificationSent(incidentId, 'sms', decision.trace)
+      await notifySlack(incidentId, assessment, snapshot, true)
     } else {
       await storeNotificationSuppressed(incidentId, 'SMS send failed', decision.trace)
     }
@@ -123,6 +131,7 @@ export async function notifyWithEscalation(
   if (smsResult.success) {
     await updateEscalationAfterNotification(incidentId, isFirstNotification)
     await storeNotificationSent(incidentId, 'sms', decision.trace)
+    await notifySlack(incidentId, assessment, snapshot, isFirstNotification)
   } else {
     await storeNotificationSuppressed(incidentId, 'SMS send failed', decision.trace)
   }
@@ -196,3 +205,70 @@ function formatEscalationMessage(
   }
 }
 
+/**
+ * Sends a descriptive update to Slack and persists the thread ID so follow-ups remain
+ * in the same conversation. This is read-only aside from storing the thread timestamp,
+ * which keeps Slack threads aligned with Jarvis incidents without touching booking data.
+ */
+async function notifySlack(
+  incidentId: string,
+  assessment: JarvisAssessment,
+  snapshot: IncidentSnapshot,
+  isFirst: boolean
+): Promise<void> {
+  if (!snapshot?.env) {
+    return
+  }
+
+  const supabase = getServerSupabase()
+  const summary = assessment.assessment || 'Severity update in progress'
+  const signals = Object.entries(snapshot.signals || {})
+    .filter(([, value]) => Boolean(value))
+    .map(([key]) => key)
+    .join(', ') || 'no dominant signals'
+  const details = `Blast radius: ${snapshot.blast_radius?.join(', ') || 'unknown'} - Signals: ${signals}`
+
+  try {
+    if (isFirst) {
+      const threadTs = await postIncidentNotification({
+        incidentId,
+        severity: assessment.severity,
+        env: snapshot.env,
+        summary,
+        details
+      })
+
+      if (threadTs) {
+        await supabase
+          .from('jarvis_incidents')
+          .update({ slack_thread_ts: threadTs })
+          .eq('incident_id', incidentId)
+      }
+
+      await storeNotificationSent(incidentId, 'slack')
+      return
+    }
+
+    const { data } = await supabase
+      .from('jarvis_incidents')
+      .select('slack_thread_ts')
+      .eq('incident_id', incidentId)
+      .maybeSingle()
+
+    if (data?.slack_thread_ts) {
+      await postSeverityChangeUpdate({
+        incidentId,
+        severity: assessment.severity,
+        env: snapshot.env,
+        summary,
+        details,
+        threadTs: data.slack_thread_ts
+      })
+      await storeNotificationSent(incidentId, 'slack')
+    }
+  } catch (error) {
+    logger.error('[Slack] Incident notification failed', error instanceof Error ? error : new Error(String(error)), {
+      incident_id: incidentId
+    })
+  }
+}

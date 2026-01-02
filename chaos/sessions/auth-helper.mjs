@@ -24,12 +24,12 @@ function getSupabaseConfig() {
         supabaseUrl = urlMatch[1].trim().replace(/^["']|["']$/g, '')
       }
       
-      const publishableMatch = envContent.match(/NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY\s*=\s*([^\s\r\n]+)/i)
-      if (publishableMatch) {
-        supabaseAnonKey = publishableMatch[1].trim().replace(/^["']|["']$/g, '')
+      const anonMatch = envContent.match(/NEXT_PUBLIC_SUPABASE_ANON_KEY\s*=\s*([^\s\r\n]+)/i)
+      if (anonMatch) {
+        supabaseAnonKey = anonMatch[1].trim().replace(/^["']|["']$/g, '')
       }
       
-      const serviceMatch = envContent.match(/SUPABASE_SECRET_KEY\s*=\s*([^\s\r\n]+)/i)
+      const serviceMatch = envContent.match(/SUPABASE_SERVICE_ROLE_KEY\s*=\s*([^\s\r\n]+)/i)
       if (serviceMatch) {
         supabaseServiceKey = serviceMatch[1].trim().replace(/^["']|["']$/g, '')
       }
@@ -40,8 +40,8 @@ function getSupabaseConfig() {
 
   // Fallback to environment variables
   supabaseUrl = supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL
-  supabaseAnonKey = supabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-  supabaseServiceKey = supabaseServiceKey || process.env.SUPABASE_SECRET_KEY
+  supabaseAnonKey = supabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  supabaseServiceKey = supabaseServiceKey || process.env.SUPABASE_SERVICE_ROLE_KEY
 
   return { supabaseUrl, supabaseAnonKey, supabaseServiceKey }
 }
@@ -139,7 +139,6 @@ export async function authenticateForStaging(baseUrl) {
     return null
   }
 }
-
 
 
 

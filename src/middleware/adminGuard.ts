@@ -8,7 +8,9 @@ const ADMIN_ORG_IDS = process.env.ADMIN_ORG_IDS?.split(',').filter(Boolean) || [
 
 export async function adminGuard(request: NextRequest) {
   const url = request.nextUrl
-  
+
+  console.log('adminGuard invoked for', url.pathname);
+
   // Only apply to admin routes
   if (!url.pathname.startsWith('/admin') && !url.pathname.startsWith('/api/admin')) {
     return NextResponse.next()
@@ -127,5 +129,4 @@ export async function adminGuard(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 }
-
 

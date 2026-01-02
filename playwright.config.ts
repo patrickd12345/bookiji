@@ -56,9 +56,6 @@ if (!isLocalSupabase) {
 
 const baseURL = process.env.BASE_URL || 'http://localhost:3000'
 
-// Check if we should skip Supabase-dependent tests
-const skipSupabaseTests = process.env.E2E_SKIP_SUPABASE_TESTS === 'true'
-
 export default defineConfig({
   testDir: './tests/e2e',
   globalSetup: './playwright.global-setup.ts',
@@ -69,10 +66,6 @@ export default defineConfig({
   workers: process.env.E2E_SKIP_SEED === 'true' ? 1 : 2, // Use 2 workers if Supabase available
   retries: 1,
   timeout: 60_000, // Reduced from 120s to 60s - fail faster
-  
-  // Configure test tags - if skipping Supabase tests, exclude @requires-supabase tagged tests
-  // Otherwise, run all tests (including @requires-supabase)
-  grepInvert: skipSupabaseTests ? /@requires-supabase/ : undefined,
 
   use: {
     baseURL,

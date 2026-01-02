@@ -30,13 +30,13 @@ envContent.split('\n').forEach(line => {
   if (line.includes('SUPABASE_URL=') && !line.includes('NEXT_PUBLIC')) {
     supabaseUrl = line.split('=')[1].trim().split('#')[0].trim();
   }
-  if (line.includes('SUPABASE_SECRET_KEY=')) {
+  if (line.includes('SUPABASE_SERVICE_ROLE_KEY=')) {
     supabaseServiceKey = line.split('=')[1].trim().split('#')[0].trim();
   }
 });
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing SUPABASE_URL or SUPABASE_SECRET_KEY in .env.local');
+  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local');
   process.exit(1);
 }
 
@@ -93,7 +93,6 @@ async function verifyKillSwitch() {
 }
 
 verifyKillSwitch();
-
 
 
 

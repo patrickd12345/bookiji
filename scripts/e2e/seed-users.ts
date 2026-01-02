@@ -19,7 +19,7 @@
  * 
  * Environment Variables:
  *   SUPABASE_URL - Supabase project URL (required)
- *   SUPABASE_SECRET_KEY - Service role key (required)
+ *   SUPABASE_SERVICE_ROLE_KEY - Service role key (required)
  *   E2E_ADMIN_EMAIL - Admin email (optional, default: e2e-admin@bookiji.test)
  *   E2E_ADMIN_PASSWORD - Admin password (default: TestPassword123!)
  *   CREATE_ADMIN - Set to true to seed the admin user (optional)
@@ -32,7 +32,6 @@ import fs from 'node:fs'
 import path from 'node:path'
 import dotenv from 'dotenv'
 import { createSupabaseAdminClient } from './createSupabaseAdmin'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { E2E_CUSTOMER_USER, E2E_VENDOR_USER, E2EUserDefinition } from './credentials'
 
 // Allow skipping seed if explicitly requested (useful for cloud environments where users may already exist)
@@ -76,11 +75,9 @@ if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
   throw error
 }
 
-const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY
-
-if (!SUPABASE_SECRET_KEY) {
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
   const error = new Error(
-    'E2E seed requires SUPABASE_SECRET_KEY\n' +
+    'E2E seed requires SUPABASE_SERVICE_ROLE_KEY\n' +
     '\n' +
     'Get your service role key from:\n' +
     '  Supabase Dashboard → Your Project → Settings → API → Project API keys\n' +
@@ -91,11 +88,12 @@ if (!SUPABASE_SECRET_KEY) {
 }
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 // Create admin client with timeout and IPv4 handling to prevent UND_ERR_HEADERS_TIMEOUT
 const supabaseAdmin = createSupabaseAdminClient(
   SUPABASE_URL!,
-  SUPABASE_SECRET_KEY!,
+  SUPABASE_SERVICE_ROLE_KEY!,
   {
     timeoutMs: 60000, // 60 second timeout for admin operations
     forceIPv4: true   // Force IPv4 to avoid IPv6 resolution issues on Windows
@@ -120,7 +118,7 @@ if (process.env.E2E_ADMIN_EMAIL || process.env.CREATE_ADMIN === 'true') {
 }
 
 async function findUserByEmail(
-  supabase: SupabaseClient,
+  supabase: ReturnType<typeof createClient>,
   email: string
 ): Promise<{ id: string; email?: string } | null> {
   const normalizedEmail = email.toLowerCase()
@@ -155,7 +153,6 @@ async function findUserByEmail(
           if (isLocal) {
             throw new Error(
               `Cannot connect to local Supabase at ${supabaseUrl}\n` +
-              `Error: ${err.message} (${err.code || err.cause?.code})\n` +
               '\n' +
               'Local Supabase requires Docker. Options:\n' +
               '  1. Start Docker and run: pnpm db:start\n' +
@@ -167,12 +164,11 @@ async function findUserByEmail(
           } else {
             throw new Error(
               `Cannot connect to remote Supabase at ${supabaseUrl}\n` +
-              `Error: ${err.message} (${err.code || err.cause?.code})\n` +
               '\n' +
               'Check:\n' +
               '  1. SUPABASE_URL is correct\n' +
-              '  2. Network can reach Supabase (check VPN/Firewall)\n' +
-              '  3. Project is active in Supabase dashboard (paused projects timeout)\n' +
+              '  2. Network can reach Supabase\n' +
+              '  3. Project is active in Supabase dashboard\n' +
               '  4. API keys are valid\n' +
               '\n' +
               'Or skip seeding: E2E_SKIP_SEED=true pnpm e2e'
@@ -210,7 +206,7 @@ async function findUserByEmail(
 }
 
 async function seedUser(
-  supabase: SupabaseClient,
+  supabase: ReturnType<typeof createClient>,
   userSeed: UserSeed
 ): Promise<string> {
   const { email, password, role, fullName } = userSeed
@@ -371,7 +367,7 @@ async function seedUser(
 }
 
 async function ensureProfileExists(
-  supabase: SupabaseClient,
+  supabase: ReturnType<typeof createClient>,
   userSeed: UserSeed,
   userId: string
 ): Promise<void> {
@@ -396,7 +392,7 @@ async function ensureProfileExists(
 }
 
 async function ensureAppUserExists(
-  supabase: SupabaseClient,
+  supabase: ReturnType<typeof createClient>,
   userSeed: UserSeed,
   userId: string
 ): Promise<string> {
@@ -426,7 +422,7 @@ async function ensureAppUserExists(
 }
 
 async function ensureUserRoleExists(
-  supabase: SupabaseClient,
+  supabase: ReturnType<typeof createClient>,
   userSeed: UserSeed,
   appUserId: string
 ): Promise<void> {

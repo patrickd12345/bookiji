@@ -269,4 +269,3 @@ The certification script uses SimCity's infrastructure:
 
 
 
-

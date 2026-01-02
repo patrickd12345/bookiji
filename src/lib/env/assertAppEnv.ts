@@ -12,37 +12,6 @@ const ALLOWED_ENVIRONMENTS = ['local', 'staging', 'prod'] as const;
 
 export type AppEnvironment = typeof ALLOWED_ENVIRONMENTS[number];
 
-function isAllowedAppEnv(value: string): value is AppEnvironment {
-  return ALLOWED_ENVIRONMENTS.includes(value as AppEnvironment);
-}
-
-/**
- * Resolve APP_ENV from explicit config or well-known platform signals.
- *
- * Why: Next.js may import server modules during `next build` (e.g. "Collecting page data").
- * Vercel provides `VERCEL_ENV` but does not automatically set `APP_ENV`.
- * We still want a deterministic environment mode during builds without hard-failing.
- */
-function resolveAppEnv(): AppEnvironment | undefined {
-  const explicit = process.env.APP_ENV || process.env.NEXT_PUBLIC_APP_ENV;
-  if (explicit && isAllowedAppEnv(explicit)) return explicit;
-
-  const vercelEnv = process.env.VERCEL_ENV;
-  if (vercelEnv === 'production') return 'prod';
-  if (vercelEnv === 'preview') return 'staging';
-  if (vercelEnv === 'development') return 'local';
-
-  const nodeEnv = process.env.NODE_ENV;
-  // During `next build`, Next.js sets NEXT_PHASE to "phase-production-build".
-  // We avoid inferring "prod" here because production builds can run in contexts
-  // without runtime secrets (e.g. local builds, CI sanity builds).
-  if (nodeEnv === 'production' && process.env.NEXT_PHASE === 'phase-production-build') return 'local';
-  if (nodeEnv === 'test') return 'local';
-  if (nodeEnv === 'development') return 'local';
-
-  return undefined;
-}
-
 /**
  * Assert that APP_ENV is set and valid.
  * 
@@ -57,7 +26,7 @@ function resolveAppEnv(): AppEnvironment | undefined {
  * @throws Error if APP_ENV is invalid or missing
  */
 export function assertAppEnv(): AppEnvironment {
-  const env = resolveAppEnv();
+  const env = process.env.APP_ENV || process.env.NEXT_PUBLIC_APP_ENV;
   
   if (!env) {
     throw new Error(
@@ -65,13 +34,15 @@ export function assertAppEnv(): AppEnvironment {
       'Set APP_ENV to one of: local, staging, prod'
     );
   }
-
-  // Ensure downstream code reading process.env.APP_ENV sees a consistent value.
-  if (!process.env.APP_ENV) {
-    process.env.APP_ENV = env;
+  
+  if (!ALLOWED_ENVIRONMENTS.includes(env as AppEnvironment)) {
+    throw new Error(
+      `Invalid APP_ENV: "${env}". ` +
+      `Must be one of: ${ALLOWED_ENVIRONMENTS.join(', ')}`
+    );
   }
-
-  return env;
+  
+  return env as AppEnvironment;
 }
 
 /**
@@ -81,7 +52,11 @@ export function assertAppEnv(): AppEnvironment {
  * @returns The APP_ENV value if valid, undefined otherwise
  */
 export function getAppEnv(): AppEnvironment | undefined {
-  return resolveAppEnv();
+  const env = process.env.APP_ENV || process.env.NEXT_PUBLIC_APP_ENV;
+  if (env && ALLOWED_ENVIRONMENTS.includes(env as AppEnvironment)) {
+    return env as AppEnvironment;
+  }
+  return undefined;
 }
 
 /**
@@ -123,7 +98,6 @@ export function allowsDestructiveOps(): boolean {
   const env = getAppEnv();
   return env === 'local' || env === 'staging';
 }
-
 
 
 

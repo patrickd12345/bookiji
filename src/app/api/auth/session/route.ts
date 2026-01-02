@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Get session to check expiry
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
       // Get role from profiles
       const { data: profile } = await supabase
@@ -136,7 +136,6 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-
 
 
 

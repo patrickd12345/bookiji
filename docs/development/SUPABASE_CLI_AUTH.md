@@ -18,8 +18,8 @@ supabase login
 **Storage:**
 - Stored internally by CLI
 - **NEVER** comes from `.env`
-- **NEVER** comes from `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- **NEVER** comes from `SUPABASE_SECRET_KEY`
+- **NEVER** comes from `SUPABASE_ANON_KEY`
+- **NEVER** comes from `SERVICE_ROLE_KEY`
 - **NEVER** comes from connection strings
 
 **Usage:**
@@ -40,8 +40,8 @@ supabase login
 **Purpose:** Authenticate the application to Supabase API
 
 **Variables:**
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_SECRET_KEY` (or `SUPABASE_SERVICE_KEY`)
+- `SUPABASE_ANON_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
+- `SUPABASE_SERVICE_ROLE_KEY` (or `SUPABASE_SERVICE_KEY`)
 
 **Token Format:** JWT tokens (start with `eyJ...`)
 
@@ -95,7 +95,7 @@ SUPABASE_ACCESS_TOKEN=sbp_...  # Don't do this
 ### ❌ Mistake 2: Using App Credentials for CLI
 ```bash
 # WRONG - This won't work
-export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJ...  # CLI doesn't use this
+export SUPABASE_ANON_KEY=eyJ...  # CLI doesn't use this
 supabase projects list  # Will fail
 ```
 
@@ -143,8 +143,8 @@ supabase db push
 
 # 2. Add to .env.local (for app runtime)
 NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJ...
-SUPABASE_SECRET_KEY=eyJ...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
 # 3. Use in application code
 import { createClient } from '@supabase/supabase-js'
@@ -171,7 +171,7 @@ supabase status
 
 **DO NOT:**
 - Set `SUPABASE_ACCESS_TOKEN` in `.env`
-- Use `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for CLI
+- Use `SUPABASE_ANON_KEY` for CLI
 - Use `SERVICE_ROLE_KEY` for CLI
 
 ---
@@ -223,7 +223,6 @@ supabase status
 - [Database Management Policy](./DATABASE_MANAGEMENT_POLICY.md)
 - [Environment Model](../architecture/ENVIRONMENT_MODEL.md)
 - [Staging Setup](../operations/STAGING_SETUP.md)
-
 
 
 

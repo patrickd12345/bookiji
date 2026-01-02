@@ -48,8 +48,8 @@ if (!fs.existsSync(envLocalPath) && fs.existsSync(envLocalBakPath)) {
 const requiredVars = [
   'SUPABASE_URL',
   'NEXT_PUBLIC_SUPABASE_URL',
-  'SUPABASE_SECRET_KEY',
-  'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
 ]
 
 // Detect cloud environment (more comprehensive)
@@ -93,18 +93,8 @@ const loadEnvFromFiles = () => {
 const fileEnvVars = loadEnvFromFiles()
 const allEnvVars = { ...fileEnvVars, ...process.env }
 
-// Helper to check for variables with backward compatibility
-const hasVar = (name: string, altName?: string): boolean => {
-  return !!(allEnvVars[name] || (altName && allEnvVars[altName]))
-}
-
-// Check if we have all required vars from any source (with backward compatibility)
-const hasSupabaseSecretKey = hasVar('SUPABASE_SECRET_KEY')
-const hasSupabasePublishableKey = hasVar('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY')
-const hasAllRequiredVars = 
-  hasVar('SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL') &&
-  hasSupabaseSecretKey &&
-  hasSupabasePublishableKey
+// Check if we have all required vars from any source
+const hasAllRequiredVars = requiredVars.every(v => allEnvVars[v])
 
 let needsSync = false
 let syncReason = ''
@@ -119,12 +109,8 @@ if (fs.existsSync(envE2EPath)) {
     needsSync = true
     syncReason = 'localhost in cloud environment'
   } 
-  // Check if required vars are missing (with backward compatibility)
-  const e2eHasSecretKey = !!e2eEnv.SUPABASE_SECRET_KEY
-  const e2eHasPublishableKey = !!e2eEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
-  const e2eHasUrl = !!(e2eEnv.SUPABASE_URL || e2eEnv.NEXT_PUBLIC_SUPABASE_URL)
-  
-  if (!e2eHasUrl || !e2eHasSecretKey || !e2eHasPublishableKey) {
+  // Check if required vars are missing
+  else if (!requiredVars.every(v => e2eEnv[v])) {
     needsSync = true
     syncReason = 'missing required variables'
   }
@@ -215,17 +201,12 @@ if (needsSync) {
   }
   
   lines.push('# Supabase Configuration')
-  // Use new variable names, with fallback to old names
-  const supabaseUrl = allEnvVars.SUPABASE_URL || allEnvVars.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseSecretKey = allEnvVars.SUPABASE_SECRET_KEY
-  const supabasePublishableKey = allEnvVars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
-  
-  if (supabaseUrl) lines.push(`SUPABASE_URL=${supabaseUrl}`)
-  if (supabaseUrl && supabaseUrl !== allEnvVars.NEXT_PUBLIC_SUPABASE_URL) {
-    lines.push(`NEXT_PUBLIC_SUPABASE_URL=${supabaseUrl}`)
-  }
-  if (supabaseSecretKey) lines.push(`SUPABASE_SECRET_KEY=${supabaseSecretKey}`)
-  if (supabasePublishableKey) lines.push(`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${supabasePublishableKey}`)
+  requiredVars.forEach(key => {
+    const value = allEnvVars[key]
+    if (value) {
+      lines.push(`${key}=${value}`)
+    }
+  })
 
   // Optional E2E credential overrides
   const credentialVars = [
@@ -408,10 +389,8 @@ if (isLocalSupabase && process.env.E2E_SKIP_SEED !== 'true') {
         console.log('')
         console.log('⏭️  Auto-skipping seeding and continuing with tests...')
         console.log('   (Tests may fail if required users don\'t exist)')
-        console.log('   (Supabase-dependent tests will be automatically skipped)')
         console.log('   (Set E2E_NO_AUTO_START=true to skip auto-start attempts)')
         process.env.E2E_SKIP_SEED = 'true'
-        process.env.E2E_SKIP_SUPABASE_TESTS = 'true'
       }
     }
   }
@@ -445,9 +424,7 @@ if (process.env.E2E_SKIP_SEED !== 'true') {
       if (isLocalSupabase) {
         console.error('⚠️  Auto-skipping seeding and continuing with tests...')
         console.error('   (Tests may fail if required users don\'t exist)')
-        console.error('   (Supabase-dependent tests will be automatically skipped)')
         process.env.E2E_SKIP_SEED = 'true'
-        process.env.E2E_SKIP_SUPABASE_TESTS = 'true'
       } else {
         // Remote Supabase - this is more serious
         console.error('❌ Cannot connect to remote Supabase')
