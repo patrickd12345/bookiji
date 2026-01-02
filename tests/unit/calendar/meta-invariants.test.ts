@@ -17,6 +17,9 @@ import {
   validateChecksumParams,
   type EventChecksumParams,
 } from '@/lib/calendar-sync/checksum';
+import { mergeIntervals } from '@/lib/calendar-sync/merge';
+import { subtractIntervals } from '@/lib/calendar-sync/subtract';
+import { computeIntervalSetChecksum } from '@/lib/calendar-sync/checksum';
 
 describe('Meta-Invariants: Immutability', () => {
   describe('normalizeBusyIntervalsToUTC', () => {
@@ -201,5 +204,35 @@ describe('Meta-Invariants: Stability', () => {
 
       expect(json1).toBe(json2);
     });
+  });
+});
+
+describe('Meta-Invariants: New Helpers', () => {
+  it('mergeIntervals does not mutate inputs', () => {
+    const intervals = [
+      { start: new Date('2026-01-20T10:00:00Z'), end: new Date('2026-01-20T11:00:00Z') },
+      { start: new Date('2026-01-20T11:00:00Z'), end: new Date('2026-01-20T12:00:00Z') },
+    ];
+    const original = intervals[0].start.getTime();
+    mergeIntervals(intervals);
+    expect(intervals[0].start.getTime()).toBe(original);
+  });
+
+  it('subtractIntervals does not mutate inputs', () => {
+    const base = { start: new Date('2026-01-20T09:00:00Z'), end: new Date('2026-01-20T17:00:00Z') };
+    const busy = [{ start: new Date('2026-01-20T12:00:00Z'), end: new Date('2026-01-20T13:00:00Z') }];
+    const before = base.start.getTime();
+    subtractIntervals(base, busy);
+    expect(base.start.getTime()).toBe(before);
+    expect(busy[0].start.getTime()).toBe(new Date('2026-01-20T12:00:00Z').getTime());
+  });
+
+  it('computeIntervalSetChecksum is stable and does not mutate inputs', () => {
+    const intervals = [{ start: new Date('2026-01-20T10:00:00Z'), end: new Date('2026-01-20T11:00:00Z') }];
+    const before = intervals[0].start.getTime();
+    const a = computeIntervalSetChecksum(intervals);
+    const b = computeIntervalSetChecksum(intervals);
+    expect(a).toBe(b);
+    expect(intervals[0].start.getTime()).toBe(before);
   });
 });

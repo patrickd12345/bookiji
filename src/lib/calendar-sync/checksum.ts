@@ -134,3 +134,24 @@ export function validateChecksumParams(
 
   return { valid: true };
 }
+
+import type { TimeInterval } from './normalize';
+
+/**
+ * Computes a deterministic checksum for a set of time intervals.
+ * - Inputs assumed normalized to UTC.
+ * - Order-independent: same intervals in different order => same checksum.
+ * - Returns SHA-256 hex string.
+ */
+export function computeIntervalSetChecksum(intervals: TimeInterval[]): string {
+  // Empty set -> stable hash
+  if (!Array.isArray(intervals) || intervals.length === 0) {
+    return createHash('sha256').update('empty', 'utf8').digest('hex');
+  }
+
+  const tuples: [number, number][] = intervals.map((i) => [i.start.getTime(), i.end.getTime()]);
+  tuples.sort((a, b) => (a[0] === b[0] ? a[1] - b[1] : a[0] - b[0]));
+
+  const payload = tuples.map(([s, e]) => `${s}-${e}`).join('|');
+  return createHash('sha256').update(payload, 'utf8').digest('hex');
+}

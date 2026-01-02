@@ -9,6 +9,7 @@ import { describe, it, expect } from 'vitest';
 import {
   computeExternalEventChecksum,
   validateChecksumParams,
+  computeIntervalSetChecksum,
   type EventChecksumParams,
 } from '@/lib/calendar-sync/checksum';
 
@@ -161,6 +162,48 @@ describe('Checksum Determinism', () => {
 
       expect(params.start.getTime()).toBe(originalStart);
     });
+  });
+});
+
+describe('computeIntervalSetChecksum', () => {
+  const intervals = [
+    { start: new Date('2026-01-20T10:00:00Z'), end: new Date('2026-01-20T11:00:00Z') },
+    { start: new Date('2026-01-20T12:00:00Z'), end: new Date('2026-01-20T13:00:00Z') },
+  ];
+
+  it('is order-independent', () => {
+    const a = computeIntervalSetChecksum(intervals);
+    const b = computeIntervalSetChecksum([intervals[1], intervals[0]]);
+    expect(a).toBe(b);
+  });
+
+  it('changes when a boundary changes', () => {
+    const base = computeIntervalSetChecksum(intervals);
+    const changed = computeIntervalSetChecksum([
+      { start: new Date('2026-01-20T10:01:00Z'), end: new Date('2026-01-20T11:00:00Z') },
+      intervals[1],
+    ]);
+    expect(base).not.toBe(changed);
+  });
+
+  it('returns stable hash for empty set', () => {
+    const a = computeIntervalSetChecksum([]);
+    const b = computeIntervalSetChecksum([]);
+    expect(a).toBe(b);
+  });
+
+  it('produces valid sha256 hex', () => {
+    const hash = computeIntervalSetChecksum(intervals);
+    expect(hash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it('does not mutate inputs', () => {
+    const src = [
+      { start: new Date('2026-01-20T10:00:00Z'), end: new Date('2026-01-20T11:00:00Z') },
+    ];
+    const before = src[0].start.getTime();
+    computeIntervalSetChecksum(src);
+    expect(src[0].start.getTime()).toBe(before);
   });
 });
 
