@@ -1,0 +1,320 @@
+{
+  "info": {
+    "name": "BOOKIJI Stress Test Collection",
+    "description": "Comprehensive stress test collection for BOOKIJI system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "bookiji-stress-tests"
+  },
+  "item": [
+    {
+      "name": "PART 1: API Contract Tests",
+      "item": [
+        {
+          "name": "1.1 Concurrent Reservations",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate unique partner_booking_ref",
+                  "pm.variables.set('partner_booking_ref', 'test-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9));",
+                  "",
+                  "// Set same slot for all requests",
+                  "const futureDate = new Date();",
+                  "futureDate.setHours(futureDate.getHours() + 2);",
+                  "pm.variables.set('slot_start', futureDate.toISOString());",
+                  "",
+                  "const endDate = new Date(futureDate);",
+                  "endDate.setHours(endDate.getHours() + 1);",
+                  "pm.variables.set('slot_end', endDate.toISOString());"
+                ]
+              }
+            },
+            "test": [
+              "pm.test('Status code is 201 or 409', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+              "});",
+              "",
+              "if (pm.response.code === 201) {",
+              "    pm.test('Reservation created successfully', function () {",
+              "        const jsonData = pm.response.json();",
+              "        pm.expect(jsonData).to.have.property('reservationId');",
+              "        pm.expect(jsonData).to.have.property('state');",
+              "        pm.expect(jsonData).to.have.property('expiresAt');",
+              "    });",
+              "} else if (pm.response.code === 409) {",
+              "    pm.test('Conflict error has correct structure', function () {",
+              "        const jsonData = pm.response.json();",
+              "        pm.expect(jsonData).to.have.property('error');",
+              "        pm.expect(jsonData.error).to.have.property('code');",
+              "        pm.expect(jsonData.error).to.have.property('retryable');",
+              "        pm.expect(jsonData.error.retryable).to.be.false;",
+              "    });",
+              "}"
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Partner-API-Key",
+                "value": "{{PARTNER_API_KEY}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorId\": \"{{VENDOR_ID}}\",\n  \"slotStartTime\": \"{{slot_start}}\",\n  \"slotEndTime\": \"{{slot_end}}\",\n  \"requesterId\": \"{{REQUESTER_ID}}\",\n  \"idempotencyKey\": \"{{partner_booking_ref}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/reservations",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "reservations"]
+            }
+          }
+        },
+        {
+          "name": "1.2 Idempotency Replay",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Use fixed idempotency key for replay test",
+                  "pm.variables.set('idempotency_key', 'idempotency-replay-test-' + Date.now());",
+                  "",
+                  "const futureDate = new Date();",
+                  "futureDate.setHours(futureDate.getHours() + 2);",
+                  "pm.variables.set('slot_start', futureDate.toISOString());",
+                  "",
+                  "const endDate = new Date(futureDate);",
+                  "endDate.setHours(endDate.getHours() + 1);",
+                  "pm.variables.set('slot_end', endDate.toISOString());"
+                ]
+              }
+            },
+            "test": [
+              "pm.test('Status code is 201', function () {",
+              "    pm.expect(pm.response.code).to.equal(201);",
+              "});",
+              "",
+              "pm.test('Reservation ID is present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('reservationId');",
+              "    ",
+              "    // Store reservation ID for second request",
+              "    pm.variables.set('first_reservation_id', jsonData.reservationId);",
+              "});"
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Partner-API-Key",
+                "value": "{{PARTNER_API_KEY}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorId\": \"{{VENDOR_ID}}\",\n  \"slotStartTime\": \"{{slot_start}}\",\n  \"slotEndTime\": \"{{slot_end}}\",\n  \"requesterId\": \"{{REQUESTER_ID}}\",\n  \"idempotencyKey\": \"{{idempotency_key}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/reservations",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "reservations"]
+            }
+          }
+        },
+        {
+          "name": "1.2b Idempotency Replay (Second Request)",
+          "event": [
+            "test": [
+              "pm.test('Status code is 201 or 200', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "pm.test('Same reservation ID returned', function () {",
+              "    const jsonData = pm.response.json();",
+              "    const firstId = pm.variables.get('first_reservation_id');",
+              "    pm.expect(jsonData.reservationId).to.equal(firstId);",
+              "});"
+            ]
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Partner-API-Key",
+                "value": "{{PARTNER_API_KEY}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorId\": \"{{VENDOR_ID}}\",\n  \"slotStartTime\": \"{{slot_start}}\",\n  \"slotEndTime\": \"{{slot_end}}\",\n  \"requesterId\": \"{{REQUESTER_ID}}\",\n  \"idempotencyKey\": \"{{idempotency_key}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/reservations",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "reservations"]
+            }
+          }
+        },
+        {
+          "name": "1.3 Stale Computed Version",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// First, get availability to fetch computedVersion",
+                  "const getAvailabilityRequest = {",
+                  "    url: pm.variables.get('BASE_URL') + '/api/v1/vendors/' + pm.variables.get('VENDOR_ID') + '/availability',",
+                  "    method: 'GET',",
+                  "    header: {",
+                  "        'X-Partner-API-Key': pm.variables.get('PARTNER_API_KEY')",
+                  "    }",
+                  "};",
+                  "",
+                  "pm.sendRequest(getAvailabilityRequest, function (err, response) {",
+                  "    if (!err && response.code === 200) {",
+                  "        const jsonData = response.json();",
+                  "        pm.variables.set('stale_computed_version', jsonData.computedVersion);",
+                  "    }",
+                  "});",
+                  "",
+                  "const futureDate = new Date();",
+                  "futureDate.setHours(futureDate.getHours() + 2);",
+                  "pm.variables.set('slot_start', futureDate.toISOString());",
+                  "",
+                  "const endDate = new Date(futureDate);",
+                  "endDate.setHours(endDate.getHours() + 1);",
+                  "pm.variables.set('slot_end', endDate.toISOString());"
+                ]
+              }
+            },
+            "test": [
+              "pm.test('Status code is 412', function () {",
+              "    pm.expect(pm.response.code).to.equal(412);",
+              "});",
+              "",
+              "pm.test('Error code is AVAILABILITY_CHANGED', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error.code).to.equal('AVAILABILITY_CHANGED');",
+              "});",
+              "",
+              "pm.test('Error is retryable', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.error.retryable).to.be.true;",
+              "});"
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Partner-API-Key",
+                "value": "{{PARTNER_API_KEY}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorId\": \"{{VENDOR_ID}}\",\n  \"slotStartTime\": \"{{slot_start}}\",\n  \"slotEndTime\": \"{{slot_end}}\",\n  \"requesterId\": \"{{REQUESTER_ID}}\",\n  \"computedVersion\": \"{{stale_computed_version}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/reservations",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "reservations"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PART 2: Utility Requests",
+      "item": [
+        {
+          "name": "Get Availability",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Partner-API-Key",
+                "value": "{{PARTNER_API_KEY}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/vendors/{{VENDOR_ID}}/availability?startTime={{startTime}}&endTime={{endTime}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "vendors", "{{VENDOR_ID}}", "availability"],
+              "query": [
+                {
+                  "key": "startTime",
+                  "value": "{{startTime}}"
+                },
+                {
+                  "key": "endTime",
+                  "value": "{{endTime}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Reservation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Partner-API-Key",
+                "value": "{{PARTNER_API_KEY}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/reservations/{{reservationId}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "reservations", "{{reservationId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "PARTNER_API_KEY",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "VENDOR_ID",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "REQUESTER_ID",
+      "value": "test-requester-1",
+      "type": "string"
+    }
+  ]
+}
