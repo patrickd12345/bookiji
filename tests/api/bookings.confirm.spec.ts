@@ -78,7 +78,8 @@ vi.mock('@/middleware/sloProbe', () => ({
 describe('POST /api/bookings/confirm - Layer 2: API E2E Tests (System Truth)', () => {
   beforeEach(() => {
     const mock = getSupabaseMock()
-    mock.from.mockReset()
+    // Keep the shared mock's default `from()` behavior intact.
+    // Individual tests override `from()` with a table-switch implementation.
     vi.clearAllMocks()
   })
 
@@ -91,90 +92,72 @@ describe('POST /api/bookings/confirm - Layer 2: API E2E Tests (System Truth)', (
     const providerId = 'provider_123'
     const idempotencyKey = 'idempotency_key_123'
 
-    // Mock quote lookup
-    mock.from.mockImplementationOnce((table: string) => {
+    // Use a table-based implementation to avoid call-order brittleness.
+    mock.from.mockImplementation((table: string) => {
+      if (table === 'bookings') {
+        return {
+          select: () => ({
+            eq: () => ({
+              single: () => Promise.resolve({ data: null, error: { code: 'PGRST116' } }),
+            }),
+          }),
+          insert: () => ({
+            select: () => ({
+              single: () =>
+                Promise.resolve({
+                  data: {
+                    id: 'booking_123',
+                    customer_id: 'user_123',
+                    provider_id: providerId,
+                    quote_id: quoteId,
+                    state: 'hold_placed',
+                    price_cents: 100,
+                    stripe_payment_intent_id: 'pi_valid',
+                    idempotency_key: idempotencyKey,
+                    hold_expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+                  },
+                  error: null,
+                }),
+            }),
+          }),
+        }
+      }
+
       if (table === 'quotes') {
         return {
           select: () => ({
             eq: () => ({
               gt: () => ({
-                single: () => Promise.resolve({
-                  data: {
-                    id: quoteId,
-                    user_id: 'user_123',
-                    price_cents: 100,
-                    start_time: futureDate.toISOString(),
-                    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-                    candidates: [{ id: providerId }]
-                  },
-                  error: null
-                })
-              })
-            })
-          })
+                single: () =>
+                  Promise.resolve({
+                    data: {
+                      id: quoteId,
+                      user_id: 'user_123',
+                      price_cents: 100,
+                      start_time: futureDate.toISOString(),
+                      expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+                      candidates: [{ id: providerId }],
+                    },
+                    error: null,
+                  }),
+              }),
+            }),
+          }),
         }
       }
-      return baseFrom(table)
-    })
 
-    // Mock idempotency check (no existing booking)
-    mock.from.mockImplementationOnce((table: string) => {
-      if (table === 'bookings') {
-        return {
-          select: () => ({
-            eq: () => ({
-              single: () => Promise.resolve({ data: null, error: { code: 'PGRST116' } })
-            })
-          })
-        }
-      }
-      return baseFrom(table)
-    })
-
-    // Mock booking creation
-    mock.from.mockImplementationOnce((table: string) => {
-      if (table === 'bookings') {
-        return {
-          insert: () => ({
-            select: () => ({
-              single: () => Promise.resolve({
-                data: {
-                  id: 'booking_123',
-                  customer_id: 'user_123',
-                  provider_id: providerId,
-                  quote_id: quoteId,
-                  state: 'hold_placed',
-                  price_cents: 100,
-                  stripe_payment_intent_id: 'pi_valid',
-                  idempotency_key: idempotencyKey,
-                  hold_expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-                },
-                error: null
-              })
-            })
-          })
-        }
-      }
-      return baseFrom(table)
-    })
-
-    // Mock payments outbox insert
-    mock.from.mockImplementationOnce((table: string) => {
       if (table === 'payments_outbox') {
         return {
-          insert: () => Promise.resolve({ error: null })
+          insert: () => Promise.resolve({ error: null }),
         }
       }
-      return baseFrom(table)
-    })
 
-    // Mock audit log insert
-    mock.from.mockImplementationOnce((table: string) => {
       if (table === 'booking_audit_log') {
         return {
-          insert: () => Promise.resolve({ error: null })
+          insert: () => Promise.resolve({ error: null }),
         }
       }
+
       return baseFrom(table)
     })
 
@@ -211,23 +194,21 @@ describe('POST /api/bookings/confirm - Layer 2: API E2E Tests (System Truth)', (
     
     const idempotencyKey = 'duplicate_key'
 
-    // Mock idempotency check (existing booking found)
-    mock.from.mockImplementationOnce((table: string) => {
+    mock.from.mockImplementation((table: string) => {
       if (table === 'bookings') {
         return {
           select: () => ({
             eq: () => ({
-              single: () => Promise.resolve({
-                data: {
-                  id: 'existing_booking_123',
-                  idempotency_key: idempotencyKey
-                },
-                error: null
-              })
-            })
-          })
+              single: () =>
+                Promise.resolve({
+                  data: { id: 'existing_booking_123', idempotency_key: idempotencyKey },
+                  error: null,
+                }),
+            }),
+          }),
         }
       }
+
       return baseFrom(table)
     })
 
@@ -261,36 +242,33 @@ describe('POST /api/bookings/confirm - Layer 2: API E2E Tests (System Truth)', (
     
     const quoteId = 'expired_quote'
 
-    // Mock idempotency check (no existing booking)
-    mock.from.mockImplementationOnce((table: string) => {
+    mock.from.mockImplementation((table: string) => {
       if (table === 'bookings') {
         return {
           select: () => ({
             eq: () => ({
-              single: () => Promise.resolve({ data: null, error: { code: 'PGRST116' } })
-            })
-          })
+              single: () => Promise.resolve({ data: null, error: { code: 'PGRST116' } }),
+            }),
+          }),
         }
       }
-      return baseFrom(table)
-    })
 
-    // Mock quote lookup (expired)
-    mock.from.mockImplementationOnce((table: string) => {
       if (table === 'quotes') {
         return {
           select: () => ({
             eq: () => ({
               gt: () => ({
-                single: () => Promise.resolve({
-                  data: null,
-                  error: { code: 'PGRST116', message: 'Not found' }
-                })
-              })
-            })
-          })
+                single: () =>
+                  Promise.resolve({
+                    data: null,
+                    error: { code: 'PGRST116', message: 'Not found' },
+                  }),
+              }),
+            }),
+          }),
         }
       }
+
       return baseFrom(table)
     })
 
@@ -346,43 +324,40 @@ describe('POST /api/bookings/confirm - Layer 2: API E2E Tests (System Truth)', (
     const pastDate = new Date(Date.now() - 60 * 60 * 1000) // 1 hour ago
     const quoteId = 'quote_past'
 
-    // Mock idempotency check
-    mock.from.mockImplementationOnce((table: string) => {
+    mock.from.mockImplementation((table: string) => {
       if (table === 'bookings') {
         return {
           select: () => ({
             eq: () => ({
-              single: () => Promise.resolve({ data: null, error: { code: 'PGRST116' } })
-            })
-          })
+              single: () => Promise.resolve({ data: null, error: { code: 'PGRST116' } }),
+            }),
+          }),
         }
       }
-      return baseFrom(table)
-    })
 
-    // Mock quote lookup (with past start_time)
-    mock.from.mockImplementationOnce((table: string) => {
       if (table === 'quotes') {
         return {
           select: () => ({
             eq: () => ({
               gt: () => ({
-                single: () => Promise.resolve({
-                  data: {
-                    id: quoteId,
-                    user_id: 'user_123',
-                    price_cents: 100,
-                    start_time: pastDate.toISOString(), // Past date
-                    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-                    candidates: [{ id: 'provider_123' }]
-                  },
-                  error: null
-                })
-              })
-            })
-          })
+                single: () =>
+                  Promise.resolve({
+                    data: {
+                      id: quoteId,
+                      user_id: 'user_123',
+                      price_cents: 100,
+                      start_time: pastDate.toISOString(), // Past date
+                      expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+                      candidates: [{ id: 'provider_123' }],
+                    },
+                    error: null,
+                  }),
+              }),
+            }),
+          }),
         }
       }
+
       return baseFrom(table)
     })
 

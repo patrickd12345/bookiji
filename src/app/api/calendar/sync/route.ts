@@ -1,6 +1,7 @@
 import { google } from 'googleapis'
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
+import { isCalendarSyncEnabled } from '@/lib/calendar-sync/flags'
 
 export async function POST(request: Request) {
   // IMPORTANT: Do not create Supabase clients at module load.
@@ -12,6 +13,14 @@ export async function POST(request: Request) {
 
   if (!profileId) {
     return NextResponse.json({ error: 'Missing profileId' }, { status: 400 })
+  }
+
+  // Check feature flag
+  if (!isCalendarSyncEnabled(profileId)) {
+    return NextResponse.json(
+      { error: 'Calendar sync is not enabled' },
+      { status: 403 }
+    )
   }
 
   try {

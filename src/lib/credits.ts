@@ -388,7 +388,7 @@ export class CreditsService implements CreditsCalculator {
     const isNegative = amount < 0;
     const absoluteValue = Math.abs(amount);
     const formatted = `$${absoluteValue.toFixed(2)}`;
-    return isNegative ? `-${formatted}` : formatted;
+    return isNegative ? `$-${absoluteValue.toFixed(2)}` : formatted;
   }
 
   public getTierIcon(tierName: string): string {
@@ -397,20 +397,20 @@ export class CreditsService implements CreditsCalculator {
       'Silver': '🥈',
       'Gold': '🥇',
       'Platinum': '💎',
-      'Diamond': '💠'
+      'Diamond': '⭐'
     };
     return tierIcons[tierName] || '⭐';
   }
 
   public getTierColor(tierName: string): string {
     const tierColors: Record<string, string> = {
-      'Bronze': 'bg-amber-100 text-amber-800 border-amber-200',
-      'Silver': 'bg-gray-100 text-gray-800 border-gray-200',
-      'Gold': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      'Platinum': 'bg-blue-100 text-blue-800 border-blue-200',
-      'Diamond': 'bg-purple-100 text-purple-800 border-purple-200'
+      'Bronze': 'text-amber-600',
+      'Silver': 'text-gray-400',
+      'Gold': 'text-yellow-500',
+      'Platinum': 'text-purple-500',
+      'Diamond': 'text-gray-600'
     };
-    return tierColors[tierName] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return tierColors[tierName] || 'text-gray-600';
   }
 }
 

@@ -38,12 +38,49 @@ This file contains an index of all markdown files in the repository, organized b
 - `VERCEL_AUDIT_SUMMARY.md`
 - `VSCODE_GITHUB_ACTIONS_SETTINGS.md`
 
+- `.deployment-test.md`
+- `ADD_SCHED_DOMAIN.md`
+- `AUTHENTICATION_ISSUE_EXPLAINED.md`
+- `CODE_COMPLETION_AUDIT.md`
+- `COMPREHENSIVE_TEST_ERRORS_TO_FIX.md`
+- `DEPLOYMENT_FIX_COMPLETE.md`
+- `DEPLOYMENT_FIX_SUMMARY.md`
+- `DOCKER_SUPABASE_RECOVERY_PLAN.md`
+- `DUMMY_DEPLOYMENT_TRIGGERED.md`
+- `E2E_TEST_REMEDIATION_REPORT.md`
+- `EMAIL_AND_REGISTRATION_FIX.md`
+- `EMAIL_VERIFICATION_ISSUE_INVESTIGATION.md`
+- `FINAL_DEPLOYMENT_STATUS.md`
+- `K6_INSTALLATION_AND_TEST_EXECUTION_REPORT.md`
+- `LOAD_TEST_SUMMARY_REPORT.md`
+- `PHASE1_AVAILABILITY_INTEGRITY_COMPLETE.md`
+- `PRE_COMMIT_OPTIMIZATION.md`
+- `PRODUCTION_LOG_INVESTIGATION_REPORT.md`
+- `PRODUCTION_SYNC_STATUS.md`
+- `PROJECT_STATUS_REPORT.md`
+- `PROJECT_STATUS_REPORT_VALIDATED.md`
+- `PR_F009_IMPLEMENTATION_SUMMARY.md`
+- `PR_F009_SLOT_CONFLICT_DETECTION.md`
+- `STAGING_SETUP_READY.md`
+- `STRESS_TEST_EXECUTION_REPORT.md`
+- `STRESS_TEST_IMPLEMENTATION_SUMMARY.md`
+- `STRESS_TEST_PLAN.md`
+- `STRESS_TEST_UNBLOCK_SUMMARY.md`
+- `TESTING_STRATEGY_IMPLEMENTATION.md`
+- `TEST_ERRORS_REPORT.md`
+- `TEST_INVENTORY_REPORT.md`
+- `VERCEL_DEPLOYMENT_ANALYSIS.md`
+- `WORKFLOW_FAILURE_ANALYSIS.md`
+- `production-site-run-log.md`
 ---
 
 ## Configuration & Setup
 
 ### .cursor/
 - `.cursor/startup-context.md`
+
+### .github/
+- `.github/pull_request_template.md`
 
 ---
 
@@ -54,16 +91,97 @@ This file contains an index of all markdown files in the repository, organized b
 
 ---
 
+## Certification
+
+### certification/
+- `certification/scheduling-certification-v1.md`
+
+---
+
 ## Chaos Engineering
 
+- `chaos/REFACTOR_PLAN.md`
+- `chaos/SIMCITY_V1_FROZEN.md`
 ### chaos/
 - `chaos/OPERATIONAL_STATUS.md`
 - `chaos/TIER_A_RESULTS.md`
 
+- `chaos/e2e/README.md`
+
+
+
+
+
+- `chaos/sessions/CHAOS_SESSION_FINDINGS.md`
+- `chaos/sessions/CHAOS_SESSION_OBSERVATIONS.md`
+- `chaos/sessions/CHAOS_SESSION_REPORT.md`
+- `chaos/sessions/CHAOS_SESSION_REPORT_1766854687327.md`
+- `chaos/sessions/FIXED.md`
+- `chaos/sessions/README.md`
+- `chaos/sessions/SESSION_OUTPUT_REQUIREMENTS.md`
+- `chaos/sessions/SIMCITY_SESSIONS_README.md`
+- `chaos/sessions/STAGING_AUTH_IMPLEMENTATION_SUMMARY.md`
+- `chaos/sessions/STAGING_AUTH_SETUP.md`
+- `chaos/sessions/STAGING_SETUP_INSTRUCTIONS.md`
+- `chaos/sessions/VERCEL_PREVIEW_FIX_SUMMARY.md`
+- `chaos/sessions/consolidated-findings-1766856611448.md`
+- `chaos/sessions/consolidated-findings-1766864897666.md`
+- `chaos/sessions/consolidated-findings-1766867315155.md`
+- `chaos/sessions/session1-1766856033360-report.md`
+- `chaos/sessions/session1-1766864321403-report.md`
+- `chaos/sessions/session1-1766866741541-report.md`
+- `chaos/sessions/session1-1766867294697-report.md`
+- `chaos/sessions/session2-1766856179858-report.md`
+- `chaos/sessions/session2-1766864466947-report.md`
+- `chaos/sessions/session2-1766866884676-report.md`
+- `chaos/sessions/session2-1766867437560-report.md`
+- `chaos/sessions/session3-1766856370569-report.md`
+- `chaos/sessions/session3-1766864657215-report.md`
+- `chaos/sessions/session3-1766867074806-report.md`
+- `chaos/sessions/session3-1766867627695-report.md`
+### chaos/scenarios/support_rag/
+
+- `chaos/scenarios/support_rag/README.md`
+### chaos/scenarios/reschedule_atomicity/
+
+- `chaos/scenarios/reschedule_atomicity/README.md`
+### chaos/scenarios/marketplace_bootstrap/
+
+- `chaos/scenarios/marketplace_bootstrap/README.md`
+### chaos/scenarios/double_booking_attack/
+
+- `chaos/scenarios/double_booking_attack/README.md`
+### chaos/kernel/transports/
+
+- `chaos/kernel/transports/README.md`
 ---
 
 ## Documentation
 
+- `docs/AUTOMATED_TRACKING_SYSTEM.md`
+- `docs/CONCURRENT_WORKFLOWS.md`
+- `docs/EXECUTIVE_DASHBOARD_OPTION_A.md`
+- `docs/JIRA_IMPORT_INSTRUCTIONS.md`
+- `docs/JIRA_SCRIPT_USAGE.md`
+- `docs/PROJECT_TRACKING_SYSTEM.md`
+- `docs/START_HERE.md`
+- `docs/USABILITY_FIXES_AND_MODERN_HOMEPAGE.md`
+- `docs/VENDOR_SCHEDULING_MVP_TEST_STATUS.md`
+- `docs/VENDOR_SCHEDULING_MVP_VISUAL.md`
+- `docs/VENDOR_SCHEDULING_MVP_WBS_GANTT.md`
+- `docs/go-to-market-implementation.md`
+- `docs/index.md`
+- `docs/simcity-llm-events.md`
+- `docs/supabase-auth-error-escalation.md`
+- `docs/timing-proof-instructions.md`
+
+
+### docs/bookiji-kb/
+
+- `docs/bookiji-kb/knowledge-base.md`
+### docs/backend/
+
+- `docs/backend/SERVER_ROUTE_AUTH_INVARIANT.md`
 ### docs/
 
 #### Marketing
@@ -80,18 +198,36 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/api/PROVIDER_RESPONSE_BEST_PRACTICES.md`
 - `docs/api/README.md`
 
+- `docs/api/search-providers-performance.md`
 #### Architecture
 - `docs/architecture/database-policy.md` - Database Management Policy (DBMP) - comprehensive database policy and table classification rules
 - `docs/architecture/ENVIRONMENT_MODEL.md` - Environment isolation model and operational invariants
 
+- `docs/architecture/CORE_INFRASTRUCTURE_DESIGN.md`
+- `docs/architecture/CORE_INFRASTRUCTURE_IMPLEMENTATION_SUMMARY.md`
+- `docs/architecture/FAILURE_COMPENSATION_MATRIX.md`
+
+#### Debugging
+- `docs/debugging/UND_ERR_HEADERS_TIMEOUT_FIX.md`
+- `docs/debugging/backend-contract-boundaries.md`
+- `docs/debugging/csp-localhost-failure.md`
+- `docs/debugging/e2e-philosophy.md`
+- `docs/debugging/env-shadowing-and-nextjs.md`
+- `docs/debugging/playwright-vs-simcity.md`
+- `docs/debugging/supabase-local-infra-failures.md`
+- `docs/debugging/ui-determinism-in-e2e.md`
+- `docs/debugging/when-to-stop-debugging.md`
+
+#### Design
+- `docs/design/F015_3_OUTBOUND_SYNC.md`
+- `docs/design/F015_REALITY_CHECK.md`
+- `docs/design/RECONCILIATION.md`
+- `docs/design/availability-conflict-resolution.md`
+- `docs/design/calendar-sync-architecture.md`
+- `docs/design/credits-reconciliation.md`
+
 #### Bookiji Knowledge Base
-- `docs/bookiji-kb/ai-features.md`
-- `docs/bookiji-kb/connexion-stripe.md`
-- `docs/bookiji-kb/getting-started.md`
 - `docs/bookiji-kb/README.md`
-- `docs/bookiji-kb/SETUP.md`
-- `docs/bookiji-kb/troubleshooting/payment-issues.md`
-- `docs/bookiji-kb/vendor/onboarding.md`
 
 #### CI/CD
 - `docs/ci-cd/GITHUB_ACTIONS_SETUP.md`
@@ -115,6 +251,15 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/deployment/SUPABASE_MIGRATION_GUIDE.md`
 - `docs/deployment/SUPABASE_SETUP.md`
 
+- `docs/deployment/ADD_SCHED_SUBDOMAIN.md`
+- `docs/deployment/PERFORMANCE_OPTIMIZATION_DEPLOYMENT_COMPLETE.md`
+- `docs/deployment/SCHED_SUBDOMAIN_CHECKLIST.md`
+- `docs/deployment/SCHED_SUBDOMAIN_DEBUG.md`
+- `docs/deployment/SCHED_SUBDOMAIN_FULL_CHECK.md`
+- `docs/deployment/SCHED_SUBDOMAIN_TROUBLESHOOTING.md`
+- `docs/deployment/VENDOR_BOOKING_SYSTEM_DEPLOYMENT_COMPLETE.md`
+- `docs/deployment/VERCEL_PREVIEW_AUTH_SETUP.md`
+- `docs/deployment/VERCEL_PREVIEW_PROTECTION_FIX.md`
 #### Invariants
 - `docs/invariants.md` - Enforceable invariant checklist
 - `docs/invariants/bookings-lifecycle.md` - Booking lifecycle invariants
@@ -129,6 +274,7 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/invariants/backfills-reconciliation.md` - Backfill and reconciliation invariants
 - `docs/invariants/PROCESS_INVARIANT_ENFORCEMENT_SUMMARY.md` - PIE implementation summary
 
+- `docs/invariants/SIMCITY_MAPPING.md`
 #### Development
 - `docs/development/ADVERSARIAL_CERTIFICATION.md`
 - `docs/development/SUPABASE_CLI_AUTH.md` - Supabase CLI authentication guide
@@ -150,8 +296,6 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/DISPUTE_NO_SHOW_SYSTEM.md`
 - `docs/development/DYNAMIC_BROADCASTING_IMPLEMENTATION_SUMMARY.md`
 - `docs/development/FIX_ME.md`
-- `docs/development/GENOME_LINTER_GUIDE.md`
-- `docs/development/GENOME_LINTER_NEXT_STEPS_PLAN.md`
 - `docs/development/GLOBAL_FAIRNESS_SYSTEM.md`
 - `docs/development/INVARIANT_COVERAGE_MATRIX.md`
 - `docs/development/KB_API_UPGRADE_GUIDE.md`
@@ -179,8 +323,6 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/SUPPORT_RAG_SIMCITY_SETUP.md` - Support RAG SimCity environment setup
 - `docs/development/TEAM_COORDINATION.md`
 - `docs/development/TESTING_GUIDE.md`
-- `docs/development/TEST_PLAN.md`
-- `docs/development/TEST_RESULTS_DASHBOARD.md`
 - `docs/development/TRANSLATE_UNTRANSLATED.md`
 - `docs/development/TRANSLATION_COMPLETE.md`
 - `docs/development/TRANSLATION_GUIDE.md`
@@ -188,6 +330,8 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/development/TYPE_SAFETY_STRIKE.md` - Type safety strike plan for critical paths
 - `docs/development/WIREFRAMES.md`
 
+- `docs/development/ENV_LOCAL_PROTECTION.md`
+- `docs/development/VENDOR_BOOKING_SYSTEM_PLAN.md`
 #### Jarvis
 - `docs/development/JARVIS_DEPLOYMENT_CHECKLIST.md` - Jarvis deployment checklist and verification steps
 - `docs/development/JARVIS_INCIDENT_COMMANDER.md` - Jarvis incident commander system (3AM mode)
@@ -239,6 +383,19 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/ops/LOGSAI.md`
 - `docs/ops/PHASE14_BASELINE.md`
 
+- `docs/ops/CALENDAR_MIGRATION_CEREMONY.md`
+
+#### OpsAI
+- `docs/opsai/README.md`
+
+#### Requirements
+- `docs/requirements/calendar-sync-2way.md`
+- `docs/requirements/loyalty-reconciliation.md`
+- `docs/requirements/vendor-availability-hardening.md`
+
+#### Runbooks
+- `docs/runbooks/calendar-sync-operations.md`
+
 #### Support Module
 - `docs/support-module/ARCHITECTURE.md`
 - `docs/support-module/FINALIZATION_SUMMARY.md`
@@ -254,6 +411,12 @@ This file contains an index of all markdown files in the repository, organized b
 #### Testing
 - `docs/testing/SELECTOR_MAP.md`
 
+- `docs/testing/CLOUD_E2E_SETUP.md`
+- `docs/testing/E2E_CLOUD_REALITY.md`
+- `docs/testing/E2E_ENV_FIX.md`
+- `docs/testing/E2E_QUICK_START.md`
+- `docs/testing/E2E_TEST_REMEDIATION_REPORT.md`
+- `docs/testing/PRODUCTION_READINESS_PROOF.md`
 #### User Guides
 - `docs/user-guides/ADSENSE_APPROVAL_SETUP.md`
 - `docs/user-guides/ADSENSE_COMPLIANCE_AUDIT.md`
@@ -281,8 +444,8 @@ This file contains an index of all markdown files in the repository, organized b
 - `docs/user-guides/SUGGESTED_TERMS_COPY.md`
 - `docs/user-guides/VENDOR_FEE_SYSTEM.md`
 
+- `docs/user-guides/ADSENSE_VERIFICATION_REPORT.md`
 #### Other Documentation
-- `docs/BOOKIJI_CONTINUITY_KERNEL.md`
 - `docs/BUG_REPORT_VERIFICATION.md`
 - `docs/BUGS_TO_FIX.md`
 - `docs/CHANGELOG.md`
@@ -329,6 +492,10 @@ This file contains an index of all markdown files in the repository, organized b
 
 ## Packages
 
+
+### packages/opsai-voice/
+
+- `packages/opsai-voice/README.md`
 ### packages/
 - `packages/opsai-helpdesk/README.md`
 - `packages/opsai-l7/README.md`
@@ -345,6 +512,10 @@ This file contains an index of all markdown files in the repository, organized b
 
 ## Scripts
 
+- `scripts/README.md`
+- `scripts/check-production-env.md`
+- `scripts/sync-vercel-env.md`
+- `scripts/vercel-env-checklist.md`
 ### scripts/
 - `scripts/recovery/README.md`
 - `scripts/recovery/report.template.md`
@@ -356,6 +527,9 @@ This file contains an index of all markdown files in the repository, organized b
 ### src/
 - `src/components/README.md`
 
+### src/lib/core-infrastructure/
+- `src/lib/core-infrastructure/README.md`
+
 ---
 
 ## Supabase
@@ -365,11 +539,31 @@ This file contains an index of all markdown files in the repository, organized b
 
 ---
 
+## Stress Tests
+
+### stress-tests/
+- `stress-tests/README.md`
+
+### stress-test-results/
+- `stress-test-results-20260101-131606/STRESS_TEST_REPORT.md`
+- `stress-test-results-20260101-133214/STRESS_TEST_REPORT.md`
+
+---
+
 ## Tests
 
+
+### tests/plan/
+
+- `tests/plan/calendar-loyalty-integration.md`
+- `tests/plan/vendor-availability-hardening.md`
 ### tests/
 - `tests/Pre-Phase14-Legal-Baseline.md`
 - `tests/README.md`
+
+### tests/unit/calendar/
+- `tests/unit/calendar/README.md`
+- `tests/unit/calendar/missing-helpers.md`
 
 ---
 

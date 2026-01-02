@@ -127,7 +127,11 @@ vi.mock('stripe', () => ({
       create: vi.fn(async () => ({
         id: 'pi_mock',
         client_secret: 'cs_mock'
-      }))
+      })),
+      retrieve: vi.fn(async () => ({
+        id: 'pi_existing',
+        client_secret: 'cs_existing'
+      })),
     }
   }))
 }))
@@ -233,18 +237,20 @@ describe('POST /api/bookings/create', () => {
     const mock = getSupabaseMock()
     const baseFrom = mock.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
 
-    // Mock idempotency check - return existing booking
-    mock.from.mockImplementationOnce((table: string) => {
+    // Mock idempotency check - return existing booking.
+    // Use a table-based implementation to avoid being consumed by earlier profile lookups.
+    mock.from.mockImplementation((table: string) => {
       if (table === 'bookings') {
         return {
           select: () => ({
             eq: () => ({
-              maybeSingle: () => Promise.resolve({
-                data: existingBooking,
-                error: null
-              })
-            })
-          })
+              maybeSingle: () =>
+                Promise.resolve({
+                  data: existingBooking,
+                  error: null,
+                }),
+            }),
+          }),
         }
       }
       return baseFrom(table)

@@ -181,12 +181,11 @@ export function createAgent(kind: 'customer' | 'vendor', persona: AgentPersona):
 }
 
 export function generatePersona(kind: 'customer' | 'vendor', id: number): AgentPersona {
-  const baseEmail = kind === 'customer' ? 'customer' : 'vendor';
-  
   return {
     chatty: Math.random() < 0.3,
     patient: Math.random() < 0.7,
     strict: Math.random() < 0.4,
-    email: `${baseEmail}${id}@simcity.test`
+    // Deterministic, clearly synthetic address (safe for non-prod).
+    email: `synthetic+${kind}-${id}@example.com`
   };
 }

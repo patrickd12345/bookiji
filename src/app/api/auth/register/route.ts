@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { limitRequest } from '@/middleware/requestLimiter'
 import { getSupabaseServiceKey, getSupabaseUrl } from '@/lib/env/supabaseEnv'
+import { referralService } from '@/lib/referrals'
 
 export async function POST(request: Request) {
   try {
@@ -108,6 +109,36 @@ export async function POST(request: Request) {
     if (!data.user) {
       console.error('User creation returned no user data')
       return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
+    }
+
+    // Create or update profile row (idempotent).
+    // This keeps registration consistent across environments that rely on profiles.
+    try {
+      const { error: profileUpsertError } = await supabaseAdmin
+        .from('profiles')
+        .upsert(
+          {
+            id: data.user.id,
+            email: data.user.email ?? email.trim().toLowerCase(),
+            full_name: full_name || '',
+            role,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        )
+
+      if (profileUpsertError) throw profileUpsertError
+    } catch (profileError) {
+      console.error('Profile upsert failed during registration:', profileError)
+      // Do not fail registration; user is created in auth already.
+    }
+
+    // Apply referral crediting (no-op if no matching referral exists).
+    try {
+      await referralService.completeReferral(email.trim().toLowerCase(), data.user.id, role)
+    } catch (referralError) {
+      console.error('Referral completion failed during registration:', referralError)
+      // Do not fail registration; treat referral as best-effort.
     }
 
     return NextResponse.json({

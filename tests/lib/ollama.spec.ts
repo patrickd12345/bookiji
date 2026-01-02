@@ -22,9 +22,9 @@ describe('OllamaService', () => {
   describe('Configuration', () => {
     it('allows timeout configuration updates', () => {
       const originalTimeout = ollamaService.getTimeout()
-      ollamaService.setTimeout(30000)
+      ollamaService.setTimeout(25000)
       
-      expect(ollamaService.getTimeout()).toBe(30000)
+      expect(ollamaService.getTimeout()).toBe(25000)
       expect(ollamaService.getTimeout()).not.toBe(originalTimeout)
     })
 

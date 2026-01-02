@@ -34,6 +34,12 @@ export interface FeatureFlags {
     quote_endpoint_target_p99_ms: number
     confirm_endpoint_target_p99_ms: number
   }
+  calendar: {
+    sync_enabled: boolean
+    oauth_enabled: boolean
+    jobs_enabled: boolean
+    webhook_enabled: boolean
+  }
 }
 
 // Pilot configuration - only enable for pilot organizations
@@ -82,6 +88,12 @@ export const getFeatureFlags = (orgId?: string): FeatureFlags => {
       confirm_endpoint_target_p95_ms: 0, // Default value, will be overridden by development overrides
       quote_endpoint_target_p99_ms: 0, // Default value, will be overridden by development overrides
       confirm_endpoint_target_p99_ms: 0 // Default value, will be overridden by development overrides
+    },
+    calendar: {
+      sync_enabled: false,
+      oauth_enabled: false,
+      jobs_enabled: false,
+      webhook_enabled: false
     }
   }
 }
@@ -124,6 +136,12 @@ export const getDevelopmentFlags = (): FeatureFlags => {
         confirm_endpoint_target_p95_ms: 0, // Override default for development
         quote_endpoint_target_p99_ms: 0, // Override default for development
         confirm_endpoint_target_p99_ms: 0 // Override default for development
+      },
+      calendar: {
+        sync_enabled: false,
+        oauth_enabled: false,
+        jobs_enabled: false,
+        webhook_enabled: false
       }
     }
   }
@@ -163,6 +181,12 @@ export const getDevelopmentFlags = (): FeatureFlags => {
       confirm_endpoint_target_p95_ms: 0, // Override default for development
       quote_endpoint_target_p99_ms: 0, // Override default for development
       confirm_endpoint_target_p99_ms: 0 // Override default for development
+    },
+    calendar: {
+      sync_enabled: false,
+      oauth_enabled: false,
+      jobs_enabled: false,
+      webhook_enabled: false
     }
   }
 }

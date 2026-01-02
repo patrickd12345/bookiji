@@ -10,10 +10,14 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { getServerSupabase } from '@/lib/supabaseServer';
 import { AtomicSlotOperations } from '@/lib/availability/atomicSlotOperations';
 
-// This test requires a real database connection
-// Run with: pnpm vitest run tests/api/vendor/availability-concurrency.spec.ts
+// This test requires a real database connection.
+// It is intentionally skipped in the default unit-test run (mocked Supabase).
+// Run with: FORCE_LOCAL_DB=true pnpm vitest run tests/api/vendor/availability-concurrency.spec.ts
 
-describe('Slot Conflict Detection - Concurrency Tests', () => {
+const shouldRun = process.env.FORCE_LOCAL_DB === 'true';
+const describeIf = shouldRun ? describe : describe.skip;
+
+describeIf('Slot Conflict Detection - Concurrency Tests', () => {
   const testProviderId = 'test-provider-concurrency';
   const testServiceId = 'test-service-concurrency';
 

@@ -10,10 +10,14 @@ export default defineConfig({
     setupFiles: ["./tests/setup.ts"],
     testTimeout: 10000, // 10 second timeout for tests
     maxWorkers: 1, // Limit concurrent workers to reduce memory usage
-    pool: "forks", // Use fork pool for better memory management
+    // Use VM-isolated forks so workers can be recycled by memory limit.
+    // This prevents long-run heap growth and OOM on large jsdom-heavy suites.
+    pool: "vmForks",
     poolOptions: {
-      forks: {
-        singleFork: true, // Use single fork for memory-intensive tests
+      vmForks: {
+        // Recycle the worker when it exceeds this threshold.
+        // Accepts values like "512MB", "1GB", or percentages like "50%".
+        memoryLimit: "1024MB",
       },
     },
     coverage: {
@@ -27,7 +31,7 @@ export default defineConfig({
       "src/**/*.{test,spec}.{ts,tsx}",
       "tests/components/**/*.test.{ts,tsx}",
       "tests/unit/**/*.{test,spec}.{ts,tsx}",
-      "tests/lib/**/*.spec.ts",
+      "tests/lib/**/*.{spec,test}.{ts,tsx}",
       "tests/api/**/*.spec.ts",
       "tests/contracts/**/*.{spec,test}.{ts,tsx}",
       "tests/governance/**/*.{spec,test}.{ts,tsx}",

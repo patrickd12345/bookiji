@@ -73,7 +73,7 @@ describe('CreditsRedemption', () => {
       expect(screen.getByText('Credits Available: 50.00')).toBeInTheDocument();
     });
 
-    const maxButton = screen.getByText('Use Max');
+    const maxButton = screen.getByText('Max');
     fireEvent.click(maxButton);
 
     // Max should be 25% of total cost (25) or credits balance (50), whichever is lower
@@ -100,7 +100,7 @@ describe('CreditsRedemption', () => {
     const input = screen.getByDisplayValue('0.00');
     fireEvent.change(input, { target: { value: '20' } });
 
-    const applyButton = screen.getByText('Apply Credits');
+    const applyButton = screen.getByText('Apply $20.00 Credits');
     fireEvent.click(applyButton);
 
     await waitFor(() => {

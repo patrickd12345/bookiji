@@ -24,10 +24,9 @@ describe('POST /api/auth/register with referral', () => {
   beforeEach(() => {
     const supabase = getSupabaseMock()
     const baseFrom = supabase.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
-    supabase.auth.signUp.mockResolvedValue({
+    supabase.auth.admin.createUser.mockResolvedValue({
       data: {
         user: { id: 'new-user', email: 'new@example.com' },
-        session: { access_token: 'token' }
       },
       error: null
     } as any)
@@ -55,7 +54,7 @@ describe('POST /api/auth/register with referral', () => {
   it('credits referrer when referral email matches', async () => {
     const body = {
       email: 'new@example.com',
-      password: 'pass123',
+      password: 'pass12345',
       full_name: 'New User',
       role: 'customer'
     }

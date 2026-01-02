@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import { GET } from '@/app/api/vendor/analytics/route'
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
 // Mock Supabase SSR and config
 vi.mock('@supabase/ssr', () => ({
@@ -14,6 +15,10 @@ vi.mock('@/config/supabase', () => ({
   }))
 }))
 
+vi.mock('@/lib/supabaseServerClient', () => ({
+  createSupabaseServerClient: vi.fn(() => getSupabaseMock())
+}))
+
 vi.mock('next/headers', () => ({
   cookies: vi.fn(() => ({
     getAll: vi.fn(() => []),
@@ -24,39 +29,41 @@ vi.mock('next/headers', () => ({
 const TEST_BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
 
 describe('GET /api/vendor/analytics', () => {
-  let mockSupabase: any
   let mockCreateServerClient: any
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    
-    // Create mock Supabase client
-    mockSupabase = {
-      auth: {
-        getSession: vi.fn(),
-        getUser: vi.fn()
-      },
-      from: vi.fn()
-    }
 
     // Mock createServerClient to return our mock
     const { createServerClient } = await import('@supabase/ssr')
     mockCreateServerClient = createServerClient as any
-    mockCreateServerClient.mockReturnValue(mockSupabase)
+    mockCreateServerClient.mockReturnValue(getSupabaseMock())
   })
 
   it('returns analytics for authenticated vendor', async () => {
     const vendorId = 'vendor-123'
     const userId = 'auth-user-123'
+    const supabase = getSupabaseMock()
+    const baseFrom = supabase.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
+
+    const createCountChain = (count: number) => {
+      const chain: any = {}
+      chain.select = vi.fn(() => chain)
+      chain.eq = vi.fn(() => chain)
+      chain.gt = vi.fn(() => chain)
+      chain.then = (resolve: any, reject?: any) =>
+        Promise.resolve({ count, error: null }).then(resolve, reject)
+      return chain
+    }
 
     // Mock authentication
-    mockSupabase.auth.getUser.mockResolvedValue({
+    supabase.auth.getUser.mockResolvedValue({
       data: { user: { id: userId } },
       error: null
     })
 
     // Mock profile lookup
-    mockSupabase.from.mockImplementation((table: string) => {
+    supabase.from.mockImplementation((table: string) => {
       if (table === 'profiles') {
         return {
           select: vi.fn(() => ({
@@ -71,18 +78,7 @@ describe('GET /api/vendor/analytics', () => {
       }
 
       if (table === 'bookings') {
-        const bookingsChain = {
-          select: vi.fn(() => bookingsChain),
-          eq: vi.fn(() => bookingsChain),
-          gt: vi.fn(() => bookingsChain),
-          then: vi.fn(async (resolve: any) => {
-            return resolve({ count: 10, error: null })
-          })
-        }
-        bookingsChain.select.mockReturnValue(bookingsChain)
-        bookingsChain.eq.mockReturnValue(bookingsChain)
-        bookingsChain.gt.mockReturnValue(bookingsChain)
-        return bookingsChain
+        return createCountChain(10)
       }
 
       if (table === 'reviews') {
@@ -96,7 +92,7 @@ describe('GET /api/vendor/analytics', () => {
         }
       }
 
-      return {}
+      return baseFrom(table)
     })
 
     const req = new NextRequest(
@@ -121,7 +117,8 @@ describe('GET /api/vendor/analytics', () => {
   })
 
   it('returns 401 when not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
+    const supabase = getSupabaseMock()
+    supabase.auth.getUser.mockResolvedValue({
       data: { user: null },
       error: { message: 'Invalid token' }
     })
@@ -144,13 +141,15 @@ describe('GET /api/vendor/analytics', () => {
 
   it('returns 403 when user is not a vendor', async () => {
     const userId = 'auth-user-123'
+    const supabase = getSupabaseMock()
+    const baseFrom = supabase.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
 
-    mockSupabase.auth.getUser.mockResolvedValue({
+    supabase.auth.getUser.mockResolvedValue({
       data: { user: { id: userId } },
       error: null
     })
 
-    mockSupabase.from.mockImplementation((table: string) => {
+    supabase.from.mockImplementation((table: string) => {
       if (table === 'profiles') {
         return {
           select: vi.fn(() => ({
@@ -163,7 +162,7 @@ describe('GET /api/vendor/analytics', () => {
           }))
         }
       }
-      return {}
+      return baseFrom(table)
     })
 
     const req = new NextRequest(
@@ -185,8 +184,20 @@ describe('GET /api/vendor/analytics', () => {
   it('uses aggregated queries (no N+1)', async () => {
     const vendorId = 'vendor-123'
     const userId = 'auth-user-123'
+    const supabase = getSupabaseMock()
+    const baseFrom = supabase.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
 
-    mockSupabase.auth.getUser.mockResolvedValue({
+    const createCountChain = (count: number) => {
+      const chain: any = {}
+      chain.select = vi.fn(() => chain)
+      chain.eq = vi.fn(() => chain)
+      chain.gt = vi.fn(() => chain)
+      chain.then = (resolve: any, reject?: any) =>
+        Promise.resolve({ count, error: null }).then(resolve, reject)
+      return chain
+    }
+
+    supabase.auth.getUser.mockResolvedValue({
       data: { user: { id: userId } },
       error: null
     })
@@ -194,7 +205,7 @@ describe('GET /api/vendor/analytics', () => {
     let bookingsFromCalls = 0
     let reviewsFromCalls = 0
 
-    mockSupabase.from.mockImplementation((table: string) => {
+    supabase.from.mockImplementation((table: string) => {
       if (table === 'profiles') {
         return {
           select: vi.fn(() => ({
@@ -210,18 +221,7 @@ describe('GET /api/vendor/analytics', () => {
 
       if (table === 'bookings') {
         bookingsFromCalls++
-        const bookingsChain = {
-          select: vi.fn(() => bookingsChain),
-          eq: vi.fn(() => bookingsChain),
-          gt: vi.fn(() => bookingsChain),
-          then: vi.fn(async (resolve: any) => {
-            return resolve({ count: 5, error: null })
-          })
-        }
-        bookingsChain.select.mockReturnValue(bookingsChain)
-        bookingsChain.eq.mockReturnValue(bookingsChain)
-        bookingsChain.gt.mockReturnValue(bookingsChain)
-        return bookingsChain
+        return createCountChain(5)
       }
 
       if (table === 'reviews') {
@@ -236,7 +236,7 @@ describe('GET /api/vendor/analytics', () => {
         }
       }
 
-      return {}
+      return baseFrom(table)
     })
 
     const req = new NextRequest(

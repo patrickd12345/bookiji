@@ -32,6 +32,7 @@ process.env.DEPLOY_ENV = 'test'
 // Supabase Test Project (create a dedicated test project)
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://your-test-project.supabase.co'
 process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'your-test-project-publishable-key'
+process.env.SUPABASE_SECRET_KEY = 'your-test-project-secret-key'
 
 // Stripe Test Mode (using test API keys)
 process.env.STRIPE_PUBLISHABLE_KEY = 'pk_test_your_key'
@@ -216,14 +217,20 @@ vi.mock('@/stores/uiStore', () => ({
 }))
 
 // Mock additional component dependencies
-vi.mock('@/lib/ollama', () => ({
-  ollamaService: {
-    generate: vi.fn(() => Promise.resolve('Mock AI response'))
-  },
-  BOOKIJI_PROMPTS: {
-    bookingQuery: vi.fn(() => 'Mock prompt')
+// Important: keep real exports (e.g., OllamaService) available for unit tests.
+vi.mock('@/lib/ollama', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ollama')>()
+  return {
+    ...actual,
+    ollamaService: {
+      generate: vi.fn(() => Promise.resolve('Mock AI response')),
+    },
+    BOOKIJI_PROMPTS: {
+      ...actual.BOOKIJI_PROMPTS,
+      bookingQuery: vi.fn(() => 'Mock prompt'),
+    },
   }
-}))
+})
 
 vi.mock('@/lib/stripe', () => ({
   getStripeSecretKey: vi.fn(() => 'sk_test_mock'),

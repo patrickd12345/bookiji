@@ -7,7 +7,7 @@
 -- 3. Indexes for performance
 -- 4. Database function for atomic slot creation with conflict detection
 
-BEGIN;
+-- Note: Supabase migrations handle transactions automatically, no BEGIN/COMMIT needed
 
 -- 1. Ensure btree_gist extension is enabled (already enabled for bookings, but ensure it's here)
 CREATE EXTENSION IF NOT EXISTS btree_gist;
@@ -27,7 +27,7 @@ ALTER TABLE availability_slots
 ADD CONSTRAINT availability_slots_no_overlap
 EXCLUDE USING gist (
   provider_id WITH =,
-  tsrange(start_time, end_time) WITH &&
+  tstzrange(start_time, end_time) WITH &&
 )
 WHERE (is_available = true);
 
@@ -66,7 +66,7 @@ BEGIN
   )) INTO v_conflicts
   FROM availability_slots
   WHERE provider_id = p_provider_id
-    AND tsrange(start_time, end_time) && tsrange(p_start_time, p_end_time)
+    AND tstzrange(start_time, end_time) && tstzrange(p_start_time, p_end_time)
     AND is_available = true;
   
   -- If conflicts exist, return them
@@ -101,7 +101,7 @@ EXCEPTION
     )) INTO v_conflicts
     FROM availability_slots
     WHERE provider_id = p_provider_id
-      AND tsrange(start_time, end_time) && tsrange(p_start_time, p_end_time)
+      AND tstzrange(start_time, end_time) && tstzrange(p_start_time, p_end_time)
       AND is_available = true;
     
     RETURN QUERY SELECT false, NULL::UUID, 'Slot overlap detected by database constraint'::TEXT, v_conflicts;
@@ -112,19 +112,6 @@ EXCEPTION
     RETURN QUERY SELECT false, NULL::UUID, SQLERRM::TEXT, NULL::JSONB;
 END;
 $$ LANGUAGE plpgsql;
-
--- Grant execute permissions
-GRANT EXECUTE ON FUNCTION create_slot_atomically(UUID, UUID, TIMESTAMPTZ, TIMESTAMPTZ, JSONB) 
-TO authenticated, anon, service_role;
-
--- 6. Add comment for documentation
-COMMENT ON CONSTRAINT availability_slots_no_overlap ON availability_slots IS 
-'Prevents overlapping availability slots for the same provider. Uses GiST exclusion constraint to ensure no two available slots have overlapping time ranges.';
-
-COMMENT ON FUNCTION create_slot_atomically IS 
-'Atomically creates an availability slot with conflict detection. Returns conflicts if any overlapping slots exist.';
-
-COMMIT;
 
 -- Rollback plan:
 -- If issues arise, run:

@@ -5,6 +5,10 @@ on:
     # 09:00 UTC on the 1st of every month — adjust as you like
     - cron: "0 9 1 * *"
   workflow_dispatch: {}
+  push:
+    branches: [main, bookiji]
+    paths:
+      - "supabase/migrations/**"
 
 jobs:
   audit-staging:
@@ -29,19 +33,27 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_STG }}
         run: |
           echo "## Remote migrations (staging)" >> $GITHUB_STEP_SUMMARY
-          supabase migration list --remote | tee migrations_staging.txt
+          supabase migration list --linked --output json | tee migrations_staging.json
           echo "" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          cat migrations_staging.txt >> $GITHUB_STEP_SUMMARY
+          cat migrations_staging.json >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-      - name: Schema dump & hash (Staging)
-        id: schema-staging
+      - name: Compare repo migrations vs remote (Staging)
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_STG }}
         run: |
+          python .github/scripts/compare_supabase_migrations.py --env staging --remote-json migrations_staging.json
+
+      - name: Schema dump & hash (Staging)
+        id: schema-staging
+        if: ${{ secrets.SUPABASE_DB_URL_STG != '' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_STG }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL_STG }}
+        run: |
           # Dump schema only (no data). Produces supabase/schema.sql
-          supabase db dump --schema-only --db-url env://SUPABASE_DB_URL || true
+          supabase db dump --schema-only --db-url env://SUPABASE_DB_URL
 
           # If you don't want to store DB URL, let CLI infer from 'link' (older CLI may need DB URL)
           # Compute hash even if file missing (shows 'N/A')
@@ -61,7 +73,7 @@ jobs:
         with:
           name: supabase-audit-staging
           path: |
-            migrations_staging.txt
+            migrations_staging.json
             schema_staging.sha256
             supabase/schema.sql
 
@@ -98,19 +110,27 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
         run: |
           echo "## Remote migrations (production)" >> $GITHUB_STEP_SUMMARY
-          supabase migration list --remote | tee migrations_production.txt
+          supabase migration list --linked --output json | tee migrations_production.json
           echo "" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          cat migrations_production.txt >> $GITHUB_STEP_SUMMARY
+          cat migrations_production.json >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-      - name: Schema dump & hash (Production)
-        id: schema-production
+      - name: Compare repo migrations vs remote (Production)
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
         run: |
+          python .github/scripts/compare_supabase_migrations.py --env production --remote-json migrations_production.json
+
+      - name: Schema dump & hash (Production)
+        id: schema-production
+        if: ${{ secrets.SUPABASE_DB_URL_PROD != '' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN_PROD }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL_PROD }}
+        run: |
           # Dump schema only (no data). Produces supabase/schema.sql
-          supabase db dump --schema-only --db-url env://SUPABASE_DB_URL || true
+          supabase db dump --schema-only --db-url env://SUPABASE_DB_URL
 
           # If you don't want to store DB URL, let CLI infer from 'link' (older CLI may need DB URL)
           # Compute hash even if file missing (shows 'N/A')
@@ -130,7 +150,7 @@ jobs:
         with:
           name: supabase-audit-production
           path: |
-            migrations_production.txt
+            migrations_production.json
             schema_production.sha256
             supabase/schema.sql
 

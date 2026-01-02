@@ -78,19 +78,8 @@ export async function POST(req: NextRequest) {
   const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
 
   if (authError || !user) {
-    if (!isE2E) {
-      console.warn('Booking create auth failed', { authError })
-      return createErrorResponse('Not authenticated', 401, 'AUTH_REQUIRED', 'Please log in to create a booking')
-    }
-    // E2E mode: return deterministic stub without touching DB/RLS (keeps smoke tests stable)
-    return NextResponse.json({
-      booking: {
-        id: 'e2e-proof',
-        status: 'pending',
-        state: 'quoted'
-      },
-      clientSecret: 'pi_e2e_fallback_secret'
-    })
+    console.warn('Booking create auth failed', { authError })
+    return createErrorResponse('Not authenticated', 401, 'AUTH_REQUIRED', 'Please log in to create a booking')
   }
 
   interface BookingRequestBody {
@@ -222,33 +211,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Check for duplicate by booking parameters (within 5 minute window)
-  const { data: existingByParams } = await supabase
-    .from('bookings')
-    .select('id, customer_id, provider_id, service_id, start_time, stripe_payment_intent_id, idempotency_key')
-    .eq('customer_id', resolvedCustomerId)
-    .eq('provider_id', resolvedProviderId)
-    .eq('service_id', serviceId)
-    .gte('start_time', duplicateWindowStart.toISOString())
-    .lte('start_time', duplicateWindowEnd.toISOString())
-    .order('created_at', { ascending: false })
-    .limit(1)
-
-  if (existingByParams && existingByParams.length > 0) {
-    const existing = existingByParams[0]
-    // If booking was created within last 5 minutes, return it as duplicate
-    const existingIntent = existing.stripe_payment_intent_id
-      ? await (stripe?.paymentIntents.retrieve(existing.stripe_payment_intent_id).catch(() => null))
-      : null
-
-    return NextResponse.json({
-      booking: existing,
-      clientSecret: existingIntent?.client_secret || null,
-      vendorCreated: vendorCreated,
-      requiresPayment: !vendorCreated,
-      duplicate: true
-    }, { status: 200 })
-  }
+  // NOTE: We intentionally do NOT "dedupe by parameters" here.
+  // Slot exclusivity is enforced by the atomic slot claim, and idempotency is enforced
+  // via `idempotency_key`. Parameter-based dedupe can mask legitimate distinct bookings.
 
   // For vendor-created bookings, skip payment intent creation
   let intent: { id: string; client_secret: string | null } | null = null

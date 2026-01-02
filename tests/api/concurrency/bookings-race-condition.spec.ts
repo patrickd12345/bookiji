@@ -13,6 +13,22 @@ vi.mock('@supabase/ssr', () => ({
   createServerClient: vi.fn(() => getSupabaseMock())
 }))
 
+vi.mock('stripe', () => ({
+  __esModule: true,
+  default: vi.fn(() => ({
+    paymentIntents: {
+      create: vi.fn(async () => ({
+        id: 'pi_mock',
+        client_secret: 'cs_mock',
+      })),
+      retrieve: vi.fn(async () => ({
+        id: 'pi_existing',
+        client_secret: 'cs_existing',
+      })),
+    },
+  })),
+}))
+
 /**
  * Layer 2: API E2E Tests - Concurrency & Race Conditions
  * 
@@ -22,8 +38,8 @@ vi.mock('@supabase/ssr', () => ({
 describe('Concurrency Tests - Layer 2: API E2E (System Truth)', () => {
   beforeEach(() => {
     const mock = getSupabaseMock()
-    mock.from.mockReset()
     vi.clearAllMocks()
+    mock.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-123' } }, error: null } as any)
   })
 
   it('rejects simultaneous booking attempts for same slot', async () => {
@@ -38,42 +54,6 @@ describe('Concurrency Tests - Layer 2: API E2E (System Truth)', () => {
       endTime: futureEnd.toISOString(),
       amountUSD: 25
     }
-
-    const mock = getSupabaseMock()
-    const baseFrom = mock.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
-
-    // Simulate concurrent requests
-    // First request should succeed, subsequent requests should fail with 409
-    let requestCount = 0
-
-    mock.from.mockImplementation((table: string) => {
-      if (table === 'bookings') {
-        return {
-          select: () => ({
-            eq: () => ({
-              maybeSingle: () => {
-                requestCount++
-                // First request: no existing booking
-                if (requestCount === 1) {
-                  return Promise.resolve({ data: null, error: null })
-                }
-                // Subsequent requests: booking already exists (race condition detected)
-                return Promise.resolve({
-                  data: {
-                    id: 'booking_123',
-                    provider_id: bookingData.providerId,
-                    service_id: bookingData.serviceId,
-                    start_time: bookingData.startTime
-                  },
-                  error: null
-                })
-              }
-            })
-          })
-        }
-      }
-      return baseFrom(table)
-    })
 
     // Simulate two concurrent requests
     const request1 = new NextRequest(

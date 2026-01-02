@@ -26,7 +26,7 @@ const mockUserCredits = {
 const defaultProps = {
   userId: '1',
   totalCost: 100.00,
-  onCreditsAppliedAction: jest.fn(),
+  onCreditsAppliedAction: vi.fn(),
   className: '',
 };
 

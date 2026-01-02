@@ -155,3 +155,27 @@ export function computeIntervalSetChecksum(intervals: TimeInterval[]): string {
   const payload = tuples.map(([s, e]) => `${s}-${e}`).join('|');
   return createHash('sha256').update(payload, 'utf8').digest('hex');
 }
+
+/**
+ * Compute checksum for calendar event payload (outbound).
+ * Uses deterministic fields: start ISO, end ISO, title, description, location, ics_uid
+ */
+export function computeCalendarEventPayloadChecksum(payload: {
+  start: Date;
+  end: Date;
+  title: string;
+  description?: string;
+  location?: string;
+  ics_uid: string;
+}): string {
+  const parts = [
+    payload.ics_uid || '',
+    payload.start.toISOString(),
+    payload.end.toISOString(),
+    payload.title || '',
+    payload.description || '',
+    payload.location || '',
+  ];
+  const data = parts.join('|');
+  return createHash('sha256').update(data, 'utf8').digest('hex');
+}

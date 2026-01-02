@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS external_calendar_events (
     raw_payload JSONB, -- Optional provider-specific data
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(calendar_provider, external_event_id),
+    UNIQUE(provider_id, calendar_provider, external_event_id),
     CONSTRAINT end_after_start CHECK (end_time > start_time)
 );
 

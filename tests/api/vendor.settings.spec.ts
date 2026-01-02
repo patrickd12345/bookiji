@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import { GET } from '@/app/api/vendor/settings/route'
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
 // Mock Supabase SSR and config
 vi.mock('@supabase/ssr', () => ({
@@ -24,35 +25,28 @@ vi.mock('next/headers', () => ({
 const TEST_BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000'
 
 describe('GET /api/vendor/settings', () => {
-  let mockSupabase: any
   let mockCreateServerClient: any
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    
-    mockSupabase = {
-      auth: {
-        getSession: vi.fn(),
-        getUser: vi.fn()
-      },
-      from: vi.fn()
-    }
 
     const { createServerClient } = await import('@supabase/ssr')
     mockCreateServerClient = createServerClient as any
-    mockCreateServerClient.mockReturnValue(mockSupabase)
+    mockCreateServerClient.mockReturnValue(getSupabaseMock())
   })
 
   it('returns settings for authenticated vendor', async () => {
     const vendorId = 'vendor-123'
     const userId = 'auth-user-123'
+    const supabase = getSupabaseMock()
+    const baseFrom = supabase.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
 
-    mockSupabase.auth.getUser.mockResolvedValue({
+    supabase.auth.getUser.mockResolvedValue({
       data: { user: { id: userId } },
       error: null
     })
 
-    mockSupabase.from.mockImplementation((table: string) => {
+    supabase.from.mockImplementation((table: string) => {
       if (table === 'profiles') {
         return {
           select: vi.fn(() => ({
@@ -72,7 +66,7 @@ describe('GET /api/vendor/settings', () => {
           }))
         }
       }
-      return {}
+      return baseFrom(table)
     })
 
     const req = new NextRequest(
@@ -98,13 +92,15 @@ describe('GET /api/vendor/settings', () => {
   it('returns defaults when preferences do not exist', async () => {
     const vendorId = 'vendor-123'
     const userId = 'auth-user-123'
+    const supabase = getSupabaseMock()
+    const baseFrom = supabase.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
 
-    mockSupabase.auth.getUser.mockResolvedValue({
+    supabase.auth.getUser.mockResolvedValue({
       data: { user: { id: userId } },
       error: null
     })
 
-    mockSupabase.from.mockImplementation((table: string) => {
+    supabase.from.mockImplementation((table: string) => {
       if (table === 'profiles') {
         return {
           select: vi.fn(() => ({
@@ -121,7 +117,7 @@ describe('GET /api/vendor/settings', () => {
           }))
         }
       }
-      return {}
+      return baseFrom(table)
     })
 
     const req = new NextRequest(
@@ -143,7 +139,8 @@ describe('GET /api/vendor/settings', () => {
   })
 
   it('returns 401 when not authenticated', async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
+    const supabase = getSupabaseMock()
+    supabase.auth.getUser.mockResolvedValue({
       data: { user: null },
       error: { message: 'Invalid token' }
     })
@@ -163,13 +160,15 @@ describe('GET /api/vendor/settings', () => {
 
   it('returns 403 when user is not a vendor', async () => {
     const userId = 'auth-user-123'
+    const supabase = getSupabaseMock()
+    const baseFrom = supabase.from.getMockImplementation?.() ?? ((table: string) => ({} as any))
 
-    mockSupabase.auth.getUser.mockResolvedValue({
+    supabase.auth.getUser.mockResolvedValue({
       data: { user: { id: userId } },
       error: null
     })
 
-    mockSupabase.from.mockImplementation((table: string) => {
+    supabase.from.mockImplementation((table: string) => {
       if (table === 'profiles') {
         return {
           select: vi.fn(() => ({
@@ -182,7 +181,7 @@ describe('GET /api/vendor/settings', () => {
           }))
         }
       }
-      return {}
+      return baseFrom(table)
     })
 
     const req = new NextRequest(
