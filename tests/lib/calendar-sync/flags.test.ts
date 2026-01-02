@@ -114,4 +114,22 @@ describe('Calendar Sync Flags', () => {
       expect(flagsModule.isConnectionAllowed('connection-999')).toBe(false)
     })
   })
+
+  describe('edge cases and production defaults', async () => {
+    it('readFlag returns false when unset in production', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      vi.unstubEnv('CALENDAR_SYNC_ENABLED')
+      const flagsModule = await import('@/lib/calendar-sync/flags')
+      expect(flagsModule.isCalendarSyncEnabled()).toBe(false)
+    })
+
+    it('isWebhookEnabled requires connection allowlist in production when present', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      vi.stubEnv('CALENDAR_WEBHOOK_ENABLED', 'true')
+      vi.stubEnv('CALENDAR_ALLOWLIST_CONNECTION_IDS', 'conn-1')
+      const flagsModule = await import('@/lib/calendar-sync/flags')
+      expect(flagsModule.isWebhookEnabled('conn-1')).toBe(true)
+      expect(flagsModule.isWebhookEnabled('conn-2')).toBe(false)
+    })
+  })
 })

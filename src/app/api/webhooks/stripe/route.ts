@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { featureFlags } from '@/config/featureFlags'
+import { findByExternalId, updateStatus } from '@/lib/payments/repository'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
@@ -107,7 +108,35 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promis
     // 3. The kill switch prevents NEW confirmations, not completion of in-flight payments
     // If a hold was placed before the switch was flipped, its payment should still process.
     
-    // Find the booking for this payment intent
+    // Step 1: Resolve PaymentIntent from external provider ID
+    const dbPaymentIntent = await findByExternalId('stripe', paymentIntent.id)
+    if (!dbPaymentIntent) {
+      console.error('PaymentIntent not found for Stripe payment intent:', paymentIntent.id)
+      return
+    }
+
+    // Step 2: Verify credit_intent_id exists (enforced by FK, but double-check for safety)
+    if (!dbPaymentIntent.credit_intent_id) {
+      console.error('PaymentIntent missing credit_intent_id:', dbPaymentIntent.id)
+      return
+    }
+
+    // Step 3: Update PaymentIntent status to 'captured' (idempotent)
+    const updateResult = await updateStatus(dbPaymentIntent.id, 'captured', {
+      metadata: {
+        stripe_status: paymentIntent.status,
+        captured_at: new Date().toISOString(),
+      },
+    })
+
+    if (!updateResult.success) {
+      // If already captured, that's fine (idempotent)
+      if (!updateResult.error?.includes('Invalid status transition')) {
+        console.error('Failed to update PaymentIntent status:', updateResult.error)
+      }
+    }
+    
+    // Step 4: Find the booking for this payment intent
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .select('*')
@@ -194,7 +223,20 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent): Promis
 
 async function handlePaymentFailure(paymentIntent: Stripe.PaymentIntent): Promise<void> {
   try {
-    // Find the booking for this payment intent
+    // Step 1: Resolve PaymentIntent from external provider ID
+    const dbPaymentIntent = await findByExternalId('stripe', paymentIntent.id)
+    if (dbPaymentIntent) {
+      // Update PaymentIntent status to 'failed' (idempotent)
+      await updateStatus(dbPaymentIntent.id, 'failed', {
+        metadata: {
+          stripe_status: paymentIntent.status,
+          failure_reason: paymentIntent.last_payment_error?.message || 'Payment failed',
+          failed_at: new Date().toISOString(),
+        },
+      })
+    }
+
+    // Step 2: Find the booking for this payment intent
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .select('*')
@@ -315,7 +357,19 @@ async function handlePaymentCanceled(paymentIntent: Stripe.PaymentIntent): Promi
     // Payment cancellations must be processed to release slots and cancel holds,
     // regardless of kill switch state. This prevents resource leaks.
     
-    // Find the booking for this payment intent
+    // Step 1: Resolve PaymentIntent from external provider ID
+    const dbPaymentIntent = await findByExternalId('stripe', paymentIntent.id)
+    if (dbPaymentIntent) {
+      // Update PaymentIntent status to 'cancelled' (idempotent)
+      await updateStatus(dbPaymentIntent.id, 'cancelled', {
+        metadata: {
+          stripe_status: paymentIntent.status,
+          cancelled_at: new Date().toISOString(),
+        },
+      })
+    }
+    
+    // Step 2: Find the booking for this payment intent
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
       .select('*')
