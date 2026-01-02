@@ -66,7 +66,8 @@ describe('CreditsDisplay', () => {
       expect(screen.getByText('Exclusive Offers')).toBeInTheDocument();
       expect(screen.getByText('VIP Events')).toBeInTheDocument();
       expect(screen.getByText('Referrals:')).toBeInTheDocument();
-      expect(screen.getByText('8/10 completed')).toBeInTheDocument();
+      expect(screen.getByText('8')).toBeInTheDocument();
+      expect(screen.getByText('/10 completed')).toBeInTheDocument();
     });
   });
 

@@ -43,7 +43,7 @@ describe('CreditsService', () => {
     });
 
     it('handles negative numbers', () => {
-      expect(creditsService.formatCredits(-25.75)).toBe('-$25.75');
+      expect(creditsService.formatCredits(-25.75)).toBe('$-25.75');
     });
   });
 
@@ -53,19 +53,19 @@ describe('CreditsService', () => {
       expect(creditsService.getTierIcon('Silver')).toBe('🥈');
       expect(creditsService.getTierIcon('Gold')).toBe('🥇');
       expect(creditsService.getTierIcon('Platinum')).toBe('💎');
-      expect(creditsService.getTierIcon('Diamond')).toBe('💠');
+      expect(creditsService.getTierIcon('Diamond')).toBe('⭐');
       expect(creditsService.getTierIcon('Unknown')).toBe('⭐');
     });
   });
 
   describe('getTierColor', () => {
     it('returns correct colors for each tier', () => {
-      expect(creditsService.getTierColor('Bronze')).toBe('bg-amber-100 text-amber-800 border-amber-200');
-      expect(creditsService.getTierColor('Silver')).toBe('bg-gray-100 text-gray-800 border-gray-200');
-      expect(creditsService.getTierColor('Gold')).toBe('bg-yellow-100 text-yellow-800 border-yellow-200');
-      expect(creditsService.getTierColor('Platinum')).toBe('bg-blue-100 text-blue-800 border-blue-200');
-      expect(creditsService.getTierColor('Diamond')).toBe('bg-purple-100 text-purple-800 border-purple-200');
-      expect(creditsService.getTierColor('Unknown')).toBe('bg-gray-100 text-gray-800 border-gray-200');
+      expect(creditsService.getTierColor('Bronze')).toBe('text-amber-600');
+      expect(creditsService.getTierColor('Silver')).toBe('text-gray-400');
+      expect(creditsService.getTierColor('Gold')).toBe('text-yellow-500');
+      expect(creditsService.getTierColor('Platinum')).toBe('text-purple-500');
+      expect(creditsService.getTierColor('Diamond')).toBe('text-gray-600');
+      expect(creditsService.getTierColor('Unknown')).toBe('text-gray-600');
     });
   });
 

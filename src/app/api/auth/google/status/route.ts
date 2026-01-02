@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabaseServer'
+import { isOAuthEnabled } from '@/lib/calendar-sync/flags'
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,6 +9,14 @@ export async function GET(request: NextRequest) {
     
     if (!profileId) {
       return NextResponse.json({ error: 'Profile ID is required' }, { status: 400 })
+    }
+
+    // Check feature flag
+    if (!isOAuthEnabled(profileId)) {
+      return NextResponse.json(
+        { error: 'Calendar OAuth is not enabled' },
+        { status: 403 }
+      )
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

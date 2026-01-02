@@ -203,7 +203,7 @@ export function CreditsRedemption({
               onClick={handleMaxRedemption}
               disabled={!canRedeem}
             >
-              Use Max
+              Max
             </Button>
           </div>
           <p className="text-xs text-gray-500">
@@ -257,7 +257,11 @@ export function CreditsRedemption({
           className="w-full"
           size="lg"
         >
-          {isApplying ? 'Applying...' : 'Apply Credits'}
+          {isApplying
+            ? 'Applying...'
+            : redemptionAmount > 0
+              ? `Apply ${formatCredits(redemptionAmount)} Credits`
+              : 'Apply Credits'}
         </Button>
 
         {/* Error Display */}

@@ -56,8 +56,34 @@ export function normalizeBusyIntervalsToUTC(
  * @returns Date object in UTC
  */
 function convertToUTC(date: Date, timezone: string): Date {
-  // Get the date components as they appear when the date is displayed in the timezone
-  // These are the "wall clock" components we want to preserve
+  // For UTC inputs, normalization is a no-op: the `Date` already represents
+  // an absolute UTC instant and there is no "wall clock" reinterpretation needed.
+  if (timezone === 'UTC' || timezone === 'Etc/UTC' || timezone === 'GMT' || timezone === 'Etc/GMT') {
+    return new Date(date.getTime());
+  }
+
+  // IMPORTANT: input `date` is treated as a "naive wall-clock" time (no timezone).
+  // We interpret its *local* components (getFullYear/getHours/etc) as if they occurred
+  // in the provided IANA timezone, then return the corresponding UTC instant.
+  //
+  // This makes tests deterministic across machines with different local timezones.
+  const targetYear = date.getFullYear();
+  const targetMonth = date.getMonth();
+  const targetDay = date.getDate();
+  const targetHour = date.getHours();
+  const targetMinute = date.getMinutes();
+  const targetSecond = date.getSeconds();
+
+  // Strategy: Use Intl.DateTimeFormat to find the UTC time that displays as the target components
+  // in the source timezone. We do this by:
+  // 1. Create a date string in ISO format with the target components (treating them as UTC)
+  // 2. Parse it and see what it displays as in the timezone
+  // 3. Calculate the offset and adjust
+  
+  // Create a UTC date with target components (as if they were UTC)
+  const candidateUTC = new Date(Date.UTC(targetYear, targetMonth, targetDay, targetHour, targetMinute, targetSecond));
+  
+  // Format candidateUTC in the source timezone to see what it displays as
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
     year: 'numeric',
@@ -68,23 +94,7 @@ function convertToUTC(date: Date, timezone: string): Date {
     second: '2-digit',
     hour12: false,
   });
-
-  const parts = formatter.formatToParts(date);
-  const targetYear = parseInt(parts.find((p) => p.type === 'year')?.value || '0', 10);
-  const targetMonth = parseInt(parts.find((p) => p.type === 'month')?.value || '0', 10) - 1;
-  const targetDay = parseInt(parts.find((p) => p.type === 'day')?.value || '0', 10);
-  const targetHour = parseInt(parts.find((p) => p.type === 'hour')?.value || '0', 10);
-  const targetMinute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
-  const targetSecond = parseInt(parts.find((p) => p.type === 'second')?.value || '0', 10);
-
-  // We need to find the UTC time that, when displayed in the timezone, shows targetYear, targetMonth, etc.
-  // Strategy: Start with a UTC date using target components, see what it displays as in timezone,
-  // then adjust based on the difference.
   
-  // Step 1: Create a UTC date with target components (as if they were UTC)
-  const candidateUTC = new Date(Date.UTC(targetYear, targetMonth, targetDay, targetHour, targetMinute, targetSecond));
-  
-  // Step 2: See what this UTC time displays as in the timezone
   const tzParts = formatter.formatToParts(candidateUTC);
   const displayedYear = parseInt(tzParts.find((p) => p.type === 'year')?.value || '0', 10);
   const displayedMonth = parseInt(tzParts.find((p) => p.type === 'month')?.value || '0', 10) - 1;
@@ -93,33 +103,18 @@ function convertToUTC(date: Date, timezone: string): Date {
   const displayedMinute = parseInt(tzParts.find((p) => p.type === 'minute')?.value || '0', 10);
   const displayedSecond = parseInt(tzParts.find((p) => p.type === 'second')?.value || '0', 10);
   
-  // Step 3: Create a UTC date from displayed components (as if displayed components were UTC)
+  // Calculate the offset: candidateUTC displays as (displayedYear, displayedMonth, ...) in timezone
+  // We want it to display as (targetYear, targetMonth, ...) in timezone
+  // The offset is the difference between what we want and what we have
   const displayedAsUTC = new Date(Date.UTC(displayedYear, displayedMonth, displayedDay, displayedHour, displayedMinute, displayedSecond));
-  
-  // Step 4: Calculate offset
-  // If candidateUTC displays as displayedAsUTC in the timezone, then:
-  // The timezone offset at candidateUTC is: candidateUTC - displayedAsUTC
-  // But we want the UTC time that displays as target components.
-  // If candidateUTC already displays as target components, we're done.
-  // Otherwise, we need to adjust.
-  
-  // The offset tells us: when we have a UTC time, what does it show as in the timezone?
-  // offset = candidateUTC - displayedAsUTC means: candidateUTC is offset milliseconds ahead of what it displays as
-  // So to get a UTC time that displays as target, we need: targetAsUTC - offset
-  // But wait, that's not right either...
-  
-  // Actually: if candidateUTC displays as displayedAsUTC in timezone, and we want it to display as target,
-  // we need to adjust by: (target - displayed) in terms of the timezone offset
-  
-  // Simpler approach: the displayed components tell us the offset
-  // displayedAsUTC is what candidateUTC "looks like" in the timezone (as UTC components)
-  // target components are what we want it to "look like"
-  // So we need to adjust candidateUTC by the difference between target and displayed
-  
   const targetAsUTC = new Date(Date.UTC(targetYear, targetMonth, targetDay, targetHour, targetMinute, targetSecond));
-  const diff = targetAsUTC.getTime() - displayedAsUTC.getTime();
   
-  return new Date(candidateUTC.getTime() + diff);
+  // The offset is: candidateUTC - displayedAsUTC (what candidateUTC shows as in timezone, in UTC terms)
+  // We want: resultUTC such that resultUTC shows as targetAsUTC in timezone
+  // So: resultUTC = candidateUTC + (targetAsUTC - displayedAsUTC)
+  const offset = targetAsUTC.getTime() - displayedAsUTC.getTime();
+  
+  return new Date(candidateUTC.getTime() + offset);
 }
 
 /**

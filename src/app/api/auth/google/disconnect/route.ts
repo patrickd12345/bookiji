@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabaseServer'
 import { GoogleCalendarAdapterFactory } from '@/lib/calendar-adapters/google'
 import type { CalendarSystemConfig, CalendarCredentials } from '@/lib/calendar-adapters/types'
+import { isOAuthEnabled } from '@/lib/calendar-sync/flags'
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,6 +10,14 @@ export async function POST(request: NextRequest) {
     
     if (!profileId) {
       return NextResponse.json({ error: 'Profile ID is required' }, { status: 400 })
+    }
+
+    // Check feature flag
+    if (!isOAuthEnabled(profileId)) {
+      return NextResponse.json(
+        { error: 'Calendar OAuth is not enabled' },
+        { status: 403 }
+      )
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

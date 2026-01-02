@@ -5,6 +5,34 @@ type SupabaseResponse<T> = { data: T; error: null }
 const defaultListResponse: SupabaseResponse<any[]> = { data: [], error: null }
 const defaultSingleResponse: SupabaseResponse<any> = { data: null, error: null }
 
+type MockDb = {
+  external_calendar_events: Array<Record<string, any>>
+  external_calendar_connections: Array<Record<string, any>>
+  bookings: Array<Record<string, any>>
+  claimed_slot_ids: Set<string>
+}
+
+function getMockDb(): MockDb {
+  const g = globalThis as any
+  if (!g.__supabaseMockDb) {
+    g.__supabaseMockDb = {
+      external_calendar_events: [],
+      external_calendar_connections: [],
+      bookings: [],
+      claimed_slot_ids: new Set<string>(),
+    } satisfies MockDb
+  }
+  return g.__supabaseMockDb as MockDb
+}
+
+function resetMockDb() {
+  const db = getMockDb()
+  db.external_calendar_events = []
+  db.external_calendar_connections = []
+  db.bookings = []
+  db.claimed_slot_ids = new Set<string>()
+}
+
 function isInsertErrorEnabled(table: string): boolean {
   const state = (globalThis as any).__supabaseMockState
   return Boolean(state?.insertErrors?.has?.(table))
@@ -32,12 +60,14 @@ function createQueryChain(defaultThenResult: SupabaseResponse<any> = defaultList
           limit: vi.fn(async () => ({ data: [], error: null }))
         }))
       })),
+      lte: vi.fn(() => eqChain),
       eq: vi.fn(() => eqChain),
       order: vi.fn(async () => ({ data: [], error: null }))
     }
     return {
       eq: vi.fn(() => eqChain),
       gte: vi.fn(async () => ({ data: [], error: null })),
+      lte: vi.fn(async () => ({ data: [], error: null })),
       not: vi.fn(() => ({
         gte: vi.fn(async () => ({ data: [], error: null }))
       })),
@@ -49,11 +79,20 @@ function createQueryChain(defaultThenResult: SupabaseResponse<any> = defaultList
     }
   })
 
-  const deleteChain = vi.fn(() => ({
-    eq: vi.fn(() => ({
-      eq: vi.fn(async () => ({ error: null }))
-    }))
-  }))
+  const deleteChain = vi.fn(() => {
+    // Supabase query builder is thenable; many tests do:
+    // await supabase.from('table').delete().neq('id', '')
+    const deleteBuilder: any = {}
+    deleteBuilder.select = vi.fn(() => deleteBuilder)
+    deleteBuilder.eq = vi.fn(() => deleteBuilder)
+    deleteBuilder.neq = vi.fn(() => deleteBuilder)
+    deleteBuilder.in = vi.fn(() => deleteBuilder)
+    deleteBuilder.or = vi.fn(() => deleteBuilder)
+    deleteBuilder.then = vi.fn((resolve, reject) =>
+      Promise.resolve({ data: null, error: null }).then(resolve, reject)
+    )
+    return deleteBuilder
+  })
 
   chain.select = selectFallback
   chain.insert = vi.fn(() => chain)
@@ -99,6 +138,7 @@ export function createMockSupabaseClient() {
     const insertBuilder = {
       select: vi.fn(() => ({
         single: vi.fn(async () => insertResult),
+        maybeSingle: vi.fn(async () => insertResult),
       })),
       single: vi.fn(async () => insertResult),
       ...thenable(insertResult),
@@ -107,9 +147,409 @@ export function createMockSupabaseClient() {
     const upsertBuilder = {
       select: vi.fn(() => ({
         single: vi.fn(async () => upsertResult),
+        maybeSingle: vi.fn(async () => upsertResult),
       })),
       single: vi.fn(async () => upsertResult),
       ...thenable(upsertResult),
+    }
+
+    // --- Stateful in-memory tables (used by "integration" tests that exercise repository logic) ---
+    if (table === 'external_calendar_events') {
+      const db = getMockDb()
+
+      const queryState: {
+        filters: Array<{ op: 'eq' | 'neq' | 'gte' | 'lte'; column: string; value: any }>
+        orderBy?: { column: string; ascending: boolean }
+        insertPayload?: any
+        updatePayload?: any
+      } = { filters: [] }
+
+      const applyFilters = (rows: Array<Record<string, any>>) => {
+        return rows.filter((row) => {
+          return queryState.filters.every((f) => {
+            const v = row[f.column]
+            if (f.op === 'eq') return v === f.value
+            if (f.op === 'neq') return v !== f.value
+            if (f.op === 'gte') return String(v) >= String(f.value)
+            if (f.op === 'lte') return String(v) <= String(f.value)
+            return true
+          })
+        })
+      }
+
+      const selectResult = () => {
+        let rows = applyFilters(db.external_calendar_events)
+        if (queryState.orderBy) {
+          const { column, ascending } = queryState.orderBy
+          rows = [...rows].sort((a, b) => {
+            const av = String(a[column])
+            const bv = String(b[column])
+            if (av === bv) return 0
+            return ascending ? (av < bv ? -1 : 1) : (av > bv ? -1 : 1)
+          })
+        }
+        return rows
+      }
+
+      const tableChain: any = {}
+      tableChain.select = vi.fn(() => tableChain)
+      tableChain.eq = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'eq', column, value })
+        return tableChain
+      })
+      tableChain.neq = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'neq', column, value })
+        return tableChain
+      })
+      tableChain.gte = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'gte', column, value })
+        return tableChain
+      })
+      tableChain.lte = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'lte', column, value })
+        return tableChain
+      })
+      tableChain.order = vi.fn((column: string, options?: { ascending?: boolean }) => {
+        queryState.orderBy = { column, ascending: options?.ascending !== false }
+        return tableChain
+      })
+      tableChain.then = vi.fn((resolve, reject) =>
+        Promise.resolve({ data: selectResult(), error: null }).then(resolve, reject)
+      )
+      tableChain.maybeSingle = vi.fn(async () => {
+        const rows = selectResult()
+        return { data: rows[0] ?? null, error: null }
+      })
+      tableChain.single = vi.fn(async () => {
+        const rows = selectResult()
+        return { data: rows[0] ?? null, error: null }
+      })
+
+      tableChain.insert = vi.fn((payload: any) => {
+        queryState.insertPayload = payload
+        const inserted = {
+          id: (globalThis as any).crypto?.randomUUID?.() ?? `mock-${Date.now()}`,
+          ...payload,
+        }
+        db.external_calendar_events.push(inserted)
+        const insertChain: any = {}
+        insertChain.select = vi.fn(() => ({
+          maybeSingle: vi.fn(async () => ({ data: inserted, error: null })),
+          single: vi.fn(async () => ({ data: inserted, error: null })),
+        }))
+        insertChain.maybeSingle = vi.fn(async () => ({ data: inserted, error: null }))
+        insertChain.single = vi.fn(async () => ({ data: inserted, error: null }))
+        insertChain.then = vi.fn((resolve, reject) =>
+          Promise.resolve({ data: inserted, error: null }).then(resolve, reject)
+        )
+        return insertChain
+      })
+
+      tableChain.update = vi.fn((payload: any) => {
+        queryState.updatePayload = payload
+        const updateChain: any = {}
+        updateChain.eq = vi.fn((column: string, value: any) => {
+          // Only support eq('id', ...)
+          if (column === 'id') {
+            const idx = db.external_calendar_events.findIndex((r) => r.id === value)
+            if (idx >= 0) {
+              db.external_calendar_events[idx] = { ...db.external_calendar_events[idx], ...payload }
+            }
+          }
+          return {
+            select: vi.fn(() => ({
+              maybeSingle: vi.fn(async () => {
+                const row =
+                  column === 'id'
+                    ? db.external_calendar_events.find((r) => r.id === value) ?? null
+                    : null
+                return { data: row, error: null }
+              }),
+              single: vi.fn(async () => {
+                const row =
+                  column === 'id'
+                    ? db.external_calendar_events.find((r) => r.id === value) ?? null
+                    : null
+                return { data: row, error: null }
+              }),
+            })),
+          }
+        })
+        return updateChain
+      })
+
+      tableChain.delete = vi.fn(() => {
+        const deleteChain: any = {}
+        deleteChain.eq = vi.fn((column: string, value: any) => {
+          // accumulate on tableChain's filters for simplicity
+          queryState.filters.push({ op: 'eq', column, value })
+          return deleteChain
+        })
+        deleteChain.neq = vi.fn((column: string, value: any) => {
+          queryState.filters.push({ op: 'neq', column, value })
+          return deleteChain
+        })
+        deleteChain.then = vi.fn((resolve, reject) => {
+          const toDelete = applyFilters(db.external_calendar_events).map((r) => r.id)
+          db.external_calendar_events = db.external_calendar_events.filter((r) => !toDelete.includes(r.id))
+          return Promise.resolve({ data: null, error: null }).then(resolve, reject)
+        })
+        return deleteChain
+      })
+
+      return tableChain
+    }
+
+    if (table === 'external_calendar_connections') {
+      const db = getMockDb()
+
+      const queryState: {
+        filters: Array<{ op: 'eq' | 'neq'; column: string; value: any }>
+        insertPayload?: any
+        updatePayload?: any
+      } = { filters: [] }
+
+      const applyFilters = (rows: Array<Record<string, any>>) => {
+        return rows.filter((row) =>
+          queryState.filters.every((f) => {
+            const v = row[f.column]
+            if (f.op === 'eq') return v === f.value
+            if (f.op === 'neq') return v !== f.value
+            return true
+          })
+        )
+      }
+
+      const tableChain: any = {}
+      tableChain.select = vi.fn(() => tableChain)
+      tableChain.eq = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'eq', column, value })
+        return tableChain
+      })
+      tableChain.neq = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'neq', column, value })
+        return tableChain
+      })
+      tableChain.maybeSingle = vi.fn(async () => {
+        const rows = applyFilters(db.external_calendar_connections)
+        return { data: rows[0] ?? null, error: null }
+      })
+      tableChain.single = vi.fn(async () => {
+        const rows = applyFilters(db.external_calendar_connections)
+        return { data: rows[0] ?? null, error: null }
+      })
+      tableChain.then = vi.fn((resolve, reject) =>
+        Promise.resolve({ data: applyFilters(db.external_calendar_connections), error: null }).then(resolve, reject)
+      )
+
+      tableChain.insert = vi.fn((payload: any) => {
+        queryState.insertPayload = payload
+        const inserted = {
+          id: (globalThis as any).crypto?.randomUUID?.() ?? `mock-${Date.now()}`,
+          ...payload,
+        }
+        db.external_calendar_connections.push(inserted)
+        const insertChain: any = {}
+        insertChain.select = vi.fn(() => ({
+          maybeSingle: vi.fn(async () => ({ data: inserted, error: null })),
+          single: vi.fn(async () => ({ data: inserted, error: null })),
+        }))
+        insertChain.maybeSingle = vi.fn(async () => ({ data: inserted, error: null }))
+        insertChain.single = vi.fn(async () => ({ data: inserted, error: null }))
+        insertChain.then = vi.fn((resolve, reject) =>
+          Promise.resolve({ data: inserted, error: null }).then(resolve, reject)
+        )
+        return insertChain
+      })
+
+      tableChain.update = vi.fn((payload: any) => {
+        queryState.updatePayload = payload
+        const updateChain: any = {}
+        updateChain.eq = vi.fn((column: string, value: any) => {
+          if (column === 'id') {
+            const idx = db.external_calendar_connections.findIndex((r) => r.id === value)
+            if (idx >= 0) {
+              db.external_calendar_connections[idx] = { ...db.external_calendar_connections[idx], ...payload }
+            }
+          }
+          const result = { data: null, error: null }
+          return {
+            then: vi.fn((resolve, reject) => Promise.resolve(result).then(resolve, reject)),
+          }
+        })
+        updateChain.then = vi.fn((resolve, reject) => Promise.resolve({ data: null, error: null }).then(resolve, reject))
+        return updateChain
+      })
+
+      tableChain.delete = vi.fn(() => {
+        const deleteChain: any = {}
+        deleteChain.eq = vi.fn((column: string, value: any) => {
+          queryState.filters.push({ op: 'eq', column, value })
+          return deleteChain
+        })
+        deleteChain.neq = vi.fn((column: string, value: any) => {
+          queryState.filters.push({ op: 'neq', column, value })
+          return deleteChain
+        })
+        deleteChain.then = vi.fn((resolve, reject) => {
+          const toDelete = applyFilters(db.external_calendar_connections).map((r) => r.id)
+          db.external_calendar_connections = db.external_calendar_connections.filter((r) => !toDelete.includes(r.id))
+          return Promise.resolve({ data: null, error: null }).then(resolve, reject)
+        })
+        return deleteChain
+      })
+
+      return tableChain
+    }
+
+    if (table === 'bookings') {
+      const db = getMockDb()
+
+      const queryState: {
+        filters: Array<{ op: 'eq' | 'neq' | 'gte' | 'lte'; column: string; value: any }>
+        orderBy?: { column: string; ascending: boolean }
+        limit?: number
+      } = { filters: [] }
+
+      const applyFilters = (rows: Array<Record<string, any>>) => {
+        return rows.filter((row) =>
+          queryState.filters.every((f) => {
+            const v = row[f.column]
+            if (f.op === 'eq') return v === f.value
+            if (f.op === 'neq') return v !== f.value
+            if (f.op === 'gte') return String(v) >= String(f.value)
+            if (f.op === 'lte') return String(v) <= String(f.value)
+            return true
+          })
+        )
+      }
+
+      const selectResult = () => {
+        let rows = applyFilters(db.bookings)
+        if (queryState.orderBy) {
+          const { column, ascending } = queryState.orderBy
+          rows = [...rows].sort((a, b) => {
+            const av = String(a[column])
+            const bv = String(b[column])
+            if (av === bv) return 0
+            return ascending ? (av < bv ? -1 : 1) : (av > bv ? -1 : 1)
+          })
+        }
+        if (typeof queryState.limit === 'number') rows = rows.slice(0, queryState.limit)
+        return rows
+      }
+
+      const tableChain: any = {}
+      tableChain.select = vi.fn(() => tableChain)
+      tableChain.eq = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'eq', column, value })
+        return tableChain
+      })
+      tableChain.neq = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'neq', column, value })
+        return tableChain
+      })
+      tableChain.gte = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'gte', column, value })
+        return tableChain
+      })
+      tableChain.lte = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'lte', column, value })
+        return tableChain
+      })
+      tableChain.order = vi.fn((column: string, options?: { ascending?: boolean }) => {
+        queryState.orderBy = { column, ascending: options?.ascending !== false }
+        return tableChain
+      })
+      tableChain.limit = vi.fn((n: number) => {
+        queryState.limit = n
+        return tableChain
+      })
+      tableChain.maybeSingle = vi.fn(async () => {
+        const rows = selectResult()
+        return { data: rows[0] ?? null, error: null }
+      })
+      tableChain.single = vi.fn(async () => {
+        const rows = selectResult()
+        return { data: rows[0] ?? null, error: null }
+      })
+      tableChain.then = vi.fn((resolve, reject) =>
+        Promise.resolve({ data: selectResult(), error: null }).then(resolve, reject)
+      )
+
+      tableChain.insert = vi.fn((payload: any) => {
+        const inserted = {
+          id: payload?.id ?? ((globalThis as any).crypto?.randomUUID?.() ?? `mock-${Date.now()}`),
+          ...payload,
+        }
+        db.bookings.push(inserted)
+        const insertChain: any = {}
+        insertChain.select = vi.fn(() => ({
+          maybeSingle: vi.fn(async () => ({ data: inserted, error: null })),
+          single: vi.fn(async () => ({ data: inserted, error: null })),
+        }))
+        insertChain.maybeSingle = vi.fn(async () => ({ data: inserted, error: null }))
+        insertChain.single = vi.fn(async () => ({ data: inserted, error: null }))
+        insertChain.then = vi.fn((resolve, reject) =>
+          Promise.resolve({ data: inserted, error: null }).then(resolve, reject)
+        )
+        return insertChain
+      })
+
+      tableChain.update = vi.fn((payload: any) => {
+        const updateChain: any = {}
+        updateChain.eq = vi.fn((column: string, value: any) => {
+          if (column === 'id') {
+            const idx = db.bookings.findIndex((r) => r.id === value)
+            if (idx >= 0) db.bookings[idx] = { ...db.bookings[idx], ...payload }
+          }
+          const result = { data: null, error: null }
+          const chained: any = {}
+          chained.select = vi.fn(() => ({
+            maybeSingle: vi.fn(async () => ({
+              data: column === 'id' ? db.bookings.find((r) => r.id === value) ?? null : null,
+              error: null,
+            })),
+            single: vi.fn(async () => ({
+              data: column === 'id' ? db.bookings.find((r) => r.id === value) ?? null : null,
+              error: null,
+            })),
+          }))
+          chained.then = vi.fn((resolve, reject) => Promise.resolve(result).then(resolve, reject))
+          return chained
+        })
+        updateChain.then = vi.fn((resolve, reject) => Promise.resolve({ data: null, error: null }).then(resolve, reject))
+        return updateChain
+      })
+
+      tableChain.delete = vi.fn(() => {
+        const deleteState: Array<{ op: 'eq' | 'neq'; column: string; value: any }> = []
+        const applyDeleteFilters = (rows: Array<Record<string, any>>) =>
+          rows.filter((row) =>
+            deleteState.every((f) => {
+              const v = row[f.column]
+              return f.op === 'eq' ? v === f.value : v !== f.value
+            })
+          )
+
+        const deleteChain: any = {}
+        deleteChain.eq = vi.fn((column: string, value: any) => {
+          deleteState.push({ op: 'eq', column, value })
+          return deleteChain
+        })
+        deleteChain.neq = vi.fn((column: string, value: any) => {
+          deleteState.push({ op: 'neq', column, value })
+          return deleteChain
+        })
+        deleteChain.then = vi.fn((resolve, reject) => {
+          const toDelete = applyDeleteFilters(db.bookings).map((r) => r.id)
+          db.bookings = db.bookings.filter((r) => !toDelete.includes(r.id))
+          return Promise.resolve({ data: null, error: null }).then(resolve, reject)
+        })
+        return deleteChain
+      })
+
+      return tableChain
     }
 
     // Special handling for availability_slots queries
@@ -118,106 +558,43 @@ export function createMockSupabaseClient() {
         select: vi.fn((columns: string) => {
           // Reset query state when select is called
           slotQueryState = {}
-          return {
-            eq: vi.fn((column: string, value: any) => {
-              if (column === 'provider_id') slotQueryState.providerId = value
-              if (column === 'start_time') slotQueryState.startTime = value
-              if (column === 'end_time') slotQueryState.endTime = value
-              if (column === 'is_available') slotQueryState.isAvailable = value
-              return slotChain
-            }),
-            maybeSingle: vi.fn(async () => {
-              // Return a slot if all required fields match
-              if (
-                slotQueryState.providerId &&
-                slotQueryState.startTime &&
-                slotQueryState.endTime &&
-                slotQueryState.isAvailable === true
-              ) {
-                return {
-                  data: {
-                    id: 'mock-slot-id',
-                    provider_id: slotQueryState.providerId,
-                    start_time: slotQueryState.startTime,
-                    end_time: slotQueryState.endTime,
-                    is_available: true,
-                  },
-                  error: null,
-                }
+          const selectChain: any = {}
+          selectChain.eq = vi.fn((column: string, value: any) => {
+            if (column === 'provider_id') slotQueryState.providerId = value
+            if (column === 'start_time') slotQueryState.startTime = value
+            if (column === 'end_time') slotQueryState.endTime = value
+            if (column === 'is_available') slotQueryState.isAvailable = value
+            return selectChain
+          })
+          selectChain.maybeSingle = vi.fn(async () => {
+            // Return a slot if all required fields match
+            if (
+              slotQueryState.providerId &&
+              slotQueryState.startTime &&
+              slotQueryState.endTime &&
+              slotQueryState.isAvailable === true
+            ) {
+              return {
+                data: {
+                  id: 'mock-slot-id',
+                  provider_id: slotQueryState.providerId,
+                  start_time: slotQueryState.startTime,
+                  end_time: slotQueryState.endTime,
+                  is_available: true,
+                },
+                error: null,
               }
-              return { data: null, error: null }
-            }),
-            single: vi.fn(async () => ({ data: null, error: null })),
-          }
+            }
+            return { data: null, error: null }
+          })
+          selectChain.single = vi.fn(async () => ({ data: null, error: null }))
+          return selectChain
         }),
         eq: vi.fn(() => slotChain),
         maybeSingle: vi.fn(async () => ({ data: null, error: null })),
         single: vi.fn(async () => ({ data: null, error: null })),
       }
       return slotChain
-    }
-
-    // Special handling for bookings table
-    if (table === 'bookings') {
-      const bookingsChain: any = {
-        select: vi.fn((columns: string) => {
-          const selectChain: any = {
-            eq: vi.fn((column: string, value: any) => {
-              selectChain[`eq_${column}`] = value
-              return selectChain
-            }),
-            gte: vi.fn((column: string, value: any) => {
-              selectChain[`gte_${column}`] = value
-              return selectChain
-            }),
-            lte: vi.fn((column: string, value: any) => {
-              selectChain[`lte_${column}`] = value
-              return selectChain
-            }),
-            order: vi.fn((column: string, options?: any) => {
-              selectChain.orderBy = { column, options }
-              return selectChain
-            }),
-            limit: vi.fn(async (count: number) => {
-              // Return empty array for duplicate check (no existing bookings)
-              return { data: [], error: null }
-            }),
-            single: vi.fn(async () => ({ data: null, error: null })),
-            maybeSingle: vi.fn(async () => ({ data: null, error: null })),
-          }
-          return selectChain
-        }),
-        update: vi.fn((values: any) => ({
-          eq: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: vi.fn(async () => ({
-                data: {
-                  id: 'mock-booking-id',
-                  customer_id: 'mock-customer-id',
-                  provider_id: 'mock-provider-id',
-                  service_id: 'mock-service-id',
-                  start_time: '2025-01-02T10:00:00Z',
-                  end_time: '2025-01-02T11:00:00Z',
-                  status: 'pending',
-                  state: 'quoted',
-                  total_amount: 25,
-                  stripe_payment_intent_id: 'pi_mock',
-                  idempotency_key: 'mock-idempotency-key',
-                  vendor_created: false,
-                  vendor_created_by: null,
-                  ...values,
-                },
-                error: null,
-              })),
-            })),
-          })),
-        })),
-        insert: vi.fn(() => insertBuilder),
-        eq: vi.fn(() => bookingsChain),
-        single: readChain.single,
-        maybeSingle: readChain.maybeSingle,
-      }
-      return bookingsChain
     }
 
     return {
@@ -256,6 +633,7 @@ export function createMockSupabaseClient() {
       resetPasswordForEmail: vi.fn((email: string, options?: any) => Promise.resolve({ error: null })),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
       admin: {
+        createUser: vi.fn(async () => ({ data: { user: { id: 'mock-user', email: 'mock@example.com' } }, error: null })),
         deleteUser: vi.fn(() => Promise.resolve({ error: null })),
       },
     },
@@ -263,6 +641,43 @@ export function createMockSupabaseClient() {
     rpc: vi.fn(async (functionName: string, args?: any) => {
       // Handle claim_slot_and_create_booking RPC call
       if (functionName === 'claim_slot_and_create_booking') {
+        // Simulate the DB-side insert that the RPC would perform.
+        const db = getMockDb()
+        const slotId = args?.p_slot_id ?? 'mock-slot-id'
+
+        // Simulate atomic slot exclusivity: only first claim wins.
+        if (db.claimed_slot_ids.has(slotId)) {
+          return {
+            data: [
+              {
+                success: false,
+                booking_id: null,
+                error_message: 'Slot is not available',
+              },
+            ],
+            error: null,
+          }
+        }
+
+        db.claimed_slot_ids.add(slotId)
+
+        const bookingId = args?.p_booking_id || 'mock-booking-id'
+        if (!db.bookings.find((b) => b.id === bookingId)) {
+          db.bookings.push({
+            id: bookingId,
+            customer_id: args?.p_customer_id ?? 'mock-customer-id',
+            provider_id: args?.p_provider_id ?? 'mock-provider-id',
+            service_id: args?.p_service_id ?? 'mock-service-id',
+            start_time: slotQueryState.startTime ?? new Date().toISOString(),
+            end_time:
+              slotQueryState.endTime ??
+              new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            status: 'pending',
+            state: null,
+            total_amount: args?.p_total_amount ?? 0,
+          })
+        }
+
         // Return the expected table format: [{ success: true, booking_id, error_message: null }]
         return {
           data: [
@@ -340,4 +755,7 @@ export function resetSupabaseMock() {
       value.mockClear()
     }
   }
+
+  // Also reset the in-memory DB used by stateful table mocks
+  resetMockDb()
 }

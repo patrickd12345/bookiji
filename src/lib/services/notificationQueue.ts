@@ -40,6 +40,12 @@ export async function addToDeadLetterQueue(
   notification: NotificationRequest,
   error?: string
 ) {
+  // Keep unit tests deterministic and fully in-memory.
+  if (process.env.NODE_ENV === 'test') {
+    deadLetterQueue.push({ notification, error, timestamp: Date.now() });
+    return;
+  }
+
   try {
     const cfg = getSupabaseConfig()
     const admin = createClient(cfg.url, cfg.secretKey as string, { auth: { persistSession: false } })

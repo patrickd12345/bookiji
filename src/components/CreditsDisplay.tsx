@@ -94,7 +94,10 @@ export default function CreditsDisplay({ userId, showDetails = false, className 
           </div>
           <div className="flex justify-between">
             <span>Referrals:</span>
-            <span className="font-medium">{`${credits.completed_referrals}/${credits.total_referrals} completed`}</span>
+            <span className="font-medium">
+              <span>{credits.completed_referrals}</span>
+              <span className="text-gray-500">{`/${credits.total_referrals} completed`}</span>
+            </span>
           </div>
           
           {/* Tier Benefits */}

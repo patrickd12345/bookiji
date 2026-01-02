@@ -1,15 +1,11 @@
 #!/usr/bin/env sh
-echo "🔍 Running TypeScript type check..."
-pnpm type-check || {
-  echo "❌ TypeScript errors found. Please fix errors before committing."
+# Optimized pre-commit hook - only checks staged files for speed
+# Full type-check and lint run in CI
+
+echo "🔍 Running lint-staged (ESLint on staged files only)..."
+pnpm lint-staged || {
+  echo "❌ Lint-staged failed. Please fix errors before committing."
   exit 1
 }
 
-echo "✅ Type check passed. Running ESLint (errors only)..."
-pnpm eslint . --quiet || {
-  echo "⚠️  ESLint warnings found (non-blocking). Continuing..."
-  # Don't exit - ESLint warnings are non-blocking
-}
-
-echo "✅ Pre-commit checks passed. Running lint-staged..."
-pnpm lint-staged
+echo "✅ Pre-commit checks passed!"

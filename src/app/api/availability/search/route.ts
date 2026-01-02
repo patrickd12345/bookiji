@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabaseServer'
+import { overlayBusyIntervals } from '@/lib/calendar-sync/availability/overlay-busy-intervals';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
@@ -32,6 +33,8 @@ export async function POST(req: NextRequest) {
       console.error('Error fetching slots:', error)
       return NextResponse.json({ error: 'Failed to fetch availability' }, { status: 500 })
     }
+
+    let finalSlots: any[] = slots || [];
 
     if ((slots?.length || 0) === 0 && serviceDetails && desiredDateTime && customerLocation) {
       try {
@@ -140,7 +143,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, slots: slots || [] })
+    // If we have fetched slots, overlay busy intervals to trim them.
+    if ((slots?.length || 0) > 0) {
+      try {
+        const availabilitySlots = (slots || []).map((s: any) => ({ start_time: s.start_time, end_time: s.end_time }));
+        const windowStart = new Date(availabilitySlots[0].start_time);
+        const windowEnd = new Date(availabilitySlots[availabilitySlots.length - 1].end_time);
+
+        const overlaid = await overlayBusyIntervals({
+          provider_id: providerId,
+          availability_slots: availabilitySlots,
+          window_start: windowStart,
+          window_end: windowEnd,
+        });
+
+        finalSlots = (overlaid || []).map((s) => ({ start_time: s.start_time, end_time: s.end_time }));
+      } catch (overlayErr) {
+        console.warn('overlayBusyIntervals failed, returning original slots', overlayErr);
+        finalSlots = slots || [];
+      }
+    }
+
+    return NextResponse.json({ success: true, slots: finalSlots })
   } catch (err) {
     console.error('availability search error:', err)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
