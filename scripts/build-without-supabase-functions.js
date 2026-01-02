@@ -10,6 +10,15 @@ const TEMP_FILE = 'supabase/functions/kb-index/index.ts.bak';
 console.log('🚀 Starting build process...');
 console.log(`📁 Working directory: ${process.cwd()}`);
 
+// Ensure APP_ENV is set so environment guards don't fail during builds
+if (!process.env.APP_ENV && !process.env.NEXT_PUBLIC_APP_ENV) {
+  process.env.APP_ENV = 'local';
+  process.env.NEXT_PUBLIC_APP_ENV = 'local';
+  console.log('ℹ️  APP_ENV not provided; defaulting to "local" for build-time tasks');
+} else if (!process.env.NEXT_PUBLIC_APP_ENV) {
+  process.env.NEXT_PUBLIC_APP_ENV = process.env.APP_ENV;
+}
+
 let functionFileMoved = false;
 
 try {
