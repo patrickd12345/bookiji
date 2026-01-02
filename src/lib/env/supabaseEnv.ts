@@ -152,6 +152,15 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
       process.env.PROD_SUPABASE_SERVICE_KEY ||
       process.env.SUPABASE_SECRET_KEY;
 
+    // Check for potential configuration mismatch in production
+    if (!process.env.PROD_SUPABASE_PUBLISHABLE_KEY) {
+      console.warn(
+        '[Supabase Env] WARNING: PROD_SUPABASE_PUBLISHABLE_KEY is missing in production environment. ' +
+        'Falling back to NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, which may be configured for staging/preview. ' +
+        'This often causes "Unregistered API key" errors.'
+      );
+    }
+
     if (!url || !anonKey) {
       throw new Error(
         'Missing production Supabase credentials. ' +
