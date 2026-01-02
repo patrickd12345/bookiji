@@ -161,6 +161,15 @@ export function getSupabaseEnv(): SupabaseEnvConfig {
       );
     }
 
+    // Check for service key (required for admin operations like user creation)
+    if (!serviceKey) {
+      console.warn(
+        '[Supabase Env] WARNING: PROD_SUPABASE_SECRET_KEY is missing in production environment. ' +
+        'Customer registration will fail. Required variables: PROD_SUPABASE_SECRET_KEY or PROD_SUPABASE_SERVICE_KEY. ' +
+        'This causes "Server configuration error" when creating users via /api/auth/register.'
+      );
+    }
+
     if (!url || !anonKey) {
       throw new Error(
         'Missing production Supabase credentials. ' +

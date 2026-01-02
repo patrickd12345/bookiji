@@ -1,22 +1,94 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import DashboardCards from '@/components/admin/DashboardCards'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { logger } from '@/lib/logger'
 
-// Hardcode stats for now to avoid import issues
-const dashboardStats = {
-  activeUsers: 1247,
-  bookingsToday: 89,
-  revenue: 12450,
-  errors: 3
+interface DashboardStats {
+  activeUsers: number
+  bookingsToday: number
+  revenue: number
+  errors: number
+}
+
+interface ActivityItem {
+  id: string
+  type: 'vendor_registration' | 'booking_completed' | 'payment_received' | 'other'
+  title: string
+  description: string
+  timestamp: string
+  timeAgo: string
+  color: 'blue' | 'green' | 'yellow' | 'gray'
+}
+
+interface SystemStatus {
+  name: string
+  status: 'healthy' | 'operational' | 'connected' | 'warning' | 'error'
+  label: string
 }
 
 export default function AdminDashboard() {
   const [refreshingSitemap, setRefreshingSitemap] = useState(false)
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null)
+  const [activities, setActivities] = useState<ActivityItem[]>([])
+  const [systemStatuses, setSystemStatuses] = useState<SystemStatus[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    async function loadDashboardData() {
+      try {
+        const [statsRes, activityRes, statusRes] = await Promise.all([
+          fetch('/api/admin/dashboard/stats', { credentials: 'include' }),
+          fetch('/api/admin/dashboard/activity', { credentials: 'include' }),
+          fetch('/api/admin/dashboard/system-status', { credentials: 'include' })
+        ])
+
+        if (!mounted) return
+
+        // Parse all responses first
+        const [statsData, activityData, statusData] = await Promise.all([
+          statsRes.json().catch(() => ({ error: statsRes.statusText || 'Failed to parse response' })),
+          activityRes.json().catch(() => ({ error: activityRes.statusText || 'Failed to parse response' })),
+          statusRes.json().catch(() => ({ error: statusRes.statusText || 'Failed to parse response' }))
+        ])
+
+        // Check each response and get error details
+        const errors: string[] = []
+        if (!statsRes.ok) {
+          errors.push(`Stats: ${statsData.error || statsRes.statusText || 'Unknown error'}`)
+        }
+        if (!activityRes.ok) {
+          errors.push(`Activity: ${activityData.error || activityRes.statusText || 'Unknown error'}`)
+        }
+        if (!statusRes.ok) {
+          errors.push(`Status: ${statusData.error || statusRes.statusText || 'Unknown error'}`)
+        }
+
+        if (errors.length > 0) {
+          setError(`Failed to load dashboard data: ${errors.join('; ')}`)
+          setLoading(false)
+          return
+        }
+
+        setDashboardStats(statsData)
+        setActivities(activityData.activities || [])
+        setSystemStatuses(statusData.statuses || [])
+        setLoading(false)
+      } catch (err: any) {
+        if (!mounted) return
+        logger.error('Error loading dashboard data:', { error: err })
+        setError(err?.message || 'Failed to load dashboard data')
+        setLoading(false)
+      }
+    }
+    loadDashboardData()
+    return () => { mounted = false }
+  }, [])
 
   const handleRefreshSitemap = async () => {
     setRefreshingSitemap(true)
@@ -67,7 +139,21 @@ export default function AdminDashboard() {
       </motion.div>
 
       {/* Dashboard Cards */}
-      <DashboardCards stats={dashboardStats} />
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-gray-100 rounded-2xl p-6 animate-pulse">
+              <div className="h-20 bg-gray-200 rounded"></div>
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
+          <p className="text-red-600">Error: {error}</p>
+        </div>
+      ) : dashboardStats ? (
+        <DashboardCards stats={dashboardStats} />
+      ) : null}
 
       {/* Quick Actions */}
       <motion.div
@@ -140,68 +226,80 @@ export default function AdminDashboard() {
         {/* Recent Activity */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">New vendor registration</p>
-                <p className="text-xs text-gray-600">Garden Masters joined the platform</p>
-                <p className="text-xs text-gray-500">2 minutes ago</p>
-              </div>
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-start gap-3 animate-pulse">
+                  <div className="w-2 h-2 bg-gray-200 rounded-full mt-2"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
             </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Booking completed</p>
-                <p className="text-xs text-gray-600">Computer repair service completed</p>
-                <p className="text-xs text-gray-500">1 hour ago</p>
-              </div>
+          ) : activities.length > 0 ? (
+            <div className="space-y-4">
+              {activities.map((activity) => {
+                const colorClasses: Record<string, string> = {
+                  blue: 'bg-blue-500',
+                  green: 'bg-green-500',
+                  yellow: 'bg-yellow-500',
+                  gray: 'bg-gray-500'
+                }
+                return (
+                  <div key={activity.id} className="flex items-start gap-3">
+                    <div className={`w-2 h-2 ${colorClasses[activity.color] || 'bg-gray-500'} rounded-full mt-2`}></div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{activity.title}</p>
+                      <p className="text-xs text-gray-600">{activity.description}</p>
+                      <p className="text-xs text-gray-500">{activity.timeAgo}</p>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Payment received</p>
-                <p className="text-xs text-gray-600">$150 payment for TechFix Pro</p>
-                <p className="text-xs text-gray-500">3 hours ago</p>
-              </div>
-            </div>
-          </div>
+          ) : (
+            <p className="text-sm text-gray-500">No recent activity</p>
+          )}
         </div>
 
         {/* System Status */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">System Status</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Database</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Healthy
-              </span>
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center justify-between animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-24"></div>
+                  <div className="h-6 bg-gray-200 rounded w-20"></div>
+                </div>
+              ))}
             </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">API Services</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Operational
-              </span>
+          ) : systemStatuses.length > 0 ? (
+            <div className="space-y-4">
+              {systemStatuses.map((status) => {
+                const statusColors: Record<string, { bg: string; text: string }> = {
+                  healthy: { bg: 'bg-green-100', text: 'text-green-800' },
+                  operational: { bg: 'bg-green-100', text: 'text-green-800' },
+                  connected: { bg: 'bg-green-100', text: 'text-green-800' },
+                  warning: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+                  error: { bg: 'bg-red-100', text: 'text-red-800' }
+                }
+                const colors = statusColors[status.status] || statusColors.warning
+                return (
+                  <div key={status.name} className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">{status.name}</span>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
+                      {status.label}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Payment Gateway</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Connected
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">AI Services</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                Warning
-              </span>
-            </div>
-          </div>
+          ) : (
+            <p className="text-sm text-gray-500">System status unavailable</p>
+          )}
         </div>
       </motion.div>
     </div>
