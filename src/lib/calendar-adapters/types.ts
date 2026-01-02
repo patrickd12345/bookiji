@@ -78,6 +78,16 @@ export interface CalendarSystemConfig {
   authType: 'oauth2' | 'api_key' | 'none';
 }
 
+export interface FreeBusyCapability {
+  listFreeBusy(params: {
+    timeMin: Date;
+    timeMax: Date;
+    calendarIds?: string[];
+  }): Promise<{
+    busy: Array<{ start: Date; end: Date }>;
+  }>;
+}
+
 export interface CalendarAdapter {
   connect(code: string, email?: string): Promise<ExternalCalendarConfig>;
   disconnect(connectionId: string): Promise<void>;
@@ -93,6 +103,10 @@ export interface CalendarAdapter {
   
   // System-specific operations
   refreshCredentials?(): Promise<CalendarCredentials>;
+  
+  // Calendar sync capability (optional, for 2-way sync)
+  // Provides normalized free/busy intervals with support for multiple calendars
+  listFreeBusy?: FreeBusyCapability['listFreeBusy'];
 }
 
 export interface CalendarAdapterFactory {
