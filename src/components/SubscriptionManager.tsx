@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
 
@@ -11,6 +12,8 @@ interface VendorSubscription {
 }
 
 export function SubscriptionManager() {
+  const router = useRouter()
+  const pathname = usePathname()
   const [loading, setLoading] = useState(true)
   const [subscription, setSubscription] = useState<VendorSubscription | null>(null)
 
@@ -45,31 +48,12 @@ export function SubscriptionManager() {
     setLoading(false)
   }
 
-  const handleSubscribe = async () => {
-    try {
-      const priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID;
-      if (!priceId) {
-          alert('Configuration error: Missing Price ID');
-          return;
-      }
-
-      const res = await fetch('/api/billing/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          priceId, 
-          successUrl: window.location.href,
-          cancelUrl: window.location.href,
-        }),
-      })
-      
-      if (!res.ok) throw new Error('Failed to create session');
-      
-      const { url } = await res.json()
-      if (url) window.location.href = url
-    } catch (err) {
-      console.error(err)
-      alert('Failed to start subscription process');
+  const handleSubscribe = () => {
+    if (pathname === '/vendor/dashboard/subscription') {
+      // If already on the subscription page, scroll to plans
+      window.scrollTo({ top: 500, behavior: 'smooth' })
+    } else {
+      router.push('/vendor/dashboard/subscription')
     }
   }
 
@@ -136,5 +120,3 @@ export function SubscriptionManager() {
     </div>
   )
 }
-
-
