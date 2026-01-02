@@ -1,4 +1,4 @@
-﻿import { defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
@@ -26,7 +26,8 @@ export default defineConfig({
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",
       "tests/components/**/*.test.{ts,tsx}",
-      "tests/unit/**/*.test.{ts,tsx}",
+      "tests/unit/**/*.{test,spec}.{ts,tsx}",
+      "tests/lib/**/*.spec.ts",
       "tests/api/**/*.spec.ts",
       "tests/contracts/**/*.{spec,test}.{ts,tsx}",
       "tests/governance/**/*.{spec,test}.{ts,tsx}",

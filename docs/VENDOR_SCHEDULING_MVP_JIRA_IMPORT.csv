@@ -1,0 +1,519 @@
+Summary,Issue Type,Description,Status,Priority,Due Date,Labels,Components,Epic Link
+"[P-001] Project repository initialization",Task,"Phase: Discovery
+Duration: 2 workdays
+Dependencies: None
+Start Date: 2025-08-15
+Target Date: 2025-08-16
+% Complete: 100
+
+Evidence/Deliverable: package.json, next.config.ts, turbo.json",Done,Medium,2025-08-16,"past,discovery","Vendor Scheduling MVP",
+"[P-002] Next.js 15 + TypeScript scaffolding",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: P-001
+Start Date: 2025-08-17
+Target Date: 2025-08-19
+% Complete: 100
+
+Evidence/Deliverable: src/app/, tsconfig.json, App Router structure",Done,Medium,2025-08-19,"past,build","Vendor Scheduling MVP",
+"[P-003] Supabase project setup & local dev",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: P-001
+Start Date: 2025-08-20
+Target Date: 2025-08-23
+% Complete: 100
+
+Evidence/Deliverable: supabase/ directory, local Supabase running",Done,Medium,2025-08-23,"past,build","Vendor Scheduling MVP",
+"[P-004] Core database schema (profiles, services, bookings)",Task,"Phase: Build
+Duration: 5 workdays
+Dependencies: P-003
+Start Date: 2025-08-24
+Target Date: 2025-08-30
+% Complete: 100
+
+Evidence/Deliverable: supabase/migrations/20250819190000_complete_database_schema.sql",Done,High,2025-08-30,"past,build","Vendor Scheduling MVP",
+"[P-005] Authentication & RLS policies",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: P-004
+Start Date: 2025-08-31
+Target Date: 2025-09-04
+% Complete: 100
+
+Evidence/Deliverable: Auth routes, RLS policies in migrations",Done,High,2025-09-04,"past,build","Vendor Scheduling MVP",
+"[P-006] Basic booking engine (create, confirm, cancel)",Task,"Phase: Build
+Duration: 6 workdays
+Dependencies: P-004
+Start Date: 2025-09-05
+Target Date: 2025-09-12
+% Complete: 100
+
+Evidence/Deliverable: src/lib/bookingEngine.ts, src/app/api/bookings/*/route.ts",Done,High,2025-09-12,"past,build","Vendor Scheduling MVP",
+"[P-007] Availability engine (slot computation)",Task,"Phase: Build
+Duration: 5 workdays
+Dependencies: P-004
+Start Date: 2025-09-13
+Target Date: 2025-09-19
+% Complete: 100
+
+Evidence/Deliverable: src/lib/availabilityEngine.ts, tests/lib/availabilityEngine.spec.ts",Done,High,2025-09-19,"past,build","Vendor Scheduling MVP",
+"[P-008] Vendor subscription lifecycle (schema + API)",Task,"Phase: Build
+Duration: 5 workdays
+Dependencies: P-004
+Start Date: 2025-12-24
+Target Date: 2025-12-30
+% Complete: 100
+
+Evidence/Deliverable: supabase/migrations/20251224205800_vendor_subscriptions.sql, /api/vendor/subscription/*",Done,High,2025-12-30,"past,build","Vendor Scheduling MVP",
+"[P-009] Payment-free vendor booking flows",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: P-006, P-008
+Start Date: 2025-12-31
+Target Date: 2026-01-02
+% Complete: 100
+
+Evidence/Deliverable: src/app/api/vendor/bookings/create/route.ts, vendor_created flag",Done,High,2026-01-02,"past,build","Vendor Scheduling MVP",
+"[P-010] Google Calendar OAuth foundation",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: P-003
+Start Date: 2025-09-20
+Target Date: 2025-09-25
+% Complete: 100
+
+Evidence/Deliverable: src/app/api/auth/google/*, provider_google_calendar table",Done,Medium,2025-09-25,"past,build","Vendor Scheduling MVP",
+"[P-011] One-way calendar sync (free/busy read)",Task,"Phase: Build
+Duration: 5 workdays
+Dependencies: P-010
+Start Date: 2025-09-26
+Target Date: 2025-10-02
+% Complete: 100
+
+Evidence/Deliverable: src/app/api/calendar/sync/route.ts, src/lib/calendar-adapters/google.ts",Done,Medium,2025-10-02,"past,build","Vendor Scheduling MVP",
+"[P-012] Credits/loyalty database schema",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: P-004
+Start Date: 2025-10-03
+Target Date: 2025-10-07
+% Complete: 100
+
+Evidence/Deliverable: user_credits, credit_transactions tables in migrations",Done,Medium,2025-10-07,"past,build","Vendor Scheduling MVP",
+"[P-013] Basic credits service (earn/spend)",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: P-012
+Start Date: 2025-10-08
+Target Date: 2025-10-11
+% Complete: 100
+
+Evidence/Deliverable: src/lib/credits.ts, src/app/api/credits/*/route.ts",Done,Medium,2025-10-11,"past,build","Vendor Scheduling MVP",
+"[P-014] Unit test framework (Vitest)",Task,"Phase: Verify
+Duration: 3 workdays
+Dependencies: P-006, P-007
+Start Date: 2025-09-20
+Target Date: 2025-09-24
+% Complete: 100
+
+Evidence/Deliverable: vitest.config.ts, tests/lib/bookingEngine.spec.ts, tests/lib/availabilityEngine.spec.ts",Done,Medium,2025-09-24,"past,verify","Vendor Scheduling MVP",
+"[P-015] API E2E test suite (Playwright)",Task,"Phase: Verify
+Duration: 5 workdays
+Dependencies: P-006
+Start Date: 2025-10-12
+Target Date: 2025-10-18
+% Complete: 100
+
+Evidence/Deliverable: tests/api/bookings.*.spec.ts, tests/api/availability.spec.ts",Done,Medium,2025-10-18,"past,verify","Vendor Scheduling MVP",
+"[P-016] UI E2E test suite (customer/vendor flows)",Task,"Phase: Verify
+Duration: 4 workdays
+Dependencies: P-006
+Start Date: 2025-10-19
+Target Date: 2025-10-24
+% Complete: 100
+
+Evidence/Deliverable: tests/e2e/bookings/customer-flow.spec.ts, tests/e2e/bookings/vendor-flow.spec.ts",Done,Medium,2025-10-24,"past,verify","Vendor Scheduling MVP",
+"[P-017] Atomic booking claim (race condition fix)",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: P-006
+Start Date: 2026-01-01
+Target Date: 2026-01-03
+% Complete: 100
+
+Evidence/Deliverable: supabase/migrations/20260101135426_enforce_booking_atomicity.sql, claim_slot_and_create_booking() RPC",Done,High,2026-01-03,"past,build","Vendor Scheduling MVP",
+"[P-018] Vendor scheduling UI (basic)",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: P-007, P-008
+Start Date: 2025-12-20
+Target Date: 2025-12-23
+% Complete: 100
+
+Evidence/Deliverable: src/app/vendor/schedule/page.tsx, ScheduleClient.tsx",Done,Medium,2025-12-23,"past,build","Vendor Scheduling MVP",
+"[M-REQ] REQ Baseline Approved",Milestone,"Gate Milestone
+Target Date: 2026-01-12
+Dependencies: F-001, F-002, F-003
+
+All requirements documents must be approved before proceeding to design phase.",To Do,High,2026-01-12,"future,milestone,requirements","Vendor Scheduling MVP",
+"[M-DES] Design Baseline Approved",Milestone,"Gate Milestone
+Target Date: 2026-01-19
+Dependencies: F-004, F-005, F-006
+
+All design documents must be approved before proceeding to build phase.",To Do,High,2026-01-19,"future,milestone,design","Vendor Scheduling MVP",
+"[M-CODE] Code Freeze",Milestone,"Gate Milestone
+Target Date: 2026-03-14
+Dependencies: All Build tasks
+
+No new code changes allowed after this date. Only bug fixes and test fixes permitted.",To Do,High,2026-03-14,"future,milestone,code-freeze","Vendor Scheduling MVP",
+"[M-TEST] Test Plan Approved",Milestone,"Gate Milestone
+Target Date: 2026-01-26
+Dependencies: F-007, F-008
+
+Test plans must be approved before test execution begins.",To Do,Medium,2026-01-26,"future,milestone,testing","Vendor Scheduling MVP",
+"[M-RC] Release Candidate",Milestone,"Gate Milestone
+Target Date: 2026-03-21
+Dependencies: All Verify tasks
+
+Release candidate build ready for staging deployment.",To Do,High,2026-03-21,"future,milestone,release","Vendor Scheduling MVP",
+"[M-PROD] Production Approval",Milestone,"Gate Milestone
+Target Date: 2026-03-28
+Dependencies: M-RC, F-040, F-041
+
+Final approval for production deployment.",To Do,Critical,2026-03-28,"future,milestone,production","Vendor Scheduling MVP",
+"[F-001] Requirements: Vendor availability hardening",Story,"Phase: Requirements
+Duration: 2 workdays
+Dependencies: None
+Start Date: 2026-01-05
+Target Date: 2026-01-06
+% Complete: 0
+
+Evidence/Deliverable: /docs/requirements/vendor-availability-hardening.md",To Do,High,2026-01-06,"future,requirements","Vendor Scheduling MVP",
+"[F-002] Requirements: Calendar sync 2-way",Story,"Phase: Requirements
+Duration: 2 workdays
+Dependencies: None
+Start Date: 2026-01-05
+Target Date: 2026-01-06
+% Complete: 0
+
+Evidence/Deliverable: /docs/requirements/calendar-sync-2way.md",To Do,High,2026-01-06,"future,requirements","Vendor Scheduling MVP",
+"[F-003] Requirements: Loyalty/credits reconciliation",Story,"Phase: Requirements
+Duration: 2 workdays
+Dependencies: None
+Start Date: 2026-01-05
+Target Date: 2026-01-06
+% Complete: 0
+
+Evidence/Deliverable: /docs/requirements/loyalty-reconciliation.md",To Do,High,2026-01-06,"future,requirements","Vendor Scheduling MVP",
+"[F-004] Design: Availability conflict resolution",Story,"Phase: Design
+Duration: 3 workdays
+Dependencies: F-001
+Start Date: 2026-01-07
+Target Date: 2026-01-09
+% Complete: 0
+
+Evidence/Deliverable: /docs/design/availability-conflict-resolution.md",To Do,High,2026-01-09,"future,design","Vendor Scheduling MVP",
+"[F-005] Design: Calendar sync architecture (ICS + 2-way)",Story,"Phase: Design
+Duration: 4 workdays
+Dependencies: F-002
+Start Date: 2026-01-07
+Target Date: 2026-01-12
+% Complete: 0
+
+Evidence/Deliverable: /docs/design/calendar-sync-architecture.md",To Do,High,2026-01-12,"future,design","Vendor Scheduling MVP",
+"[F-006] Design: Credits reconciliation system",Story,"Phase: Design
+Duration: 3 workdays
+Dependencies: F-003
+Start Date: 2026-01-10
+Target Date: 2026-01-12
+% Complete: 0
+
+Evidence/Deliverable: /docs/design/credits-reconciliation.md",To Do,High,2026-01-12,"future,design","Vendor Scheduling MVP",
+"[F-007] Test plan: Vendor availability hardening",Story,"Phase: Verify
+Duration: 2 workdays
+Dependencies: F-001
+Start Date: 2026-01-13
+Target Date: 2026-01-14
+% Complete: 0
+
+Evidence/Deliverable: /tests/plan/vendor-availability-hardening.md",To Do,Medium,2026-01-14,"future,verify","Vendor Scheduling MVP",
+"[F-008] Test plan: Calendar sync + loyalty",Story,"Phase: Verify
+Duration: 2 workdays
+Dependencies: F-002, F-003
+Start Date: 2026-01-13
+Target Date: 2026-01-14
+% Complete: 0
+
+Evidence/Deliverable: /tests/plan/calendar-loyalty-integration.md",To Do,Medium,2026-01-14,"future,verify","Vendor Scheduling MVP",
+"[F-009] Vendor availability: Slot conflict detection",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: M-DES, F-004
+Start Date: 2026-01-20
+Target Date: 2026-01-22
+% Complete: 0
+
+Evidence/Deliverable: src/lib/availabilityConflictDetector.ts, unit tests",To Do,High,2026-01-22,"future,build","Vendor Scheduling MVP",
+"[F-010] Vendor availability: Atomic slot updates",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: F-009
+Start Date: 2026-01-23
+Target Date: 2026-01-26
+% Complete: 0
+
+Evidence/Deliverable: Migration: enforce_atomic_slot_updates.sql, RPC function",To Do,High,2026-01-26,"future,build","Vendor Scheduling MVP",
+"[F-011] Vendor availability: Recurring slot management",Task,"Phase: Build
+Duration: 5 workdays
+Dependencies: F-010
+Start Date: 2026-01-27
+Target Date: 2026-02-03
+% Complete: 0
+
+Evidence/Deliverable: src/lib/recurringSlotManager.ts, recurrence_rule support",To Do,High,2026-02-03,"future,build","Vendor Scheduling MVP",
+"[F-012] Vendor availability: Block time API",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: F-010
+Start Date: 2026-02-04
+Target Date: 2026-02-06
+% Complete: 0
+
+Evidence/Deliverable: /api/vendor/availability/block, migration for blocked_slots",To Do,Medium,2026-02-06,"future,build","Vendor Scheduling MVP",
+"[F-013] Vendor availability: Conflict resolution UI",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: F-009
+Start Date: 2026-02-07
+Target Date: 2026-02-12
+% Complete: 0
+
+Evidence/Deliverable: src/components/vendor/ConflictResolutionDialog.tsx",To Do,Medium,2026-02-12,"future,build","Vendor Scheduling MVP",
+"[F-014] Vendor availability: API hardening tests",Task,"Phase: Verify
+Duration: 3 workdays
+Dependencies: F-009, F-010, F-011
+Start Date: 2026-02-13
+Target Date: 2026-02-17
+% Complete: 0
+
+Evidence/Deliverable: tests/api/vendor/availability-hardening.spec.ts",To Do,High,2026-02-17,"future,verify","Vendor Scheduling MVP",
+"[F-015] Calendar sync: 2-way free/busy sync",Task,"Phase: Build
+Duration: 5 workdays
+Dependencies: M-DES, F-005
+Start Date: 2026-01-20
+Target Date: 2026-01-26
+% Complete: 0
+
+Evidence/Deliverable: src/lib/calendarSync/twoWaySync.ts, cron job setup",To Do,High,2026-01-26,"future,build","Vendor Scheduling MVP",
+"[F-016] Calendar sync: Write bookings to Google Calendar",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: F-015
+Start Date: 2026-01-27
+Target Date: 2026-02-03
+% Complete: 0
+
+Evidence/Deliverable: src/lib/calendarSync/writeToCalendar.ts, event creation API",To Do,High,2026-02-03,"future,build","Vendor Scheduling MVP",
+"[F-017] Calendar sync: ICS export endpoint",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: F-015
+Start Date: 2026-02-04
+Target Date: 2026-02-06
+% Complete: 0
+
+Evidence/Deliverable: /api/vendor/calendar/export.ics, src/lib/icsGenerator.ts",To Do,Medium,2026-02-06,"future,build","Vendor Scheduling MVP",
+"[F-018] Calendar sync: ICS import (vendor upload)",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: F-017
+Start Date: 2026-02-07
+Target Date: 2026-02-12
+% Complete: 0
+
+Evidence/Deliverable: /api/vendor/calendar/import, src/lib/icsParser.ts",To Do,Medium,2026-02-12,"future,build","Vendor Scheduling MVP",
+"[F-019] Calendar sync: Invite generation (email)",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: F-016
+Start Date: 2026-02-13
+Target Date: 2026-02-17
+% Complete: 0
+
+Evidence/Deliverable: src/lib/calendarInvites/generateInvite.ts, email template",To Do,Medium,2026-02-17,"future,build","Vendor Scheduling MVP",
+"[F-020] Calendar sync: Update/cancel event sync",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: F-016
+Start Date: 2026-02-18
+Target Date: 2026-02-21
+% Complete: 0
+
+Evidence/Deliverable: src/lib/calendarSync/updateEvent.ts, cancelEvent.ts",To Do,High,2026-02-21,"future,build","Vendor Scheduling MVP",
+"[F-021] Calendar sync: Sync status dashboard",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: F-015, F-016
+Start Date: 2026-02-24
+Target Date: 2026-02-26
+% Complete: 0
+
+Evidence/Deliverable: src/app/vendor/calendar/sync-status/page.tsx",To Do,Low,2026-02-26,"future,build","Vendor Scheduling MVP",
+"[F-022] Calendar sync: Integration tests",Task,"Phase: Verify
+Duration: 4 workdays
+Dependencies: F-015, F-016, F-020
+Start Date: 2026-02-27
+Target Date: 2026-03-04
+% Complete: 0
+
+Evidence/Deliverable: tests/integration/calendar-sync.spec.ts",To Do,High,2026-03-04,"future,verify","Vendor Scheduling MVP",
+"[F-023] Loyalty: Earn credits on booking completion",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: M-DES, F-006
+Start Date: 2026-01-20
+Target Date: 2026-01-22
+% Complete: 0
+
+Evidence/Deliverable: src/lib/loyalty/earnCredits.ts, webhook handler update",To Do,High,2026-01-22,"future,build","Vendor Scheduling MVP",
+"[F-024] Loyalty: Redeem credits at checkout",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: F-023
+Start Date: 2026-01-23
+Target Date: 2026-01-26
+% Complete: 0
+
+Evidence/Deliverable: src/components/checkout/CreditsRedemption.tsx (enhance), API update",To Do,High,2026-01-26,"future,build","Vendor Scheduling MVP",
+"[F-025] Loyalty: Tier progression logic",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: F-023
+Start Date: 2026-01-27
+Target Date: 2026-02-03
+% Complete: 0
+
+Evidence/Deliverable: src/lib/loyalty/tierCalculator.ts, migration for tier tracking",To Do,Medium,2026-02-03,"future,build","Vendor Scheduling MVP",
+"[F-026] Loyalty: Credits reconciliation job",Task,"Phase: Build
+Duration: 5 workdays
+Dependencies: F-023, F-024
+Start Date: 2026-02-04
+Target Date: 2026-02-10
+% Complete: 0
+
+Evidence/Deliverable: src/lib/loyalty/reconciliation.ts, cron job, reconciliation_runs table",To Do,High,2026-02-10,"future,build","Vendor Scheduling MVP",
+"[F-027] Loyalty: Reconciliation dashboard",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: F-026
+Start Date: 2026-02-11
+Target Date: 2026-02-13
+% Complete: 0
+
+Evidence/Deliverable: src/app/admin/loyalty/reconciliation/page.tsx",To Do,Low,2026-02-13,"future,build","Vendor Scheduling MVP",
+"[F-028] Loyalty: Unit tests (earn/redeem/tier)",Task,"Phase: Verify
+Duration: 3 workdays
+Dependencies: F-023, F-024, F-025
+Start Date: 2026-02-14
+Target Date: 2026-02-18
+% Complete: 0
+
+Evidence/Deliverable: tests/lib/loyalty/*.spec.ts",To Do,High,2026-02-18,"future,verify","Vendor Scheduling MVP",
+"[F-029] Loyalty: Reconciliation tests",Task,"Phase: Verify
+Duration: 3 workdays
+Dependencies: F-026
+Start Date: 2026-02-19
+Target Date: 2026-02-21
+% Complete: 0
+
+Evidence/Deliverable: tests/integration/loyalty-reconciliation.spec.ts",To Do,High,2026-02-21,"future,verify","Vendor Scheduling MVP",
+"[F-030] GTM: Pricing page updates",Task,"Phase: Build
+Duration: 2 workdays
+Dependencies: M-REQ
+Start Date: 2026-01-13
+Target Date: 2026-01-14
+% Complete: 0
+
+Evidence/Deliverable: src/app/vendor/pricing/page.tsx (update copy, features)",To Do,Medium,2026-01-14,"future,build","Vendor Scheduling MVP",
+"[F-031] GTM: Vendor onboarding flow enhancement",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: F-030
+Start Date: 2026-01-15
+Target Date: 2026-01-20
+% Complete: 0
+
+Evidence/Deliverable: src/app/vendor/onboarding/page.tsx, step-by-step wizard",To Do,Medium,2026-01-20,"future,build","Vendor Scheduling MVP",
+"[F-032] GTM: Email templates (booking confirmations)",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: F-019
+Start Date: 2026-02-18
+Target Date: 2026-02-20
+% Complete: 0
+
+Evidence/Deliverable: src/lib/email/templates/booking-confirmation.tsx, Resend integration",To Do,Medium,2026-02-20,"future,build","Vendor Scheduling MVP",
+"[F-033] GTM: Email templates (onboarding sequence)",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: F-031
+Start Date: 2026-01-21
+Target Date: 2026-01-23
+% Complete: 0
+
+Evidence/Deliverable: src/lib/email/templates/onboarding-sequence.tsx",To Do,Low,2026-01-23,"future,build","Vendor Scheduling MVP",
+"[F-034] GTM: Monitoring dashboard (vendor metrics)",Task,"Phase: Build
+Duration: 4 workdays
+Dependencies: M-DES
+Start Date: 2026-01-20
+Target Date: 2026-01-23
+% Complete: 0
+
+Evidence/Deliverable: src/app/vendor/dashboard/analytics/page.tsx, metrics API",To Do,Medium,2026-01-23,"future,build","Vendor Scheduling MVP",
+"[F-035] GTM: Error alerting (Sentry integration)",Task,"Phase: Build
+Duration: 2 workdays
+Dependencies: F-034
+Start Date: 2026-01-24
+Target Date: 2026-01-25
+% Complete: 0
+
+Evidence/Deliverable: Sentry config, alert rules, src/lib/monitoring/sentry.ts",To Do,Medium,2026-01-25,"future,build","Vendor Scheduling MVP",
+"[F-036] GTM: Performance monitoring (Core Web Vitals)",Task,"Phase: Build
+Duration: 2 workdays
+Dependencies: F-034
+Start Date: 2026-01-26
+Target Date: 2026-01-27
+% Complete: 0
+
+Evidence/Deliverable: Vercel Analytics integration, dashboard",To Do,Low,2026-01-27,"future,build","Vendor Scheduling MVP",
+"[F-037] GTM: Documentation (vendor guide)",Task,"Phase: Build
+Duration: 3 workdays
+Dependencies: F-031
+Start Date: 2026-01-28
+Target Date: 2026-02-03
+% Complete: 0
+
+Evidence/Deliverable: /docs/vendor-guide/getting-started.md, /docs/vendor-guide/scheduling.md",To Do,Low,2026-02-03,"future,build","Vendor Scheduling MVP",
+"[F-038] Integration: End-to-end booking flow test",Task,"Phase: Verify
+Duration: 4 workdays
+Dependencies: F-014, F-022, F-028
+Start Date: 2026-03-05
+Target Date: 2026-03-10
+% Complete: 0
+
+Evidence/Deliverable: tests/e2e/integration/booking-flow-complete.spec.ts",To Do,High,2026-03-10,"future,verify","Vendor Scheduling MVP",
+"[F-039] Integration: Load testing (vendor scheduling)",Task,"Phase: Verify
+Duration: 3 workdays
+Dependencies: F-038
+Start Date: 2026-03-11
+Target Date: 2026-03-13
+% Complete: 0
+
+Evidence/Deliverable: loadtests/vendor-scheduling-load.js, report",To Do,High,2026-03-13,"future,verify","Vendor Scheduling MVP",
+"[F-040] Deploy: Staging deployment",Task,"Phase: Deploy
+Duration: 2 workdays
+Dependencies: M-RC
+Start Date: 2026-03-24
+Target Date: 2026-03-25
+% Complete: 0
+
+Evidence/Deliverable: Vercel staging environment, smoke tests pass",To Do,High,2026-03-25,"future,deploy","Vendor Scheduling MVP",
+"[F-041] Deploy: Production deployment",Task,"Phase: Deploy
+Duration: 2 workdays
+Dependencies: F-040
+Start Date: 2026-03-26
+Target Date: 2026-03-27
+% Complete: 0
+
+Evidence/Deliverable: Production Vercel deploy, monitoring active",To Do,Critical,2026-03-27,"future,deploy","Vendor Scheduling MVP",
+"[F-042] Closeout: Project retrospective",Task,"Phase: Closeout
+Duration: 1 workday
+Dependencies: M-PROD
+Start Date: 2026-03-28
+Target Date: 2026-03-28
+% Complete: 0
+
+Evidence/Deliverable: /docs/retrospectives/vendor-scheduling-mvp-retro.md",To Do,Low,2026-03-28,"future,closeout","Vendor Scheduling MVP",
+"[F-043] Closeout: Handoff documentation",Task,"Phase: Closeout
+Duration: 2 workdays
+Dependencies: F-042
+Start Date: 2026-03-29
+Target Date: 2026-04-01
+% Complete: 0
+
+Evidence/Deliverable: /docs/handoff/vendor-scheduling-mvp.md",To Do,Low,2026-04-01,"future,closeout","Vendor Scheduling MVP",

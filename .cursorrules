@@ -38,6 +38,16 @@
 - Keep `index.md` current: add new markdown files under the appropriate heading, preserve ordering, and remove entries for deleted files.
 - Refer to this file when determining whether a doc already exists before creating a duplicate.
 
+## Project Planning & Timeline Maintenance
+
+- **Visual Timeline Updates**: When tasks are completed, dates change, or status updates occur in Jira, update `docs/VENDOR_SCHEDULING_MVP_VISUAL.md` to reflect current progress. The indented timeline should show:
+  - ✅ for completed tasks (status: Done)
+  - 🔄 for in-progress tasks (status: In Progress)
+  - Updated dates if they change
+  - Current status indicators
+- **Sync Script**: Use `scripts/sync-jira-to-visual.mjs` to automatically sync Jira status to the visual timeline, or update manually as work progresses.
+- **WBS Updates**: Keep `docs/VENDOR_SCHEDULING_MVP_WBS_GANTT.md` aligned with actual progress - update status, % complete, and dates when tasks are completed or schedules change.
+
 ## Reference Files
 
 - `README.md` – Primary project overview and launch guidance.
