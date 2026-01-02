@@ -1,10 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import DataTable from '@/components/admin/DataTable'
-import { bookings } from '@/lib/mockData'
 import { exportToCSV, exportToJSON } from '@/lib/admin/exportUtils'
 import { X } from 'lucide-react'
 import { logger } from '@/lib/logger'
@@ -13,6 +12,33 @@ export default function BookingsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showReminderModal, setShowReminderModal] = useState(false)
   const [exportFormat, setExportFormat] = useState<'csv' | 'json'>('csv')
+  const [rows, setRows] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    async function load() {
+      try {
+        const res = await fetch('/api/admin/bookings', { credentials: 'include' })
+        const json = await res.json()
+        if (!mounted) return
+        if (!res.ok) {
+          setLoadError(json?.error || 'Failed to load bookings')
+          setLoading(false)
+          return
+        }
+        setRows(json.data || [])
+      } catch (err: any) {
+        if (!mounted) return
+        setLoadError(err?.message || 'Network error')
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+    load()
+    return () => { mounted = false }
+  }, [])
 
   const handleExport = () => {
     if (exportFormat === 'csv') {
@@ -99,7 +125,7 @@ export default function BookingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Total Bookings</p>
-              <p className="text-2xl font-bold text-blue-600">{bookings.length}</p>
+              <p className="text-2xl font-bold text-blue-600">{rows.length}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
               <span className="text-blue-600 font-semibold">📅</span>
@@ -112,7 +138,7 @@ export default function BookingsPage() {
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Confirmed</p>
               <p className="text-2xl font-bold text-green-600">
-                {bookings.filter(b => b.status === 'confirmed').length}
+                {rows.filter(b => b.status === 'confirmed').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
@@ -126,7 +152,7 @@ export default function BookingsPage() {
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Pending</p>
               <p className="text-2xl font-bold text-yellow-600">
-                {bookings.filter(b => b.status === 'pending').length}
+                {rows.filter(b => b.status === 'pending').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center">
@@ -140,7 +166,7 @@ export default function BookingsPage() {
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Total Revenue</p>
               <p className="text-2xl font-bold text-purple-600">
-                ${bookings.reduce((sum, b) => sum + b.amount, 0).toLocaleString()}
+                ${rows.reduce((sum: number, b: any) => sum + ((b.total_amount_cents || 0) / 100), 0).toLocaleString()}
               </p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">
@@ -156,11 +182,17 @@ export default function BookingsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4 }}
       >
-        <DataTable
-          columns={columns}
-          data={bookings}
-          title="Booking Management"
-        />
+        {loading ? (
+          <div className="p-6">Loading bookings...</div>
+        ) : loadError ? (
+          <div className="p-6 text-red-600">Error: {loadError}</div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={rows}
+            title="Booking Management"
+          />
+        )}
       </motion.div>
 
       {/* Quick Actions */}

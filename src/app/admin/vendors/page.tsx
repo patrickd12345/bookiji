@@ -1,12 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import DataTable from '@/components/admin/DataTable'
-import { vendors } from '@/lib/mockData'
 import { exportToCSV, exportToJSON } from '@/lib/admin/exportUtils'
 import { X } from 'lucide-react'
 
@@ -17,6 +16,33 @@ export default function VendorsPage() {
   const [showNewsletterModal, setShowNewsletterModal] = useState(false)
   const [selectedVendors, setSelectedVendors] = useState<Set<string>>(new Set())
   const [exportFormat, setExportFormat] = useState<'csv' | 'json'>('csv')
+  const [rows, setRows] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    async function load() {
+      try {
+        const res = await fetch('/api/admin/providers', { credentials: 'include' })
+        const json = await res.json()
+        if (!mounted) return
+        if (!res.ok) {
+          setLoadError(json?.error || 'Failed to load providers')
+          setLoading(false)
+          return
+        }
+        setRows(json.data || [])
+      } catch (err: any) {
+        if (!mounted) return
+        setLoadError(err?.message || 'Network error')
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+    load()
+    return () => { mounted = false }
+  }, [])
   
   const columns = [
     { key: 'name', label: 'Name', sortable: true },
@@ -113,7 +139,7 @@ export default function VendorsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Total Vendors</p>
-              <p className="text-2xl font-bold text-blue-600">{vendors.length}</p>
+              <p className="text-2xl font-bold text-blue-600">{rows.length}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
               <span className="text-blue-600 font-semibold">👥</span>
@@ -126,7 +152,7 @@ export default function VendorsPage() {
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Active</p>
               <p className="text-2xl font-bold text-green-600">
-                {vendors.filter(v => v.status === 'active').length}
+                {rows.filter((v:any) => v.vendor_status === 'approved' || v.vendor_status === 'active').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
@@ -140,7 +166,7 @@ export default function VendorsPage() {
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Pending</p>
               <p className="text-2xl font-bold text-yellow-600">
-                {vendors.filter(v => v.status === 'pending').length}
+                {rows.filter((v:any) => v.vendor_status === 'pending' || v.vendor_status === 'pending_approval').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center">
@@ -154,7 +180,7 @@ export default function VendorsPage() {
             <div>
               <p className="text-sm font-medium text-gray-600 mb-1">Suspended</p>
               <p className="text-2xl font-bold text-red-600">
-                {vendors.filter(v => v.status === 'suspended').length}
+                {rows.filter((v:any) => v.vendor_status === 'suspended').length}
               </p>
             </div>
             <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center">
@@ -170,11 +196,17 @@ export default function VendorsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4 }}
       >
-        <DataTable
-          columns={columns}
-          data={vendors}
-          title="Vendor Management"
-        />
+        {loading ? (
+          <div className="p-6">Loading vendors...</div>
+        ) : loadError ? (
+          <div className="p-6 text-red-600">Error: {loadError}</div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={rows}
+            title="Vendor Management"
+          />
+        )}
       </motion.div>
 
       {/* Quick Actions */}
