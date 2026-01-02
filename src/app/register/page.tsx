@@ -11,9 +11,8 @@ function RegisterForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [roleType, setRoleType] = useState<'customer' | 'provider' | null>(
-    searchParams?.get('role') === 'provider' ? 'provider' : 
-    searchParams?.get('role') === 'customer' ? 'customer' : null
+  const [roleType, setRoleType] = useState<'customer' | 'provider'>(
+    searchParams?.get('role') === 'provider' ? 'provider' : 'customer'
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,7 +42,7 @@ function RegisterForm() {
         body: JSON.stringify({
           email,
           password,
-          role: roleType || 'customer',
+          role: roleType,
           full_name: '',
         }),
       });
@@ -113,13 +112,11 @@ function RegisterForm() {
             </button>
           </div>
           
-          {roleType && (
-            <p className="mt-4 text-center text-xs text-gray-500">
-              {roleType === 'customer' 
-                ? 'You\'ll be able to book appointments with service providers'
-                : 'You\'ll be able to offer your services and manage bookings'}
-            </p>
-          )}
+          <p className="mt-4 text-center text-xs text-gray-500">
+            {roleType === 'customer' 
+              ? 'You\'ll be able to book appointments with service providers'
+              : 'You\'ll be able to offer your services and manage bookings'}
+          </p>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit} suppressHydrationWarning>
@@ -179,7 +176,7 @@ function RegisterForm() {
           <div>
             <button
               type="submit"
-              disabled={isSubmitting || !roleType}
+              disabled={isSubmitting}
               className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               aria-busy={isSubmitting}
             >

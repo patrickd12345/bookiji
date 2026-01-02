@@ -9,14 +9,43 @@ console.log('========================================');
 console.log('This script will help you fix the "Unregistered API key" error in Production.');
 console.log('It ensures the PROD_SUPABASE_* environment variables are correctly set in Vercel.\n');
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
-
-const question = (query) => new Promise((resolve) => rl.question(query, resolve));
+let rl = null;
+const question = (query) => {
+  if (!rl) {
+    rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+  }
+  return new Promise((resolve) => rl.question(query, resolve));
+};
 
 async function main() {
+  // Check for command-line arguments or environment variables
+  const args = process.argv.slice(2);
+  let url, anonKey, serviceKey;
+  
+  if (args.length >= 2) {
+    // Non-interactive mode: use command-line arguments
+    url = args[0];
+    anonKey = args[1];
+    serviceKey = args[2] || '';
+    console.log('📝 Using provided credentials (non-interactive mode)\n');
+  } else if (process.env.PROD_SUPABASE_URL && process.env.PROD_SUPABASE_PUBLISHABLE_KEY) {
+    // Use environment variables if available
+    url = process.env.PROD_SUPABASE_URL;
+    anonKey = process.env.PROD_SUPABASE_PUBLISHABLE_KEY;
+    serviceKey = process.env.PROD_SUPABASE_SECRET_KEY || '';
+    console.log('📝 Using environment variables (non-interactive mode)\n');
+  } else {
+    // Interactive mode
+    console.log('\nPlease retrieve your PRODUCTION Supabase credentials from the Supabase Dashboard.');
+    console.log('Go to: Project Settings -> API\n');
+    url = await question('Enter Production Supabase URL (https://...): ');
+    anonKey = await question('Enter Production Supabase Anon/Public Key: ');
+    serviceKey = await question('Enter Production Supabase Service/Secret Key (optional, press Enter to skip): ');
+  }
+
   // Check for Vercel CLI
   let hasVercel = false;
   try {
@@ -28,13 +57,6 @@ async function main() {
     console.log('   You will need to manually configure variables or install Vercel CLI later.');
   }
 
-  console.log('\nPlease retrieve your PRODUCTION Supabase credentials from the Supabase Dashboard.');
-  console.log('Go to: Project Settings -> API\n');
-
-  const url = await question('Enter Production Supabase URL (https://...): ');
-  const anonKey = await question('Enter Production Supabase Anon/Public Key: ');
-  const serviceKey = await question('Enter Production Supabase Service/Secret Key (optional, press Enter to skip): ');
-
   if (!url || !anonKey) {
     console.error('❌ URL and Anon Key are required.');
     process.exit(1);
@@ -45,24 +67,42 @@ async function main() {
   if (hasVercel) {
     try {
       console.log('Setting PROD_SUPABASE_URL...');
-      execSync(`npx vercel env add PROD_SUPABASE_URL production "${url}"`, { stdio: 'inherit' });
+      // Vercel CLI prompts for value, so we pipe it via stdin
+      execSync(`echo "${url}" | npx vercel env add PROD_SUPABASE_URL production`, { 
+        stdio: 'inherit',
+        shell: true 
+      });
       
       console.log('Setting PROD_SUPABASE_PUBLISHABLE_KEY...');
-      execSync(`npx vercel env add PROD_SUPABASE_PUBLISHABLE_KEY production "${anonKey}"`, { stdio: 'inherit' });
+      execSync(`echo "${anonKey}" | npx vercel env add PROD_SUPABASE_PUBLISHABLE_KEY production`, { 
+        stdio: 'inherit',
+        shell: true 
+      });
 
       if (serviceKey) {
         console.log('Setting PROD_SUPABASE_SECRET_KEY...');
-        execSync(`npx vercel env add PROD_SUPABASE_SECRET_KEY production "${serviceKey}"`, { stdio: 'inherit' });
+        execSync(`echo "${serviceKey}" | npx vercel env add PROD_SUPABASE_SECRET_KEY production`, { 
+          stdio: 'inherit',
+          shell: true 
+        });
       }
 
       console.log('\n✅ Successfully updated Vercel Production Environment Variables.');
       console.log('🚀 Redeploying to Production to apply changes...');
       
-      const deploy = await question('Do you want to redeploy now? (y/n): ');
-      if (deploy.toLowerCase() === 'y') {
-        execSync('npx vercel deploy --prod', { stdio: 'inherit' });
+      // In non-interactive mode, skip deployment prompt (user can deploy manually)
+      const isNonInteractive = args.length >= 2 || (process.env.PROD_SUPABASE_URL && process.env.PROD_SUPABASE_PUBLISHABLE_KEY);
+      
+      if (isNonInteractive) {
+        console.log('⚠️  Non-interactive mode: Skipping automatic deployment.');
+        console.log('   Run `npx vercel deploy --prod` manually when ready.');
       } else {
-        console.log('Skipping deployment. Run `npx vercel deploy --prod` when ready.');
+        const deploy = await question('Do you want to redeploy now? (y/n): ');
+        if (deploy.toLowerCase() === 'y') {
+          execSync('npx vercel deploy --prod', { stdio: 'inherit' });
+        } else {
+          console.log('Skipping deployment. Run `npx vercel deploy --prod` when ready.');
+        }
       }
     } catch (e) {
       console.error('\n❌ Failed to update Vercel via CLI. Falling back to .env file generation.');
@@ -72,7 +112,7 @@ async function main() {
     generateEnvFile(url, anonKey, serviceKey);
   }
 
-  rl.close();
+  if (rl) rl.close();
 }
 
 function generateEnvFile(url, anonKey, serviceKey) {
