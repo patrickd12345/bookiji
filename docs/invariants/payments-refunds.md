@@ -122,6 +122,83 @@
 - Reconciliation script checks for orphan payments
 - Database query to find payment intents without bookings
 
+---
+
+## INV-8: PaymentIntent Ledger Linkage
+**Rule**: Every PaymentIntent must be linked to a Credit Ledger entry via `credit_intent_id`.
+
+**FAIL Condition**:
+- PaymentIntent created without `credit_intent_id`
+- PaymentIntent with `credit_intent_id` that doesn't exist in `credit_ledger_entries`
+- Payment operation bypasses Credit Ledger
+
+**Allowed Behavior**:
+- Create credit_ledger_entry first, then create PaymentIntent with `credit_intent_id`
+- Foreign key constraint enforces linkage at database level
+- Repository validates `credit_intent_id` exists before insert
+
+**Enforcement**: 
+- Database FK constraint: `fk_payment_intents_credit_ledger` on `credit_intent_id`
+- Repository validation in `insertPaymentIntent()`
+- No money movement without ledger entry
+
+---
+
+## INV-9: PaymentIntent Double-Capture Prevention
+**Rule**: PaymentIntent cannot be captured more than once.
+
+**FAIL Condition**:
+- PaymentIntent status `captured` but capture attempted again
+- Invalid status transition from `captured` to `captured`
+
+**Allowed Behavior**:
+- Status transition: `authorized` → `captured` (allowed)
+- Status transition: `captured` → `captured` (rejected - idempotent check)
+- Status transition: `captured` → `refunded` (allowed)
+
+**Enforcement**: 
+- Status transition validation in `updateStatus()`
+- Terminal state check: `captured` can only transition to `refunded`
+- Repository layer enforces valid transitions
+
+---
+
+## INV-10: PaymentIntent Double-Refund Prevention
+**Rule**: PaymentIntent cannot be refunded more than once.
+
+**FAIL Condition**:
+- PaymentIntent status `refunded` but refund attempted again
+- Invalid status transition from `refunded` to any other state
+
+**Allowed Behavior**:
+- Status transition: `captured` → `refunded` (allowed)
+- Status transition: `refunded` → `refunded` (rejected - terminal state)
+- Status `refunded` is terminal (no further transitions)
+
+**Enforcement**: 
+- Status transition validation in `updateStatus()`
+- Terminal state check: `refunded` cannot transition to any other state
+- Repository layer enforces valid transitions
+
+---
+
+## INV-11: PaymentIntent External ID Uniqueness
+**Rule**: Each external payment provider ID can only be recorded once in PaymentIntent table.
+
+**FAIL Condition**:
+- Same Stripe payment_intent.id recorded in multiple PaymentIntent records
+- Duplicate `(external_provider, external_id)` pairs
+
+**Allowed Behavior**:
+- Unique constraint on `(external_provider, external_id)`
+- Webhook handlers use `findByExternalId()` to resolve existing PaymentIntent
+- Idempotent updates if PaymentIntent already exists
+
+**Enforcement**: 
+- Database unique constraint: `ux_payment_intents_external`
+- Repository `findByExternalId()` used before creating new records
+- Prevents duplicate external payment records
+
 
 
 

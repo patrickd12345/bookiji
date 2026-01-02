@@ -186,11 +186,31 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       return
     }
 
+    // Step 1: Resolve PaymentIntent from external provider ID
+    const { findByExternalId, updateStatus } = await import('@/lib/payments/repository')
+    const dbPaymentIntent = await findByExternalId('stripe', paymentIntent.id)
+    
+    if (dbPaymentIntent) {
+      // Verify credit_intent_id exists
+      if (!dbPaymentIntent.credit_intent_id) {
+        console.error('PaymentIntent missing credit_intent_id:', dbPaymentIntent.id)
+        return
+      }
+
+      // Update PaymentIntent status to 'captured' (idempotent)
+      await updateStatus(dbPaymentIntent.id, 'captured', {
+        metadata: {
+          stripe_status: paymentIntent.status,
+          captured_at: new Date().toISOString(),
+        },
+      })
+    }
+
     if (process.env.NODE_ENV === 'development') {
       console.log('✅ Payment succeeded for booking:', bookingId)
     }
 
-    // Update booking status to confirmed
+    // Step 2: Update booking status to confirmed
     const { error } = await this.supabase
       .from('bookings')
       .update({ 
@@ -270,11 +290,26 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       return
     }
 
+    // Step 1: Resolve PaymentIntent from external provider ID
+    const { findByExternalId, updateStatus } = await import('@/lib/payments/repository')
+    const dbPaymentIntent = await findByExternalId('stripe', paymentIntent.id)
+    
+    if (dbPaymentIntent) {
+      // Update PaymentIntent status to 'failed' (idempotent)
+      await updateStatus(dbPaymentIntent.id, 'failed', {
+        metadata: {
+          stripe_status: paymentIntent.status,
+          failure_reason: paymentIntent.last_payment_error?.message || 'Payment failed',
+          failed_at: new Date().toISOString(),
+        },
+      })
+    }
+
     if (process.env.NODE_ENV === 'development') {
       console.log('❌ Payment failed for booking:', bookingId)
     }
 
-    // Update booking status to cancelled
+    // Step 2: Update booking status to cancelled
     const { error } = await this.supabase
       .from('bookings')
       .update({
@@ -305,11 +340,25 @@ export class PaymentsWebhookHandlerImpl implements PaymentsWebhookHandler {
       return
     }
 
+    // Step 1: Resolve PaymentIntent from external provider ID
+    const { findByExternalId, updateStatus } = await import('@/lib/payments/repository')
+    const dbPaymentIntent = await findByExternalId('stripe', paymentIntent.id)
+    
+    if (dbPaymentIntent) {
+      // Update PaymentIntent status to 'cancelled' (idempotent)
+      await updateStatus(dbPaymentIntent.id, 'cancelled', {
+        metadata: {
+          stripe_status: paymentIntent.status,
+          cancelled_at: new Date().toISOString(),
+        },
+      })
+    }
+
     if (process.env.NODE_ENV === 'development') {
       console.log('🚫 Payment canceled for booking:', bookingId)
     }
 
-    // Update booking status to cancelled
+    // Step 2: Update booking status to cancelled
     const { error } = await this.supabase
       .from('bookings')
       .update({

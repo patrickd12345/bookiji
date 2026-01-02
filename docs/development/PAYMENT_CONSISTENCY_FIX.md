@@ -14,6 +14,27 @@ SimCity Phase 2 revealed a critical violation:
 4. **Slots not released on payment failure** - failed payments left slots permanently held
 5. **No reconciliation for expired holds** - holds could expire without cleanup
 
+## PaymentIntent Entity
+
+**New Entity:** `payment_intents` table (`supabase/migrations/20260102165112_create_payment_intents.sql`)
+
+The PaymentIntent entity links every money-moving operation to a Credit Ledger intent and booking, ensuring:
+- **Ledger Linkage**: Every PaymentIntent requires a `credit_intent_id` (enforced by FK constraint)
+- **Idempotency**: Unique constraints on `idempotency_key` and (`external_provider`, `external_id`) prevent duplicate creates/records
+- **Double-Capture/Refund Prevention**: Status transitions are validated to prevent invalid state changes
+- **Auditability**: All payment operations are tracked with status history
+
+**Status Flow:**
+- `created` → `authorized` → `captured` → `refunded` (terminal)
+- `created` → `cancelled` (terminal)
+- `created` → `failed` (terminal)
+
+**Integration Points:**
+- Payment creation: Creates PaymentIntent before calling Stripe, updates with `external_id` after Stripe response
+- Webhook handlers: Resolve PaymentIntent by `external_provider` + `external_id`, update status, then proceed with booking transitions
+
+See `docs/architecture/PAYMENT_INTENT_DESIGN.md` for complete design documentation.
+
 ## Fixes Implemented
 
 ### 1. Booking Confirm Endpoint (`src/app/api/bookings/confirm/route.ts`)

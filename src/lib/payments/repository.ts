@@ -48,13 +48,13 @@ export async function insertPaymentIntent(
     // Check for existing PaymentIntent with same idempotency_key
     if (input.idempotency_key) {
       const { data: existing } = await supabase
-        .from<PaymentIntent>('payment_intents')
+        .from('payment_intents')
         .select('*')
         .eq('idempotency_key', input.idempotency_key)
         .maybeSingle();
 
       if (existing) {
-        return { success: true, paymentIntent: existing };
+        return { success: true, paymentIntent: existing as PaymentIntent };
       }
     }
 
@@ -87,7 +87,7 @@ export async function insertPaymentIntent(
     };
 
     const { data, error } = await supabase
-      .from<PaymentIntent>('payment_intents')
+      .from('payment_intents')
       .insert(payload)
       .select()
       .single();
@@ -98,19 +98,19 @@ export async function insertPaymentIntent(
       if (isUniqueViolation && input.idempotency_key) {
         // Retry fetch by idempotency_key
         const { data: existing } = await supabase
-          .from<PaymentIntent>('payment_intents')
+          .from('payment_intents')
           .select('*')
           .eq('idempotency_key', input.idempotency_key)
           .maybeSingle();
         
         if (existing) {
-          return { success: true, paymentIntent: existing };
+          return { success: true, paymentIntent: existing as PaymentIntent };
         }
       }
       return { success: false, error: error.message || String(error) };
     }
 
-    return { success: true, paymentIntent: data };
+    return { success: true, paymentIntent: data as PaymentIntent };
   } catch (err: any) {
     return { success: false, error: err?.message ?? String(err) };
   }
@@ -125,7 +125,7 @@ export async function findByExternalId(
   externalId: string
 ): Promise<PaymentIntent | null> {
   const { data, error } = await supabase
-    .from<PaymentIntent>('payment_intents')
+    .from('payment_intents')
     .select('*')
     .eq('external_provider', provider)
     .eq('external_id', externalId)
@@ -136,7 +136,7 @@ export async function findByExternalId(
     return null;
   }
 
-  return data ?? null;
+  return (data as PaymentIntent) ?? null;
 }
 
 /**
@@ -144,7 +144,7 @@ export async function findByExternalId(
  */
 export async function findById(id: string): Promise<PaymentIntent | null> {
   const { data, error } = await supabase
-    .from<PaymentIntent>('payment_intents')
+    .from('payment_intents')
     .select('*')
     .eq('id', id)
     .maybeSingle();
@@ -154,7 +154,7 @@ export async function findById(id: string): Promise<PaymentIntent | null> {
     return null;
   }
 
-  return data ?? null;
+  return (data as PaymentIntent) ?? null;
 }
 
 /**
@@ -198,7 +198,7 @@ export async function updateStatus(
     }
 
     const { data, error } = await supabase
-      .from<PaymentIntent>('payment_intents')
+      .from('payment_intents')
       .update(updatePayload)
       .eq('id', id)
       .select()
@@ -208,7 +208,7 @@ export async function updateStatus(
       return { success: false, error: error.message || String(error) };
     }
 
-    return { success: true, paymentIntent: data };
+    return { success: true, paymentIntent: data as PaymentIntent };
   } catch (err: any) {
     return { success: false, error: err?.message ?? String(err) };
   }

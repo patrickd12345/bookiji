@@ -1,7 +1,7 @@
 /**
- * Google Calendar Webhook Endpoint
+ * Microsoft/Outlook Calendar Webhook Endpoint
  * 
- * Receives push notifications from Google Calendar when events change.
+ * Receives push notifications from Microsoft Graph when calendar events change.
  * Marks connections as needing sync but does not trigger sync loop.
  */
 
@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabaseServer'
 import { isWebhookEnabled, isConnectionAllowed } from '@/lib/calendar-sync/flags'
 import { safeError } from '@/lib/calendar-sync/utils/token-redaction'
-import { GoogleWebhookSignatureValidator } from '@/lib/calendar-sync/webhooks/validators'
+import { MicrosoftWebhookSignatureValidator } from '@/lib/calendar-sync/webhooks/validators'
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,13 +28,13 @@ export async function POST(request: NextRequest) {
     const body = JSON.parse(rawBody || '{}')
     
     // Extract connection_id from webhook payload
-    // Google Calendar webhooks include channel information
-    // The exact structure depends on Google's webhook format
-    // For now, we'll try to extract from common fields
-    const connectionId = body.channel?.resourceId || 
-                        body.resourceId || 
-                        request.headers.get('X-Goog-Resource-ID') ||
-                        body.connection_id
+    // Microsoft Graph webhooks include resource data
+    // The exact structure depends on Microsoft's webhook format
+    const connectionId = body.resourceData?.id ||
+                        body.value?.[0]?.resourceData?.id ||
+                        request.headers.get('X-Microsoft-Graph-Resource-ID') ||
+                        body.connection_id ||
+                        body.subscriptionId
 
     if (!connectionId) {
       return NextResponse.json(
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate signature
-    const validator = new GoogleWebhookSignatureValidator()
+    const validator = new MicrosoftWebhookSignatureValidator()
     const isValid = await validator.validate(request, rawBody)
     
     if (!isValid) {
@@ -62,11 +62,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Extract dedupe key (e.g., X-Goog-Resource-ID or event ID)
-    const dedupeKey = request.headers.get('X-Goog-Resource-ID') || 
-                     body.channel?.id || 
-                     body.id ||
-                     `webhook-${Date.now()}`
+    // Extract dedupe key (e.g., notification ID or change type)
+    const dedupeKey = body.notificationId ||
+                     body.value?.[0]?.id ||
+                     request.headers.get('X-Microsoft-Graph-Notification-Id') ||
+                     `${body.changeType || 'unknown'}-${body.resource || 'unknown'}-${Date.now()}`
 
     const supabase = getServerSupabase()
 
