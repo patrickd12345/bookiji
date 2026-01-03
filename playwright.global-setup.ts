@@ -3,8 +3,9 @@ import { execSync } from 'node:child_process'
 export default async function globalSetup() {
   // Ensure deterministic Supabase Auth users exist for E2E runs.
   // Skip if E2E_SKIP_SEED is set (useful for cloud environments where users may already exist)
+  const allowNoSupabase = process.env.E2E_ALLOW_NO_SUPABASE === 'true' || process.env.E2E_NAVIGATION_ONLY === 'true'
   const hasAdminKey = Boolean(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
-  if (process.env.E2E_SKIP_SEED !== 'true' && hasAdminKey) {
+  if (!allowNoSupabase && process.env.E2E_SKIP_SEED !== 'true' && hasAdminKey) {
     try {
       execSync('pnpm e2e:seed', { stdio: 'inherit' })
     } catch (error: any) {
@@ -27,7 +28,7 @@ export default async function globalSetup() {
         const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
         const isRemote = supabaseUrl && !/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(supabaseUrl)
         
-        if (isRemote || process.env.CI || process.env.CURSOR || process.env.CODEX) {
+        if (isRemote || process.env.CI || process.env.CURSOR || process.env.CODEX || allowNoSupabase) {
           console.error('⚠️  Continuing without seeded users - tests may fail if they require specific users')
           console.error('   Set E2E_SKIP_SEED=true to suppress this warning\n')
         } else {
@@ -38,6 +39,11 @@ export default async function globalSetup() {
       }
     }
   } else {
+    if (allowNoSupabase) {
+      console.warn('⏭️  Skipping user seeding (E2E_ALLOW_NO_SUPABASE=true / E2E_NAVIGATION_ONLY=true)')
+      console.warn('   Supabase-dependent tests should self-skip in this mode.\n')
+      // Note: We still run the warm-up below to reduce flake when hitting remote BASE_URL.
+    } else
     if (!hasAdminKey) {
       console.warn('⚠️  Skipping user seeding: missing SUPABASE_SECRET_KEY (or legacy SUPABASE_SERVICE_ROLE_KEY).')
       console.warn('   Role-based E2E tests may still pass if the users already exist in Supabase.')

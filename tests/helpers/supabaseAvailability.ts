@@ -21,8 +21,10 @@ export async function isSupabaseAvailable(): Promise<boolean> {
     const supabase = getSupabaseAdmin()
     // Try a simple query to check connectivity
     const { error } = await supabase.from('profiles').select('id').limit(1)
-    
-    const available = !error || error.code !== 'PGRST301' // PGRST301 = connection refused
+
+    // Conservative: any error here means Supabase isn't usable for E2E role flows
+    // (bad URL, bad key, connection refused, paused project, etc.).
+    const available = !error
     availabilityCache = { available, checked: Date.now() }
     return available
   } catch (error) {

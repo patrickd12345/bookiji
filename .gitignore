@@ -73,6 +73,7 @@ next-env.d.ts
 # Playwright reports
 /playwright-report/
 /test-results/
+/playwright/navigation-artifacts/
 
 # Coverage reports
 /coverage/

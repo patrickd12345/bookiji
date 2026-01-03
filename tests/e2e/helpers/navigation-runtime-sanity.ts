@@ -43,6 +43,9 @@ const DEFAULT_BENIGN_CONSOLE_PATTERNS: Array<{ re: RegExp; reason: string }> = [
   { re: /JWT.*(expired|invalid)/i, reason: 'auth-jwt-warning' },
   { re: /(No session|missing session|auth session missing)/i, reason: 'auth-session-warning' },
   { re: /(Invalid login credentials)/i, reason: 'auth-invalid-credentials (non-test login screen noise)' },
+  // Expected in role-protected areas when running as guest (browser logs 401/403 resource loads).
+  { re: /Failed to load resource: the server responded with a status of (401|403)/i, reason: 'auth-protected-resource' },
+  { re: /net::ERR_ABORTED.*(401|403)/i, reason: 'auth-protected-resource' },
 
   // Next dev overlay / HMR / source maps.
   { re: /Failed to load source map/i, reason: 'sourcemap-noise' },
