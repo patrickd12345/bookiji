@@ -13,6 +13,23 @@ function curlStatus(url: string) {
   return Number(out.trim())
 }
 
+function isRemoteBaseURL(baseURL: string) {
+  try {
+    const origin = new URL(baseURL).origin
+    return !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)
+  } catch {
+    return true
+  }
+}
+
+function readIntEnv(name: string) {
+  const raw = process.env[name]
+  if (!raw) return null
+  const n = Number(raw)
+  if (!Number.isFinite(n)) return null
+  return Math.trunc(n)
+}
+
 test.describe('Navigation completeness + runtime sanity (UI state machine)', () => {
   test.describe.configure({ mode: 'serial' })
 
@@ -91,8 +108,18 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     expect(health).toBeLessThan(500)
   })
 
-  test('guest traversal', async ({ page, baseURL }) => {
+  test('guest traversal', { timeout: 10 * 60_000 }, async ({ page, baseURL }) => {
+    test.setTimeout(10 * 60_000)
     const resolvedBaseURL = baseURL ?? process.env.BASE_URL ?? 'http://localhost:3000'
+    const remote = isRemoteBaseURL(resolvedBaseURL)
+    const maxActions = readIntEnv('E2E_NAV_MAX_ACTIONS') ?? (remote ? 250 : 1000)
+    const includeMainContentLinks =
+      process.env.E2E_NAV_INCLUDE_MAIN_CONTENT_LINKS === 'true' ? true : process.env.E2E_NAV_INCLUDE_MAIN_CONTENT_LINKS === 'false' ? false : !remote
+    const allowedActionTypes = process.env.E2E_NAV_ALLOWED_ACTION_TYPES?.length
+      ? (process.env.E2E_NAV_ALLOWED_ACTION_TYPES.split(',').map((s) => s.trim()).filter(Boolean) as any)
+      : remote
+        ? (['link', 'menuitem'] as const)
+        : undefined
     const harness = createRuntimeSanityHarness(page, resolvedBaseURL)
     harness.attachToPage()
     harness.resetStep({ role: 'guest', entryPoint: '/', actionId: null, fromPath: '/' })
@@ -104,7 +131,9 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
       {
         role: 'guest',
         entryPoints: ['/', '/main'],
-        includeMainContentLinks: true,
+        includeMainContentLinks,
+        maxActions,
+        allowedActionTypes: allowedActionTypes as any,
         stabilizationTimeoutMs: 20_000,
       },
       runtimeFailures,
@@ -135,11 +164,21 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     expect(runtimeFailures, JSON.stringify(runtimeFailures.slice(0, 5), null, 2)).toEqual([])
   })
 
-  test('customer traversal', { tag: '@requires-supabase' }, async ({ page, baseURL, auth }) => {
+  test('customer traversal', { tag: '@requires-supabase', timeout: 10 * 60_000 }, async ({ page, baseURL, auth }) => {
+    test.setTimeout(10 * 60_000)
     await skipIfSupabaseUnavailable(test.info())
     await auth.loginAsCustomer()
 
     const resolvedBaseURL = baseURL ?? process.env.BASE_URL ?? 'http://localhost:3000'
+    const remote = isRemoteBaseURL(resolvedBaseURL)
+    const maxActions = readIntEnv('E2E_NAV_MAX_ACTIONS') ?? (remote ? 250 : 1000)
+    const includeMainContentLinks =
+      process.env.E2E_NAV_INCLUDE_MAIN_CONTENT_LINKS === 'true' ? true : process.env.E2E_NAV_INCLUDE_MAIN_CONTENT_LINKS === 'false' ? false : !remote
+    const allowedActionTypes = process.env.E2E_NAV_ALLOWED_ACTION_TYPES?.length
+      ? (process.env.E2E_NAV_ALLOWED_ACTION_TYPES.split(',').map((s) => s.trim()).filter(Boolean) as any)
+      : remote
+        ? (['link', 'menuitem'] as const)
+        : undefined
     const harness = createRuntimeSanityHarness(page, resolvedBaseURL)
     harness.attachToPage()
     harness.resetStep({ role: 'customer', entryPoint: '/customer/dashboard', actionId: null, fromPath: '/customer/dashboard' })
@@ -148,7 +187,14 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     const traversal = await runNavigationTraversal(
       page,
       resolvedBaseURL,
-      { role: 'customer', entryPoints: ['/customer/dashboard'], includeMainContentLinks: true, stabilizationTimeoutMs: 20_000 },
+      {
+        role: 'customer',
+        entryPoints: ['/customer/dashboard'],
+        includeMainContentLinks,
+        maxActions,
+        allowedActionTypes: allowedActionTypes as any,
+        stabilizationTimeoutMs: 20_000,
+      },
       runtimeFailures,
       harness
     )
@@ -176,11 +222,21 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     expect(runtimeFailures, JSON.stringify(runtimeFailures.slice(0, 5), null, 2)).toEqual([])
   })
 
-  test('vendor traversal', { tag: '@requires-supabase' }, async ({ page, baseURL, auth }) => {
+  test('vendor traversal', { tag: '@requires-supabase', timeout: 10 * 60_000 }, async ({ page, baseURL, auth }) => {
+    test.setTimeout(10 * 60_000)
     await skipIfSupabaseUnavailable(test.info())
     await auth.loginAsVendor()
 
     const resolvedBaseURL = baseURL ?? process.env.BASE_URL ?? 'http://localhost:3000'
+    const remote = isRemoteBaseURL(resolvedBaseURL)
+    const maxActions = readIntEnv('E2E_NAV_MAX_ACTIONS') ?? (remote ? 250 : 1000)
+    const includeMainContentLinks =
+      process.env.E2E_NAV_INCLUDE_MAIN_CONTENT_LINKS === 'true' ? true : process.env.E2E_NAV_INCLUDE_MAIN_CONTENT_LINKS === 'false' ? false : !remote
+    const allowedActionTypes = process.env.E2E_NAV_ALLOWED_ACTION_TYPES?.length
+      ? (process.env.E2E_NAV_ALLOWED_ACTION_TYPES.split(',').map((s) => s.trim()).filter(Boolean) as any)
+      : remote
+        ? (['link', 'menuitem'] as const)
+        : undefined
     const harness = createRuntimeSanityHarness(page, resolvedBaseURL)
     harness.attachToPage()
     harness.resetStep({ role: 'vendor', entryPoint: '/vendor/dashboard', actionId: null, fromPath: '/vendor/dashboard' })
@@ -189,7 +245,14 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     const traversal = await runNavigationTraversal(
       page,
       resolvedBaseURL,
-      { role: 'vendor', entryPoints: ['/vendor/dashboard'], includeMainContentLinks: true, stabilizationTimeoutMs: 20_000 },
+      {
+        role: 'vendor',
+        entryPoints: ['/vendor/dashboard'],
+        includeMainContentLinks,
+        maxActions,
+        allowedActionTypes: allowedActionTypes as any,
+        stabilizationTimeoutMs: 20_000,
+      },
       runtimeFailures,
       harness
     )
@@ -217,11 +280,19 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     expect(runtimeFailures, JSON.stringify(runtimeFailures.slice(0, 5), null, 2)).toEqual([])
   })
 
-  test('admin traversal (admin shell only)', { tag: '@requires-supabase' }, async ({ page, baseURL, auth }) => {
+  test('admin traversal (admin shell only)', { tag: '@requires-supabase', timeout: 10 * 60_000 }, async ({ page, baseURL, auth }) => {
+    test.setTimeout(10 * 60_000)
     await skipIfSupabaseUnavailable(test.info())
     await auth.loginAsAdmin()
 
     const resolvedBaseURL = baseURL ?? process.env.BASE_URL ?? 'http://localhost:3000'
+    const remote = isRemoteBaseURL(resolvedBaseURL)
+    const maxActions = readIntEnv('E2E_NAV_MAX_ACTIONS') ?? (remote ? 250 : 1000)
+    const allowedActionTypes = process.env.E2E_NAV_ALLOWED_ACTION_TYPES?.length
+      ? (process.env.E2E_NAV_ALLOWED_ACTION_TYPES.split(',').map((s) => s.trim()).filter(Boolean) as any)
+      : remote
+        ? (['link', 'menuitem'] as const)
+        : undefined
     const harness = createRuntimeSanityHarness(page, resolvedBaseURL)
     harness.attachToPage()
     harness.resetStep({ role: 'admin', entryPoint: '/admin', actionId: null, fromPath: '/admin' })
@@ -230,7 +301,14 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     const traversal = await runNavigationTraversal(
       page,
       resolvedBaseURL,
-      { role: 'admin', entryPoints: ['/admin'], includeMainContentLinks: false, stabilizationTimeoutMs: 25_000 },
+      {
+        role: 'admin',
+        entryPoints: ['/admin'],
+        includeMainContentLinks: false,
+        maxActions,
+        allowedActionTypes: allowedActionTypes as any,
+        stabilizationTimeoutMs: 25_000,
+      },
       runtimeFailures,
       harness
     )

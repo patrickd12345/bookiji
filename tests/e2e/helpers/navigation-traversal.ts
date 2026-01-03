@@ -37,6 +37,8 @@ type TraversalOptions = {
   stabilizationTimeoutMs?: number
   // If true, include visible internal links in main content, not only nav containers.
   includeMainContentLinks?: boolean
+  // Optional: restrict traversal to a subset of action types (useful for remote/prod runs).
+  allowedActionTypes?: Array<NavigationActionEdge['actionType']>
 }
 
 const DEFAULT_EXCLUDE_TEXT = [
@@ -201,7 +203,14 @@ async function collectCandidateActionLocators(page: Page, includeMainContentLink
   return candidates
 }
 
-async function materializeActions(page: Page, role: RoleName, entryPoint: string, fromPath: string, includeMainContentLinks: boolean) {
+async function materializeActions(
+  page: Page,
+  role: RoleName,
+  entryPoint: string,
+  fromPath: string,
+  includeMainContentLinks: boolean,
+  allowedActionTypes?: Array<NavigationActionEdge['actionType']>
+) {
   await tryClickOpenToggles(page)
 
   const candidates = await collectCandidateActionLocators(page, includeMainContentLinks)
@@ -219,11 +228,25 @@ async function materializeActions(page: Page, role: RoleName, entryPoint: string
     if (!(await locator.isEnabled().catch(() => true))) continue
 
     const label = await visibleText(locator)
+    const type = await getActionType(locator)
+
+    if (allowedActionTypes && !allowedActionTypes.includes(type)) {
+      actions.push({
+        actionId: `excluded:${sha1(`${role}:${fromPath}:${type}:${label}`)}`,
+        label,
+        type,
+        locator,
+        meta: { label, type },
+        excludedReason: 'action-type-excluded',
+      })
+      continue
+    }
+
     if (isExcludedLabel(label)) {
       actions.push({
         actionId: `excluded:${sha1(`${role}:${fromPath}:${label}`)}`,
         label,
-        type: await getActionType(locator),
+        type,
         locator,
         meta: { label },
         excludedReason: 'destructive-or-auth-action',
@@ -252,7 +275,7 @@ async function materializeActions(page: Page, role: RoleName, entryPoint: string
       actions.push({
         actionId: `excluded:${sha1(`${role}:${fromPath}:${testId}`)}`,
         label: testId,
-        type: 'select',
+        type,
         locator,
         meta: { dataTestId: testId },
         excludedReason: 'role-switcher-crosses-role-scope',
@@ -260,7 +283,6 @@ async function materializeActions(page: Page, role: RoleName, entryPoint: string
       continue
     }
 
-    const type = await getActionType(locator)
     const stableKey = `${role}:${entryPoint}:${fromPath}:${type}:${label}:${href ?? ''}`
     const actionId = sha1(stableKey)
 
@@ -359,7 +381,7 @@ export async function runNavigationTraversal(
     const fromPath = normalizePathFromUrl(page.url(), baseURL)
     visitedPaths.add(fromPath)
 
-    const actions = await materializeActions(page, opts.role, entryPoint, fromPath, includeMainContentLinks)
+    const actions = await materializeActions(page, opts.role, entryPoint, fromPath, includeMainContentLinks, opts.allowedActionTypes)
     for (const a of actions) {
       if (a.excludedReason) {
         excludedActions.push({ role: opts.role, entryPoint, fromPath, label: a.label, reason: a.excludedReason })
@@ -401,7 +423,7 @@ export async function runNavigationTraversal(
 
     // Re-materialize the same action on this page (locators can go stale).
     const currentFromPath = normalizePathFromUrl(page.url(), baseURL)
-    const actions = await materializeActions(page, opts.role, next.entryPoint, currentFromPath, includeMainContentLinks)
+    const actions = await materializeActions(page, opts.role, next.entryPoint, currentFromPath, includeMainContentLinks, opts.allowedActionTypes)
     const found = actions.find((a) => a.actionId === next.actionId && !a.excludedReason)
     if (!found) {
       // Treat as a runtime failure: navigation action not reachable under intended UI state.
