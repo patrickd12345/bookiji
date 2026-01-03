@@ -180,21 +180,50 @@ export default function LoginFormContent() {
     }
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const redirectUrl = `${window.location.origin}/auth/callback`
+      console.log(`[OAuth] Initiating ${provider} sign-in with redirect:`, redirectUrl)
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
-      if (error) throw error;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setError(error.message || `Failed to sign in with ${provider}`);
-      } else {
-        setError(`Failed to sign in with ${provider}`);
+      if (error) {
+        console.error(`[OAuth] ${provider} sign-in error:`, error)
+        throw error;
       }
-    } finally {
+
+      // If data.url exists, the redirect should happen automatically
+      // If not, there might be a configuration issue
+      if (!data?.url) {
+        console.warn(`[OAuth] ${provider} sign-in returned no redirect URL`)
+        setError(`${provider} sign-in is not properly configured. Please check Supabase dashboard settings.`);
+        setIsLoading(false);
+        return;
+      }
+
+      // The redirect should happen automatically via the returned URL
+      console.log(`[OAuth] ${provider} redirect URL received, redirecting...`)
+    } catch (error: unknown) {
+      console.error(`[OAuth] ${provider} sign-in exception:`, error)
+      if (error instanceof Error) {
+        // Provide more helpful error messages
+        if (error.message.includes('redirect_uri_mismatch') || error.message.includes('redirect')) {
+          setError(`${provider} OAuth redirect URL mismatch. Please add "${window.location.origin}/auth/callback" to your Supabase dashboard redirect URLs.`);
+        } else if (error.message.includes('provider') || error.message.includes('not enabled')) {
+          setError(`${provider} OAuth provider is not enabled. Please enable it in your Supabase dashboard under Authentication > Providers.`);
+        } else {
+          setError(error.message || `Failed to sign in with ${provider}. Please check your Supabase OAuth configuration.`);
+        }
+      } else {
+        setError(`Failed to sign in with ${provider}. Please check your Supabase OAuth configuration.`);
+      }
       setIsLoading(false);
     }
   };

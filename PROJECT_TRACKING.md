@@ -211,6 +211,7 @@ Comprehensive performance and scalability improvements for the booking platform,
 ## Notes
 
 - All code changes are complete and ready for deployment
+- **OAuth Provider Configuration (GitHub/Google)**: Will do another time - Requires manual configuration in Supabase Dashboard (providers enabled, redirect URLs added). Local config.toml updated, verification script created.
 - **Final punch-list implementation is 100% complete**:
   - ✅ Server-side admin role gating with allow-lists
   - ✅ Generic RLS error hints (no information leakage)

@@ -20,6 +20,9 @@ import { useAuth } from '../../hooks/useAuth'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
+import { LogOut, LogIn } from 'lucide-react'
 
 // Lazy load SupportChat to reduce initial bundle size
 const SupportChat = dynamic(() => import('@/components').then(mod => ({ default: mod.SupportChat })), {
@@ -43,6 +46,7 @@ import {
 export default function HomePageModern2025() {
   const { t, formatCurrency } = useI18n()
   const { isAuthenticated, canBookServices, canOfferServices } = useAuth()
+  const router = useRouter()
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isDark, setIsDark] = useState(false)
   const [showSupportChat, setShowSupportChat] = useState(false)
@@ -51,6 +55,14 @@ export default function HomePageModern2025() {
   const { scrollYProgress } = useScroll()
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95])
+
+  const handleSignOut = async () => {
+    const supabase = supabaseBrowserClient()
+    if (supabase) {
+      await supabase.auth.signOut()
+      router.push('/login')
+    }
+  }
 
   // Track mouse for parallax effects
   useEffect(() => {
@@ -112,6 +124,39 @@ export default function HomePageModern2025() {
         ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-zinc-900' 
         : 'bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50'
     }`}>
+      {/* Sign In / Log Out Button - Top Right, aligned with NotifyForm button */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="fixed top-4 right-6 z-50"
+      >
+        {isAuthenticated ? (
+          <motion.button
+            onClick={handleSignOut}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-white hover:opacity-90 transition-all"
+            aria-label="Log out"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="text-sm font-medium">Log Out</span>
+          </motion.button>
+        ) : (
+          <Link href="/login">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-white hover:opacity-90 transition-all"
+              aria-label="Sign in"
+            >
+              <LogIn className="w-4 h-4" />
+              <span className="text-sm font-medium">Sign In</span>
+            </motion.button>
+          </Link>
+        )}
+      </motion.div>
+
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
