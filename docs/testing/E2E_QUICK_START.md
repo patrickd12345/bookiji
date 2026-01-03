@@ -75,3 +75,44 @@ This will tell you exactly what's missing.
 ## TL;DR
 
 **You need Supabase. Get a free one at https://app.supabase.com (5 min setup).**
+
+---
+
+## Navigation completeness + runtime sanity (UI state machine)
+
+This repo includes a Playwright E2E spec that verifies **navigation completeness** by simulating what a real user would click (menus, sidebars, nav links, and other intended UI navigation actions), and fails on **runtime sanity** issues on every visited page.
+
+### What it is (and is not)
+
+- **It is**: navigation-driven traversal based on **visible UI actions** and **revealed navigation state** (drawers/menus).
+- **It is not**: SEO crawling, sitemap crawling, or “type in random URLs”.
+
+### Role shells + entry points
+
+The traversal is run **separately** per role:
+
+- **Guest**: entry points `"/"` and `"/main"` using `MainNavigation` (`src/components/MainNavigation.tsx`).
+- **Customer**: entry point `"/customer/dashboard"` using `CustomerNavigation` (`src/components/customer/CustomerNavigation.tsx`).
+- **Vendor**: entry point `"/vendor/dashboard"` using `VendorNavigation` (`src/components/vendor/VendorNavigation.tsx`).
+- **Admin**: entry point `"/admin"` using the admin shell (`src/app/admin/layout.tsx` + `src/components/admin/Sidebar.tsx`).
+
+### Runtime failures that fail the test
+
+- Uncaught JS errors (`pageerror`)
+- React hydration errors (classified from console output)
+- Same-origin HTTP **5xx** responses
+- Redirect loops / pages that never stabilize after navigation
+
+### Artifacts
+
+Artifacts are written to `playwright/navigation-artifacts/`:
+
+- `navigation-graph.json` (guest) + `navigation-graph.{customer|vendor|admin}.json`
+- `navigation-orphans.json` (filesystem route patterns not reached by UI traversal)
+- `runtime-failures.json` (guest) + `runtime-failures.{customer|vendor|admin}.json`
+
+### How to run
+
+```bash
+E2E=true pnpm e2e tests/e2e/navigation-completeness-and-sanity.spec.ts
+```
