@@ -29,7 +29,7 @@ function getSupabaseConfig() {
         supabaseAnonKey = anonMatch[1].trim().replace(/^["']|["']$/g, '')
       }
       
-      const serviceMatch = envContent.match(/SUPABASE_SERVICE_ROLE_KEY\s*=\s*([^\s\r\n]+)/i)
+      const serviceMatch = envContent.match(/SUPABASE_SECRET_KEY\s*=\s*([^\s\r\n]+)/i)
       if (serviceMatch) {
         supabaseServiceKey = serviceMatch[1].trim().replace(/^["']|["']$/g, '')
       }
@@ -41,7 +41,7 @@ function getSupabaseConfig() {
   // Fallback to environment variables
   supabaseUrl = supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL
   supabaseAnonKey = supabaseAnonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  supabaseServiceKey = supabaseServiceKey || process.env.SUPABASE_SERVICE_ROLE_KEY
+  supabaseServiceKey = supabaseServiceKey || process.env.SUPABASE_SECRET_KEY
 
   return { supabaseUrl, supabaseAnonKey, supabaseServiceKey }
 }

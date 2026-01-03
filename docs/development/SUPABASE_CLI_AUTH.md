@@ -41,7 +41,7 @@ supabase login
 
 **Variables:**
 - `SUPABASE_ANON_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
-- `SUPABASE_SERVICE_ROLE_KEY` (or `SUPABASE_SERVICE_KEY`)
+- `SUPABASE_SECRET_KEY` (legacy: `SUPABASE_SERVICE_ROLE_KEY`)
 
 **Token Format:** JWT tokens (start with `eyJ...`)
 
@@ -144,7 +144,7 @@ supabase db push
 # 2. Add to .env.local (for app runtime)
 NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
+SUPABASE_SECRET_KEY=eyJ...
 
 # 3. Use in application code
 import { createClient } from '@supabase/supabase-js'

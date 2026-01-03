@@ -19,7 +19,7 @@
  * 
  * Environment Variables:
  *   SUPABASE_URL - Supabase project URL (required)
- *   SUPABASE_SERVICE_ROLE_KEY - Service role key (required)
+ *   SUPABASE_SECRET_KEY - Service role key (required)
  *   E2E_ADMIN_EMAIL - Admin email (optional, default: e2e-admin@bookiji.test)
  *   E2E_ADMIN_PASSWORD - Admin password (default: TestPassword123!)
  *   CREATE_ADMIN - Set to true to seed the admin user (optional)
@@ -75,25 +75,26 @@ if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
   throw error
 }
 
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+// Use SUPABASE_SECRET_KEY (legacy SUPABASE_SERVICE_ROLE_KEY is no longer supported)
+if (!process.env.SUPABASE_SECRET_KEY) {
   const error = new Error(
-    'E2E seed requires SUPABASE_SERVICE_ROLE_KEY\n' +
-    '\n' +
-    'Get your service role key from:\n' +
-    '  Supabase Dashboard → Your Project → Settings → API → Project API keys\n' +
-    '\n' +
+    'E2E seed requires SUPABASE_SECRET_KEY\\n' +
+    '\\n' +
+    'Set SUPABASE_SECRET_KEY in your environment.\\n' +
+    'Get the key from: Supabase Dashboard → Your Project → Settings → API → Project API keys\\n' +
+    '\\n' +
     'Or set E2E_SKIP_SEED=true if users already exist in your Supabase project.'
   )
   throw error
 }
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY
 
 // Create admin client with timeout and IPv4 handling to prevent UND_ERR_HEADERS_TIMEOUT
 const supabaseAdmin = createSupabaseAdminClient(
   SUPABASE_URL!,
-  SUPABASE_SERVICE_ROLE_KEY!,
+  SUPABASE_SECRET_KEY!,
   {
     timeoutMs: 60000, // 60 second timeout for admin operations
     forceIPv4: true   // Force IPv4 to avoid IPv6 resolution issues on Windows

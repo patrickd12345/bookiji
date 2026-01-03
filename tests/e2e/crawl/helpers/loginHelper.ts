@@ -109,7 +109,7 @@ export async function loginAsRole(
         `To fix:\n` +
         `  1. Run: pnpm e2e:seed (to seed users before tests)\n` +
         `  2. Or: Start Supabase and ensure users are seeded\n` +
-        `  3. Or: Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set correctly`
+        `  3. Or: Check SUPABASE_URL and SUPABASE_SECRET_KEY are set correctly`
       )
     }
   }

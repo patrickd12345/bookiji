@@ -23,7 +23,7 @@ k6 must be installed separately (not via npm). Installation methods:
 ```
 BOOKIJI_BASE_URL=http://localhost:3000
 SUPABASE_URL=http://127.0.0.1:55321
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SECRET_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 PARTNER_API_KEY=test-partner-api-key-1767275933622
 BOOKIJI_PARTNER_API_KEY=test-partner-api-key-1767275933622
 BOOKIJI_VENDOR_TEST_ID=0f01a981-944e-4a52-8c4f-ecffee0a9f6d
