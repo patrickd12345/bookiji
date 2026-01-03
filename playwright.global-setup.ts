@@ -3,65 +3,42 @@ import { execSync } from 'node:child_process'
 export default async function globalSetup() {
   // Ensure deterministic Supabase Auth users exist for E2E runs.
   // Skip if E2E_SKIP_SEED is set (useful for cloud environments where users may already exist)
+  // Skip if running against production (users should be seeded manually)
+  const baseURL = process.env.BASE_URL || process.env.E2E_BASE_URL || 'http://localhost:3000'
+  const isProduction = baseURL.includes('bookiji.com')
+
   const allowNoSupabase = process.env.E2E_ALLOW_NO_SUPABASE === 'true' || process.env.E2E_NAVIGATION_ONLY === 'true'
-  const hasAdminKey = Boolean(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
-  if (!allowNoSupabase && process.env.E2E_SKIP_SEED !== 'true' && hasAdminKey) {
-    try {
-      execSync('pnpm e2e:seed', { stdio: 'inherit' })
-    } catch (error: any) {
-      // If seeding fails, check if it's a connection error
-      const output = error.stdout?.toString() || error.stderr?.toString() || error.message || ''
-      if (output.includes('ECONNREFUSED') || 
-          output.includes('fetch failed') || 
-          output.includes('Cannot connect') ||
-          output.includes('Connection timeout') ||
-          output.includes('timeout') ||
-          output.includes('UND_ERR_HEADERS_TIMEOUT')) {
-        console.error('\n❌ User seeding failed - Supabase is not reachable')
-        console.error('\n💡 Options:')
-        console.error('  1. Set up remote Supabase: pnpm e2e:setup-remote')
-        console.error('  2. Skip seeding (if users already exist): E2E_SKIP_SEED=true pnpm e2e')
-        console.error('  3. Start local Supabase: pnpm db:start (requires Docker)')
-        console.error('\n📖 See docs/testing/CLOUD_E2E_SETUP.md for details\n')
-        
-        // In cloud environments, allow continuing if skip flag would work
-        const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-        const isRemote = supabaseUrl && !/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(supabaseUrl)
-        
-        if (isRemote || process.env.CI || process.env.CURSOR || process.env.CODEX || allowNoSupabase) {
-          console.error('⚠️  Continuing without seeded users - tests may fail if they require specific users')
-          console.error('   Set E2E_SKIP_SEED=true to suppress this warning\n')
-        } else {
-          throw error
-        }
-      } else {
-        throw error
-      }
-    }
+
+  // NOTE: For production, we do NOT auto-mutate anything during Playwright setup.
+  if (isProduction) {
+    console.log('⏭️  Skipping user seeding (production environment detected)')
+    console.log('   For production, seed manually:')
+    console.log('     pnpm tsx scripts/e2e/apply-seed-function-prod.ts')
+    console.log('     pnpm e2e:seed\n')
+  } else if (allowNoSupabase) {
+    console.warn('⏭️  Skipping user seeding (E2E_ALLOW_NO_SUPABASE=true / E2E_NAVIGATION_ONLY=true)')
+    console.warn('   Supabase-dependent tests should self-skip in this mode.\n')
+  } else if (process.env.E2E_SKIP_SEED === 'true') {
+    console.log('⏭️  Skipping user seeding (E2E_SKIP_SEED=true)')
   } else {
-    if (allowNoSupabase) {
-      console.warn('⏭️  Skipping user seeding (E2E_ALLOW_NO_SUPABASE=true / E2E_NAVIGATION_ONLY=true)')
-      console.warn('   Supabase-dependent tests should self-skip in this mode.\n')
-      // Note: We still run the warm-up below to reduce flake when hitting remote BASE_URL.
-    } else
+    const hasAdminKey = Boolean(process.env.SUPABASE_SECRET_KEY)
     if (!hasAdminKey) {
-      console.warn('⚠️  Skipping user seeding: missing SUPABASE_SECRET_KEY (or legacy SUPABASE_SERVICE_ROLE_KEY).')
-      console.warn('   Role-based E2E tests may still pass if the users already exist in Supabase.')
-      console.warn('   Otherwise, set SUPABASE_SECRET_KEY or set E2E_SKIP_SEED=true explicitly.\n')
+      console.warn('⚠️  Skipping user seeding: missing SUPABASE_SECRET_KEY.')
+      console.warn('   Role-based E2E tests may still pass if the users already exist in Supabase.\n')
     } else {
-      console.log('⏭️  Skipping user seeding (E2E_SKIP_SEED=true)')
+      execSync('pnpm e2e:seed', { stdio: 'inherit' })
     }
   }
 
   // Warm Next.js routes to avoid first-hit compile delays causing E2E flake.
-  const baseURL = process.env.BASE_URL || process.env.E2E_BASE_URL || 'http://localhost:3000'
+  const warmupBaseURL = process.env.BASE_URL || process.env.E2E_BASE_URL || 'http://localhost:3000'
 
   const waitFor = async (path: string, timeoutMs = 120_000) => {
     const started = Date.now()
     let lastError: unknown = null
     while (Date.now() - started < timeoutMs) {
       try {
-        const res = await fetch(`${baseURL}${path}`, { redirect: 'manual' as any })
+        const res = await fetch(`${warmupBaseURL}${path}`, { redirect: 'manual' as any })
         if (res.status >= 200 && res.status < 500) return
       } catch (err) {
         lastError = err
@@ -83,7 +60,7 @@ export default async function globalSetup() {
     waitFor('/customer/dashboard'),
     (async () => {
       try {
-        await fetch(`${baseURL}/api/bookings/create`, {
+        await fetch(`${warmupBaseURL}/api/bookings/create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

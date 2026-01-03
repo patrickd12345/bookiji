@@ -4,7 +4,7 @@ import { ensureCustomerUser, ensureVendorUser, ensureAdminUser } from './ensureU
 const DEFAULT_CUSTOMER_EMAIL = process.env.E2E_CUSTOMER_EMAIL || 'e2e-customer@bookiji.test'
 const DEFAULT_CUSTOMER_PASSWORD = process.env.E2E_CUSTOMER_PASSWORD || 'password123'
 const DEFAULT_VENDOR_EMAIL = process.env.E2E_VENDOR_EMAIL || 'e2e-vendor@bookiji.test'
-const DEFAULT_VENDOR_PASSWORD = process.env.E2E_VENDOR_PASSWORD || 'TestPassword123!'
+const DEFAULT_VENDOR_PASSWORD = process.env.E2E_VENDOR_PASSWORD || 'password123'
 const DEFAULT_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'e2e-admin@bookiji.test'
 const DEFAULT_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'TestPassword123!'
 

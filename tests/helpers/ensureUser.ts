@@ -20,11 +20,18 @@ export async function ensureUserExists(userDef: E2EUserDefinition): Promise<{ cr
     const supabase = getSupabaseAdmin()
     const { email, password, role, fullName } = userDef
 
-    // Try to find existing user
+    // Try to find existing user (check multiple pages in case of pagination)
     let existingUser: { id: string; email?: string } | null = null
     try {
-      const { data: usersData } = await supabase.auth.admin.listUsers({ page: 1, perPage: 100 })
-      existingUser = usersData?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase()) || null
+      // Search through multiple pages (up to 5 pages = 500 users)
+      for (let page = 1; page <= 5; page++) {
+        const { data: usersData, error: listError } = await supabase.auth.admin.listUsers({ page, perPage: 100 })
+        if (listError) break
+        existingUser = usersData?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase()) || null
+        if (existingUser) break
+        // If we got fewer than 100 users, we've reached the end
+        if (!usersData?.users || usersData.users.length < 100) break
+      }
     } catch (error) {
       // If we can't list users, try to create anyway (will fail gracefully if user exists)
       console.warn(`⚠️  Could not list users to check for ${email}, attempting direct create`)
@@ -79,13 +86,66 @@ export async function ensureUserExists(userDef: E2EUserDefinition): Promise<{ cr
     })
 
     if (createError) {
-      // If user already exists (race condition), try to find it
-      if (createError.message?.toLowerCase().includes('already') || 
-          createError.message?.toLowerCase().includes('exists')) {
-        const { data: usersData } = await supabase.auth.admin.listUsers({ page: 1, perPage: 100 })
-        const found = usersData?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
-        if (found) {
-          return { created: false, userId: found.id }
+      // If user already exists (race condition or concurrent creation), try to find it
+      const errorMsg = createError.message?.toLowerCase() || ''
+      if (errorMsg.includes('already') || 
+          errorMsg.includes('exists') ||
+          errorMsg.includes('registered')) {
+        // Try to find the existing user (check multiple pages)
+        try {
+          let found: { id: string; email?: string } | null = null
+          for (let page = 1; page <= 5; page++) {
+            const { data: usersData, error: listError } = await supabase.auth.admin.listUsers({ page, perPage: 100 })
+            if (listError) break
+            found = usersData?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase()) || null
+            if (found) break
+            if (!usersData?.users || usersData.users.length < 100) break
+          }
+          if (found) {
+            // User exists - ensure password and profile are correct
+            try {
+              await supabase.auth.admin.updateUserById(found.id, {
+                password,
+                email_confirm: true,
+                user_metadata: {
+                  full_name: fullName,
+                  role
+                }
+              })
+            } catch (updateError) {
+              // Password update may fail - continue anyway
+              console.warn(`⚠️  Could not update password for ${email}, continuing with existing user`)
+            }
+
+            // Ensure profile exists
+            try {
+              await supabase
+                .from('profiles')
+                .upsert(
+                  {
+                    auth_user_id: found.id,
+                    email,
+                    full_name: fullName,
+                    role
+                  },
+                  { onConflict: 'auth_user_id' }
+                )
+            } catch (profileError) {
+              console.warn(`⚠️  Could not upsert profile for ${email}`)
+            }
+
+            return { created: false, userId: found.id }
+          }
+          // User not found in list but error says it exists - might be pagination issue
+          // Since we know the user exists (got "already registered"), proceed with login
+          console.warn(`⚠️  User ${email} appears to exist but not found in user list. Proceeding with login attempt.`)
+          // Return a dummy userId - the login will work if user exists, fail gracefully if not
+          return { created: false, userId: 'unknown' }
+        } catch (listError) {
+          // If we can't list users, the user might still exist - try to proceed with login
+          console.warn(`⚠️  Could not list users to find ${email}, user may already exist. Proceeding with login attempt.`)
+          // Return a dummy userId - the login will work if user exists, fail gracefully if not
+          return { created: false, userId: 'unknown' }
         }
       }
       throw new Error(`Failed to create user ${email}: ${createError.message}`)

@@ -8,7 +8,7 @@ export interface E2EUserDefinition {
 }
 
 const E2E_VENDOR_EMAIL = process.env.E2E_VENDOR_EMAIL || 'e2e-vendor@bookiji.test'
-const E2E_VENDOR_PASSWORD = process.env.E2E_VENDOR_PASSWORD || 'TestPassword123!'
+const E2E_VENDOR_PASSWORD = process.env.E2E_VENDOR_PASSWORD || 'password123'
 
 export const E2E_VENDOR_USER: E2EUserDefinition = {
   email: E2E_VENDOR_EMAIL,

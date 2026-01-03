@@ -28,9 +28,9 @@
  * by the Playwright suites to avoid drift.
  */
 
-import fs from 'node:fs'
-import path from 'node:path'
-import dotenv from 'dotenv'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import * as dotenv from 'dotenv'
 import { createSupabaseAdminClient } from './createSupabaseAdmin'
 import { E2E_CUSTOMER_USER, E2E_VENDOR_USER, E2EUserDefinition } from './credentials'
 
@@ -40,24 +40,25 @@ if (process.env.E2E_SKIP_SEED === 'true') {
   process.exit(0)
 }
 
-// Load .env.e2e if it exists, otherwise fall back to .env or .env.local
+// Important:
+// `pnpm e2e:seed` preloads `.env.e2e` via DOTENV_CONFIG_PATH. For production seeding,
+// `.env.e2e` points at localhost and must NOT be used.
+//
+// Strategy:
+// - If `.env.e2e` exists AND points at localhost, load `.env.local` *with override=true*
+//   so the production project values win.
+// - Otherwise, keep existing env intact.
 const envE2EPath = path.resolve(process.cwd(), '.env.e2e')
-const envPaths = [
-  path.resolve(process.cwd(), '.env.local'),
-  path.resolve(process.cwd(), '.env'),
-]
+const envLocalPath = path.resolve(process.cwd(), '.env.local')
 
-if (fs.existsSync(envE2EPath)) {
-  dotenv.config({ path: envE2EPath })
-} else {
-  const envPath = envPaths.find(p => fs.existsSync(p))
-  if (envPath) {
-    dotenv.config({ path: envPath })
-    console.warn(`⚠️  Using ${path.basename(envPath)} instead of .env.e2e for seeding`)
-  } else {
-    // Fall back to default dotenv behavior
-    dotenv.config()
-  }
+const isLocalSupabaseUrl = (url: string | undefined) =>
+  !!url && /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(url.trim())
+
+const currentSupabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+
+if (fs.existsSync(envE2EPath) && isLocalSupabaseUrl(currentSupabaseUrl) && fs.existsSync(envLocalPath)) {
+  dotenv.config({ path: envLocalPath, override: true })
+  console.warn('⚠️  Detected localhost Supabase in .env.e2e; using .env.local for seeding instead.')
 }
 
 if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -390,10 +391,97 @@ async function ensureProfileExists(
     )
 
   if (error) {
-    throw new Error(`Failed to upsert profile for ${email}: ${error.message}`)
+    const msg = (error.message || '').toLowerCase()
+    const looksLikeRls =
+      msg.includes('row-level security') ||
+      msg.includes('violates row-level security') ||
+      msg.includes('rls')
+
+    if (!looksLikeRls) {
+      throw new Error(`Failed to upsert profile for ${email}: ${error.message}`)
+    }
+
+    const rpcRes = await supabase.rpc('seed_e2e_profile', {
+      p_auth_user_id: userId,
+      p_email: email,
+      p_full_name: fullName,
+      p_role: role
+    })
+
+    if (rpcRes.error) {
+      // Last-resort fallback: direct Postgres write via DATABASE_URL (useful when the API key
+      // does not map to a bypass-RLS PostgREST role).
+    const dbUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL
+      if (!dbUrl) {
+        const rpcMsg = rpcRes.error.message || ''
+        throw new Error(
+          [
+            `Failed to ensure profile for ${email}.`,
+            `profiles.upsert failed due to RLS, and RPC seed_e2e_profile is not available (or not yet in the PostgREST schema cache).`,
+            ``,
+            `Fix: run "pnpm tsx scripts/e2e/apply-seed-function-prod.ts" (one-time), wait ~30s, then retry "pnpm e2e:seed".`,
+            ``,
+            `RPC error: ${rpcMsg}`
+          ].join('\n')
+        )
+      }
+
+      // Safety: prevent mixing auth from one Supabase project with DB from another.
+      ensureDbMatchesSupabaseProject(dbUrl)
+      await upsertProfileViaPg(dbUrl, userSeed, userId)
+    }
   }
 
   console.log(`   ƒo" Ensured profile for ${email}`)
+}
+
+async function upsertProfileViaPg(dbUrl: string, userSeed: UserSeed, authUserId: string): Promise<void> {
+  const { email, fullName, role } = userSeed
+  const { Client } = await import('pg')
+  const client = new Client({ connectionString: dbUrl })
+  await client.connect()
+  try {
+    await client.query(
+      `
+      INSERT INTO public.profiles (id, auth_user_id, email, full_name, role, created_at, updated_at)
+      VALUES ($1, $1, $2, $3, $4, now(), now())
+      ON CONFLICT (auth_user_id)
+      DO UPDATE SET
+        email = EXCLUDED.email,
+        full_name = EXCLUDED.full_name,
+        role = EXCLUDED.role,
+        updated_at = now();
+      `,
+      [authUserId, email, fullName, role]
+    )
+  } finally {
+    await client.end()
+  }
+}
+
+function ensureDbMatchesSupabaseProject(dbUrl: string) {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!supabaseUrl) return
+
+  const suMatch = supabaseUrl.match(/^https?:\/\/([^.]+)\.supabase\.co/i)
+  const dbMatch = dbUrl.match(/@db\.([^.]+)\.supabase\.co/i)
+
+  if (!suMatch || !dbMatch) return
+
+  const suRef = suMatch[1]
+  const dbRef = dbMatch[1]
+
+  if (suRef !== dbRef) {
+    throw new Error(
+      [
+        `Refusing to write via DATABASE_URL because it targets a different Supabase project.`,
+        `SUPABASE_URL projectRef=${suRef}`,
+        `DATABASE_URL projectRef=${dbRef}`,
+        ``,
+        `Fix: ensure .env.local / .env.e2e point at the same project, or set DATABASE_URL for the same project you're seeding.`,
+      ].join('\n')
+    )
+  }
 }
 
 async function ensureAppUserExists(
@@ -415,7 +503,25 @@ async function ensureAppUserExists(
     .single()
 
   if (error) {
-    throw new Error(`Failed to upsert app_user for ${email}: ${error.message}`)
+    const msg = (error.message || '').toLowerCase()
+    const looksLikeRls =
+      msg.includes('row-level security') ||
+      msg.includes('violates row-level security') ||
+      msg.includes('rls')
+
+    if (!looksLikeRls) {
+      throw new Error(`Failed to upsert app_user for ${email}: ${error.message}`)
+    }
+
+    const dbUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL
+    if (!dbUrl) {
+      throw new Error(`Failed to upsert app_user for ${email}: ${error.message}`)
+    }
+
+    ensureDbMatchesSupabaseProject(dbUrl)
+    const appUserId = await upsertAppUserViaPg(dbUrl, userSeed, userId)
+    console.log(`   ƒo" Ensured app_user for ${email}`)
+    return appUserId
   }
 
   if (!data?.id) {
@@ -424,6 +530,33 @@ async function ensureAppUserExists(
 
   console.log(`   ƒo" Ensured app_user for ${email}`)
   return data.id
+}
+
+async function upsertAppUserViaPg(dbUrl: string, userSeed: UserSeed, authUserId: string): Promise<string> {
+  const { email, fullName } = userSeed
+  const { Client } = await import('pg')
+  const client = new Client({ connectionString: dbUrl })
+  await client.connect()
+  try {
+    const res = await client.query(
+      `
+      INSERT INTO public.app_users (auth_user_id, display_name, created_at)
+      VALUES ($1, $2, now())
+      ON CONFLICT (auth_user_id)
+      DO UPDATE SET
+        display_name = EXCLUDED.display_name
+      RETURNING id;
+      `,
+      [authUserId, fullName]
+    )
+    const id = res.rows?.[0]?.id
+    if (!id) {
+      throw new Error(`Failed to retrieve app_user id for ${email}`)
+    }
+    return id
+  } finally {
+    await client.end()
+  }
 }
 
 async function ensureUserRoleExists(
@@ -443,10 +576,45 @@ async function ensureUserRoleExists(
     )
 
   if (error) {
-    throw new Error(`Failed to upsert user_role ${role} for ${email}: ${error.message}`)
+    const msg = (error.message || '').toLowerCase()
+    const looksLikeRls =
+      msg.includes('row-level security') ||
+      msg.includes('violates row-level security') ||
+      msg.includes('rls')
+
+    if (!looksLikeRls) {
+      throw new Error(`Failed to upsert user_role ${role} for ${email}: ${error.message}`)
+    }
+
+    const dbUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL
+    if (!dbUrl) {
+      throw new Error(`Failed to upsert user_role ${role} for ${email}: ${error.message}`)
+    }
+
+    ensureDbMatchesSupabaseProject(dbUrl)
+    await upsertUserRoleViaPg(dbUrl, appUserId, role)
   }
 
   console.log(`   ƒo" Ensured user_role ${role} for ${email}`)
+}
+
+async function upsertUserRoleViaPg(dbUrl: string, appUserId: string, role: string): Promise<void> {
+  const { Client } = await import('pg')
+  const client = new Client({ connectionString: dbUrl })
+  await client.connect()
+  try {
+    await client.query(
+      `
+      INSERT INTO public.user_roles (app_user_id, role, granted_at)
+      VALUES ($1, $2, now())
+      ON CONFLICT (app_user_id, role)
+      DO NOTHING;
+      `,
+      [appUserId, role]
+    )
+  } finally {
+    await client.end()
+  }
 }
 
 async function main() {

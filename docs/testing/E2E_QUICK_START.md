@@ -113,6 +113,21 @@ Artifacts are written to `playwright/navigation-artifacts/`:
 
 ### How to run
 
+**For local/staging:**
 ```bash
 E2E=true pnpm e2e tests/e2e/navigation-completeness-and-sanity.spec.ts
 ```
+
+**For production (bookiji.com):**
+```bash
+# 1. Apply the seeding function to production (one-time setup)
+pnpm tsx scripts/e2e/apply-seed-function-prod.ts
+
+# 2. Seed test users
+pnpm e2e:seed
+
+# 3. Run navigation completeness test
+pnpm e2e:navigation
+```
+
+**Note:** The global setup automatically skips seeding when `BASE_URL` contains `bookiji.com` to avoid mutating production during test runs.

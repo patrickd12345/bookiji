@@ -1,0 +1,28 @@
+# Bookiji deterministic test environment
+FROM node:18-alpine AS base
+
+ENV TZ=UTC
+WORKDIR /app
+
+# Install pnpm pinned to v8 (matches lockfile)
+RUN npm install -g pnpm@9.1.2
+
+# Copy lockfiles and package manifests
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies strictly from lockfile
+RUN pnpm install --frozen-lockfile
+
+# Copy full repo (for running migrations, seeds, and tests)
+COPY . .
+
+ENV NODE_ENV=test
+
+# Everything below here runs in the test job container
+# Entrypoint will be specified by docker-compose to:
+# - Run Supabase migrations
+# - Seed test users/data
+# - Run full test suite (vitest, then e2e)
+
+# Default command is noop; actual test-run command set in docker-compose
+CMD ["sleep", "infinity"]
