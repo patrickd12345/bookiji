@@ -1,176 +1,355 @@
 #!/usr/bin/env node
 
 /**
- * Analyzes navigation coverage by comparing:
- * 1. Pages that exist in src/app
- * 2. Pages linked in navigation components
- * 3. Identifies missing links
+ * Navigation Coverage Analysis
+ * 
+ * Analyzes all routes in the app and checks if they're reachable through
+ * navigation (links, menus, buttons). Identifies orphaned pages that can't
+ * be reached through navigation.
  */
 
-import { readdirSync, statSync, readFileSync } from 'fs'
-import { join, dirname } from 'path'
+import fs from 'fs'
+import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-const rootDir = join(__dirname, '..')
+const __dirname = path.dirname(__filename)
+const rootDir = path.resolve(__dirname, '..')
 
-// Get all page routes from src/app
-function getAllPages(dir = 'src/app', basePath = '') {
-  const pages = []
-  const fullPath = join(rootDir, dir)
+// Extract all routes from app directory
+function getAllRoutes() {
+  const routes = new Set()
+  const appDir = path.join(rootDir, 'src/app')
   
-  try {
-    const entries = readdirSync(fullPath)
+  function scanDirectory(dir, basePath = '') {
+    if (!fs.existsSync(dir)) return
+    
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
     
     for (const entry of entries) {
-      // Skip special Next.js directories and files
-      if (entry.startsWith('_') || entry.startsWith('.') || entry === 'api' || entry === 'layout.tsx' || entry === 'loading.tsx' || entry === 'error.tsx' || entry === 'not-found.tsx') {
-        continue
-      }
+      const fullPath = path.join(dir, entry.name)
+      const routePath = path.join(basePath, entry.name)
       
-      const entryPath = join(fullPath, entry)
-      const stat = statSync(entryPath)
-      
-      if (stat.isDirectory()) {
-        // Check if it's a dynamic route [param]
-        if (entry.startsWith('[') && entry.endsWith(']')) {
-          pages.push(`${basePath}/${entry}`)
-        } else {
-          // Recursively get pages from subdirectory
-          pages.push(...getAllPages(join(dir, entry), `${basePath}/${entry}`))
+      if (entry.isDirectory()) {
+        // Skip special Next.js directories
+        if (entry.name.startsWith('(') || entry.name.startsWith('_')) {
+          continue
         }
-      } else if (entry === 'page.tsx' || entry === 'page.ts') {
-        // Found a page
-        const route = basePath || '/'
-        pages.push(route)
+        scanDirectory(fullPath, routePath)
+      } else if (entry.name === 'page.tsx' || entry.name === 'page.ts') {
+        // Convert file path to route
+        let route = basePath || '/'
+        if (route !== '/') {
+          route = '/' + route.replace(/\\/g, '/')
+        }
+        
+        // Handle dynamic routes [param]
+        route = route.replace(/\[([^\]]+)\]/g, ':$1')
+        
+        routes.add(route)
       }
     }
-  } catch {
-    // Directory doesn't exist or can't be read
   }
   
-  return pages
+  scanDirectory(appDir)
+  return Array.from(routes).sort()
 }
 
-// Extract hrefs from navigation components
-function extractNavLinks() {
+  // Extract navigation links from components
+function getNavigationLinks() {
+  const links = new Set()
+  const componentsDir = path.join(rootDir, 'src/components')
+  
+  // Known navigation components
   const navFiles = [
-    'src/components/MainNavigation.tsx',
-    'src/components/admin/Sidebar.tsx',
-    'src/components/admin/Navbar.tsx',
-    'src/components/simcity-cockpit/CockpitNavigation.tsx',
-    'src/app/settings/layout.tsx',
-    'src/app/HomePageClient.tsx'
+    'MainNavigation.tsx',
+    'Footer.tsx',
+    'admin/Sidebar.tsx',
+    'customer/CustomerNavigation.tsx',
+    'vendor/VendorNavigation.tsx',
+    'simcity-cockpit/CockpitNavigation.tsx',
   ]
   
-  const links = new Set()
+  // Also check admin ops-ai layout
+  const opsAiLayoutPath = path.join(rootDir, 'src/app/admin/ops-ai/layout.tsx')
   
+  // Extract hrefs from navigation components
   for (const file of navFiles) {
-    try {
-      const content = readFileSync(join(rootDir, file), 'utf-8')
-      // Match href="..." or href={'...'} or href={`...`}
-      const hrefMatches = content.matchAll(/href\s*=\s*["'`]([^"'`]+)["'`]/g)
+    const filePath = path.join(componentsDir, file)
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, 'utf-8')
+      
+      // Match href="/..." or href='/...'
+      const hrefMatches = content.matchAll(/href=["']([^"']+)["']/g)
       for (const match of hrefMatches) {
         const href = match[1]
-        // Only include internal links
-        if (href.startsWith('/') && !href.startsWith('/api/') && !href.startsWith('/_next/')) {
-          links.add(href)
+        // Only include internal routes (starting with /)
+        if (href.startsWith('/') && !href.startsWith('//') && !href.includes('http')) {
+          // Remove query params and hashes
+          const cleanHref = href.split('?')[0].split('#')[0]
+          links.add(cleanHref)
         }
       }
-    } catch {
-      // File doesn't exist
+      
+      // Also check for navItems arrays
+      const navItemsMatches = content.matchAll(/href:\s*["']([^"']+)["']/g)
+      for (const match of navItemsMatches) {
+        const href = match[1]
+        if (href.startsWith('/') && !href.startsWith('//') && !href.includes('http')) {
+          const cleanHref = href.split('?')[0].split('#')[0]
+          links.add(cleanHref)
+        }
+      }
     }
   }
   
-  return Array.from(links).sort()
+  // Check ops-ai layout
+  if (fs.existsSync(opsAiLayoutPath)) {
+    const content = fs.readFileSync(opsAiLayoutPath, 'utf-8')
+    const hrefMatches = content.matchAll(/href:\s*["']([^"']+)["']/g)
+    for (const match of hrefMatches) {
+      const href = match[1]
+      if (href.startsWith('/') && !href.startsWith('//') && !href.includes('http')) {
+        const cleanHref = href.split('?')[0].split('#')[0]
+        links.add(cleanHref)
+      }
+    }
+  }
+  
+  // Also check for links in page components (buttons, cards, etc.)
+  // This includes: href attributes, router.push(), window.location, onClick handlers
+  function scanForNavigation(dir) {
+    if (!fs.existsSync(dir)) return
+    
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+    
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name)
+      
+      if (entry.isDirectory()) {
+        if (!entry.name.startsWith('(') && !entry.name.startsWith('_') && entry.name !== 'node_modules') {
+          scanForNavigation(fullPath)
+        }
+      } else if (entry.name.endsWith('.tsx') || entry.name.endsWith('.ts')) {
+        const content = fs.readFileSync(fullPath, 'utf-8')
+        
+        // Match href attributes
+        const hrefMatches = content.matchAll(/href=["']([^"']+)["']/g)
+        for (const match of hrefMatches) {
+          const href = match[1]
+          if (href.startsWith('/') && !href.startsWith('//') && !href.includes('http')) {
+            const cleanHref = href.split('?')[0].split('#')[0]
+            links.add(cleanHref)
+          }
+        }
+        
+        // Match router.push() calls
+        const routerPushMatches = content.matchAll(/router\.(push|replace)\(["']([^"']+)["']/g)
+        for (const match of routerPushMatches) {
+          const route = match[2]
+          if (route.startsWith('/') && !route.startsWith('//') && !route.includes('http')) {
+            const cleanRoute = route.split('?')[0].split('#')[0]
+            links.add(cleanRoute)
+          }
+        }
+        
+        // Match window.location assignments
+        const windowLocationMatches = content.matchAll(/window\.location\.(href|assign|replace)\s*=\s*["']([^"']+)["']/g)
+        for (const match of windowLocationMatches) {
+          const route = match[2]
+          if (route.startsWith('/') && !route.startsWith('//') && !route.includes('http')) {
+            const cleanRoute = route.split('?')[0].split('#')[0]
+            links.add(cleanRoute)
+          }
+        }
+        
+        // Match onClick handlers with navigation (template literals with routes)
+        const onClickMatches = content.matchAll(/onClick.*?\([^)]*?["']([^"']+)["']/gs)
+        for (const match of onClickMatches) {
+          const route = match[1]
+          if (route.startsWith('/') && !route.startsWith('//') && !route.includes('http') && route.length < 100) {
+            const cleanRoute = route.split('?')[0].split('#')[0]
+            links.add(cleanRoute)
+          }
+        }
+        
+        // Match template literals in navigation (e.g., `/book/${vendorId}`)
+        // Extract base routes from template literals
+        const templateLiteralMatches = content.matchAll(/["']\/([^"']*?)\$\{/g)
+        for (const match of templateLiteralMatches) {
+          const baseRoute = '/' + match[1]
+          if (baseRoute.length > 1 && !baseRoute.includes('http')) {
+            links.add(baseRoute)
+          }
+        }
+      }
+    }
+  }
+  
+  scanForNavigation(path.join(rootDir, 'src/app'))
+  scanForNavigation(path.join(rootDir, 'src/components'))
+  
+  return links
+}
+
+// Check if a route is reachable (either exact match or parent route)
+function isRouteReachable(route, links) {
+  // Exact match
+  if (links.has(route)) return true
+  
+  // Check if parent route exists (e.g., /admin/users is reachable if /admin exists)
+  const parts = route.split('/').filter(Boolean)
+  for (let i = parts.length - 1; i > 0; i--) {
+    const parentRoute = '/' + parts.slice(0, i).join('/')
+    if (links.has(parentRoute)) return true
+  }
+  
+  // Check dynamic routes (e.g., /book/:vendorId is reachable if /book exists)
+  const baseRoute = route.split(':')[0].replace(/\/$/, '') || '/'
+  if (links.has(baseRoute)) return true
+  
+  return false
 }
 
 // Main analysis
-const allPages = getAllPages()
-const navLinks = extractNavLinks()
-
-console.log('\n📊 NAVIGATION COVERAGE ANALYSIS\n')
-console.log('='.repeat(80))
-
-console.log(`\n📄 Total pages found: ${allPages.length}`)
-console.log(`🔗 Total navigation links: ${navLinks.length}`)
-
-// Find pages not in navigation
-const pagesNotInNav = allPages.filter(page => {
-  // Check if any nav link matches this page
-  return !navLinks.some(link => {
-    // Exact match
-    if (link === page) return true
-    // Parent route match (e.g., /admin matches /admin/analytics)
-    if (page.startsWith(link + '/')) return true
-    // Dynamic route match (e.g., /book/[vendorId] matches /book/123)
-    if (link.includes('[') && link.includes(']')) {
-      const linkPattern = link.replace(/\[.*?\]/g, '[^/]+')
-      const regex = new RegExp(`^${linkPattern}$`)
-      return regex.test(page)
+function analyzeNavigationCoverage() {
+  console.log('🔍 Analyzing Navigation Coverage...\n')
+  
+  const allRoutes = getAllRoutes()
+  const navLinksSet = getNavigationLinks()
+  const navLinks = navLinksSet instanceof Set ? navLinksSet : new Set(Array.from(navLinksSet || []))
+  
+  console.log(`📊 Found ${allRoutes.length} routes`)
+  console.log(`🔗 Found ${navLinks.size} navigation links\n`)
+  
+  // Categorize routes
+  const publicRoutes = allRoutes.filter(r => !r.startsWith('/admin') && !r.startsWith('/customer') && !r.startsWith('/vendor'))
+  const adminRoutes = allRoutes.filter(r => r.startsWith('/admin'))
+  const customerRoutes = allRoutes.filter(r => r.startsWith('/customer'))
+  const vendorRoutes = allRoutes.filter(r => r.startsWith('/vendor'))
+  
+  // Find unreachable routes
+  const unreachable = []
+  const reachable = []
+  
+  for (const route of allRoutes) {
+    if (isRouteReachable(route, navLinks)) {
+      reachable.push(route)
+    } else {
+      unreachable.push(route)
     }
-    return false
-  })
-})
-
-// Find navigation links that don't have pages
-const navLinksWithoutPages = navLinks.filter(link => {
-  // Check if any page matches this link
-  return !allPages.some(page => {
-    // Exact match
-    if (link === page) return true
-    // Parent route match
-    if (page.startsWith(link + '/')) return true
-    // Dynamic route match
-    if (page.includes('[') && page.includes(']')) {
-      const pagePattern = page.replace(/\[.*?\]/g, '[^/]+')
-      const regex = new RegExp(`^${pagePattern}$`)
-      return regex.test(link)
+  }
+  
+  // Generate report
+  console.log('='.repeat(80))
+  console.log('NAVIGATION COVERAGE REPORT')
+  console.log('='.repeat(80))
+  console.log()
+  
+  console.log(`✅ Reachable routes: ${reachable.length}/${allRoutes.length} (${Math.round(reachable.length / allRoutes.length * 100)}%)`)
+  console.log(`❌ Unreachable routes: ${unreachable.length}/${allRoutes.length} (${Math.round(unreachable.length / allRoutes.length * 100)}%)`)
+  console.log()
+  
+  if (unreachable.length > 0) {
+    console.log('⚠️  UNREACHABLE ROUTES (not linked in navigation):')
+    console.log('-'.repeat(80))
+    
+    // Group by category
+    const unreachablePublic = unreachable.filter(r => !r.startsWith('/admin') && !r.startsWith('/customer') && !r.startsWith('/vendor'))
+    const unreachableAdmin = unreachable.filter(r => r.startsWith('/admin'))
+    const unreachableCustomer = unreachable.filter(r => r.startsWith('/customer'))
+    const unreachableVendor = unreachable.filter(r => r.startsWith('/vendor'))
+    
+    if (unreachablePublic.length > 0) {
+      console.log('\n📄 Public Routes:')
+      unreachablePublic.forEach(r => console.log(`   - ${r}`))
     }
-    return false
-  })
-})
-
-console.log(`\n❌ Pages NOT in navigation: ${pagesNotInNav.length}`)
-if (pagesNotInNav.length > 0) {
-  console.log('\nMissing from navigation:')
-  pagesNotInNav.forEach(page => {
-    console.log(`   - ${page}`)
-  })
-}
-
-console.log(`\n⚠️  Navigation links without pages: ${navLinksWithoutPages.length}`)
-if (navLinksWithoutPages.length > 0) {
-  console.log('\nBroken navigation links:')
-  navLinksWithoutPages.forEach(link => {
-    console.log(`   - ${link}`)
-  })
-}
-
-// Group by category
-console.log('\n\n📋 PAGES BY CATEGORY:\n')
-
-const categories = {
-  'Public Pages': allPages.filter(p => !p.startsWith('/admin') && !p.startsWith('/customer') && !p.startsWith('/vendor') && !p.startsWith('/provider')),
-  'Admin Pages': allPages.filter(p => p.startsWith('/admin')),
-  'Customer Pages': allPages.filter(p => p.startsWith('/customer')),
-  'Vendor Pages': allPages.filter(p => p.startsWith('/vendor')),
-  'Provider Pages': allPages.filter(p => p.startsWith('/provider')),
-  'Settings Pages': allPages.filter(p => p.startsWith('/settings')),
-}
-
-for (const [category, pages] of Object.entries(categories)) {
-  if (pages.length > 0) {
-    console.log(`${category} (${pages.length}):`)
-    pages.forEach(page => {
-      const inNav = navLinks.some(link => link === page || page.startsWith(link + '/'))
-      console.log(`   ${inNav ? '✅' : '❌'} ${page}`)
-    })
+    
+    if (unreachableAdmin.length > 0) {
+      console.log('\n🔧 Admin Routes:')
+      unreachableAdmin.forEach(r => console.log(`   - ${r}`))
+    }
+    
+    if (unreachableCustomer.length > 0) {
+      console.log('\n👤 Customer Routes:')
+      unreachableCustomer.forEach(r => console.log(`   - ${r}`))
+    }
+    
+    if (unreachableVendor.length > 0) {
+      console.log('\n🏪 Vendor Routes:')
+      unreachableVendor.forEach(r => console.log(`   - ${r}`))
+    }
+  } else {
+    console.log('✅ All routes are reachable through navigation!')
+  }
+  
+  console.log()
+  console.log('='.repeat(80))
+  console.log('NAVIGATION LINKS FOUND:')
+  console.log('='.repeat(80))
+  console.log()
+  
+  const publicLinks = Array.from(navLinks).filter(l => !l.startsWith('/admin') && !l.startsWith('/customer') && !l.startsWith('/vendor'))
+  const adminLinks = Array.from(navLinks).filter(l => l.startsWith('/admin'))
+  const customerLinks = Array.from(navLinks).filter(l => l.startsWith('/customer'))
+  const vendorLinks = Array.from(navLinks).filter(l => l.startsWith('/vendor'))
+  
+  if (publicLinks.length > 0) {
+    console.log('📄 Public Links:')
+    publicLinks.forEach(l => console.log(`   - ${l}`))
     console.log()
   }
+  
+  if (adminLinks.length > 0) {
+    console.log('🔧 Admin Links:')
+    adminLinks.forEach(l => console.log(`   - ${l}`))
+    console.log()
+  }
+  
+  if (customerLinks.length > 0) {
+    console.log('👤 Customer Links:')
+    customerLinks.forEach(l => console.log(`   - ${l}`))
+    console.log()
+  }
+  
+  if (vendorLinks.length > 0) {
+    console.log('🏪 Vendor Links:')
+    vendorLinks.forEach(l => console.log(`   - ${l}`))
+    console.log()
+  }
+  
+  // Save report to file
+  const reportPath = path.join(rootDir, 'NAVIGATION_COVERAGE_REPORT.md')
+  const report = `# Navigation Coverage Report
+
+Generated: ${new Date().toISOString()}
+
+## Summary
+
+- **Total Routes**: ${allRoutes.length}
+- **Navigation Links**: ${navLinks.size}
+- **Reachable Routes**: ${reachable.length} (${Math.round(reachable.length / allRoutes.length * 100)}%)
+- **Unreachable Routes**: ${unreachable.length} (${Math.round(unreachable.length / allRoutes.length * 100)}%)
+
+## Unreachable Routes
+
+${unreachable.length > 0 ? unreachable.map(r => `- \`${r}\``).join('\n') : '✅ All routes are reachable!'}
+
+## Recommendations
+
+${unreachable.length > 0 ? `
+1. Add navigation links for unreachable routes
+2. Consider adding these routes to appropriate navigation components:
+   - Admin routes → \`src/components/admin/Sidebar.tsx\`
+   - Customer routes → \`src/components/customer/CustomerNavigation.tsx\`
+   - Vendor routes → \`src/components/vendor/VendorNavigation.tsx\`
+   - Public routes → \`src/components/MainNavigation.tsx\` or \`src/components/Footer.tsx\`
+` : '✅ All routes are properly linked in navigation!'}
+`
+  
+  fs.writeFileSync(reportPath, report, 'utf-8')
+  console.log(`\n📄 Report saved to: ${reportPath}`)
 }
 
-console.log('\n' + '='.repeat(80))
-console.log('\n✅ Analysis complete!\n')
-
+// Run analysis
+analyzeNavigationCoverage()

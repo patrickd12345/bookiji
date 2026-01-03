@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Calendar, Heart, User, Settings, CreditCard } from 'lucide-react'
+import { LayoutDashboard, Calendar, Heart, User, Settings, CreditCard, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { LogoutButton } from '@/components/LogoutButton'
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/customer/favorites', label: 'Favorites', icon: Heart },
   { href: '/customer/profile', label: 'Profile', icon: User },
   { href: '/customer/credits', label: 'Credits', icon: CreditCard },
+  { href: '/customer/coming-soon', label: 'Coming Soon', icon: Clock },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 

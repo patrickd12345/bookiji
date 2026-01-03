@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Calendar, LayoutDashboard, HelpCircle, FileText, Clock } from 'lucide-react'
+import { Calendar, LayoutDashboard, HelpCircle, FileText, Clock, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { LogoutButton } from '@/components/LogoutButton'
@@ -13,6 +13,7 @@ const navItems = [
   { href: '/vendor/calendar', label: 'Calendar', icon: Calendar },
   { href: '/vendor/schedule', label: 'Schedule', icon: Clock },
   { href: '/vendor/requests', label: 'Requests', icon: FileText },
+  { href: '/vendor/communications', label: 'Communications', icon: MessageSquare },
   { href: '/vendor/help', label: 'Help', icon: HelpCircle },
 ]
 

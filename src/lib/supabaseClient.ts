@@ -80,7 +80,8 @@ export function getBrowserSupabase(): SupabaseClient | null {
   console.warn('[SUPABASE CLIENT] Creating browser client', {
     url,
     hasKey: !!key,
-    keyPreview: key?.slice(0, 10)
+    keyPreview: key?.slice(0, 20),
+    keyFormat: key?.startsWith('eyJ') ? 'JWT (legacy)' : key?.startsWith('sb_') ? 'sb_ prefix (new format)' : 'unknown format'
   })
 
   if (!url || !key) {
@@ -99,7 +100,7 @@ export function getBrowserSupabase(): SupabaseClient | null {
   }
 
   try {
-    // Create client with single options object (not deprecated parameters)
+    // Create client with options object (format: url, key, options)
     // Use a unique storage key to prevent conflicts with other instances
     const client = createClient(url, key, {
       auth: {

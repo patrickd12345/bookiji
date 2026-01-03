@@ -44,6 +44,16 @@ export default function Footer() {
                   Compliance
                 </Link>
               </li>
+              <li>
+                <Link href="/application" className="hover:text-white transition-colors">
+                  Application
+                </Link>
+              </li>
+              <li>
+                <Link href="/beta/signup" className="hover:text-white transition-colors">
+                  Beta Signup
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -69,6 +79,16 @@ export default function Footer() {
               <li>
                 <Link href="/requests" className="hover:text-white transition-colors">
                   Service Requests
+                </Link>
+              </li>
+              <li>
+                <Link href="/sched" className="hover:text-white transition-colors">
+                  Schedule
+                </Link>
+              </li>
+              <li>
+                <Link href="/ops" className="hover:text-white transition-colors">
+                  Operations
                 </Link>
               </li>
             </ul>

@@ -1,9 +1,9 @@
 import { test, expect } from '../fixtures/base'
 
 test.describe('Admin Dashboard', () => {
-  test('dashboard loads data from APIs', async ({ page, authHelper }) => {
+  test('dashboard loads data from APIs', async ({ page, auth }) => {
     // Login as admin
-    await authHelper.loginAsAdmin()
+    await auth.loginAsAdmin()
     
     // Navigate to admin dashboard
     await page.goto('/admin', { waitUntil: 'domcontentloaded' })

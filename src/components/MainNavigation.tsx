@@ -144,7 +144,7 @@ export default function MainNavigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <Link href="/" className="flex items-center" data-test="nav-logo">
+            <Link href="/main" className="flex items-center" data-test="nav-logo">
               <span className="text-xl font-bold text-primary">Bookiji</span>
             </Link>
           </div>
@@ -283,6 +283,13 @@ export default function MainNavigation() {
                         data-test="nav-start-booking"
                       >
                         {t('nav.start_booking')}
+                      </Link>
+                      <Link
+                        href="/choose-role"
+                        className="px-3 py-2 rounded-md text-sm font-medium text-foreground hover:bg-muted"
+                        data-test="nav-choose-role"
+                      >
+                        Choose Role
                       </Link>
                       <Link
                         href={isLoggedIn && userRole !== 'vendor' ? '/customer/dashboard' : '/register?redirect=/customer/dashboard'}

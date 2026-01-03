@@ -27,9 +27,15 @@ export default function AnalyticsChart({ data }: AnalyticsChartProps) {
       return (
         <div className="bg-white p-4 rounded-2xl shadow-xl border border-gray-200">
           <p className="font-medium text-gray-900">{`Date: ${label}`}</p>
-          <p className="text-blue-600">{`Users: ${payload[0].value}`}</p>
-          <p className="text-green-600">{`Bookings: ${payload[1].value}`}</p>
-          <p className="text-purple-600">{`Revenue: $${payload[2].value}`}</p>
+          {payload[0] && payload[0].dataKey === 'users' && (
+            <p className="text-blue-600">{`Users: ${payload[0].value}`}</p>
+          )}
+          {payload[1] && payload[1].dataKey === 'bookings' && (
+            <p className="text-green-600">{`Bookings: ${payload[1].value}`}</p>
+          )}
+          {payload[0] && payload[0].dataKey === 'revenue' && (
+            <p className="text-purple-600">{`Revenue: $${payload[0].value?.toLocaleString() || 0}`}</p>
+          )}
         </div>
       )
     }
@@ -96,7 +102,21 @@ export default function AnalyticsChart({ data }: AnalyticsChartProps) {
                 tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               />
               <YAxis stroke="#6b7280" fontSize={12} />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip 
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-white p-4 rounded-2xl shadow-xl border border-gray-200">
+                        <p className="font-medium text-gray-900">{`Date: ${label}`}</p>
+                        {payload[0] && (
+                          <p className="text-purple-600">{`Revenue: $${payload[0].value?.toLocaleString() || 0}`}</p>
+                        )}
+                      </div>
+                    )
+                  }
+                  return null
+                }}
+              />
               <Area 
                 type="monotone" 
                 dataKey="revenue" 

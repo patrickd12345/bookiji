@@ -59,6 +59,8 @@
     "db:diff": "supabase db diff",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
+    "db:grant-admin": "node scripts/run-grant-admin-local.mjs",
+    "db:refresh-metrics": "node scripts/refresh-api-metrics.mjs",
     "supabase:start": "node scripts/supabase-start.mjs",
     "supabase:stop": "node scripts/supabase-stop.mjs",
     "db:policy:check": "node scripts/check-db-policy.mjs",

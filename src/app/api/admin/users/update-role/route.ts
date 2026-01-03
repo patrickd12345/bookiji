@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const isAdmin = profile?.role === 'admin'
     
     // Also check explicit admin emails as a fallback/bootstrap
-    const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') || ['admin@bookiji.com', 'patri@bookiji.com']
+    const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') || ['admin@bookiji.com', 'patri@bookiji.com', 'pilotmontreal@gmail.com', 'patrick_duchesneau_1@hotmail.com']
     const isEmailAdmin = user.email && ADMIN_EMAILS.includes(user.email)
 
     if (!isAdmin && !isEmailAdmin) {

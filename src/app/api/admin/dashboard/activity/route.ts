@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
     if (recentVendors) {
       for (const vendor of recentVendors) {
         activities.push({
-          id: vendor.id,
+          id: `vendor-${vendor.id}`,
           type: 'vendor_registration',
           title: 'New vendor registration',
           description: `${vendor.business_name || vendor.full_name || 'A vendor'} joined the platform`,
@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
       for (const booking of recentBookings) {
         const serviceName = booking.service_id ? (serviceMap[booking.service_id] || 'service') : 'service'
         activities.push({
-          id: booking.id,
+          id: `booking-${booking.id}`,
           type: 'booking_completed',
           title: 'Booking completed',
           description: `${serviceName} completed`,
@@ -184,7 +184,7 @@ export async function GET(request: NextRequest) {
           ? payment.total_amount 
           : parseFloat(String(payment.total_amount || '0'))
         activities.push({
-          id: payment.id,
+          id: `payment-${payment.id}`,
           type: 'payment_received',
           title: 'Payment received',
           description: `$${amount.toFixed(2)} payment for ${serviceName}`,
