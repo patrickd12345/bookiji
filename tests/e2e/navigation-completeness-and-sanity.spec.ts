@@ -92,22 +92,23 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
   })
 
   test('guest traversal', async ({ page, baseURL }) => {
-    const harness = createRuntimeSanityHarness(page, baseURL)
+    const resolvedBaseURL = baseURL ?? process.env.BASE_URL ?? 'http://localhost:3000'
+    const harness = createRuntimeSanityHarness(page, resolvedBaseURL)
     harness.attachToPage()
     harness.resetStep({ role: 'guest', entryPoint: '/', actionId: null, fromPath: '/' })
 
     const runtimeFailures = harness.failures
     const traversal = await runNavigationTraversal(
       page,
-      baseURL,
+      resolvedBaseURL,
       {
         role: 'guest',
         entryPoints: ['/', '/main'],
         includeMainContentLinks: true,
         stabilizationTimeoutMs: 20_000,
       },
-      runtimeFailures
-      , harness
+      runtimeFailures,
+      harness
     )
 
     collected.edges.push(...traversal.edges)
@@ -138,14 +139,15 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     await skipIfSupabaseUnavailable(test.info())
     await auth.loginAsCustomer()
 
-    const harness = createRuntimeSanityHarness(page, baseURL)
+    const resolvedBaseURL = baseURL ?? process.env.BASE_URL ?? 'http://localhost:3000'
+    const harness = createRuntimeSanityHarness(page, resolvedBaseURL)
     harness.attachToPage()
     harness.resetStep({ role: 'customer', entryPoint: '/customer/dashboard', actionId: null, fromPath: '/customer/dashboard' })
     const runtimeFailures = harness.failures
 
     const traversal = await runNavigationTraversal(
       page,
-      baseURL,
+      resolvedBaseURL,
       { role: 'customer', entryPoints: ['/customer/dashboard'], includeMainContentLinks: true, stabilizationTimeoutMs: 20_000 },
       runtimeFailures,
       harness
@@ -178,14 +180,15 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     await skipIfSupabaseUnavailable(test.info())
     await auth.loginAsVendor()
 
-    const harness = createRuntimeSanityHarness(page, baseURL)
+    const resolvedBaseURL = baseURL ?? process.env.BASE_URL ?? 'http://localhost:3000'
+    const harness = createRuntimeSanityHarness(page, resolvedBaseURL)
     harness.attachToPage()
     harness.resetStep({ role: 'vendor', entryPoint: '/vendor/dashboard', actionId: null, fromPath: '/vendor/dashboard' })
     const runtimeFailures = harness.failures
 
     const traversal = await runNavigationTraversal(
       page,
-      baseURL,
+      resolvedBaseURL,
       { role: 'vendor', entryPoints: ['/vendor/dashboard'], includeMainContentLinks: true, stabilizationTimeoutMs: 20_000 },
       runtimeFailures,
       harness
@@ -218,14 +221,15 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     await skipIfSupabaseUnavailable(test.info())
     await auth.loginAsAdmin()
 
-    const harness = createRuntimeSanityHarness(page, baseURL)
+    const resolvedBaseURL = baseURL ?? process.env.BASE_URL ?? 'http://localhost:3000'
+    const harness = createRuntimeSanityHarness(page, resolvedBaseURL)
     harness.attachToPage()
     harness.resetStep({ role: 'admin', entryPoint: '/admin', actionId: null, fromPath: '/admin' })
     const runtimeFailures = harness.failures
 
     const traversal = await runNavigationTraversal(
       page,
-      baseURL,
+      resolvedBaseURL,
       { role: 'admin', entryPoints: ['/admin'], includeMainContentLinks: false, stabilizationTimeoutMs: 25_000 },
       runtimeFailures,
       harness
