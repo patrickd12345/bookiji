@@ -9,6 +9,8 @@ const DEFAULT_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'e2e-admin@bookiji.te
 const DEFAULT_ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || 'TestPassword123!'
 
 export function authHelper(page: Page) {
+  const hasAdminKey = Boolean(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
+
   const waitForPathnamePrefix = async (pathnamePrefix: string, timeoutMs = 30_000) => {
     const prefix = pathnamePrefix.startsWith('/') ? pathnamePrefix : `/${pathnamePrefix}`
     await page.waitForURL((url) => url.pathname.startsWith(prefix), { timeout: timeoutMs, waitUntil: 'domcontentloaded' })
@@ -28,7 +30,7 @@ export function authHelper(page: Page) {
   return {
     async login(email = DEFAULT_CUSTOMER_EMAIL, password = DEFAULT_CUSTOMER_PASSWORD) {
       // Ensure user exists before attempting login
-      if (email === DEFAULT_CUSTOMER_EMAIL) {
+      if (email === DEFAULT_CUSTOMER_EMAIL && hasAdminKey) {
         try {
           await ensureCustomerUser()
         } catch (error) {
@@ -76,7 +78,7 @@ export function authHelper(page: Page) {
     },
     async loginAsAdmin(email = DEFAULT_ADMIN_EMAIL, password = DEFAULT_ADMIN_PASSWORD) {
       // Ensure user exists before attempting login
-      if (email === DEFAULT_ADMIN_EMAIL) {
+      if (email === DEFAULT_ADMIN_EMAIL && hasAdminKey) {
         try {
           await ensureAdminUser()
         } catch (error) {
@@ -143,7 +145,7 @@ export function authHelper(page: Page) {
     },
     async loginAsVendor(email = DEFAULT_VENDOR_EMAIL, password = DEFAULT_VENDOR_PASSWORD, nextPath = '/vendor/dashboard') {
       // Ensure user exists before attempting login
-      if (email === DEFAULT_VENDOR_EMAIL) {
+      if (email === DEFAULT_VENDOR_EMAIL && hasAdminKey) {
         try {
           await ensureVendorUser()
         } catch (error) {
@@ -190,7 +192,7 @@ export function authHelper(page: Page) {
     },
     async loginAsCustomer(email = DEFAULT_CUSTOMER_EMAIL, password = DEFAULT_CUSTOMER_PASSWORD, nextPath = '/customer/dashboard') {
       // Ensure user exists before attempting login
-      if (email === DEFAULT_CUSTOMER_EMAIL) {
+      if (email === DEFAULT_CUSTOMER_EMAIL && hasAdminKey) {
         try {
           await ensureCustomerUser()
         } catch (error) {

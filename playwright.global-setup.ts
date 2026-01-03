@@ -3,7 +3,8 @@ import { execSync } from 'node:child_process'
 export default async function globalSetup() {
   // Ensure deterministic Supabase Auth users exist for E2E runs.
   // Skip if E2E_SKIP_SEED is set (useful for cloud environments where users may already exist)
-  if (process.env.E2E_SKIP_SEED !== 'true') {
+  const hasAdminKey = Boolean(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)
+  if (process.env.E2E_SKIP_SEED !== 'true' && hasAdminKey) {
     try {
       execSync('pnpm e2e:seed', { stdio: 'inherit' })
     } catch (error: any) {
@@ -37,7 +38,13 @@ export default async function globalSetup() {
       }
     }
   } else {
-    console.log('⏭️  Skipping user seeding (E2E_SKIP_SEED=true)')
+    if (!hasAdminKey) {
+      console.warn('⚠️  Skipping user seeding: missing SUPABASE_SECRET_KEY (or legacy SUPABASE_SERVICE_ROLE_KEY).')
+      console.warn('   Role-based E2E tests may still pass if the users already exist in Supabase.')
+      console.warn('   Otherwise, set SUPABASE_SECRET_KEY or set E2E_SKIP_SEED=true explicitly.\n')
+    } else {
+      console.log('⏭️  Skipping user seeding (E2E_SKIP_SEED=true)')
+    }
   }
 
   // Warm Next.js routes to avoid first-hit compile delays causing E2E flake.

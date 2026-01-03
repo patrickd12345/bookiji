@@ -75,10 +75,11 @@ if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
   throw error
 }
 
-// Use SUPABASE_SECRET_KEY (legacy SUPABASE_SERVICE_ROLE_KEY is no longer supported)
-if (!process.env.SUPABASE_SECRET_KEY) {
+// Prefer the new key model, but allow legacy key as a fallback for backward compatibility.
+const resolvedSupabaseSecretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+if (!resolvedSupabaseSecretKey) {
   const error = new Error(
-    'E2E seed requires SUPABASE_SECRET_KEY\\n' +
+    'E2E seed requires SUPABASE_SECRET_KEY (preferred) or legacy SUPABASE_SERVICE_ROLE_KEY\\n' +
     '\\n' +
     'Set SUPABASE_SECRET_KEY in your environment.\\n' +
     'Get the key from: Supabase Dashboard → Your Project → Settings → API → Project API keys\\n' +
@@ -87,9 +88,12 @@ if (!process.env.SUPABASE_SECRET_KEY) {
   )
   throw error
 }
+if (!process.env.SUPABASE_SECRET_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.warn('⚠️  Using legacy SUPABASE_SERVICE_ROLE_KEY for E2E seed; prefer SUPABASE_SECRET_KEY.')
+}
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY
+const SUPABASE_SECRET_KEY = resolvedSupabaseSecretKey
 
 // Create admin client with timeout and IPv4 handling to prevent UND_ERR_HEADERS_TIMEOUT
 const supabaseAdmin = createSupabaseAdminClient(
