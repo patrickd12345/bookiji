@@ -187,7 +187,7 @@ async function runCrawl(
   page: Page,
   baseURL: string,
   role?: 'admin' | 'vendor' | 'customer',
-  auth?: ReturnType<typeof import('../helpers/auth').authHelper>
+  auth?: ReturnType<typeof import('../../helpers/auth').authHelper>
 ): Promise<CrawlReport> {
   const startTime = Date.now()
   const visited = new Set<string>()
