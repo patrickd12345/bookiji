@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabaseServerClient'
+import type { PostgrestError } from '@supabase/supabase-js'
 
 export interface AdminUser {
   id: string
@@ -17,7 +18,7 @@ export async function requireAdmin(session: any): Promise<AdminUser> {
   // Get user profile with role
   // Try auth_user_id first (new schema), then id (old schema)
   let profile: { id: string; email: string; role: string } | null = null
-  let error: any = null
+  let error: PostgrestError | null = null
   
   const primaryResult = await supabase
     .from('profiles')
