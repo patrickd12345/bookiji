@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/lib/slack/notifier.ts",
+    "src/lib/jarvis/escalation/notifyWithEscalation.ts"
+  ]
+}
