@@ -53,13 +53,21 @@ class LLMClient {
 
   constructor() {
     const llmConfig = getLLMConfig();
-    this.baseURL = llmConfig.baseURL;
+    const auth = getAiGatewayAuth();
+    
+    // If Vercel Gateway auth is available, always use Vercel Gateway URL
+    if (auth) {
+      this.baseURL = process.env.VERCEL_AI_BASE_URL || 'https://ai-gateway.vercel.sh';
+    } else {
+      this.baseURL = llmConfig.baseURL;
+    }
+    
     this.model = llmConfig.model;
     this.timeout = llmConfig.timeout;
 
     if (!LLMClient.hasLoggedMode) {
-      const auth = getAiGatewayAuth();
       logger.info(`🔐 Auth mode: ${auth ? 'vercel-gateway' : 'ollama'}`);
+      logger.info(`🌐 Base URL: ${this.baseURL}`);
       LLMClient.hasLoggedMode = true;
     }
   }

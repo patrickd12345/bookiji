@@ -14,6 +14,7 @@ export interface EnvironmentConfig {
     model: string;
     apiKey?: string;
     timeout: number;
+    optimization?: 'cost' | 'speed' | 'balanced';
   };
   
   // Database Configuration
@@ -57,13 +58,40 @@ export interface EnvironmentConfig {
   };
 }
 
+// Helper to get cost-optimized model based on optimization preference
+function getOptimizedModel(optimization?: 'cost' | 'speed' | 'balanced'): string {
+  const explicitModel = process.env.VERCEL_AI_MODEL;
+  if (explicitModel) {
+    return explicitModel; // User explicitly set a model, use it
+  }
+
+  const optimizationMode = optimization || (process.env.VERCEL_AI_OPTIMIZATION as 'cost' | 'speed' | 'balanced') || 'cost';
+  
+  switch (optimizationMode) {
+    case 'cost':
+      // Cost-optimized: Use cheapest models
+      return 'gpt-3.5-turbo'; // Cheapest OpenAI model via Vercel Gateway
+    case 'speed':
+      // Speed-optimized: Use faster models (may cost more)
+      return 'gpt-4o-mini'; // Fast and reasonably priced
+    case 'balanced':
+    default:
+      // Balanced: Good performance at reasonable cost
+      return 'gpt-4o-mini'; // Good balance
+  }
+}
+
 // Development configuration (local)
 const developmentConfig: EnvironmentConfig = {
   llm: {
-    baseURL: process.env.VERCEL_AI_BASE_URL || process.env.LOCAL_LLM_URL || process.env.NEXT_PUBLIC_LLM_URL || (process.env.VERCEL_AI_KEY ? 'https://ai-gateway.vercel.sh' : ''),
-    model: process.env.VERCEL_AI_MODEL || process.env.LOCAL_LLM_MODEL || 'llama3.2:8b',
-    apiKey: process.env.VERCEL_AI_KEY || '',
+    // Prioritize Vercel AI Gateway if key is available, otherwise use local Ollama
+    baseURL: (process.env.VERCEL_AI_KEY || process.env.AI_GATEWAY_API_KEY) 
+      ? (process.env.VERCEL_AI_BASE_URL || 'https://ai-gateway.vercel.sh')
+      : (process.env.LOCAL_LLM_URL || process.env.NEXT_PUBLIC_LLM_URL || 'http://localhost:11434'),
+    model: getOptimizedModel('cost'), // Default to cost optimization
+    apiKey: process.env.VERCEL_AI_KEY || process.env.AI_GATEWAY_API_KEY || '',
     timeout: 30000, // 30 seconds for local
+    optimization: (process.env.VERCEL_AI_OPTIMIZATION as 'cost' | 'speed' | 'balanced') || 'cost',
   },
   
   database: {
@@ -106,10 +134,14 @@ const developmentConfig: EnvironmentConfig = {
 // Production configuration (Railway)
 const productionConfig: EnvironmentConfig = {
   llm: {
-    baseURL: process.env.VERCEL_AI_BASE_URL || 'https://ai-gateway.vercel.sh',
-    model: process.env.VERCEL_AI_MODEL || process.env.RAILWAY_LLM_MODEL || process.env.LLM_MODEL || 'llama3.2:8b',
-    apiKey: process.env.VERCEL_AI_KEY || '',
+    // Always use Vercel AI Gateway in production if key is available
+    baseURL: (process.env.VERCEL_AI_KEY || process.env.AI_GATEWAY_API_KEY)
+      ? (process.env.VERCEL_AI_BASE_URL || 'https://ai-gateway.vercel.sh')
+      : (process.env.RAILWAY_LLM_URL || 'https://ai-gateway.vercel.sh'),
+    model: getOptimizedModel('cost'), // Default to cost optimization
+    apiKey: process.env.VERCEL_AI_KEY || process.env.AI_GATEWAY_API_KEY || '',
     timeout: 60000, // 60 seconds for production
+    optimization: (process.env.VERCEL_AI_OPTIMIZATION as 'cost' | 'speed' | 'balanced') || 'cost',
   },
   
   database: {
@@ -192,6 +224,7 @@ export const getLLMConfig = () => ({
   model: config.llm.model,
   apiKey: config.llm.apiKey,
   timeout: config.llm.timeout,
+  optimization: config.llm.optimization || 'cost',
 });
 
 // Database configuration

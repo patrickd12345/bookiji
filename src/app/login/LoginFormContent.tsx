@@ -264,6 +264,7 @@ export default function LoginFormContent() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  suppressHydrationWarning
                   className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
                 />
               </div>
@@ -282,6 +283,7 @@ export default function LoginFormContent() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  suppressHydrationWarning
                   className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
                 />
               </div>
@@ -293,6 +295,7 @@ export default function LoginFormContent() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
+                  suppressHydrationWarning
                   className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
@@ -311,6 +314,7 @@ export default function LoginFormContent() {
               <button
                 type="submit"
                 disabled={isLoading}
+                suppressHydrationWarning
                 className={`flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                   isLoading ? 'opacity-75 cursor-not-allowed' : ''
                 }`}
@@ -334,6 +338,7 @@ export default function LoginFormContent() {
               <button
                 onClick={() => handleSocialLogin('google')}
                 disabled={isLoading}
+                suppressHydrationWarning
                 className={`flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 hover:bg-gray-50 ${
                   isLoading ? 'opacity-75 cursor-not-allowed' : ''
                 }`}
@@ -366,6 +371,7 @@ export default function LoginFormContent() {
               <button
                 onClick={() => handleSocialLogin('github')}
                 disabled={isLoading}
+                suppressHydrationWarning
                 className={`flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 hover:bg-gray-50 ${
                   isLoading ? 'opacity-75 cursor-not-allowed' : ''
                 }`}

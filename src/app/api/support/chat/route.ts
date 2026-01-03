@@ -154,8 +154,25 @@ async function handleRequest(req: Request) {
     try {
       // 1. Generate embedding for the query
       console.warn('📝 Generating embedding for query:', message.substring(0, 50));
-      const embedding = await embeddingService.getEmbedding(message);
-      console.warn('✅ Embedding generated, dimensions:', embedding.length);
+      let embedding: number[];
+      try {
+        embedding = await embeddingService.getEmbedding(message);
+        console.warn('✅ Embedding generated, dimensions:', embedding.length);
+      } catch (embedError: unknown) {
+        const errorMsg = embedError instanceof Error ? embedError.message : String(embedError);
+        console.error('❌ KB search failed:', errorMsg);
+        
+        // Provide helpful error messages for common API key issues
+        if (errorMsg.includes('leaked') || errorMsg.includes('403')) {
+          throw new Error('GEMINI_API_KEY has been reported as leaked. Please generate a new API key at https://aistudio.google.com/app/apikey and update your .env.local file. The system will attempt to use OpenAI as a fallback if OPENAI_API_KEY is available.');
+        } else if (errorMsg.includes('Invalid API Key') || errorMsg.includes('401')) {
+          const embeddingProvider = process.env.SUPPORT_EMBEDDING_PROVIDER || 'gemini';
+          if (embeddingProvider === 'gemini') {
+            throw new Error('GEMINI_API_KEY is invalid. Please check your API key at https://aistudio.google.com/app/apikey and update your .env.local file. Alternatively, set SUPPORT_EMBEDDING_PROVIDER=openai and provide OPENAI_API_KEY.');
+          }
+        }
+        throw embedError;
+      }
       
       // 2. Search vector store using RPC function
       const { data: searchResults, error: searchError } = await admin.rpc('kb_search', {

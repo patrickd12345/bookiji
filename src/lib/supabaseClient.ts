@@ -54,7 +54,12 @@ function getBrowserEnv() {
 }
 
 // Global singleton instance to prevent multiple GoTrueClient instances
-let browserInstance: SupabaseClient | null = null
+// Store on window to persist across HMR (Hot Module Reload)
+declare global {
+  interface Window {
+    __bookiji_supabase_client?: SupabaseClient
+  }
+}
 
 // ---------- Browser client (auth, sessions) ----------
 // This function now always returns the singleton to prevent multiple instances
@@ -64,9 +69,9 @@ export function getBrowserSupabase(): SupabaseClient | null {
     return null
   }
 
-  // Return existing instance if available
-  if (browserInstance) {
-    return browserInstance
+  // Return existing instance if available (check window first for HMR persistence)
+  if (window.__bookiji_supabase_client) {
+    return window.__bookiji_supabase_client
   }
 
   const { url, key } = getBrowserEnv()
@@ -96,7 +101,7 @@ export function getBrowserSupabase(): SupabaseClient | null {
   try {
     // Create client with single options object (not deprecated parameters)
     // Use a unique storage key to prevent conflicts with other instances
-    browserInstance = createClient(url, key, {
+    const client = createClient(url, key, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -105,8 +110,12 @@ export function getBrowserSupabase(): SupabaseClient | null {
         storage: typeof window !== 'undefined' ? window.localStorage : undefined,
       },
     })
+    
+    // Store on window to persist across HMR
+    window.__bookiji_supabase_client = client
+    
     console.warn('[SUPABASE CLIENT] Browser client created successfully', { url })
-    return browserInstance
+    return client
   } catch (error) {
     console.error('Failed to create Supabase client:', error)
     return null
