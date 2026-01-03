@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { limitRequest } from '@/middleware/requestLimiter'
-import { ollamaService, BOOKIJI_PROMPTS } from '@/lib/ollama'
+import { BOOKIJI_PROMPTS } from '@/lib/ollama'
+import { llmClient } from '@/lib/llm-client'
 
 export async function POST(request: Request) {
   const startTime = Date.now()
@@ -13,24 +14,24 @@ export async function POST(request: Request) {
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ 
         error: 'Message is required and must be a string' 
-      }, { status: 400 })
+    }, { status: 400 })
     }
 
     if (message.trim().length === 0) {
       return NextResponse.json({ 
         error: 'Message cannot be empty' 
-      }, { status: 400 })
+    }, { status: 400 })
     }
 
     if (process.env.NODE_ENV === 'development') {
       console.warn('🤖 AI Chat Request:', message)
     }
 
-    // Check if Ollama is available first
-    const isAvailable = await ollamaService.isAvailable()
+    // Check if LLM is available first
+    const isAvailable = await llmClient.healthCheck()
     if (!isAvailable) {
       if (process.env.NODE_ENV === 'development') {
-        console.warn('⚠️ Ollama service not available, using fallback response')
+        console.warn('⚠️ LLM service not available, using fallback response')
       }
       return NextResponse.json({
         success: true,
@@ -41,12 +42,16 @@ export async function POST(request: Request) {
       })
     }
 
-    // Use the Bookiji booking query prompt with timeout protection
-    const aiResponse = await ollamaService.generate(
-      BOOKIJI_PROMPTS.bookingQuery(message)
-    )
+    // Use the Bookiji booking query prompt with unified client
+    const response = await llmClient.chat({
+      messages: [
+        { role: 'user', content: BOOKIJI_PROMPTS.bookingQuery(message) }
+      ]
+    })
 
+    const aiResponse = response.choices[0]?.message?.content || ''
     const responseTime = Date.now() - startTime
+    
     if (process.env.NODE_ENV === 'development') {
       console.warn(`🤖 AI Response (${responseTime}ms):`, aiResponse.substring(0, 100) + '…')
     }
@@ -71,4 +76,4 @@ export async function POST(request: Request) {
       responseTime
     })
   }
-} 
+}

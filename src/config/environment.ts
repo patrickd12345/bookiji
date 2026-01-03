@@ -1,6 +1,12 @@
 // Environment configuration for Bookiji
 // Handles both development (local LLM) and production (Railway LLM)
 
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables from .env.local if present
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+
 export interface EnvironmentConfig {
   // LLM Configuration
   llm: {
@@ -54,8 +60,9 @@ export interface EnvironmentConfig {
 // Development configuration (local)
 const developmentConfig: EnvironmentConfig = {
   llm: {
-    baseURL: process.env.LOCAL_LLM_URL || process.env.NEXT_PUBLIC_LLM_URL || '',
-    model: process.env.LOCAL_LLM_MODEL || 'llama3.2:8b',
+    baseURL: process.env.VERCEL_AI_BASE_URL || process.env.LOCAL_LLM_URL || process.env.NEXT_PUBLIC_LLM_URL || (process.env.VERCEL_AI_KEY ? 'https://ai-gateway.vercel.sh' : ''),
+    model: process.env.VERCEL_AI_MODEL || process.env.LOCAL_LLM_MODEL || 'llama3.2:8b',
+    apiKey: process.env.VERCEL_AI_KEY || '',
     timeout: 30000, // 30 seconds for local
   },
   
@@ -99,8 +106,9 @@ const developmentConfig: EnvironmentConfig = {
 // Production configuration (Railway)
 const productionConfig: EnvironmentConfig = {
   llm: {
-    baseURL: process.env.RAILWAY_LLM_URL || process.env.LLM_URL || '',
-    model: process.env.RAILWAY_LLM_MODEL || process.env.LLM_MODEL || 'llama3.2:8b',
+    baseURL: process.env.VERCEL_AI_BASE_URL || 'https://ai-gateway.vercel.sh',
+    model: process.env.VERCEL_AI_MODEL || process.env.RAILWAY_LLM_MODEL || process.env.LLM_MODEL || 'llama3.2:8b',
+    apiKey: process.env.VERCEL_AI_KEY || '',
     timeout: 60000, // 60 seconds for production
   },
   
@@ -182,6 +190,7 @@ export const isStaging = () => config.app.environment === 'staging';
 export const getLLMConfig = () => ({
   baseURL: config.llm.baseURL,
   model: config.llm.model,
+  apiKey: config.llm.apiKey,
   timeout: config.llm.timeout,
 });
 

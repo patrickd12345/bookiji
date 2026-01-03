@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { limitRequest } from '@/middleware/requestLimiter'
-import { ollamaService, BOOKIJI_PROMPTS } from '@/lib/ollama'
+import { BOOKIJI_PROMPTS } from '@/lib/ollama'
+import { llmClient } from '@/lib/llm-client'
 import { ADSENSE_APPROVAL_MODE } from "@/lib/adsense"
 
 export async function POST(request: Request) {
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
     if (!service || !location) {
       return NextResponse.json({ 
         error: 'Service and location are required' 
-      }, { status: 400 })
+    }, { status: 400 })
     }
 
     if (process.env.NODE_ENV === 'development' && !ADSENSE_APPROVAL_MODE) {
@@ -32,9 +33,12 @@ export async function POST(request: Request) {
     let recommendedRadius = 5
     let explanation = 'Default radius applied.'
     try {
-      const aiResponse = await ollamaService.generate(
-        BOOKIJI_PROMPTS.radiusScaling(providerDensity || 'medium', service)
-      )
+      const response = await llmClient.chat({
+        messages: [
+          { role: 'user', content: BOOKIJI_PROMPTS.radiusScaling(providerDensity || 'medium', service) }
+        ]
+      })
+      const aiResponse = response.choices[0]?.message?.content || ''
       const radiusMatch = aiResponse.match(/(\d+(?:\.\d+)?)\s*km/i)
       recommendedRadius = radiusMatch ? parseFloat(radiusMatch[1]) : 5
       explanation = aiResponse
@@ -92,4 +96,4 @@ export async function POST(request: Request) {
       providerDensity: density
     })
   }
-} 
+}
