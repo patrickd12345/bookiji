@@ -9,7 +9,7 @@ export async function reconcileCreditIntents(): Promise<ReconciliationResult> {
   try {
     // Fetch unreconciled intents deterministically
     const { data: intents, error } = await supabase
-      .from<CreditIntent>('credit_intents')
+      .from('credit_intents')
       .select('*')
       .is('reconciled_at', null)
       .order('created_at', { ascending: true })

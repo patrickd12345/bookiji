@@ -118,7 +118,7 @@ describe('Calendar Sync Flags', () => {
   describe('edge cases and production defaults', async () => {
     it('readFlag returns false when unset in production', async () => {
       vi.stubEnv('NODE_ENV', 'production')
-      vi.unstubEnv('CALENDAR_SYNC_ENABLED')
+      // CALENDAR_SYNC_ENABLED is not set, so it should default to false
       const flagsModule = await import('@/lib/calendar-sync/flags')
       expect(flagsModule.isCalendarSyncEnabled()).toBe(false)
     })

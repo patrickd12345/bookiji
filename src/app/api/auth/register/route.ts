@@ -56,14 +56,29 @@ export async function POST(request: Request) {
       
       // Validate that we have the required configuration
       if (!supabaseUrl || !serviceKey) {
-        console.error('Missing Supabase configuration', { hasUrl: !!supabaseUrl, hasKey: !!serviceKey })
+        console.error('[REGISTER API] Missing Supabase configuration', { 
+          hasUrl: !!supabaseUrl, 
+          hasKey: !!serviceKey,
+          env: process.env.APP_ENV || process.env.NODE_ENV,
+          hasProdSecretKey: !!process.env.PROD_SUPABASE_SECRET_KEY,
+          hasProdServiceKey: !!process.env.PROD_SUPABASE_SERVICE_KEY,
+          hasFallbackSecretKey: !!process.env.SUPABASE_SECRET_KEY
+        })
         return NextResponse.json(
           { error: 'Server configuration error. Please contact support.' },
           { status: 500 }
         )
       }
     } catch (configError) {
-      console.error('Supabase configuration error:', configError)
+      console.error('[REGISTER API] Supabase configuration error:', {
+        error: configError instanceof Error ? configError.message : String(configError),
+        stack: configError instanceof Error ? configError.stack : undefined,
+        env: process.env.APP_ENV || process.env.NODE_ENV,
+        hasProdSecretKey: !!process.env.PROD_SUPABASE_SECRET_KEY,
+        hasProdServiceKey: !!process.env.PROD_SUPABASE_SERVICE_KEY,
+        hasFallbackSecretKey: !!process.env.SUPABASE_SECRET_KEY,
+        role: body.role || 'customer'
+      })
       return NextResponse.json(
         { error: 'Server configuration error. Please contact support.' },
         { status: 500 }

@@ -1,14 +1,6 @@
-/**
- * STUB: Build-time placeholder for Slack notification module
- * 
- * Real Slack integration is an ops concern and should be implemented
- * here when the integration is ready.
- * 
- * Activation requires explicit environment configuration.
- */
+import { logger, LogContext } from '@/lib/logger'
 
-// Interface matching usage in notifyWithEscalation.ts
-export interface PostIncidentNotificationParams {
+interface IncidentNotificationParams {
   incidentId: string
   severity: string
   env: string
@@ -16,30 +8,15 @@ export interface PostIncidentNotificationParams {
   details: string
 }
 
-export interface PostSeverityChangeUpdateParams {
-  incidentId: string
-  severity: string
-  env: string
-  summary: string
-  details: string
+interface SeverityUpdateParams extends IncidentNotificationParams {
   threadTs: string
 }
 
-/**
- * Stub for posting incident notification to Slack
- */
-export async function postIncidentNotification(
-  params: PostIncidentNotificationParams
-): Promise<string | null> {
-  console.warn('[Jarvis Stub] Slack notifier is stubbed. Notification suppressed:', params.incidentId)
+export async function postIncidentNotification(params: IncidentNotificationParams): Promise<string | null> {
+  logger.info('[Stub] postIncidentNotification called', params as unknown as LogContext)
   return null
 }
 
-/**
- * Stub for posting severity update to Slack
- */
-export async function postSeverityChangeUpdate(
-  params: PostSeverityChangeUpdateParams
-): Promise<void> {
-  console.warn('[Jarvis Stub] Slack severity update is stubbed. Update suppressed:', params.incidentId)
+export async function postSeverityChangeUpdate(params: SeverityUpdateParams): Promise<void> {
+  logger.info('[Stub] postSeverityChangeUpdate called', params as unknown as LogContext)
 }

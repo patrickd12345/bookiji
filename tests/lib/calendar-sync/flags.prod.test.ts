@@ -8,7 +8,7 @@ describe('Calendar Sync Flags - Production behavior', () => {
 
   it('defaults to false in production when env var is unset', async () => {
     vi.stubEnv('NODE_ENV', 'production')
-    vi.unstubEnv('CALENDAR_SYNC_ENABLED')
+    // CALENDAR_SYNC_ENABLED is not set, so it should default to false
     const flags = await import('@/lib/calendar-sync/flags')
     expect(flags.isCalendarSyncEnabled()).toBe(false)
   })
