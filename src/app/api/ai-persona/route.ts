@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { limitRequest } from '@/middleware/requestLimiter'
-import { ollamaService, BOOKIJI_PROMPTS } from '@/lib/ollama'
+import { BOOKIJI_PROMPTS } from '@/lib/ollama'
+import { llmClient } from '@/lib/llm-client'
 
 export async function POST(request: Request) {
   try {
@@ -11,17 +12,24 @@ export async function POST(request: Request) {
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ 
         error: 'Message is required and must be a string' 
-      }, { status: 400 })
+    }, { status: 400 })
     }
 
     if (process.env.NODE_ENV === 'development') {
       console.warn('👤 AI Persona Request:', { message, persona, service })
     }
 
-    // Generate AI response based on customer persona
-    const aiResponse = await ollamaService.generate(
-      BOOKIJI_PROMPTS.personaResponse(message, persona || 'general', service, userHistory)
-    )
+    // Generate AI response based on customer persona using unified client
+    const response = await llmClient.chat({
+      messages: [
+        { 
+          role: 'user', 
+          content: BOOKIJI_PROMPTS.personaResponse(message, persona || 'general', service, userHistory) 
+        }
+      ]
+    })
+
+    const aiResponse = response.choices[0]?.message?.content || ''
 
     if (process.env.NODE_ENV === 'development') {
       console.warn('👤 AI Persona Response:', aiResponse.substring(0, 100) + '…')
@@ -44,4 +52,4 @@ export async function POST(request: Request) {
       fallback: true
     })
   }
-} 
+}

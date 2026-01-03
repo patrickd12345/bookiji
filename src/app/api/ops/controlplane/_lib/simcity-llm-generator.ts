@@ -7,6 +7,7 @@
 
 import type { LLMProposedEvent, LLMWorldSnapshot } from './simcity-llm-events'
 import { validateLLMEventSchema } from './simcity-llm-events'
+import { llmClient } from '@/lib/llm-client'
 
 /**
  * Generate proposed events from LLM
@@ -39,34 +40,15 @@ export async function generateLLMEvents(
     // Build prompt for LLM
     const prompt = buildLLMPrompt(snapshot, maxEvents)
 
-    // Call LLM service (placeholder - replace with actual LLM integration)
-    const llmEndpoint = process.env.SIMCITY_LLM_ENDPOINT || 'http://localhost:11434/api/generate'
-    const llmModel = process.env.SIMCITY_LLM_MODEL || 'llama3.2'
-
-    const response = await fetch(llmEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: llmModel,
-        prompt,
-        stream: false,
-        options: {
-          temperature: snapshot.run_goals.chaos ? 0.9 : 0.7, // Higher temperature for chaos
-          top_p: 0.9,
-        },
-      }),
-      signal: AbortSignal.timeout(10000), // 10s timeout
+    // Call LLM service using unified client
+    const response = await llmClient.chat({
+      messages: [
+        { role: 'user', content: prompt }
+      ],
+      temperature: snapshot.run_goals.chaos ? 0.9 : 0.7, // Higher temperature for chaos
     })
 
-    if (!response.ok) {
-      console.warn(`LLM service returned ${response.status}`)
-      return []
-    }
-
-    const data = await response.json()
-    const rawText = data.response || data.content || ''
+    const rawText = response.choices[0]?.message?.content || ''
 
     // Parse JSON from LLM response
     // LLM might return markdown code blocks or plain JSON
@@ -85,7 +67,11 @@ export async function generateLLMEvents(
       // Try to extract JSON from text
       const jsonMatch = jsonText.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
-        parsed = JSON.parse(jsonMatch[0])
+        try {
+          parsed = JSON.parse(jsonMatch[0])
+        } catch {
+          return []
+        }
       } else {
         return []
       }

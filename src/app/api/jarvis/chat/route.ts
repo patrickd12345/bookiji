@@ -14,6 +14,7 @@ import { getIncidentSnapshot } from '@/lib/jarvis/incidentSnapshot'
 import { getIncidentStatusSnapshot } from '@/lib/jarvis/status/getIncidentSnapshot'
 import { getServerSupabase } from '@/lib/supabaseServer'
 import { getAppEnv } from '@/lib/env/assertAppEnv'
+import { llmClient } from '@/lib/llm-client'
 
 interface Booking {
   status: string
@@ -299,17 +300,13 @@ interface BookijiState {
 }
 
 /**
- * Generate chat response using LLM
+ * Generate chat response using unified LLM client
  */
 async function generateChatResponse(query: string, context: BookijiState): Promise<string> {
-  const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY
-  const model = process.env.GROQ_API_KEY ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini'
-  const baseUrl = process.env.GROQ_API_KEY 
-    ? 'https://api.groq.com/openai/v1'
-    : 'https://api.openai.com/v1'
-
-  if (!apiKey) {
-    return `I'm Jarvis, Bookiji's incident commander. I can help you understand system state, but I need an LLM API key configured (GROQ_API_KEY or OPENAI_API_KEY) to answer questions intelligently.
+  // Check if LLM is available first (handles missing config check)
+  const isAvailable = await llmClient.healthCheck()
+  if (!isAvailable) {
+    return `I'm Jarvis, Bookiji's incident commander. I can help you understand system state, but I need an LLM service configured to answer questions intelligently.
 
 Current system state:
 - Environment: ${context.environment}
@@ -319,7 +316,7 @@ Current system state:
 
 You asked: "${query}"
 
-Without LLM, I can only provide raw data. Please configure an API key for intelligent responses.`
+Without LLM, I can only provide raw data. Please configure an LLM service for intelligent responses.`
   }
 
   const systemPrompt = `You are Jarvis, Bookiji's autonomous incident commander and system monitor. You're now chatting with an admin who wants to understand Bookiji's state, stats, incidents, or system health.
@@ -338,30 +335,16 @@ ${JSON.stringify(context, null, 2)}
 Answer the admin's question based on this context. Be natural and conversational.`
 
   try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: query }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
-      })
+    const response = await llmClient.chat({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: query }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`LLM API error: ${response.status} ${errorText}`)
-    }
-
-    const data = await response.json()
-    return data.choices?.[0]?.message?.content || 'I apologize, but I could not generate a response.'
+    return response.choices[0]?.message?.content || 'I apologize, but I could not generate a response.'
   } catch (error) {
     console.error('[Jarvis Chat] LLM error:', error)
     return `I encountered an error while processing your question: ${error instanceof Error ? error.message : 'Unknown error'}. 

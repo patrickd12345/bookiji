@@ -1,5 +1,6 @@
 import { getLLMConfig, isDevelopment } from '@/config/environment';
 import { logger } from '@/lib/logger';
+import { getAiGatewayAuth } from '@/config/aiGatewayAuth';
 
 export interface LLMRequest {
   messages: Array<{
@@ -48,12 +49,27 @@ class LLMClient {
   private baseURL: string;
   private model: string;
   private timeout: number;
+  private static hasLoggedMode = false;
 
   constructor() {
     const llmConfig = getLLMConfig();
     this.baseURL = llmConfig.baseURL;
     this.model = llmConfig.model;
     this.timeout = llmConfig.timeout;
+
+    if (!LLMClient.hasLoggedMode) {
+      const auth = getAiGatewayAuth();
+      logger.info(`🔐 Auth mode: ${auth ? 'vercel-gateway' : 'ollama'}`);
+      LLMClient.hasLoggedMode = true;
+    }
+  }
+
+  /**
+   * Check if we should use Vercel/OpenAI-compatible format
+   * We use this if an authentication method is available
+   */
+  private isVercelMode(): boolean {
+    return getAiGatewayAuth() !== null;
   }
 
   /**
@@ -66,26 +82,34 @@ class LLMClient {
         throw new Error('No messages provided');
       }
 
-      // Use environment-specific endpoint
+      // Use provider-specific endpoint
       const endpoint = this.getChatEndpoint();
       const payload = this.buildPayload(request);
 
       logger.info(`🤖 LLM Request to: ${endpoint}`);
-      logger.info(`📝 Model: ${this.model}`);
+      logger.info(`📝 Model: ${request.model || this.model}`);
       logger.info(`🌍 Environment: ${isDevelopment() ? 'Development' : 'Production'}`);
+      logger.info(`🛠️  Mode: ${this.isVercelMode() ? 'Vercel/OpenAI' : 'Ollama'}`);
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      const auth = getAiGatewayAuth();
+      if (this.isVercelMode() && auth) {
+        Object.assign(headers, auth);
+      }
 
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(payload),
         signal: AbortSignal.timeout(this.timeout),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(`LLM request failed: ${response.status} ${response.statusText} - ${errorData.error?.message || 'Unknown error'}`);
+        throw new Error(`LLM request failed: ${response.status} ${response.statusText} - ${errorData.error?.message || errorData.message || 'Unknown error'}`);
       }
 
       const data = await response.json();
@@ -97,15 +121,15 @@ class LLMClient {
   }
 
   /**
-   * Get the appropriate chat endpoint based on environment
+   * Get the appropriate chat endpoint based on provider
    */
   private getChatEndpoint(): string {
-    if (isDevelopment()) {
+    if (this.isVercelMode()) {
+      // Vercel AI Gateway endpoint (OpenAI-compatible)
+      return `${this.baseURL.replace(/\/$/, '')}/v1/chat/completions`;
+    } else {
       // Local Ollama endpoint
       return `${this.baseURL}/api/chat`;
-    } else {
-      // Railway production endpoint (OpenAI-compatible)
-      return `${this.baseURL}/v1/chat/completions`;
     }
   }
 
@@ -113,7 +137,16 @@ class LLMClient {
    * Build the payload based on the LLM provider
    */
   private buildPayload(request: LLMRequest) {
-    if (isDevelopment()) {
+    if (this.isVercelMode()) {
+      // Vercel / OpenAI-compatible format
+      return {
+        model: request.model || this.model,
+        messages: request.messages,
+        temperature: request.temperature ?? 0.7,
+        max_tokens: request.max_tokens ?? 1000,
+        stream: false,
+      };
+    } else {
       // Ollama format
       return {
         model: request.model || this.model,
@@ -124,15 +157,6 @@ class LLMClient {
           num_predict: request.max_tokens || 1000,
         },
       };
-    } else {
-      // OpenAI-compatible format (for Railway deployment)
-      return {
-        model: request.model || this.model,
-        messages: request.messages,
-        temperature: request.temperature || 0.7,
-        max_tokens: request.max_tokens || 1000,
-        stream: false,
-      };
     }
   }
 
@@ -140,7 +164,41 @@ class LLMClient {
    * Format the response to a consistent structure
    */
   private formatResponse(data: Record<string, unknown>): LLMResponse {
-    if (isDevelopment()) {
+    if (this.isVercelMode()) {
+      // Vercel / OpenAI-compatible response format
+      if (data.choices && Array.isArray(data.choices)) {
+        return data as unknown as LLMResponse;
+      }
+
+      // Defensive parsing for non-standard formats if any
+      const content = 
+        (data.output as any)?.[0]?.content || 
+        (data.output as any)?.[0]?.text || 
+        (data as any).text || 
+        '';
+
+      return {
+        id: (data.id as string) || `vercel-${Date.now()}`,
+        object: 'chat.completion',
+        created: (data.created as number) || Math.floor(Date.now() / 1000),
+        model: (data.model as string) || this.model,
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: 'assistant',
+              content,
+            },
+            finish_reason: 'stop',
+          },
+        ],
+        usage: (data.usage as any) || {
+          prompt_tokens: 0,
+          completion_tokens: 0,
+          total_tokens: 0,
+        },
+      };
+    } else {
       // Ollama response format
       return {
         id: `ollama-${Date.now()}`,
@@ -163,9 +221,6 @@ class LLMClient {
           total_tokens: (typeof data.prompt_eval_count === 'number' ? data.prompt_eval_count : 0) + (typeof data.eval_count === 'number' ? data.eval_count : 0),
         },
       };
-    } else {
-      // OpenAI-compatible response format
-      return data as unknown as LLMResponse;
     }
   }
 
@@ -190,16 +245,20 @@ class LLMClient {
    */
   async healthCheck(): Promise<boolean> {
     try {
-      const endpoint = isDevelopment() 
-        ? `${this.baseURL}/api/tags` 
-        : `${this.baseURL}/v1/models`;
-      
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        signal: AbortSignal.timeout(5000),
-      });
-
-      return response.ok;
+      if (this.isVercelMode()) {
+        // For Vercel gateway, we do a lightweight generate call
+        const response = await this.chat({
+          messages: [{ role: 'user', content: 'ping' }],
+          max_tokens: 1,
+        });
+        return !!response.choices[0]?.message?.content;
+      } else {
+        const response = await fetch(`${this.baseURL}/api/tags`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(5000),
+        });
+        return response.ok;
+      }
     } catch (error) {
       console.error('❌ LLM health check failed:', error);
       return false;
@@ -211,16 +270,14 @@ class LLMClient {
    */
   async getAvailableModels(): Promise<string[]> {
     try {
-      if (isDevelopment()) {
+      if (this.isVercelMode()) {
+        // For Vercel, we return a safe default or env-provided list
+        return [this.model];
+      } else {
         // Ollama models
         const response = await fetch(`${this.baseURL}/api/tags`);
         const data = await response.json();
         return data.models?.map((model: { name: string }) => model.name) || [];
-      } else {
-        // OpenAI-compatible models
-        const response = await fetch(`${this.baseURL}/v1/models`);
-        const data = await response.json();
-        return data.data?.map((model: { id: string }) => model.id) || [];
       }
     } catch (error) {
       console.error('❌ Failed to get available models:', error);

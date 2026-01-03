@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { ollamaService } from '@/lib/ollama'
+import { llmClient } from '@/lib/llm-client'
 
 export async function GET() {
   const testResults = {
     timestamp: new Date().toISOString(),
-    ollamaConnection: false,
+    llmConnection: false,
     aiChat: false,
     aiRadiusScaling: false,
     aiPersona: false,
@@ -13,15 +13,15 @@ export async function GET() {
   }
 
   try {
-    // Test 1: Ollama Connection
-    console.warn('🧪 Testing Ollama connection...')
+    // Test 1: LLM Connection
+    console.warn('🧪 Testing LLM connection...')
     const startTime = Date.now()
-    const isAvailable = await ollamaService.isAvailable()
-    testResults.ollamaConnection = isAvailable
-    testResults.responseTimes.ollamaConnection = Date.now() - startTime
+    const isAvailable = await llmClient.healthCheck()
+    testResults.llmConnection = isAvailable
+    testResults.responseTimes.llmConnection = Date.now() - startTime
     
     if (!isAvailable) {
-      testResults.errors.push('Ollama service not available')
+      testResults.errors.push('LLM service not available')
       return NextResponse.json(testResults, { status: 503 })
     }
 
@@ -29,9 +29,10 @@ export async function GET() {
     console.warn('🧪 Testing AI Chat...')
     const chatStart = Date.now()
     try {
-      const chatResponse = await ollamaService.generate(
-        'Test booking query: I need a hair appointment'
-      )
+      const response = await llmClient.chat({
+        messages: [{ role: 'user', content: 'Test booking query: I need a hair appointment' }]
+      })
+      const chatResponse = response.choices[0]?.message?.content || ''
       testResults.aiChat = chatResponse.length > 0
       testResults.responseTimes.aiChat = Date.now() - chatStart
     } catch (error) {
@@ -42,9 +43,10 @@ export async function GET() {
     console.warn('🧪 Testing AI Radius Scaling...')
     const radiusStart = Date.now()
     try {
-      const radiusResponse = await ollamaService.generate(
-        'You are Bookiji\'s AI radius scaling system. Analyze the optimal search radius for hair appointment in a dense provider area. Consider service type, provider density, travel convenience, and privacy protection. For hair appointment in a dense area, recommend the optimal radius in kilometers. Respond with: "Recommended radius: X km" followed by a brief explanation of your reasoning. Keep the explanation under 50 words.'
-      )
+      const response = await llmClient.chat({
+        messages: [{ role: 'user', content: 'You are Bookiji\'s AI radius scaling system. Analyze the optimal search radius for hair appointment in a dense provider area. Consider service type, provider density, travel convenience, and privacy protection. For hair appointment in a dense area, recommend the optimal radius in kilometers. Respond with: "Recommended radius: X km" followed by a brief explanation of your reasoning. Keep the explanation under 50 words.' }]
+      })
+      const radiusResponse = response.choices[0]?.message?.content || ''
       testResults.aiRadiusScaling = radiusResponse.includes('Recommended radius:') || radiusResponse.includes('km')
       testResults.responseTimes.aiRadiusScaling = Date.now() - radiusStart
     } catch (error) {
@@ -55,9 +57,10 @@ export async function GET() {
     console.warn('🧪 Testing AI Persona...')
     const personaStart = Date.now()
     try {
-      const personaResponse = await ollamaService.generate(
-        'You are Bookiji\'s AI assistant, adapting to customer persona: busy-professional. Customer message: "I need a service today" Adapt your response based on the persona: busy-professional: Concise, time-focused, premium suggestions, emphasize convenience. Keep responses under 100 words and maintain the persona\'s communication style.'
-      )
+      const response = await llmClient.chat({
+        messages: [{ role: 'user', content: 'You are Bookiji\'s AI assistant, adapting to customer persona: busy-professional. Customer message: "I need a service today" Adapt your response based on the persona: busy-professional: Concise, time-focused, premium suggestions, emphasize convenience. Keep responses under 100 words and maintain the persona\'s communication style.' }]
+      })
+      const personaResponse = response.choices[0]?.message?.content || ''
       testResults.aiPersona = personaResponse.length > 0
       testResults.responseTimes.aiPersona = Date.now() - personaStart
     } catch (error) {
@@ -66,7 +69,7 @@ export async function GET() {
 
     // Calculate overall success
     const successCount = Object.values({
-      ollamaConnection: testResults.ollamaConnection,
+      llmConnection: testResults.llmConnection,
       aiChat: testResults.aiChat,
       aiRadiusScaling: testResults.aiRadiusScaling,
       aiPersona: testResults.aiPersona
@@ -94,4 +97,4 @@ export async function GET() {
     testResults.errors.push(`Integration test failed: ${error}`)
     return NextResponse.json(testResults, { status: 500 })
   }
-} 
+}

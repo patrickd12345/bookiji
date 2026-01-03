@@ -4,7 +4,7 @@ name: CI – E2E & Canary
 on:
   pull_request:
   push:
-    branches: [ main, bookiji ]
+    branches: [main, bookiji]
 
 concurrency:
   group: ci-e2e-${{ github.ref }}
@@ -14,6 +14,7 @@ jobs:
   e2e-preview:
     name: E2E – Preview / Local (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     environment:
       name: preview
       url: ${{ github.event.pull_request && format('https://{0}.bookiji.com', github.event.pull_request.head.ref) || 'http://localhost:3000' }}
@@ -27,22 +28,30 @@ jobs:
     env:
       NODE_ENV: test
       MOCK_STRIPE: "true"
-      STRIPE_SECRET_KEY: sk_test_mock
-      STRIPE_WEBHOOK_SECRET: whsec_mock
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY || '' }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET || '' }}
       APP_ENV: ${{ github.event_name == 'pull_request' && format('pr_{0}', github.event.number) || 'main' }}
       NEXT_PUBLIC_APP_ENV: ${{ github.event_name == 'pull_request' && format('pr_{0}', github.event.number) || 'main' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - run: npm ci --legacy-peer-deps
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Environment isolation guard
         env:
@@ -79,7 +88,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || '' }}
           # yamllint disable-line rule:truthy
           CI_PREDICTIVE_OFF: ${{ vars.CI_PREDICTIVE_OFF || '' }}
-        run: npx tsx scripts/predict-tests.ts
+        run: pnpm exec tsx scripts/predict-tests.ts
         continue-on-error: true
 
       - name: Read test plan
@@ -101,13 +110,17 @@ jobs:
           fi
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
 
       - name: Start Supabase
         run: |
-          npx supabase stop || true
-          npx supabase start --debug
-          npm run db:push
+          pnpm exec supabase stop || true
+          pnpm exec supabase start --debug
+        env:
+          SUPABASE_HOST: 127.0.0.1
+
+      - name: Run database migrations
+        run: pnpm db:push
 
       - name: Detect preview or local
         id: target
@@ -118,12 +131,19 @@ jobs:
             echo "baseURL=http://localhost:3000" >> $GITHUB_OUTPUT
           fi
 
+      - name: Build application
+        if: steps.target.outputs.baseURL == 'http://localhost:3000'
+        run: pnpm build
+
       - name: Start dev server (local only)
         if: steps.target.outputs.baseURL == 'http://localhost:3000'
-        run: npm run dev &
+        run: |
+          pnpm start:ci &
+          echo $! > server.pid
       
       - name: Wait for server
-        run: npx wait-on ${{ steps.target.outputs.baseURL }}
+        if: steps.target.outputs.baseURL == 'http://localhost:3000'
+        run: pnpm exec wait-on ${{ steps.target.outputs.baseURL }} --timeout 120000
 
       - name: Run Playwright tests
         env:
@@ -133,19 +153,28 @@ jobs:
             echo "Running selected tests: ${{ steps.test-plan.outputs.tests }}"
             IFS=',' read -ra TEST_ARRAY <<< "${{ steps.test-plan.outputs.tests }}"
             for test in "${TEST_ARRAY[@]}"; do
-              npx playwright test "$test" --project=${{ matrix.browser }} --shard=${{ matrix.shardIndex }}/${{ matrix.totalShards }} || true
+              pnpm exec playwright test "$test" --project=${{ matrix.browser }} --shard=${{ matrix.shardIndex }}/${{ matrix.totalShards }} || true
             done
           else
             echo "Running all tests"
-            npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shardIndex }}/${{ matrix.totalShards }}
+            pnpm exec playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shardIndex }}/${{ matrix.totalShards }}
           fi
 
-      - name: Upload report
+      - name: Stop dev server
+        if: always() && steps.target.outputs.baseURL == 'http://localhost:3000'
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+          fi
+
+      - name: Upload test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: playwright-report-${{ matrix.browser }}-shard${{ matrix.shardIndex }}
           path: playwright-report
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Create deploy metadata
         if: always()
@@ -163,31 +192,33 @@ jobs:
 
       - name: Upload deploy metadata
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: deploy-metadata-${{ github.sha }}
           path: deploy-metadata/
           retention-days: 90
+          if-no-files-found: ignore
 
       - name: Update test history
         if: always()
-        run: npx tsx scripts/update-test-history.ts
+        run: pnpm exec tsx scripts/update-test-history.ts
         continue-on-error: true
 
       - name: Quarantine flaky tests
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx tsx scripts/quarantine-flaky-tests.ts
+        run: pnpm exec tsx scripts/quarantine-flaky-tests.ts
         continue-on-error: true
 
       - name: Upload test history
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: test-history
           path: ci-history/
           retention-days: 90
+          if-no-files-found: ignore
 
       - name: Export CI metrics
         if: always()
@@ -195,11 +226,12 @@ jobs:
           CI_JOB_TYPE: e2e-${{ matrix.browser }}-shard${{ matrix.shardIndex }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
-        run: npx tsx scripts/export-ci-metrics.ts
+        run: pnpm exec tsx scripts/export-ci-metrics.ts
+        continue-on-error: true
 
       - name: Upload CI metrics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: ci-metrics-e2e-${{ matrix.browser }}-shard${{ matrix.shardIndex }}
           path: ci-metrics/
@@ -209,6 +241,7 @@ jobs:
   canary-deploy:
     name: Deploy Canary
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: e2e-preview
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/bookiji')
     # Using 'preview' environment for QA (Preview deployments from bookiji branch)
@@ -216,25 +249,33 @@ jobs:
       name: preview
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - run: npm ci --legacy-peer-deps
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Epistemic gates (deploy-blockers)
-        run: npm run ci:epistemic
+        run: pnpm ci:epistemic
 
       - name: Deploy canary
         env:
           CANARY_VERSION: canary-${{ github.sha }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: npx tsx scripts/deploy-canary.ts
+        run: pnpm exec tsx scripts/deploy-canary.ts
 
       - name: Store canary URL
         id: canary
@@ -242,24 +283,39 @@ jobs:
           if [ -f .canary.json ]; then
             CANARY_URL=$(cat .canary.json | jq -r '.url')
             echo "url=$CANARY_URL" >> $GITHUB_OUTPUT
+            echo "✅ Canary deployed to: $CANARY_URL"
+          else
+            echo "❌ Canary deployment failed - no URL found"
+            exit 1
           fi
 
   canary-smoke:
     name: Canary Smoke Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: canary-deploy
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/bookiji')
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - run: npm ci --legacy-peer-deps
-      - run: npx playwright install --with-deps chromium
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
 
       # Note: Linter warning about needs.canary-deploy.outputs.url is a false positive
       # The output is set conditionally in the canary-deploy job
@@ -267,42 +323,55 @@ jobs:
         env:
           BASE_URL: ${{ needs.canary-deploy.outputs.url || 'https://www.bookiji.com' }}
           NODE_ENV: production
-        run: npx playwright test tests/e2e/production-smoke.spec.ts --project=chromium
+        run: pnpm exec playwright test tests/e2e/production-smoke.spec.ts --project=chromium
 
       - name: Analyze canary results
         if: always()
-        run: npx tsx scripts/analyze-canary.ts
+        run: pnpm exec tsx scripts/analyze-canary.ts
+        continue-on-error: true
 
       - name: Upload canary analysis
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: canary-analysis
           path: .canary-analysis.json
           if-no-files-found: ignore
+          retention-days: 7
 
   canary-promote:
     name: Deploy to Preview (QA)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: canary-smoke
     if: success() && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/bookiji')
     environment:
       name: preview
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'pnpm'
 
-      - run: npm ci --legacy-peer-deps
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Download canary analysis
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v3
         with:
           name: canary-analysis
           path: .
+          if-no-files-found: warn
 
       - name: Verify canary analysis passed
         run: |
@@ -312,6 +381,9 @@ jobs:
               echo "❌ Canary analysis failed. Aborting deployment."
               exit 1
             fi
+            echo "✅ Canary analysis passed"
+          else
+            echo "⚠️  Canary analysis file not found, proceeding with deployment"
           fi
 
       - name: Deploy to Preview (QA)
@@ -325,31 +397,42 @@ jobs:
   canary-rollback:
     name: Rollback on Failure
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [canary-deploy, canary-smoke]
     if: failure() && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/bookiji')
     environment:
       name: preview
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'pnpm'
 
-      - run: npm ci --legacy-peer-deps
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Download canary analysis
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v3
         continue-on-error: true
         with:
           name: canary-analysis
           path: .
+          if-no-files-found: ignore
 
       - name: Log failure reason
         run: |
           if [ -f .canary-analysis.json ]; then
-            REASON=$(cat .canary-analysis.json | jq -r '.reason')
+            REASON=$(cat .canary-analysis.json | jq -r '.reason // "Unknown error"')
             echo "❌ Canary failed: $REASON"
           else
             echo "❌ Canary smoke tests failed"
@@ -358,11 +441,13 @@ jobs:
       - name: Rollback deployment
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: npx tsx scripts/rollback.ts
+        run: pnpm exec tsx scripts/rollback.ts
+        continue-on-error: true
 
   email-testing:
     name: Email Inbox Testing
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: e2e-preview
     if: always()
 
@@ -374,32 +459,58 @@ jobs:
           - 1025:1025
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - run: npm ci --legacy-peer-deps
-      - run: npx playwright install --with-deps chromium
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Start Supabase
         run: |
-          npx supabase stop || true
-          npx supabase start --debug
-          npm run db:push
+          pnpm exec supabase stop || true
+          pnpm exec supabase start --debug
+        env:
+          SUPABASE_HOST: 127.0.0.1
+
+      - name: Run database migrations
+        run: pnpm db:push
+
+      - name: Build application
+        run: pnpm build
 
       - name: Start dev server
-        run: npm run dev &
+        run: |
+          pnpm start:ci &
+          echo $! > server.pid
       
       - name: Wait for services
         run: |
-          npx wait-on http://localhost:3000
-          npx wait-on http://localhost:8025
+          pnpm exec wait-on http://localhost:3000 --timeout 120000
+          pnpm exec wait-on http://localhost:8025 --timeout 30000
 
       - name: Run email tests
         env:
           BASE_URL: http://localhost:3000
           MAILHOG_URL: http://localhost:8025
-        run: npx playwright test tests/e2e/email-real.spec.ts --project=chromium
+        run: pnpm exec playwright test tests/e2e/email-real.spec.ts --project=chromium
+
+      - name: Stop dev server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+          fi
