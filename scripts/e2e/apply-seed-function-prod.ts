@@ -1,30 +1,34 @@
 #!/usr/bin/env tsx
 /**
- * Apply seed_e2e_profile function to production Supabase using Supabase CLI or direct psql
+ * Apply seed_e2e_profile function to production Supabase using direct PostgreSQL connection
  * 
  * This script:
- * 1. Uses DATABASE_URL from .env.local if available (preferred)
+ * 1. Uses DATABASE_URL from .env.prod (preferred)
  * 2. Or constructs connection from SUPABASE_URL + SUPABASE_DB_PASSWORD
  * 3. Creates the SECURITY DEFINER function seed_e2e_profile
  * 4. Notifies PostgREST to reload schema cache
  * 
  * Usage:
- *   pnpm tsx scripts/e2e/apply-seed-function-prod.ts
+ *   RUNTIME_MODE=prod ALLOW_PROD_MUTATIONS=true pnpm tsx scripts/e2e/apply-seed-function-prod.ts
  * 
- * Environment Variables (from .env.local):
+ * Environment Variables (from .env.prod):
  *   DATABASE_URL - Full PostgreSQL connection string (preferred)
  *   OR SUPABASE_URL + SUPABASE_DB_PASSWORD
  */
 
-import * as fs from 'node:fs'
-import * as path from 'node:path'
-import * as dotenv from 'dotenv'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
+import { assertProdMutationAllowed } from '../../src/env/productionGuards'
 
-// Load .env.local
-const envLocalPath = path.resolve(process.cwd(), '.env.local')
-if (fs.existsSync(envLocalPath)) {
-  dotenv.config({ path: envLocalPath, override: false })
-}
+// Load exactly one env file according to runtime mode
+const mode = getRuntimeMode()
+loadEnvFile(mode)
+assertProdMutationAllowed('apply-seed-function-prod')
+
+console.log('')
+console.log('=== PROD MUTATION MODE ENABLED ===')
+console.log('Applying seed_e2e_profile function to production database')
+console.log('')
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const DATABASE_URL = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL
@@ -40,7 +44,7 @@ if (!SUPABASE_URL) {
 let dbUrl: string
 if (DATABASE_URL) {
   dbUrl = DATABASE_URL
-  console.log('📦 Using DATABASE_URL from .env.local')
+  console.log('📦 Using DATABASE_URL from env file')
 } else if (SUPABASE_DB_PASSWORD) {
   // Derive project ref from URL if not provided
   let projectRef = SUPABASE_PROJECT_REF
@@ -61,8 +65,8 @@ if (DATABASE_URL) {
 } else {
   console.error('❌ Missing DATABASE_URL or (SUPABASE_DB_PASSWORD + SUPABASE_URL)')
   console.error('   Options:')
-  console.error('   1. Set DATABASE_URL in .env.local (preferred)')
-  console.error('   2. Set SUPABASE_DB_PASSWORD in .env.local')
+  console.error('   1. Set DATABASE_URL in .env.prod (preferred)')
+  console.error('   2. Set SUPABASE_DB_PASSWORD in .env.prod')
   console.error('   Get password from: Supabase Dashboard → Your Project → Settings → Database → Connection string')
   process.exit(1)
 }

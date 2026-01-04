@@ -1,21 +1,76 @@
 #!/usr/bin/env node
 /**
  * Apply the admin console seed migration directly
+ * 
+ * Usage:
+ *   For production: RUNTIME_MODE=prod ALLOW_PROD_MUTATIONS=true node scripts/apply-seed-migration-direct.mjs
+ *   For local/staging: RUNTIME_MODE=dev node scripts/apply-seed-migration-direct.mjs
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { Client } from 'pg';
-import dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables
-dotenv.config({ path: join(__dirname, '..', '.env.local') });
-dotenv.config({ path: join(__dirname, '..', '.env') });
+// Runtime mode check (minimal - .mjs can't easily import TS modules)
+const runtimeMode = process.env.RUNTIME_MODE || (() => {
+  const dotenvPath = process.env.DOTENV_CONFIG_PATH || '';
+  if (dotenvPath.includes('.env.prod') || dotenvPath.includes('.env.production')) return 'prod';
+  if (dotenvPath.includes('.env.dev') || dotenvPath.includes('.env.development')) return 'dev';
+  if (dotenvPath.includes('.env.e2e')) return 'e2e';
+  if (dotenvPath.includes('.env.staging')) return 'staging';
+  throw new Error('RUNTIME_MODE or DOTENV_CONFIG_PATH must be set');
+})();
+
+// Production mutation guard
+if (runtimeMode === 'prod') {
+  if (process.env.ALLOW_PROD_MUTATIONS !== 'true') {
+    throw new Error(
+      'Production mutation requires explicit opt-in. ' +
+      'Set RUNTIME_MODE=prod ALLOW_PROD_MUTATIONS=true to proceed.'
+    );
+  }
+  console.log('');
+  console.log('=== PROD MUTATION MODE ENABLED ===');
+  console.log('Applying seed migration to production database');
+  console.log('');
+}
+
+// Load env file based on mode (using dotenv directly for .mjs compatibility)
+import dotenv from 'dotenv';
+const envFiles = {
+  dev: ['.env.dev', '.env.development'],
+  e2e: ['.env.e2e'],
+  staging: ['.env.staging'],
+  prod: ['.env.prod', '.env.production'],
+};
+const candidates = envFiles[runtimeMode] || [];
+let loaded = false;
+for (const file of candidates) {
+  const envPath = join(__dirname, '..', file);
+  try {
+    const result = dotenv.config({ path: envPath });
+    if (!result.error) {
+      loaded = true;
+      break;
+    }
+  } catch {
+    // continue
+  }
+}
+if (!loaded) {
+  throw new Error(`No env file found for mode=${runtimeMode}. Tried: ${candidates.join(', ')}`);
+}
+
+// Ban .env.local (check before loading env)
+const envLocalPath = join(__dirname, '..', '.env.local');
+if (existsSync(envLocalPath)) {
+  throw new Error('.env.local is FORBIDDEN. Use .env.dev, .env.e2e, .env.staging, or .env.prod instead.');
+}
 
 const migrationFile = '20260122000000_seed_admin_console_data.sql';
 const migrationPath = join(__dirname, '..', 'supabase', 'migrations', migrationFile);

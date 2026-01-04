@@ -1,12 +1,64 @@
-# Apply pending Supabase migrations using Supabase CLI with password from .env.local
-# This script reads .env.local and applies migrations via supabase db push
+# Apply pending Supabase migrations using Supabase CLI
+# This script reads env file based on RUNTIME_MODE and applies migrations via supabase db push
+# 
+# Usage:
+#   For production: $env:RUNTIME_MODE="prod"; $env:ALLOW_PROD_MUTATIONS="true"; .\scripts\apply-pending-migrations.ps1
+#   For local/staging: $env:RUNTIME_MODE="dev"; .\scripts\apply-pending-migrations.ps1
 
 $ErrorActionPreference = "Stop"
 
-# Load .env.local
-$envFile = ".env.local"
-if (-not (Test-Path $envFile)) {
-    Write-Host "ERROR: .env.local not found" -ForegroundColor Red
+# Ban .env.local
+if (Test-Path ".env.local") {
+    Write-Host "ERROR: .env.local is FORBIDDEN. Use .env.dev, .env.e2e, .env.staging, or .env.prod instead." -ForegroundColor Red
+    exit 1
+}
+
+# Determine runtime mode
+$runtimeMode = $env:RUNTIME_MODE
+if (-not $runtimeMode) {
+    $dotenvPath = $env:DOTENV_CONFIG_PATH
+    if ($dotenvPath) {
+        if ($dotenvPath -match '\.env\.prod|\.env\.production') { $runtimeMode = "prod" }
+        elseif ($dotenvPath -match '\.env\.dev|\.env\.development') { $runtimeMode = "dev" }
+        elseif ($dotenvPath -match '\.env\.e2e') { $runtimeMode = "e2e" }
+        elseif ($dotenvPath -match '\.env\.staging') { $runtimeMode = "staging" }
+    }
+}
+if (-not $runtimeMode) {
+    Write-Host "ERROR: RUNTIME_MODE or DOTENV_CONFIG_PATH must be set" -ForegroundColor Red
+    exit 1
+}
+
+# Production mutation guard
+if ($runtimeMode -eq "prod") {
+    if ($env:ALLOW_PROD_MUTATIONS -ne "true") {
+        Write-Host "ERROR: Production mutation requires explicit opt-in." -ForegroundColor Red
+        Write-Host "Set RUNTIME_MODE=prod ALLOW_PROD_MUTATIONS=true to proceed." -ForegroundColor Yellow
+        exit 1
+    }
+    Write-Host ""
+    Write-Host "=== PROD MUTATION MODE ENABLED ===" -ForegroundColor Red
+    Write-Host "Applying migrations to production database" -ForegroundColor Red
+    Write-Host ""
+}
+
+# Load appropriate env file
+$envFiles = @{
+    "dev" = @(".env.dev", ".env.development")
+    "e2e" = @(".env.e2e")
+    "staging" = @(".env.staging")
+    "prod" = @(".env.prod", ".env.production")
+}
+$candidates = $envFiles[$runtimeMode]
+$envFile = $null
+foreach ($candidate in $candidates) {
+    if (Test-Path $candidate) {
+        $envFile = $candidate
+        break
+    }
+}
+if (-not $envFile) {
+    Write-Host "ERROR: No env file found for mode=$runtimeMode. Tried: $($candidates -join ', ')" -ForegroundColor Red
     exit 1
 }
 
@@ -33,7 +85,7 @@ if (-not $dbPassword) {
     exit 1
 }
 
-Write-Host "Using DATABASE_URL from .env.local" -ForegroundColor Green
+Write-Host "Using DATABASE_URL from $envFile" -ForegroundColor Green
 Write-Host ""
 
 # Check if supabase CLI is available

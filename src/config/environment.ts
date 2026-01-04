@@ -1,11 +1,9 @@
 // Environment configuration for Bookiji
 // Handles both development (local LLM) and production (Railway LLM)
 
-import dotenv from 'dotenv';
 import path from 'path';
-
-// Load environment variables from .env.local if present
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+// Environment variables must be loaded explicitly via src/env/loadEnv.ts
+// No implicit .env.local loading allowed.
 
 export interface EnvironmentConfig {
   // LLM Configuration

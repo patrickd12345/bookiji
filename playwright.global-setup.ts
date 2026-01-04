@@ -1,16 +1,19 @@
 import { execSync } from 'node:child_process'
+import { getRuntimeMode } from './src/env/runtimeMode'
+import { loadEnvFile } from './src/env/loadEnv'
+import { logRuntimeBanner } from './src/env/runtimeBanner'
+import { assertNotProduction } from './src/env/productionGuards'
 
 export default async function globalSetup() {
-  // Ensure deterministic Supabase Auth users exist for E2E runs.
-  // Skip if E2E_SKIP_SEED is set (useful for cloud environments where users may already exist)
-  // Skip if running against production (users should be seeded manually)
-  const baseURL = process.env.BASE_URL || process.env.E2E_BASE_URL || 'http://localhost:3000'
-  const isProduction = baseURL.includes('bookiji.com')
+  // Determine runtime mode and load env
+  const mode = getRuntimeMode()
+  loadEnvFile(mode)
+  logRuntimeBanner()
 
   const allowNoSupabase = process.env.E2E_ALLOW_NO_SUPABASE === 'true' || process.env.E2E_NAVIGATION_ONLY === 'true'
 
   // NOTE: For production, we do NOT auto-mutate anything during Playwright setup.
-  if (isProduction) {
+  if (mode === 'prod') {
     console.log('⏭️  Skipping user seeding (production environment detected)')
     console.log('   For production, seed manually:')
     console.log('     pnpm tsx scripts/e2e/apply-seed-function-prod.ts')

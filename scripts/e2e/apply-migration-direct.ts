@@ -2,16 +2,29 @@
 /**
  * Apply migration directly using service role key
  * Executes SQL via Supabase REST API or direct PostgreSQL connection
+ * 
+ * Usage:
+ *   For production: RUNTIME_MODE=prod ALLOW_PROD_MUTATIONS=true pnpm tsx scripts/e2e/apply-migration-direct.ts
+ *   For local/staging: RUNTIME_MODE=dev pnpm tsx scripts/e2e/apply-migration-direct.ts
  */
 
 import fs from 'node:fs'
 import path from 'node:path'
-import dotenv from 'dotenv'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
+import { assertProdMutationAllowed } from '../../src/env/productionGuards'
 
-// Load .env.local
-const envLocalPath = path.resolve(process.cwd(), '.env.local')
-if (fs.existsSync(envLocalPath)) {
-  dotenv.config({ path: envLocalPath, override: false })
+// Load exactly one env file according to runtime mode
+const mode = getRuntimeMode()
+loadEnvFile(mode)
+
+// If production, require explicit opt-in
+if (mode === 'prod') {
+  assertProdMutationAllowed('apply-migration-direct')
+  console.log('')
+  console.log('=== PROD MUTATION MODE ENABLED ===')
+  console.log('Applying migration to production database')
+  console.log('')
 }
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL

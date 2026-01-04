@@ -11,6 +11,9 @@
 
 import { execSync } from 'node:child_process'
 import path from 'node:path'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
+import { logRuntimeBanner } from '../../src/env/runtimeBanner'
 
 const ARTIFACT_DIR = path.resolve(process.cwd(), 'playwright', 'navigation-artifacts')
 
@@ -18,13 +21,19 @@ console.log('🧭 Running Navigation Completeness Test against bookiji.com\n')
 console.log('   This will test all roles: guest, customer, vendor, admin')
 console.log('   Entry points: /, /main (guest), /customer/dashboard, /vendor/dashboard, /admin\n')
 
+// Set runtime mode and load env explicitly (read-only for production)
+process.env.RUNTIME_MODE = process.env.RUNTIME_MODE || 'prod'
+const mode = getRuntimeMode()
+loadEnvFile(mode)
+logRuntimeBanner()
+
 // Set environment variables
 process.env.E2E = 'true'
 process.env.BASE_URL = 'https://bookiji.com'
 
-// For production, we want to allow remote Supabase (it's already configured)
+// Production read-only: allow remote Supabase but do not seed
 process.env.E2E_ALLOW_REMOTE_SUPABASE = 'true'
-// Don't set E2E_NAVIGATION_ONLY=true - we need seeding for authenticated roles
+process.env.E2E_SKIP_SEED = 'true'
 
 // Prefer explicit admin credentials for production traversal (matches DB seed migration).
 process.env.E2E_ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || 'admin@bookiji.com'

@@ -30,9 +30,12 @@
 
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import * as dotenv from 'dotenv'
 import { createSupabaseAdminClient } from './createSupabaseAdmin'
 import { E2E_CUSTOMER_USER, E2E_VENDOR_USER, E2EUserDefinition } from './credentials'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
+import { logRuntimeBanner } from '../../src/env/runtimeBanner'
+import { assertNotProduction } from '../../src/env/productionGuards'
 
 // Allow skipping seed if explicitly requested (useful for cloud environments where users may already exist)
 if (process.env.E2E_SKIP_SEED === 'true') {
@@ -40,26 +43,12 @@ if (process.env.E2E_SKIP_SEED === 'true') {
   process.exit(0)
 }
 
-// Important:
-// `pnpm e2e:seed` preloads `.env.e2e` via DOTENV_CONFIG_PATH. For production seeding,
-// `.env.e2e` points at localhost and must NOT be used.
-//
-// Strategy:
-// - If `.env.e2e` exists AND points at localhost, load `.env.local` *with override=true*
-//   so the production project values win.
-// - Otherwise, keep existing env intact.
-const envE2EPath = path.resolve(process.cwd(), '.env.e2e')
-const envLocalPath = path.resolve(process.cwd(), '.env.local')
-
-const isLocalSupabaseUrl = (url: string | undefined) =>
-  !!url && /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(url.trim())
-
-const currentSupabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-
-if (fs.existsSync(envE2EPath) && isLocalSupabaseUrl(currentSupabaseUrl) && fs.existsSync(envLocalPath)) {
-  dotenv.config({ path: envLocalPath, override: true })
-  console.warn('⚠️  Detected localhost Supabase in .env.e2e; using .env.local for seeding instead.')
-}
+// Load exactly one env file according to runtime mode
+const mode = getRuntimeMode()
+loadEnvFile(mode)
+logRuntimeBanner()
+// Never allow seeding in production
+assertNotProduction('e2e:seed - prevents accidental production mutation')
 
 if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
   const error = new Error(
