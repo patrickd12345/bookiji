@@ -56,8 +56,7 @@ export async function GET(request: NextRequest) {
       { id: 'kb-auto-dedupe', schedule: '0 * * * *' },
       { id: 'kb-crawl', schedule: '0 2 * * 1' },
       { id: 'kb-ensure-embeddings', schedule: '0 */6 * * *' },
-      { id: 'sitemap-refresh', schedule: '0 3 * * 1' },
-      { id: 'detect-no-shows', schedule: '0 */4 * * *' }
+      { id: 'sitemap-refresh', schedule: '0 3 * * 1' }
     ]
 
     const jobs = defaultJobs.map(job => {

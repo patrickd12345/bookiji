@@ -118,7 +118,7 @@ export default function VendorOnboardingCompletePage() {
             </div>
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-5 w-5 text-green-600" />
-              <span className="text-sm">Zero double bookings guaranteed</span>
+              <span className="text-sm">Zero double bookings (enforced)</span>
             </div>
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -126,7 +126,7 @@ export default function VendorOnboardingCompletePage() {
             </div>
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-5 w-5 text-green-600" />
-              <span className="text-sm">Real-time booking management</span>
+              <span className="text-sm">Real-time booking handoff</span>
             </div>
           </CardContent>
         </Card>

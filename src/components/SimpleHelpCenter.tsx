@@ -174,11 +174,11 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                     </div>
                     
                     <div className="bg-green-50 p-6 rounded-lg">
-                      <h3 className="text-lg font-semibold text-green-900 mb-3">💳 Payments & Guarantees</h3>
+                      <h3 className="text-lg font-semibold text-green-900 mb-3">💳 Commitment & Handoff</h3>
                       <ul className="space-y-2 text-green-800">
-                        <li>• $1 commitment fee guarantees your booking slot</li>
-                        <li>• Pay service fees directly to provider after completion</li>
-                        <li>• Get full refund if provider no-shows</li>
+                        <li>• $1 commitment fee confirms intent and secures the booking slot</li>
+                        <li>• Pay service fees directly to the provider</li>
+                        <li>• Bookiji exits after booking confirmation and contact exchange</li>
                         <li>• Build loyalty credits for future bookings</li>
                       </ul>
                     </div>
@@ -218,8 +218,8 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                       <ul className="space-y-2 text-green-800">
                         <li>• Keep 100% of your service fees</li>
                         <li>• Customers pay $1 commitment fee (goes to Bookiji)</li>
-                        <li>• Get guaranteed payments for confirmed bookings</li>
-                        <li>• Weekly payouts via Stripe</li>
+                        <li>• Bookiji facilitates booking handoff, not service enforcement</li>
+                        <li>• Payments for services are handled directly between parties</li>
                       </ul>
                     </div>
                     
@@ -237,7 +237,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                         <li>• Use dual availability modes (subtractive/additive)</li>
                         <li>• Set exceptions and special schedules</li>
                         <li>• View analytics and performance metrics</li>
-                        <li>• Build customer loyalty and reviews</li>
+                        <li>• Build repeat customers through reliable handoff</li>
                       </ul>
                     </div>
                   </div>
@@ -284,7 +284,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                           $1 Booking Fee
                           <span 
                             className="text-blue-500 cursor-help text-lg" 
-                            title="This small fee guarantees your booking slot and helps reduce no-shows. It's separate from the service price and is refunded if the provider doesn't show up."
+                            title="This small fee confirms booking intent and secures the booking slot through handoff. Bookiji guarantees booking mechanics, not service outcomes."
                           >
                             ℹ️
                           </span>
@@ -326,7 +326,7 @@ export default function SimpleHelpCenter({ type, defaultTab = 'guide' }: SimpleH
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">What if a customer doesn’t show up?</h3>
-                        <p className="text-gray-600">You keep the $1 commitment fee as compensation for your time. You can also mark them as a no-show in your dashboard.</p>
+                        <p className="text-gray-600">Bookiji does not adjudicate no-shows or service disputes. After handoff, coordination happens directly between parties.</p>
                       </div>
                       <div className="bg-white border rounded-lg p-6 shadow-sm">
                         <h3 className="font-semibold text-gray-900 mb-2">Can I integrate my existing calendar?</h3>

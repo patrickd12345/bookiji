@@ -26,36 +26,6 @@ export type StandardizedEvent =
       };
     }
   | {
-      type: "dispute.opened";
-      payload: { disputeId: string; bookingId: string; reason: string; openedBy: string };
-    }
-  | {
-      type: "dispute.resolved";
-      payload: {
-        disputeId: string;
-        bookingId: string;
-        resolution: "refunded" | "rejected" | "partial";
-        resolvedBy: string;
-      };
-    }
-  | {
-      type: "rating.submitted";
-      payload: {
-        ratingId: string;
-        bookingId: string;
-        raterId: string;
-        rateeId: string;
-        stars: number;
-      };
-    }
-  | {
-      type: "rating.viewed";
-      payload: {
-        bookingId: string;
-        viewerId: string;
-      };
-    }
-  | {
       type: "anomaly.detected";
       payload: { anomalyId: string; severity: "low" | "medium" | "high" | "critical"; description?: string };
     }

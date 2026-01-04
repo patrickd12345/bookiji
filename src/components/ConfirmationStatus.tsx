@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '../../hooks/useAuth'
 
 interface BookingStatus {
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no-show'
+  status: 'pending' | 'confirmed' | 'cancelled'
   commitment_fee_paid: boolean
   payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
   created_at: string
@@ -26,31 +26,19 @@ const STATUS_CONFIG = {
     color: 'yellow',
     icon: '⏳',
     title: 'Booking Pending',
-    description: 'Waiting for provider confirmation'
+    description: 'Waiting for booking commitment to complete'
   },
   confirmed: {
     color: 'green',
     icon: '✓',
-    title: 'Booking Confirmed',
-    description: 'Your appointment is confirmed'
+    title: 'Booking Confirmed (Handoff)',
+    description: 'Your booking is committed and contact information is exchanged. Bookiji exits here.'
   },
   cancelled: {
     color: 'red',
     icon: '✕',
     title: 'Booking Cancelled',
     description: 'This booking has been cancelled'
-  },
-  completed: {
-    color: 'blue',
-    icon: '🎉',
-    title: 'Booking Completed',
-    description: 'Service has been completed'
-  },
-  'no-show': {
-    color: 'orange',
-    icon: '⚠️',
-    title: 'No Show',
-    description: 'Customer did not attend the appointment'
   }
 }
 

@@ -43,8 +43,8 @@ export default function VendorPricingPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-base sm:text-lg font-medium text-gray-900">Fewer no-shows</p>
-                <p className="text-sm sm:text-base text-gray-600">Automated reminders and confirmations reduce missed appointments</p>
+                <p className="text-base sm:text-lg font-medium text-gray-900">Fewer abandoned holds</p>
+                <p className="text-sm sm:text-base text-gray-600">$1 commitment reduces casual holds and improves booking intent</p>
               </div>
             </div>
 
@@ -101,7 +101,7 @@ export default function VendorPricingPage() {
 
         {/* Trust Indicators */}
         <div className="text-center text-xs sm:text-sm text-gray-600 px-2">
-          <p className="break-words">Certified scheduling reliability • 30-day money-back guarantee</p>
+          <p className="break-words">Certified scheduling reliability</p>
         </div>
       </div>
     </div>

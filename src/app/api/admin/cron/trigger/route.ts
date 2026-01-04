@@ -44,8 +44,7 @@ export async function POST(request: NextRequest) {
       '/api/cron/kb-auto-dedupe',
       '/api/cron/kb-crawl',
       '/api/cron/kb-ensure-embeddings',
-      '/api/cron/sitemap-refresh',
-      '/api/cron/detect-no-shows'
+      '/api/cron/sitemap-refresh'
     ]
 
     if (!validPaths.includes(path)) {

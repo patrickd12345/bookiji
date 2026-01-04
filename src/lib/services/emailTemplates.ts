@@ -66,19 +66,6 @@ export function getEmailTemplate(template: string, data: TemplateData, request?:
         subject: t(locale, 'email.booking_cancelled.subject', { service }),
         html: t(locale, 'email.booking_cancelled.body', { service })
       };
-    case 'review_reminder':
-      return {
-        subject: t(locale, 'email.review_reminder.subject'),
-        html: t(locale, 'email.review_reminder.body')
-      };
-    case 'rating_prompt':
-      return {
-        subject: t(locale, 'email.rating_prompt.subject'),
-        html: t(locale, 'email.rating_prompt.body', {
-          service,
-          link: typeof data.rating_link === 'string' ? data.rating_link : `${BASE_URL}/customer/dashboard?tab=bookings`
-        })
-      };
     default:
       return {
         subject: t(locale, 'email.default.subject'),

@@ -81,17 +81,6 @@ describe('GET /api/vendor/analytics', () => {
         return createCountChain(10)
       }
 
-      if (table === 'reviews') {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn(async () => ({
-              data: [{ rating: 4 }, { rating: 5 }],
-              error: null
-            }))
-          }))
-        }
-      }
-
       return baseFrom(table)
     })
 
@@ -110,10 +99,9 @@ describe('GET /api/vendor/analytics', () => {
     expect(response.status).toBe(200)
     expect(data).toHaveProperty('bookings_count')
     expect(data).toHaveProperty('upcoming_bookings_count')
-    expect(data).toHaveProperty('completed_bookings_count')
-    expect(data).toHaveProperty('average_rating')
+    expect(data).toHaveProperty('confirmed_bookings_count')
     expect(typeof data.bookings_count).toBe('number')
-    expect(typeof data.average_rating).toBe('number')
+    expect(typeof data.confirmed_bookings_count).toBe('number')
   })
 
   it('returns 401 when not authenticated', async () => {
@@ -203,7 +191,6 @@ describe('GET /api/vendor/analytics', () => {
     })
 
     let bookingsFromCalls = 0
-    let reviewsFromCalls = 0
 
     supabase.from.mockImplementation((table: string) => {
       if (table === 'profiles') {
@@ -224,18 +211,6 @@ describe('GET /api/vendor/analytics', () => {
         return createCountChain(5)
       }
 
-      if (table === 'reviews') {
-        reviewsFromCalls++
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn(async () => ({
-              data: [{ rating: 4 }],
-              error: null
-            }))
-          }))
-        }
-      }
-
       return baseFrom(table)
     })
 
@@ -251,10 +226,7 @@ describe('GET /api/vendor/analytics', () => {
     await GET(req)
 
     // Verify each table is queried only once (batched via Promise.all)
-    // bookings should be queried 3 times (total, upcoming, completed) but all batched
-    // reviews should be queried once
-    expect(reviewsFromCalls).toBeLessThanOrEqual(1)
-    // bookings queries are batched in parallel, so should be called multiple times but efficiently
-    expect(bookingsFromCalls).toBeGreaterThan(0)
+    // bookings should be queried 3 times (total, upcoming, confirmed) and batched in parallel
+    expect(bookingsFromCalls).toBe(3)
   })
 })

@@ -6,6 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
+import { getSupabaseMock } from '../utils/supabase-mocks'
 
 const stripeRetrieveMock = vi.fn()
 const stripeConstructEventMock = vi.fn()
@@ -65,7 +66,7 @@ vi.mock('next/headers', () => ({
 }))
 
 describe('Payment ↔ Booking Consistency', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
     process.env.STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_your_key'
     process.env.STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_webhook_secret'
@@ -205,6 +206,42 @@ describe('Payment ↔ Booking Consistency', () => {
 
       return {}
     })
+
+    // Seed an internal PaymentIntent so the webhook can resolve it via findByExternalId().
+    // (Webhook intentionally no-ops if it can't correlate the Stripe event to an internal PaymentIntent.)
+    const supabase = getSupabaseMock()
+    const credit_intent_id = 'credit-intent-pi_test_123'
+    await supabase
+      .from('credit_ledger_entries')
+      .insert({
+        credit_intent_id,
+        owner_type: 'customer',
+        owner_id: 'test-user-id',
+        amount_cents: -1000,
+        currency: 'USD',
+        reason_code: 'redeemed',
+      })
+      .select()
+      .single()
+
+    await supabase
+      .from('payment_intents')
+      .insert({
+        id: 'db-pi-1',
+        owner_type: 'customer',
+        owner_id: 'test-user-id',
+        booking_id: booking.id,
+        credit_intent_id,
+        amount_cents: 1000,
+        currency: 'USD',
+        status: 'authorized',
+        external_provider: 'stripe',
+        external_id: 'pi_test_123',
+        idempotency_key: 'payment-test-idem',
+        metadata: {},
+      })
+      .select()
+      .single()
 
     // Allow tests to inspect update calls.
     ;(globalThis as any).__bookingsUpdateMock = bookingsUpdate

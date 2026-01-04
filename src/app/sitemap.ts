@@ -43,7 +43,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/help/calendar-linking', priority: 0.7, changeFrequency: 'monthly' },
     { path: '/help/privacy-radius', priority: 0.7, changeFrequency: 'monthly' },
     { path: '/help/support-options', priority: 0.7, changeFrequency: 'monthly' },
-    { path: '/help/dispute-policy', priority: 0.7, changeFrequency: 'monthly' },
     { path: '/help/languages-currency', priority: 0.7, changeFrequency: 'monthly' },
   ];
 

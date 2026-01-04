@@ -181,7 +181,7 @@ export default function HomePageClient() {
                 <span>{t('home.commitment_banner', { fee: formatCurrency(1) })}</span>
                 <span 
                   className="text-accent-foreground/80 cursor-help text-base ml-1" 
-                  title="This small fee guarantees your booking slot and helps reduce no-shows. It's separate from the service price and is refunded if the provider doesn't show up."
+                  title="This small fee confirms booking intent and helps prevent casual holds. Bookiji guarantees booking mechanics through contact handoff, not service outcomes."
                 >
                   ℹ️
                 </span>
@@ -278,7 +278,7 @@ export default function HomePageClient() {
                 {t('home.core.commitment.title', { fee: formatCurrency(1) })}
                 <span 
                   className="text-primary/80 cursor-help text-lg" 
-                  title="Our $1 commitment fee ensures serious bookings and eliminates no-shows. It's a small investment that guarantees your appointment slot."
+                  title="Our $1 commitment fee encourages serious bookings and reduces casual holds. Once confirmed and contact information is exchanged, Bookiji exits."
                 >
                   ℹ️
                 </span>
@@ -326,7 +326,7 @@ export default function HomePageClient() {
                 {t('home.core.guarantees.title')}
                 <span 
                   className="text-secondary/80 cursor-help text-lg" 
-                  title="Self-enforcing contracts with automatic dispute resolution. Your $1 commitment fee is protected and refunded if providers don't show up."
+                  title="Bookiji guarantees booking mechanics: commitment and contact handoff. It does not provide dispute handling or post-booking judgment."
                 >
                   ℹ️
                 </span>

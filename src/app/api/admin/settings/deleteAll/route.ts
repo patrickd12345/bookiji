@@ -30,7 +30,7 @@ export async function POST(_request: NextRequest) {
     const dbSupabase = getServerSupabase()
     
     // Delete all data from main tables (be very careful!)
-    const tables = ['bookings', 'reviews', 'notifications', 'support_tickets']
+    const tables = ['bookings', 'notifications', 'support_tickets']
     
     for (const table of tables) {
       const { error } = await dbSupabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000')

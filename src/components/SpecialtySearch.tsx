@@ -333,11 +333,11 @@ export default function SpecialtySearch() {
                         <p className="text-sm text-gray-600">{provider.business_address}</p>
                       </div>
                       <div className="text-right">
-                        <div className={`text-lg font-bold ${getRatingColor(provider.average_rating)}`}>
-                          {provider.average_rating.toFixed(1)} ⭐
+                        <div className="text-sm font-semibold text-gray-900">
+                          Commitment + handoff
                         </div>
                         <p className="text-xs text-gray-500">
-                          {provider.total_reviews} reviews
+                          Bookiji does not collect post-service reviews
                         </p>
                       </div>
                     </div>

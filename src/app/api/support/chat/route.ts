@@ -299,7 +299,7 @@ Be concise, helpful, and friendly.`;
         ? `You are the Bookiji Support Bot, a helpful AI assistant for a universal booking platform. 
         
 Bookiji is a platform that connects customers with service providers for instant bookings. Key features:
-- $1 commitment fee system (small fee to guarantee bookings)
+- $1 commitment fee system (small fee to confirm booking intent and enable contact handoff)
 - AI-powered matching and booking
 - Real-time availability
 - Universal marketplace for any service type

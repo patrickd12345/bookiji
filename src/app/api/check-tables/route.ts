@@ -15,7 +15,6 @@ export async function GET() {
       'services',
       'availability_slots',
       'bookings',
-      'reviews',
       'provider_locations'
     ]
     

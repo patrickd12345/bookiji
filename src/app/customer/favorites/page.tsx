@@ -103,11 +103,9 @@ export default function CustomerFavoritesPage() {
                 )}
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 mb-1">{provider.business_name}</h3>
-                  <div className="flex items-center gap-1 mb-2">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium text-gray-900">{provider.rating}</span>
-                    <span className="text-sm text-gray-500">({provider.total_reviews} reviews)</span>
-                  </div>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Commitment + handoff • No post-service reviews
+                  </p>
                 </div>
               </div>
 

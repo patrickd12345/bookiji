@@ -36,8 +36,8 @@ export default function HowItWorksPage() {
             </div>
             <h3 className="text-xl font-semibold mb-3">📅 Choose & Book</h3>
             <p className="text-gray-600">
-              Browse available time slots, read reviews, and select the perfect provider. 
-              Our system shows real-time availability for guaranteed bookings.
+              Browse available time slots and select a provider.
+              Availability is sourced from connected calendars.
             </p>
           </div>
 
@@ -48,7 +48,7 @@ export default function HowItWorksPage() {
             <h3 className="text-xl font-semibold mb-3">💰 Secure Payment</h3>
             <p className="text-gray-600">
               Pay the $1 commitment fee to secure your booking. This ensures serious 
-              bookings and is fully refunded when you complete your appointment.
+              bookings and enables contact handoff once confirmed.
             </p>
           </div>
 
@@ -59,7 +59,7 @@ export default function HowItWorksPage() {
             <h3 className="text-xl font-semibold mb-3">✅ Enjoy Service</h3>
             <p className="text-gray-600">
               Meet your provider, receive your service, and pay the final amount directly to them. 
-              Rate your experience to help future customers.
+              Bookiji exits after booking confirmation and contact exchange.
             </p>
           </div>
         </div>
@@ -69,7 +69,7 @@ export default function HowItWorksPage() {
       <section className="mb-16 bg-gray-50 p-8 rounded-lg">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-4 text-green-600">For Service Providers</h2>
-          <p className="text-lg text-gray-600">Start earning with guaranteed bookings</p>
+          <p className="text-lg text-gray-600">Start earning with commitment + handoff</p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -101,8 +101,7 @@ export default function HowItWorksPage() {
             </div>
             <h3 className="text-xl font-semibold mb-3">🔔 Receive Bookings</h3>
             <p className="text-gray-600">
-              Get notified of new bookings instantly. The $1 commitment fee ensures 
-              all bookings are serious and reduces no-shows.
+              Get notified of new bookings instantly. The $1 commitment fee reduces casual holds.
             </p>
           </div>
 
@@ -126,10 +125,9 @@ export default function HowItWorksPage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="text-4xl mb-4">🔒</div>
-            <h3 className="text-xl font-semibold mb-3">Guaranteed Bookings</h3>
+            <h3 className="text-xl font-semibold mb-3">Commitment + Handoff</h3>
             <p className="text-gray-600">
-              Our $1 commitment fee system ensures every booking is serious, protecting 
-              both customers and providers from no-shows and cancellations.
+              Our $1 commitment fee helps ensure bookings are intentional. Once confirmed, Bookiji exchanges contact information and exits.
             </p>
           </div>
 
@@ -171,10 +169,9 @@ export default function HowItWorksPage() {
 
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="text-4xl mb-4">🌟</div>
-            <h3 className="text-xl font-semibold mb-3">Quality Assurance</h3>
+            <h3 className="text-xl font-semibold mb-3">Scope Boundary</h3>
             <p className="text-gray-600">
-              Our review system and provider verification process ensures you always 
-              get quality service from trusted professionals.
+              Bookiji guarantees booking mechanics through commitment + handoff. It does not provide post-booking judgments or dispute handling about service outcomes.
             </p>
           </div>
         </div>

@@ -11,9 +11,9 @@ export default function BookingGuaranteeModal() {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg p-6 max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-4">Booking Guarantee</h2>
+        <h2 className="text-2xl font-bold mb-4">Commitment + Handoff</h2>
         <p className="text-gray-600 mb-4">
-          Your booking is protected by our $1 guarantee. This ensures both parties show up and helps maintain a reliable booking system.
+          Bookiji guarantees booking mechanics: commitment and contact handoff. Once the booking is confirmed and contact information is exchanged, Bookiji exits and does not judge service outcomes.
         </p>
         <button
           onClick={() => setShowBookingModal(false)}

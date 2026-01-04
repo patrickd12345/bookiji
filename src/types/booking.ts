@@ -1,12 +1,8 @@
 import type { Database } from '@/types/supabase'
 
-export type BookingStatus =
-  | 'requested'
-  | 'accepted'
-  | 'confirmed'
-  | 'completed'
-  | 'no_show'
-  | 'cancelled'
+// Booking lifecycle scope (v1):
+// Bookiji guarantees booking mechanics through commitment + handoff.
+// After handoff, Bookiji does not manage service outcomes, disputes, or post-booking resolution.
 
 export type RefundStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'skipped'
 

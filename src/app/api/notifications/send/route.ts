@@ -11,8 +11,6 @@ export interface NotificationRequest {
     | 'booking_created'
     | 'booking_updated'
     | 'booking_cancelled'
-    | 'review_reminder'
-    | 'rating_prompt'
   data: Record<string, unknown>
   priority?: 'low' | 'normal' | 'high' | 'urgent'
   idempotency_key?: string

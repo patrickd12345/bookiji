@@ -21,13 +21,6 @@ export function getSmsTemplate(template: string, data: TemplateData): string {
       return t(locale, 'sms.booking_updated', { service, date });
     case 'booking_cancelled':
       return t(locale, 'sms.booking_cancelled', { service });
-    case 'review_reminder':
-      return t(locale, 'sms.review_reminder');
-    case 'rating_prompt':
-      return t(locale, 'sms.rating_prompt', {
-        service,
-        link: typeof data.rating_link === 'string' ? data.rating_link : ''
-      });
     case 'jarvis_incident':
       // Jarvis incident SMS - use message directly from data
       return typeof data.message === 'string' ? data.message : 'Jarvis incident alert';

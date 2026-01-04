@@ -91,7 +91,7 @@ function PaymentForm({
           <span className="text-lg font-bold text-green-700">$1.00</span>
         </div>
         <p className="text-xs text-green-600 mt-1">
-          This fee confirms your reservation and reduces no-shows. Non‑refundable.
+          This fee confirms your reservation and unlocks booking handoff. Non‑refundable.
         </p>
       </div>
 
