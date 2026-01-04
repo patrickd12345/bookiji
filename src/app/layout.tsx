@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     default: 'Bookiji — Universal Booking Platform',
     template: '%s | Bookiji',
   },
-  description: 'Book any service, anywhere, with guaranteed bookings and $1 commitment fees. AI-powered universal booking platform.',
+  description: 'Scheduling + commitment + handoff. Bookiji guarantees booking mechanics through contact exchange, then exits.',
   keywords: ['booking platform', 'service booking', 'appointment booking', 'online booking', 'service marketplace'],
   authors: [{ name: 'Bookiji' }],
   creator: 'Bookiji',
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     url: '/',
     siteName: 'Bookiji',
     title: 'Bookiji — Universal Booking Platform',
-    description: 'Book any service, anywhere, with guaranteed bookings and $1 commitment fees.',
+    description: 'Scheduling + commitment + handoff. Bookiji guarantees booking mechanics through contact exchange, then exits.',
     images: [
       {
         url: '/og-image.jpg',
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Bookiji — Universal Booking Platform',
-    description: 'Book any service, anywhere, with guaranteed bookings and $1 commitment fees.',
+    description: 'Scheduling + commitment + handoff. Bookiji guarantees booking mechanics through contact exchange, then exits.',
     images: ['/og-image.jpg'],
   },
   robots: {

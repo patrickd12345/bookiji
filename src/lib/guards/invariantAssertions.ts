@@ -37,10 +37,10 @@ export async function assertValidBookingStateTransition(
   // Allowed transitions
   const allowedTransitions: Record<string, string[]> = {
     hold_placed: ['confirmed', 'cancelled'],
-    confirmed: ['completed', 'cancelled', 'no_show'],
-    completed: [],
-    cancelled: [],
-    no_show: []
+    // Terminal state for v1 scope: once confirmed, Bookiji has handed off.
+    // No post-booking state management (e.g. "completed", "no_show") is supported.
+    confirmed: [],
+    cancelled: []
   }
 
   if (!allowedTransitions[fromState]?.includes(toState)) {

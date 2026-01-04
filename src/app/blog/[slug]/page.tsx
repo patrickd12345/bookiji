@@ -46,11 +46,11 @@ const posts: BlogPost[] = [
   },
   {
     slug: 'building-trust-gig-economy-guaranteed-bookings',
-    title: 'Building Trust in the Gig Economy: Guaranteed Bookings Explained',
+    title: 'Building Trust in the Gig Economy: Commitment + Handoff Explained',
     date: '2024-01-05',
     category: 'Industry Insights',
     content:
-      'Guaranteed booking mechanics help providers plan their day and reduce last-minute cancellations. Customers benefit from clearer expectations and fewer scheduling surprises.',
+      'Commitment-backed booking mechanics help providers plan their day and reduce casual holds. Customers benefit from clearer expectations and a fast contact handoff without post-service judgment.',
   },
   {
     slug: 'real-time-availability-end-phone-tag',

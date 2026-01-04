@@ -17,6 +17,8 @@ export interface ProviderCandidate {
   name: string;
   specialty: string;
   price_cents: number;
+  // Reliability signal for booking mechanics only (v1 scope).
+  // Not a post-service quality rating and not derived from reviews.
   rating: number;
   distance_km: number;
   eta_minutes: number;
@@ -35,7 +37,6 @@ export interface ProviderSearchCriteria {
   when_iso?: string;
   max_distance_km?: number;
   max_price_cents?: number;
-  min_rating?: number;
   limit?: number;
 }
 
@@ -55,11 +56,6 @@ interface ServiceData {
   title: string;
   price_cents: number;
   is_active: boolean;
-}
-
-interface ReviewData {
-  provider_id: string;
-  overall_quality: number | null;
 }
 
 export class ProviderMatchingService {
@@ -145,27 +141,11 @@ export class ProviderMatchingService {
         return [];
       }
 
-      // Get provider ratings
-      const { data: ratings, error: ratingError } = await supabase
-        .from('reviews')
-        .select(`
-          provider_id,
-          overall_quality
-        `)
-        .in('provider_id', providerIds)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .eq('status', 'published') as { data: ReviewData[] | null; error: any };
-
-      if (ratingError) {
-        logger.error('Error finding ratings', { ...errorToContext(new Error(ratingError.message)), provider_ids: providerIds });
-      }
-
       // Build candidate list
       const candidates: ProviderCandidate[] = [];
       
       for (const provider of providers || []) {
         const providerServices = services?.filter(s => s.provider_id === provider.id) || [];
-        const providerRatings = ratings?.filter(r => r.provider_id === provider.id) || [];
         
         if (providerServices.length === 0) continue;
         
@@ -184,14 +164,9 @@ export class ProviderMatchingService {
           continue;
         }
 
-        // Calculate average rating
-        const avgRating = providerRatings.length > 0
-          ? providerRatings.reduce((sum, r) => sum + (r.overall_quality || 0), 0) / providerRatings.length
-          : 4.0; // Default rating
-
-        if (criteria.min_rating && avgRating < criteria.min_rating) {
-          continue;
-        }
+        // v1 scope: Bookiji is not a post-service judgment system.
+        // Keep a stable placeholder signal for downstream ranking.
+        const bookingReliabilitySignal = 1.0;
 
         // Use the first service for pricing (could be enhanced to find best match)
         const service = providerServices[0];
@@ -212,7 +187,7 @@ export class ProviderMatchingService {
             )
           )?.name || criteria.intent,
           price_cents: service.price_cents,
-          rating: avgRating,
+          rating: bookingReliabilitySignal,
           distance_km: distance,
           eta_minutes: etaMinutes,
           location: {
@@ -222,10 +197,10 @@ export class ProviderMatchingService {
         });
       }
 
-      // Sort by relevance (rating, distance, price)
+      // Sort by relevance (distance, price).
       candidates.sort((a, b) => {
-        const scoreA = (a.rating * 0.4) + (1 / (a.distance_km + 1) * 0.4) + (1 / (a.price_cents / 100) * 0.2);
-        const scoreB = (b.rating * 0.4) + (1 / (b.distance_km + 1) * 0.4) + (1 / (b.price_cents / 100) * 0.2);
+        const scoreA = (1 / (a.distance_km + 1) * 0.7) + (1 / (a.price_cents / 100) * 0.3);
+        const scoreB = (1 / (b.distance_km + 1) * 0.7) + (1 / (b.price_cents / 100) * 0.3);
         return scoreB - scoreA;
       });
 
@@ -301,7 +276,7 @@ export class ProviderMatchingService {
           name: service.profiles.display_name || 'Provider',
           specialty: service.title,
           price_cents: service.price_cents,
-          rating: 4.0, // Default rating
+          rating: 1.0,
           distance_km: distance,
           eta_minutes: Math.max(15, Math.round(distance * 2)),
           location: location ? { lat: location.lat, lon: location.lon } : criteria.location

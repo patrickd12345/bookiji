@@ -26,7 +26,7 @@ const faqJsonLd = {
       name: 'How does the $1 commitment fee work?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'The $1 commitment fee guarantees your booking spot and reduces no-shows. It\'s a small charge that ensures serious bookings and protects both customers and service providers.',
+        text: 'The $1 commitment fee confirms booking intent and helps prevent casual holds. Once a booking is confirmed, Bookiji exchanges contact information and exits.',
       },
     },
     {
@@ -34,7 +34,7 @@ const faqJsonLd = {
       name: 'What if my vendor cancels?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'If a vendor cancels, you\'ll get the provider\'s contact info after booking - you can arrange directly with them or get a refund.',
+        text: 'If a vendor cancels, coordinate directly with the other party. Bookiji does not manage service outcomes after handoff.',
       },
     },
     {
@@ -91,14 +91,14 @@ export default function FAQPage() {
             <p className="text-gray-700 leading-relaxed">
               Bookiji is a universal booking platform that connects customers with service providers 
               across all industries. Whether you need a plumber, personal trainer, tutor, or any other 
-              service, Bookiji makes it easy to find, book, and pay for services with guaranteed availability.
+              service, Bookiji makes it easy to find and book services using real-time availability sourced from connected calendars. After booking confirmation and contact exchange, Bookiji exits.
             </p>
           </div>
 
           <div className="bg-gray-50 p-6 rounded-lg">
             <h3 className="text-xl font-semibold mb-3">How does the $1 booking fee work?</h3>
             <p className="text-gray-700 leading-relaxed">
-              A <strong>$1 booking fee</strong> is charged <strong>only when your booking is confirmed</strong>. This small fee helps reduce no‑shows and confirms your reservation. The fee is <strong>not refundable</strong>. The final payment for the actual service is handled directly between you and the service provider, outside of our platform.
+              A <strong>$1 commitment fee</strong> is charged <strong>only when your booking is confirmed</strong>. This small fee confirms intent and enables contact handoff. The fee is <strong>not refundable</strong>. Payment for the actual service is handled directly between you and the service provider, outside of our platform.
             </p>
           </div>
 

@@ -72,8 +72,8 @@ registerTour({
     { target: '[data-tour="map-container"]', content: 'Welcome to Bookiji\'s interactive map! Here you can discover local service providers in real-time.' },
     { target: '[data-tour="map-controls"]', content: 'Use these controls to zoom, pan, and adjust your view. The map updates automatically with your location.' },
     { target: '[data-tour="provider-markers"]', content: 'Each marker represents a service provider. Green markers show available providers, orange show limited availability.' },
-    { target: '[data-tour="marker-click"]', content: 'Click on any provider marker to see their services, ratings, and instant booking options.' },
-    { target: '[data-tour="filter-panel"]', content: 'Use these filters to narrow down providers by service type, rating, distance, or availability.' },
+    { target: '[data-tour="marker-click"]', content: 'Click on any provider marker to see their services and instant booking options.' },
+    { target: '[data-tour="filter-panel"]', content: 'Use these filters to narrow down providers by service type, distance, or availability.' },
     { target: '[data-tour="list-view-toggle"]', content: 'Switch between map and list view to see providers in a different format.' }
   ]
 })
@@ -87,7 +87,7 @@ registerTour({
   steps: [
     { target: '[data-tour="welcome-section"]', content: 'Welcome to your personal dashboard! Here you can manage all your bookings and account settings.' },
     { target: '[data-tour="upcoming-bookings"]', content: 'View and manage your upcoming appointments. Click on any booking for details or to make changes.' },
-    { target: '[data-tour="past-bookings"]', content: 'Access your booking history and leave reviews for past services.' },
+    { target: '[data-tour="past-bookings"]', content: 'Access your booking history. Bookiji exits after handoff.' },
     { target: '[data-tour="profile-settings"]', content: 'Update your profile information, preferences, and notification settings.' },
     { target: '[data-tour="credits-section"]', content: 'Check your credit balance and purchase history. Credits can be used for future bookings.' },
     { target: '[data-tour="support-access"]', content: 'Need help? Access our support system here for quick assistance.' }
@@ -134,10 +134,10 @@ registerTour({
   description: 'Manage your bookings, track performance, and grow your business',
   steps: [
     { target: '[data-tour="revenue-overview"]', content: 'Track your earnings and revenue trends. This section shows your total revenue and recent performance.' },
-    { target: '[data-tour="booking-stats"]', content: 'Monitor your booking statistics including total bookings, confirmation rates, and no-show percentages.' },
+    { target: '[data-tour="booking-stats"]', content: 'Monitor booking statistics including total bookings and confirmation rates.' },
     { target: '[data-tour="calendar-tab"]', content: 'Access your integrated calendar to manage appointments, set availability, and view upcoming bookings.' },
     { target: '[data-tour="analytics-tab"]', content: 'Dive deep into your performance analytics. Track customer trends, popular services, and growth opportunities.' },
-    { target: '[data-tour="recent-bookings"]', content: 'View and manage your recent bookings. Click on any booking for details or to update status.' },
+    { target: '[data-tour="recent-bookings"]', content: 'View your recent bookings. Click on any booking for details.' },
     { target: '[data-tour="pending-service-badge"]', content: 'This badge shows pending service type proposals awaiting admin approval.' }
   ]
 })
@@ -152,7 +152,7 @@ registerTour({
     { target: '[data-tour="system-overview"]', content: 'Welcome to the admin analytics dashboard. Monitor overall platform health and performance metrics.' },
     { target: '[data-tour="user-metrics"]', content: 'Track user growth, registration rates, and engagement patterns across different user segments.' },
     { target: '[data-tour="booking-analytics"]', content: 'Monitor booking volume, success rates, and revenue generation across the platform.' },
-    { target: '[data-tour="vendor-performance"]', content: 'Analyze vendor performance, service quality, and customer satisfaction metrics.' },
+    { target: '[data-tour="vendor-performance"]', content: 'Analyze vendor onboarding and booking flow metrics.' },
     { target: '[data-tour="revenue-tracking"]', content: 'Track platform revenue, fee collection, and financial performance indicators.' },
     { target: '[data-tour="system-health"]', content: 'Monitor system performance, error rates, and technical metrics to ensure smooth operation.' }
   ]

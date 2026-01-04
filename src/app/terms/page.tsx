@@ -117,19 +117,16 @@ export default function TermsPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">10. Dispute Resolution</h2>
+          <h2 className="text-2xl font-semibold mb-4">10. Scope boundary</h2>
           <div className="space-y-4">
             <p className="text-gray-700 leading-relaxed">
-              <strong>Customer Support:</strong> We encourage users to contact our support team first 
-              to resolve any disputes or issues.
+              Bookiji guarantees booking mechanics (scheduling, commitment, and contact handoff). After a booking is confirmed and contact information is exchanged, Bookiji exits.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              <strong>Mediation:</strong> For disputes between customers and service providers, we may 
-              provide mediation services to help reach a fair resolution.
+              Bookiji does not provide disputes, mediation, arbitration, or post-booking judgment about service outcomes.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              <strong>Governing Law:</strong> These terms shall be governed by and construed in accordance 
-              with applicable laws.
+              <strong>Governing Law:</strong> These terms shall be governed by and construed in accordance with applicable laws.
             </p>
           </div>
         </section>

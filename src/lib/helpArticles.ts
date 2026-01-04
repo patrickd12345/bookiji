@@ -19,7 +19,7 @@ export const helpArticles: HelpArticle[] = [
         <li>Search for a provider and choose a service.</li>
         <li>Select an available time slot.</li>
         <li>Confirm your details and pay the $1 commitment fee.</li>
-        <li>Receive confirmation and calendar invite.</li>
+        <li>Receive confirmation and contact handoff.</li>
       </ol>
     `,
     related: ['reschedule-cancel','refunds-no-shows','calendar-linking']
@@ -28,10 +28,10 @@ export const helpArticles: HelpArticle[] = [
     slug: 'the-1-commitment-fee',
     title: 'The $1 Commitment Fee',
     category: 'Payments',
-    tags: ['refunds','payment','security'],
+    tags: ['payment','security'],
     content: `
-      <p>We place a $1 charge on your card to verify booking intent. The amount is refunded automatically after the appointment or if you cancel in time.</p>
-      <p>This protects providers from no-shows and keeps the platform fair.</p>
+      <p>We charge a $1 commitment fee to confirm booking intent and reduce casual holds.</p>
+      <p>Once the booking is confirmed and contact information is exchanged, Bookiji exits.</p>
     `,
     related: ['refunds-no-shows']
   },
@@ -52,12 +52,12 @@ export const helpArticles: HelpArticle[] = [
   },
   {
     slug: 'refunds-no-shows',
-    title: 'Refunds & No-Shows',
+    title: 'Commitment Fee Refunds',
     category: 'Payments',
-    tags: ['refunds','no-shows'],
+    tags: ['refunds','payment'],
     content: `
-      <p>Cancelling within the allowed window triggers an automatic refund of the $1 fee.</p>
-      <p>No-shows may forfeit the commitment fee according to provider policy.</p>
+      <p>In some cases, cancelling within the allowed window triggers an automatic refund of the $1 commitment fee.</p>
+      <p>Bookiji does not handle service-outcome disputes or no-show adjudication.</p>
     `,
     related: ['the-1-commitment-fee','reschedule-cancel']
   },
@@ -110,16 +110,6 @@ export const helpArticles: HelpArticle[] = [
       <p>Need help? Visit the help center, start a chat, or email support@bookiji.com.</p>
     `,
     related: ['how-booking-works']
-  },
-  {
-    slug: 'dispute-policy',
-    title: 'Dispute Policy',
-    category: 'Support',
-    tags: ['dispute','policy'],
-    content: `
-      <p>If something goes wrong, contact support within 7 days. We'll investigate and mediate between parties.</p>
-    `,
-    related: ['support-options']
   },
   {
     slug: 'languages-currency',

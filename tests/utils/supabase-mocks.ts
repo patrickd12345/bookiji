@@ -9,6 +9,8 @@ type MockDb = {
   external_calendar_events: Array<Record<string, any>>
   external_calendar_connections: Array<Record<string, any>>
   bookings: Array<Record<string, any>>
+  credit_ledger_entries: Array<Record<string, any>>
+  payment_intents: Array<Record<string, any>>
   claimed_slot_ids: Set<string>
 }
 
@@ -19,6 +21,8 @@ function getMockDb(): MockDb {
       external_calendar_events: [],
       external_calendar_connections: [],
       bookings: [],
+      credit_ledger_entries: [],
+      payment_intents: [],
       claimed_slot_ids: new Set<string>(),
     } satisfies MockDb
   }
@@ -30,6 +34,8 @@ function resetMockDb() {
   db.external_calendar_events = []
   db.external_calendar_connections = []
   db.bookings = []
+  db.credit_ledger_entries = []
+  db.payment_intents = []
   db.claimed_slot_ids = new Set<string>()
 }
 
@@ -154,6 +160,43 @@ export function createMockSupabaseClient() {
     }
 
     // --- Stateful in-memory tables (used by "integration" tests that exercise repository logic) ---
+    if (table === 'profiles') {
+      const queryState: { filters: Array<{ column: string; value: any }> } = { filters: [] }
+
+      const resolveRow = () => {
+        const byAuth = queryState.filters.find((f) => f.column === 'auth_user_id')?.value
+        const byId = queryState.filters.find((f) => f.column === 'id')?.value
+        const role = queryState.filters.find((f) => f.column === 'role')?.value
+
+        const authUserId = (byAuth ?? null) as string | null
+        const id = (byId ?? (authUserId ? `profile-${authUserId}` : null)) as string | null
+
+        if (!id) return null
+
+        return {
+          id,
+          auth_user_id: authUserId,
+          role: role ?? 'customer',
+        }
+      }
+
+      const tableChain: any = {}
+      tableChain.select = vi.fn(() => tableChain)
+      tableChain.eq = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ column, value })
+        return tableChain
+      })
+      tableChain.maybeSingle = vi.fn(async () => ({ data: resolveRow(), error: null }))
+      tableChain.single = vi.fn(async () => {
+        const row = resolveRow()
+        return { data: row, error: row ? null : { message: 'not found' } }
+      })
+      tableChain.then = vi.fn((resolve, reject) =>
+        Promise.resolve({ data: resolveRow() ? [resolveRow()] : [], error: null }).then(resolve, reject)
+      )
+      return tableChain
+    }
+
     if (table === 'external_calendar_events') {
       const db = getMockDb()
 
@@ -547,6 +590,182 @@ export function createMockSupabaseClient() {
           return Promise.resolve({ data: null, error: null }).then(resolve, reject)
         })
         return deleteChain
+      })
+
+      return tableChain
+    }
+
+    if (table === 'credit_ledger_entries') {
+      const db = getMockDb()
+
+      const queryState: {
+        filters: Array<{ op: 'eq' | 'neq'; column: string; value: any }>
+        insertPayload?: any
+      } = { filters: [] }
+
+      const applyFilters = (rows: Array<Record<string, any>>) => {
+        return rows.filter((row) =>
+          queryState.filters.every((f) => {
+            const v = row[f.column]
+            return f.op === 'eq' ? v === f.value : v !== f.value
+          })
+        )
+      }
+
+      const selectResult = () => applyFilters(db.credit_ledger_entries)
+
+      const tableChain: any = {}
+      tableChain.select = vi.fn(() => tableChain)
+      tableChain.eq = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'eq', column, value })
+        return tableChain
+      })
+      tableChain.neq = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'neq', column, value })
+        return tableChain
+      })
+      tableChain.maybeSingle = vi.fn(async () => {
+        const rows = selectResult()
+        return { data: rows[0] ?? null, error: null }
+      })
+      tableChain.single = vi.fn(async () => {
+        const rows = selectResult()
+        return { data: rows[0] ?? null, error: null }
+      })
+      tableChain.then = vi.fn((resolve, reject) =>
+        Promise.resolve({ data: selectResult(), error: null }).then(resolve, reject)
+      )
+
+      tableChain.insert = vi.fn((payload: any) => {
+        const creditIntentId = payload?.credit_intent_id ?? null
+        const existing = creditIntentId
+          ? db.credit_ledger_entries.find((r) => r.credit_intent_id === creditIntentId) ?? null
+          : null
+
+        const insertResult =
+          existing
+            ? ({ data: null, error: { message: 'duplicate key value violates unique constraint', code: '23505' } } as any)
+            : ({
+                data: {
+                  id: payload?.id ?? ((globalThis as any).crypto?.randomUUID?.() ?? `mock-${Date.now()}`),
+                  ...payload,
+                },
+                error: null,
+              } as any)
+
+        if (!existing && insertResult.data) {
+          db.credit_ledger_entries.push(insertResult.data)
+        }
+
+        const insertChain: any = {}
+        insertChain.select = vi.fn(() => ({
+          single: vi.fn(async () => insertResult),
+          maybeSingle: vi.fn(async () => insertResult),
+        }))
+        insertChain.single = vi.fn(async () => insertResult)
+        insertChain.maybeSingle = vi.fn(async () => insertResult)
+        insertChain.then = vi.fn((resolve, reject) => Promise.resolve(insertResult).then(resolve, reject))
+        return insertChain
+      })
+
+      return tableChain
+    }
+
+    if (table === 'payment_intents') {
+      const db = getMockDb()
+
+      const queryState: {
+        filters: Array<{ op: 'eq' | 'neq'; column: string; value: any }>
+        insertPayload?: any
+        updatePayload?: any
+      } = { filters: [] }
+
+      const applyFilters = (rows: Array<Record<string, any>>) => {
+        return rows.filter((row) =>
+          queryState.filters.every((f) => {
+            const v = row[f.column]
+            return f.op === 'eq' ? v === f.value : v !== f.value
+          })
+        )
+      }
+
+      const selectResult = () => applyFilters(db.payment_intents)
+
+      const tableChain: any = {}
+      tableChain.select = vi.fn(() => tableChain)
+      tableChain.eq = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'eq', column, value })
+        return tableChain
+      })
+      tableChain.neq = vi.fn((column: string, value: any) => {
+        queryState.filters.push({ op: 'neq', column, value })
+        return tableChain
+      })
+      tableChain.maybeSingle = vi.fn(async () => {
+        const rows = selectResult()
+        return { data: rows[0] ?? null, error: null }
+      })
+      tableChain.single = vi.fn(async () => {
+        const rows = selectResult()
+        return { data: rows[0] ?? null, error: null }
+      })
+      tableChain.then = vi.fn((resolve, reject) =>
+        Promise.resolve({ data: selectResult(), error: null }).then(resolve, reject)
+      )
+
+      tableChain.insert = vi.fn((payload: any) => {
+        const inserted = {
+          id: payload?.id ?? ((globalThis as any).crypto?.randomUUID?.() ?? `mock-${Date.now()}`),
+          status: payload?.status ?? 'created',
+          metadata: payload?.metadata ?? {},
+          ...payload,
+        }
+        db.payment_intents.push(inserted)
+
+        const insertChain: any = {}
+        insertChain.select = vi.fn(() => ({
+          maybeSingle: vi.fn(async () => ({ data: inserted, error: null })),
+          single: vi.fn(async () => ({ data: inserted, error: null })),
+        }))
+        insertChain.maybeSingle = vi.fn(async () => ({ data: inserted, error: null }))
+        insertChain.single = vi.fn(async () => ({ data: inserted, error: null }))
+        insertChain.then = vi.fn((resolve, reject) =>
+          Promise.resolve({ data: inserted, error: null }).then(resolve, reject)
+        )
+        return insertChain
+      })
+
+      tableChain.update = vi.fn((payload: any) => {
+        queryState.updatePayload = payload
+        const updateChain: any = {}
+        updateChain.eq = vi.fn((column: string, value: any) => {
+          if (column === 'id') {
+            const idx = db.payment_intents.findIndex((r) => r.id === value)
+            if (idx >= 0) db.payment_intents[idx] = { ...db.payment_intents[idx], ...payload }
+          }
+
+          const selectChain: any = {}
+          selectChain.select = vi.fn(() => ({
+            single: vi.fn(async () => ({
+              data: column === 'id' ? db.payment_intents.find((r) => r.id === value) ?? null : null,
+              error: null,
+            })),
+            maybeSingle: vi.fn(async () => ({
+              data: column === 'id' ? db.payment_intents.find((r) => r.id === value) ?? null : null,
+              error: null,
+            })),
+          }))
+          selectChain.single = vi.fn(async () => ({
+            data: column === 'id' ? db.payment_intents.find((r) => r.id === value) ?? null : null,
+            error: null,
+          }))
+          selectChain.maybeSingle = vi.fn(async () => ({
+            data: column === 'id' ? db.payment_intents.find((r) => r.id === value) ?? null : null,
+            error: null,
+          }))
+          return selectChain
+        })
+        return updateChain
       })
 
       return tableChain

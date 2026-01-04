@@ -13,8 +13,8 @@ import { cookies } from 'next/headers'
  * Returns:
  * - bookings_count: Total number of bookings
  * - upcoming_bookings_count: Bookings with start_time in the future
- * - completed_bookings_count: Bookings with status = 'completed'
- * - average_rating: Average rating from reviews (nullable)
+ * v1 scope: Bookiji ends at booking handoff (confirmed + contact exchange).
+ * This endpoint reports booking mechanics only (no post-service ratings/reviews).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
 
     // Get booking counts using aggregated queries
     // Batch all queries in parallel to avoid N+1
-    const [bookingsResult, upcomingResult, completedResult, reviewsResult] = await Promise.all([
+    const [bookingsResult, upcomingResult, confirmedResult] = await Promise.all([
       // Total bookings count
       supabaseAdmin
         .from('bookings')
@@ -103,18 +103,12 @@ export async function GET(request: NextRequest) {
         .eq('provider_id', vendorId)
         .gt('start_time', now),
       
-      // Completed bookings count
+      // Confirmed bookings count (handoff)
       supabaseAdmin
         .from('bookings')
         .select('*', { count: 'exact', head: true })
         .eq('provider_id', vendorId)
-        .eq('status', 'completed'),
-      
-      // Average rating from reviews (fetch all to calculate average)
-      supabaseAdmin
-        .from('reviews')
-        .select('rating')
-        .eq('provider_id', vendorId)
+        .eq('status', 'confirmed'),
     ])
 
     if (bookingsResult.error) {
@@ -122,18 +116,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 })
     }
 
-    // Calculate average rating from reviews
-    let averageRating: number | null = null
-    if (reviewsResult.data && reviewsResult.data.length > 0) {
-      const sum = reviewsResult.data.reduce((acc, review) => acc + (review.rating || 0), 0)
-      averageRating = sum / reviewsResult.data.length
-    }
-
     return NextResponse.json({
       bookings_count: bookingsResult.count || 0,
       upcoming_bookings_count: upcomingResult.count || 0,
-      completed_bookings_count: completedResult.count || 0,
-      average_rating: averageRating
+      confirmed_bookings_count: confirmedResult.count || 0
     })
 
   } catch (error) {

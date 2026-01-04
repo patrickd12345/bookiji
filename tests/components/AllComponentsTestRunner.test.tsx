@@ -226,8 +226,6 @@ import {
   
   // Feedback Components
   FeedbackCollector,
-  NoShowFeedbackModal,
-  ReviewSystem,
   
   // Utility Components
   AsyncWarning,
@@ -400,14 +398,6 @@ describeIfNotCIHeavy('ALL COMPONENTS TEST SUITE', () => {
   describe('Feedback Components', () => {
     it('FeedbackCollector renders without crashing', () => {
       expect(() => render(<FeedbackCollector />)).not.toThrow()
-    })
-
-    it('NoShowFeedbackModal renders without crashing', () => {
-      expect(() => render(<NoShowFeedbackModal />)).not.toThrow()
-    })
-
-    it('ReviewSystem renders without crashing', () => {
-      expect(() => render(<ReviewSystem vendorId="test" />)).not.toThrow()
     })
   })
 

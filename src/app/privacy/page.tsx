@@ -98,7 +98,7 @@ export default function PrivacyPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">7. Data retention</h2>
           <p className="text-gray-700 leading-relaxed">
-            We keep your data for as long as you have an account or as needed to operate the service. We may retain some data for a longer period where required by law, to resolve disputes or enforce our agreements.
+            We keep your data for as long as you have an account or as needed to operate the service. We may retain some data for a longer period where required by law or to enforce our agreements.
           </p>
         </section>
 

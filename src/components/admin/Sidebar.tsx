@@ -14,7 +14,6 @@ import {
   Menu,
   X,
   Plus,
-  MessageSquare,
   Database,
   Activity,
   Brain,
@@ -50,14 +49,12 @@ const navItems = [
   { href: '/admin/vendors', icon: Users, label: 'Vendors' },
   { href: '/admin/customers', icon: Users, label: 'Customers' },
   { href: '/admin/bookings', icon: Calendar, label: 'Bookings' },
-  { href: '/admin/reviews', icon: MessageSquare, label: 'Review Moderation' },
   
   // Content & Configuration
   { href: '/admin/specialties', icon: Settings, label: 'Specialties' },
   { href: '/admin/service-types', icon: Wrench, label: 'Service Types' },
   { href: '/admin/suggestions', icon: Plus, label: 'Suggestions' },
   { href: '/admin/broadcasts', icon: Radio, label: 'Broadcasts' },
-  { href: '/admin/disputes', icon: AlertTriangle, label: 'Disputes' },
   { href: '/admin/support/tickets', icon: Ticket, label: 'Support Tickets' },
   { href: '/admin/unanswered', icon: HelpCircle, label: 'Unanswered' },
   { href: '/admin/faq', icon: FileText, label: 'FAQ' },

@@ -206,8 +206,6 @@ import {
   HelpBanner,
   LLMQuoteGenerator,
   SimpleMap,
-  ReviewSystem,
-  NoShowFeedbackModal,
   BookingGuaranteeModal,
   AsyncWarning,
   AIConversationalInterface
@@ -395,18 +393,6 @@ describeIfNotCIHeavy('Comprehensive Component Test Suite', () => {
     describe('SimpleMap', () => {
       it('renders without crashing', () => {
         expect(() => render(<SimpleMap />)).not.toThrow()
-      })
-    })
-
-    describe('ReviewSystem', () => {
-      it('renders without crashing', () => {
-        expect(() => render(<ReviewSystem vendorId="test" />)).not.toThrow()
-      })
-    })
-
-    describe('NoShowFeedbackModal', () => {
-      it('renders without crashing', () => {
-        expect(() => render(<NoShowFeedbackModal />)).not.toThrow()
       })
     })
 

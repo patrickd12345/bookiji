@@ -457,64 +457,15 @@ async function executeCustomerRateVendor(
   event: LLMProposedEvent,
   startTime: number
 ): Promise<EventExecutionResult> {
-  try {
-    const bookingId = event.params.booking_id as string
-    const rating = event.params.rating as number
-    const comment = (event.params.comment as string) || ''
-
-    if (!bookingId || !rating) {
-      return {
-        success: false,
-        rejected: true,
-        rejection_reason: 'booking_id and rating are required',
-        latency_ms: Date.now() - startTime,
-        invariant_status: 'ok',
-      }
-    }
-
-    const response = await fetch(
-      // Use relative URL for internal API calls
-      `/api/ratings/booking/${bookingId}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-SimCity-Actor': JSON.stringify(event.actor),
-        },
-        body: JSON.stringify({
-          rating,
-          comment,
-        }),
-      }
-    )
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      return {
-        success: false,
-        rejected: true,
-        rejection_reason: errorText,
-        error_code: response.status.toString(),
-        latency_ms: Date.now() - startTime,
-        invariant_status: 'ok',
-      }
-    }
-
-    return {
-      success: true,
-      rejected: false,
-      latency_ms: Date.now() - startTime,
-      invariant_status: 'ok',
-    }
-  } catch (error) {
-    return {
-      success: false,
-      rejected: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      error_code: 'EXECUTION_ERROR',
-      latency_ms: Date.now() - startTime,
-      invariant_status: 'unknown',
-    }
+  // Scope boundary: Bookiji does not collect post-booking judgments (e.g. ratings/reviews).
+  // SimCity should not generate or attempt to execute these events for v1.
+  return {
+    success: false,
+    rejected: true,
+    rejection_reason: 'CUSTOMER_RATE_VENDOR is out of scope (no post-booking judgments in v1).',
+    error_code: 'OUT_OF_SCOPE',
+    latency_ms: Date.now() - startTime,
+    invariant_status: 'ok',
   }
 }
 

@@ -52,8 +52,8 @@ export default function BlogPage() {
     },
     {
       id: 5,
-      title: "Building Trust in the Gig Economy: Guaranteed Bookings Explained",
-      excerpt: "How guaranteed bookings are creating a more reliable and trustworthy marketplace for service providers and customers.",
+      title: "Building Trust in the Gig Economy: Commitment + Handoff Explained",
+      excerpt: "How commitment-backed booking mechanics create a more reliable marketplace without post-service judgment.",
       date: "2024-01-05",
       category: "Industry Insights",
       slug: "building-trust-gig-economy-guaranteed-bookings"
@@ -188,7 +188,7 @@ export default function BlogPage() {
         </p>
         <p className="text-gray-700 leading-relaxed">
           Our team of experts shares insights on how platforms like Bookiji are transforming traditional 
-          service industries through features like guaranteed bookings, AI-powered matching, and privacy-first 
+          service industries through features like commitment + handoff, AI-powered matching, and privacy-first 
           location services. Whether you&apos;re a service provider looking to grow your business or a customer 
           seeking the best booking experience, our blog has something for you.
         </p>

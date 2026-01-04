@@ -79,7 +79,7 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
         {
           target: '[data-tour="booking-history"]',
           title: 'Booking History',
-          text: 'Review your past appointments, leave reviews, and track your loyalty points. Your booking history helps us provide better recommendations.',
+          text: 'Review your bookings and next steps. Bookiji exits after booking handoff.',
           placement: 'top'
         },
         {
@@ -100,7 +100,7 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
         {
           target: '[data-tour="revenue-overview"]',
           title: 'Revenue Overview',
-          text: 'Monitor your earnings in real-time. See total revenue, this week\'s bookings, and track your business growth. Every booking includes our commitment guarantee.',
+          text: 'Monitor your earnings in real-time. See total revenue and booking volume at a glance.',
           placement: 'bottom'
         },
         {
@@ -118,14 +118,8 @@ export default function GuidedTourManager({ type, onComplete, onSkip }: GuidedTo
         {
           target: '[data-tour="analytics-tab"]',
           title: 'Performance Analytics',
-          text: 'Understand your business with detailed insights. Track revenue trends, booking patterns, customer satisfaction, and get AI-powered recommendations for growth.',
+          text: 'Understand your business with insights. Track booking volume and revenue trends.',
           placement: 'bottom'
-        },
-        {
-          target: '[data-tour="no-show-guarantee"]',
-          title: 'No-Show Protection',
-          text: 'Our $1 commitment system has reduced no-shows by 95%. Every customer pays a commitment fee, ensuring they\'re serious about their booking. You\'re protected!',
-          placement: 'top'
         }
       ]
 

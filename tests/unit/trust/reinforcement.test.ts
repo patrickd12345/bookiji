@@ -43,7 +43,7 @@ describe("trust reinforcement reasoning", () => {
       trustSafety: { signals: ["cancellation_spike"] },
       latencyP95Ms: 480,
     }),
-    envelope("e3", 3000, 3, "dispute.opened", { trustSafety: { signals: ["fraud_pattern", "abuse_report"] }, severity: "high" }),
+    envelope("e3", 3000, 3, "anomaly.detected", { trustSafety: { signals: ["fraud_pattern", "abuse_report"] }, severity: "high" }),
   ];
 
   it("builds risk trajectories that evolve across frames", () => {
@@ -54,7 +54,7 @@ describe("trust reinforcement reasoning", () => {
     const noShowRisk = trajectory.snapshots.map((snapshot) => snapshot.metrics.find((metric) => metric.dimension === "noShowHazard")?.value ?? 0);
     expect(noShowRisk[1]).toBeGreaterThan(noShowRisk[0]); // cancellation should escalate no-show hazard
     const reliability = trajectory.snapshots.map((snapshot) => snapshot.metrics.find((metric) => metric.dimension === "providerReliability")?.value ?? 0);
-    expect(reliability[2]).toBeLessThan(reliability[0]); // dispute degrades reliability confidence
+    expect(reliability[2]).toBeLessThan(reliability[0]); // anomaly degrades reliability confidence
     expect(Object.isFrozen(trajectory.snapshots[0])).toBe(true); // replay compatibility via deepFreeze
   });
 
@@ -74,13 +74,13 @@ describe("trust reinforcement reasoning", () => {
         interventionClass: "notify",
       },
       {
-        id: "legacy-dispute-block",
-        domain: "dispute",
+        id: "legacy-anomaly-block",
+        domain: "anomaly",
         dimension: "fraudLikelihood",
         comparator: "gte",
         value: 0.25,
         contractVersion: "legacy-v0",
-        label: "Legacy dispute hold",
+        label: "Legacy anomaly hold",
         interventionClass: "pause",
         deprecated: true,
       },
@@ -91,10 +91,10 @@ describe("trust reinforcement reasoning", () => {
     expect(justified?.decision).toBe("justified");
     expect(justified?.whyNow).toContain("0.2");
 
-    const blocked = justifications.find((item) => item.threshold.id === "legacy-dispute-block");
+    const blocked = justifications.find((item) => item.threshold.id === "legacy-anomaly-block");
     expect(blocked?.decision).toBe("blocked");
     expect(blocked?.assumptions.some((assumption) => assumption.toLowerCase().includes("contract version"))).toBe(true);
-    expect(blocked?.assumptions.some((assumption) => assumption.toLowerCase().includes("governance marks domain"))).toBe(true);
+    expect(blocked?.assumptions.some((assumption) => assumption.toLowerCase().includes("deprecated"))).toBe(true);
     expect(crossings.length).toBeGreaterThan(0);
   });
 

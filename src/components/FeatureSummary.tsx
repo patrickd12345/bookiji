@@ -5,9 +5,9 @@ export default function FeatureSummary() {
     { name: 'AI Radius Scaling', status: 'completed' },
     { name: 'Map Abstraction', status: 'completed' },
     { name: 'Customer Personas', status: 'completed' },
-    { name: 'No-Show Flags', status: 'completed' },
+    { name: 'Commitment Fee', status: 'completed' },
     { name: 'AI Conversational', status: 'completed' },
-    { name: 'Booking Guarantee', status: 'completed' }
+    { name: 'Commitment + Handoff', status: 'completed' }
   ];
 
   return (

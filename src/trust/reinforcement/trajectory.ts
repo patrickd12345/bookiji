@@ -71,14 +71,6 @@ function applyEventAdjustments(state: RiskAccumulator, eventType: string, metada
     next.providerReliability = clamp(next.providerReliability - 0.1);
   } else if (lowerType === "booking.updated") {
     next.providerReliability = clamp(next.providerReliability - 0.02);
-  } else if (lowerType === "dispute.opened") {
-    next.fraudLikelihood = clamp(next.fraudLikelihood + severity);
-    next.abuseRisk = clamp(next.abuseRisk + 0.15);
-    next.providerReliability = clamp(next.providerReliability - 0.05);
-  } else if (lowerType === "dispute.resolved") {
-    next.fraudLikelihood = clamp(next.fraudLikelihood - 0.08);
-    next.abuseRisk = clamp(next.abuseRisk - 0.05);
-    next.providerReliability = clamp(next.providerReliability + 0.05);
   } else if (lowerType === "anomaly.detected") {
     next.fraudLikelihood = clamp(next.fraudLikelihood + severity);
     next.abuseRisk = clamp(next.abuseRisk + 0.05);
@@ -115,9 +107,9 @@ function buildMetrics(
       return "No-show hazard rises with cancellations and trust safety signals referencing cancellations.";
     }
     if (dimension === "abuseRisk") {
-      return "Abuse risk aggregates disputes, anomalies, and explicit abuse signals.";
+      return "Abuse risk aggregates anomalies and explicit abuse signals.";
     }
-    return "Fraud likelihood increases with disputes, anomalies, and fraud-tagged signals.";
+    return "Fraud likelihood increases with anomalies, chargebacks, and fraud-tagged signals.";
   };
 
   return (Object.keys(next) as RiskDimension[]).map((dimension) => ({

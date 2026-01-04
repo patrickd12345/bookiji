@@ -9,7 +9,8 @@ test.describe('Coming Soon Page Routes', () => {
     
     // Should show the coming soon page content
     await expect(page.getByText('Bookiji is almost ready!')).toBeVisible()
-    await expect(page.getByText(/We're working hard behind the scenes/)).toBeVisible()
+    // Match both straight and curly apostrophes ("We're" vs "We’re")
+    await expect(page.getByText(/working hard behind the scenes/i)).toBeVisible()
   })
 
   test('/main route shows main landing page', async ({ page }) => {

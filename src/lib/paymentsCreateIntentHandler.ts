@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createCommitmentFeePaymentIntent } from './stripe'
+import { createCommitmentFeePaymentIntent } from '@/lib/stripe'
 import Stripe from 'stripe'
 import { insertLedgerEntry } from './credits/ledger'
 import { insertPaymentIntent, updateStatus } from './payments/repository'

@@ -346,13 +346,13 @@ export default function UserDashboard() {
   const getStatusDescription = (status: string): string => {
     switch (status.toLowerCase()) {
       case 'confirmed':
-        return 'Your booking has been confirmed by the provider. The appointment is scheduled and ready.'
+        return 'Your booking is confirmed and contact information is exchanged. Bookiji exits after handoff.'
       case 'pending':
         return 'Your booking request is waiting for provider confirmation. You will be notified once confirmed.'
       case 'cancelled':
         return 'This booking has been cancelled. Contact the provider if you need to reschedule.'
       case 'completed':
-        return 'This service has been completed. You can leave a review to help others.'
+        return 'This booking is in a legacy terminal state. Bookiji exits after handoff.'
       case 'upcoming':
         return 'This booking is confirmed and scheduled for the future.'
       default:
@@ -370,10 +370,6 @@ export default function UserDashboard() {
 
   const formatCurrency = (cents: number) => {
     return `$${(Math.abs(cents) / 100).toFixed(2)}`
-  }
-
-  const canRateBooking = (status: string) => {
-    return status === 'completed' || status === 'confirmed'
   }
 
   if (!userProfile) {
@@ -657,26 +653,9 @@ export default function UserDashboard() {
                           <p className="text-lg font-semibold text-gray-900 mt-2">
                             {formatCurrency(booking.price_cents)}
                           </p>
-                          {booking.rating && (
-                            <div className="flex items-center mt-1 md:justify-end">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`w-3 h-3 ${
-                                    i < booking.rating! ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                                  }`}
-                                />
-                                ))}
-                            </div>
-                          )}
-                          {canRateBooking(booking.status) && (
-                            <Link
-                              href={`/ratings/booking/${booking.id}`}
-                              className="mt-2 inline-flex text-sm text-blue-600 hover:text-blue-700"
-                            >
-                              {t('rating.rate_booking')}
-                            </Link>
-                          )}
+                          <p className="mt-2 text-xs text-gray-500">
+                            Bookiji exits after booking handoff; any follow-up happens directly between parties.
+                          </p>
                         </div>
                       </div>
                     </motion.div>
@@ -758,11 +737,9 @@ export default function UserDashboard() {
                       <Link href={`/book/${provider.business_name}`}>
                         <Image src={provider.avatar_url} alt={provider.business_name} width={64} height={64} className="w-16 h-16 rounded-full" />
                       </Link>
-                      <div className="flex items-center mt-2">
-                        <Star className="w-4 h-4 text-yellow-400" />
-                        <span className="ml-1">{provider.rating}</span>
-                        <span className="text-sm text-gray-500 ml-2">({provider.total_reviews} reviews)</span>
-                      </div>
+                      <p className="mt-2 text-sm text-gray-600">
+                        Bookiji does not collect post-service ratings or reviews.
+                      </p>
                       <div className="mt-2">
                         {provider.specialties.map((specialty, i) => (
                           <span key={i} className="inline-block px-2 py-1 text-xs bg-gray-100 rounded mr-1 mb-1">

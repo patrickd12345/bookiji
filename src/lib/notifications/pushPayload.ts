@@ -63,18 +63,6 @@ export function buildPushPayload(template: string, data: Record<string, unknown>
       body: t(locale, 'push.reminder.body', { service, time, expectations }),
       icon: '/icons/reminder.png',
       badge: '/icons/icon-72x72.png'
-    },
-    review_reminder: {
-      title: t(locale, 'push.review_reminder.title'),
-      body: t(locale, 'push.review_reminder.body', { service }),
-      icon: '/icons/reminder.png',
-      badge: '/icons/icon-72x72.png'
-    },
-    rating_prompt: {
-      title: t(locale, 'push.rating_prompt.title'),
-      body: t(locale, 'push.rating_prompt.body', { service }),
-      icon: '/icons/rating.png',
-      badge: '/icons/icon-72x72.png'
     }
   }
 

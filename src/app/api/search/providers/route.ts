@@ -183,11 +183,6 @@ async function performAdvancedSearch(filters: SearchFilters) {
         latitude,
         longitude,
         is_primary
-      ),
-      reviews!reviews_provider_id_fkey(
-        rating,
-        comment,
-        created_at
       )
     `)
     .eq('role', 'vendor')
@@ -201,11 +196,6 @@ async function performAdvancedSearch(filters: SearchFilters) {
 
   // Note: Cannot filter nested relations (services.category, vendor_specialties.specialty_id) 
   // in Supabase query builder - will filter in post-processing
-
-  // Rating filter
-  if (filters.min_rating) {
-    query = query.gte('rating', filters.min_rating)
-  }
 
   // Execute the base query
   const { data: providers, error } = await query

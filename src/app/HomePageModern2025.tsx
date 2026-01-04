@@ -95,7 +95,7 @@ export default function HomePageModern2025() {
     {
       icon: Shield,
       title: '$1 Commitment Fee',
-      description: 'Guaranteed bookings with minimal commitment, maximum protection',
+      description: 'Commitment + handoff. Bookiji guarantees booking mechanics, then exits.',
       gradient: 'from-green-400 via-emerald-500 to-teal-500',
     },
     {
@@ -235,7 +235,7 @@ export default function HomePageModern2025() {
               isDark ? 'text-gray-400' : 'text-gray-500'
             }`}
           >
-            AI-powered • Privacy-first • Guaranteed bookings
+            AI-powered • Privacy-first • Commitment + handoff
           </motion.p>
 
           {/* CTA Buttons */}

@@ -54,7 +54,7 @@ export function PlatformDisclosures() {
               <h3 className="font-medium">Service Providers</h3>
               <p className="text-sm text-gray-600">
                 Service providers are independent businesses not employed by Bookiji.
-                We verify basic information but recommend reviewing provider profiles and reviews.
+                We verify basic information but recommend reviewing provider profiles before booking.
               </p>
             </div>
 

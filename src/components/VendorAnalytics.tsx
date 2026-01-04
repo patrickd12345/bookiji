@@ -18,11 +18,6 @@ interface AnalyticsData {
     cancelled: number
     upcoming: number
   }
-  ratings: {
-    average: number
-    total: number
-    distribution: number[]
-  }
   popular_services: Array<{
     name: string
     bookings: number
@@ -76,14 +71,6 @@ export default function VendorAnalytics() {
 
       if (bookingsError) throw bookingsError
 
-      // Get ratings
-      const { data: reviews, error: reviewsError } = await supabase
-        .from('reviews')
-        .select('rating')
-        .eq('provider_id', session.user.id)
-
-      if (reviewsError) throw reviewsError
-
       // Get popular services
       const { data: services, error: servicesError } = await supabase
         .from('services')
@@ -110,18 +97,6 @@ export default function VendorAnalytics() {
         upcoming: bookings?.filter(b => b.status === 'upcoming').length || 0
       }
 
-      // Calculate rating stats
-      const ratings = reviews || []
-      const ratingStats = {
-        average: ratings.length > 0 
-          ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length 
-          : 0,
-        total: ratings.length,
-        distribution: Array(5).fill(0).map((_, i) => 
-          ratings.filter(r => r.rating === i + 1).length
-        )
-      }
-
       // Calculate popular services
       const popularServices = (services || []).map(service => ({
         name: service.name,
@@ -132,7 +107,6 @@ export default function VendorAnalytics() {
       setAnalyticsData({
         revenue: timeframeData,
         bookings: bookingStats,
-        ratings: ratingStats,
         popular_services: popularServices
       })
     } catch (err) {
@@ -216,9 +190,9 @@ export default function VendorAnalytics() {
           <p className="text-3xl text-blue-600">{analyticsData.bookings.upcoming}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-2">Average Rating</h3>
-          <p className="text-3xl text-yellow-500">
-            {analyticsData.ratings.average.toFixed(1)} ⭐
+          <h3 className="text-lg font-semibold mb-2">Scope</h3>
+          <p className="text-sm text-gray-600">
+            Bookiji ends at booking handoff. No post-service ratings/reviews.
           </p>
         </div>
       </div>
@@ -255,23 +229,10 @@ export default function VendorAnalytics() {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Rating Distribution</h3>
-          <div className="space-y-2">
-            {analyticsData.ratings.distribution.map((count, index) => (
-              <div key={index} className="flex items-center">
-                <span className="w-16">{index + 1} ⭐</span>
-                <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-yellow-400"
-                    style={{
-                      width: `${(count / analyticsData.ratings.total * 100) || 0}%`
-                    }}
-                  />
-                </div>
-                <span className="w-16 text-right">{count}</span>
-              </div>
-            ))}
-          </div>
+          <h3 className="text-lg font-semibold mb-4">Handoff</h3>
+          <p className="text-sm text-gray-600">
+            After booking is confirmed and contact information is exchanged, Bookiji exits.
+          </p>
         </div>
       </div>
     </div>

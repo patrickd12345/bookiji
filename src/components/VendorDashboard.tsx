@@ -11,7 +11,6 @@ import {
   Calendar,
   Clock,
   MapPin, 
-  Star, 
   TrendingUp, 
   Users, 
   DollarSign,
@@ -32,8 +31,6 @@ interface VendorStats {
   pendingBookings: number
   cancelledBookings: number
   totalRevenue: number
-  averageRating: number
-  totalReviews: number
   activeServices: number
 }
 
@@ -44,8 +41,6 @@ interface RecentBooking {
   scheduled_for: string
   status: string
   price_cents: number
-  customer_rating?: number
-  customer_review?: string
 }
 
 interface VendorProfile {
@@ -54,8 +49,6 @@ interface VendorProfile {
   email: string
   phone?: string
   avatar_url?: string
-  rating: number
-  total_reviews: number
   specialties: string[]
   location: {
     lat: number
@@ -94,7 +87,7 @@ export default function VendorDashboard() {
         // Query profiles table directly (user_role_summary view doesn't exist)
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, email, phone, avatar_url, role, rating, specializations, service_area_radius, verified_at, created_at')
+          .select('id, full_name, email, phone, avatar_url, role, specializations, service_area_radius, verified_at, created_at')
           .eq('id', session.user.id)
           .eq('role', 'vendor')
           .maybeSingle()
@@ -104,26 +97,12 @@ export default function VendorDashboard() {
           throw new Error('Vendor profile not found')
         }
 
-        // Get review count separately
-        let reviewCount = 0
-        try {
-          const { count } = await supabase
-            .from('reviews')
-            .select('*', { count: 'exact', head: true })
-            .eq('vendor_id', data.id)
-          reviewCount = count ?? 0
-        } catch {
-          reviewCount = 0
-        }
-
         return {
           id: data.id,
           business_name: data.full_name || 'My Business',
           email: data.email || session.user.email || '',
           phone: data.phone,
           avatar_url: data.avatar_url,
-          rating: data.rating || 0,
-          total_reviews: reviewCount || 0,
           specialties: data.specializations || [],
           location: { lat: 0, lng: 0 }, // TODO: Get from provider_locations table
           is_verified: !!data.verified_at,
@@ -161,15 +140,6 @@ export default function VendorDashboard() {
         const pendingBookings = bookings.filter(b => b.status === 'pending').length
         const cancelledBookings = bookings.filter(b => b.status === 'cancelled').length
         const totalRevenue = bookings.reduce((sum, b) => sum + (b.price_cents || 0), 0)
-        
-        const { data: reviews } = await supabase
-          .from('reviews')
-          .select('rating')
-          .eq('vendor_id', vendorId)
-
-        const averageRating = reviews && reviews.length > 0
-          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-          : 0
 
         const { data: services } = await supabase
           .from('services')
@@ -183,8 +153,6 @@ export default function VendorDashboard() {
           pendingBookings,
           cancelledBookings,
           totalRevenue,
-          averageRating: Number(averageRating.toFixed(1)),
-          totalReviews: reviews?.length || 0,
           activeServices: services?.length || 0
         }
       })
@@ -221,9 +189,7 @@ export default function VendorDashboard() {
           service_name: booking.service_name,
           scheduled_for: booking.scheduled_for,
           status: booking.status,
-          price_cents: booking.price_cents || 0,
-          customer_rating: booking.customer_rating,
-          customer_review: booking.customer_review
+          price_cents: booking.price_cents || 0
         }))
       })
 
@@ -307,10 +273,6 @@ export default function VendorDashboard() {
     }
   }
 
-  const canRateBooking = (status: string) => {
-    return status === 'completed' || status === 'confirmed'
-  }
-
   // Show loading state while profile is loading
   if (profileData.loading && !vendorProfile) {
     return <PageLoader text="Loading your dashboard..." />
@@ -356,8 +318,8 @@ export default function VendorDashboard() {
               )}
 
               <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                <Star className="w-4 h-4" />
-                {vendorProfile.rating} ({vendorProfile.total_reviews} reviews)
+                <CheckCircle className="w-4 h-4" />
+                Booking handoff enabled
               </div>
 
               <button
@@ -447,11 +409,13 @@ export default function VendorDashboard() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Average Rating</p>
-                    <p className="text-3xl font-bold text-gray-900">{stats.averageRating}</p>
+                    <p className="text-sm text-gray-600">Scope</p>
+                    <p className="text-sm text-gray-700 mt-1">
+                      Bookiji ends at booking handoff.
+                    </p>
                   </div>
                   <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <Star className="w-6 h-6 text-yellow-600" />
+                    <CheckCircle className="w-6 h-6 text-yellow-700" />
                   </div>
                 </div>
               </motion.div>
@@ -554,42 +518,11 @@ export default function VendorDashboard() {
                           {formatCurrency(booking.price_cents)}
                         </p>
                         
-                        {booking.customer_rating && (
-                          <div className="flex items-center gap-1 mt-1 sm:justify-end">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={cn(
-                                  'w-3 h-3',
-                                  i < booking.customer_rating! 
-                                    ? 'text-yellow-400 fill-current' 
-                                    : 'text-gray-300'
-                                )}
-                              />
-                            ))}
-                            <span className="text-xs text-gray-500 ml-1">
-                              ({booking.customer_rating})
-                            </span>
-                          </div>
-                        )}
-                        {canRateBooking(booking.status) && (
-                          <Link
-                            href={`/ratings/booking/${booking.id}`}
-                            className="mt-2 inline-flex text-sm text-blue-600 hover:text-blue-700"
-                          >
-                            {t('rating.rate_booking')}
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {booking.customer_review && (
-                      <div className="mt-3 pl-14">
-                        <p className="text-sm text-gray-600 italic">
-                          &quot;{booking.customer_review}&quot;
+                        <p className="mt-2 text-xs text-gray-500">
+                          Bookiji exits after handoff; coordination continues directly between parties.
                         </p>
                       </div>
-                    )}
+                    </div>
                   </motion.div>
                 ))}
               </div>

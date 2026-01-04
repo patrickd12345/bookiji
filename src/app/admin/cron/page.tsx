@@ -79,14 +79,6 @@ export default function CronManagementPage() {
       schedule: '0 3 * * 1',
       description: 'Refreshes sitemap and submits to search engines. Runs weekly on Mondays at 3 AM UTC.',
       enabled: true
-    },
-    {
-      id: 'detect-no-shows',
-      name: 'Detect No-Shows',
-      path: '/api/cron/detect-no-shows',
-      schedule: '0 */4 * * *',
-      description: 'Detects and handles no-show bookings. Runs every 4 hours.',
-      enabled: true
     }
   ]
 
@@ -169,7 +161,6 @@ export default function CronManagementPage() {
 
     if (schedule === '0 * * * *') return 'Every hour'
     if (schedule === '0 */6 * * *') return 'Every 6 hours'
-    if (schedule === '0 */4 * * *') return 'Every 4 hours'
     if (schedule === '0 2 * * 1') return 'Weekly (Mondays 2 AM UTC)'
     if (schedule === '0 3 * * 1') return 'Weekly (Mondays 3 AM UTC)'
 
