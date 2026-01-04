@@ -1,11 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import VendorRegistration from '@/components/VendorRegistration';
+import { VendorOnboardingWizard } from '@/components/vendor-onboarding/VendorOnboardingWizard';
 
 export default function VendorOnboardingPage() {
-  const router = useRouter();
   return (
-    <VendorRegistration onSuccess={() => router.push('/vendor/dashboard')} />
+    <VendorOnboardingWizard />
   );
 }
