@@ -23,6 +23,9 @@ export interface UserProfile {
   location?: string // For vendors
   description?: string // For vendors
   vendor_status?: 'pending_verification' | 'pending_approval' | 'approved' | 'suspended' // For vendors
+  onboarding_step?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onboarding_data?: Record<string, any>
   created_at: string
   updated_at: string
 }
