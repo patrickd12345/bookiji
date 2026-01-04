@@ -35,8 +35,8 @@ END $$;
 CREATE OR REPLACE FUNCTION prevent_unverified_confirmation()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- If state is being set to 'confirmed' (or status to 'confirmed')
-  IF (NEW.state = 'confirmed' OR NEW.status = 'confirmed') THEN
+  -- If state is being set to provider-confirmed (or legacy status to 'confirmed')
+  IF (NEW.state = 'provider_confirmed' OR NEW.status = 'confirmed') THEN
     -- Require stripe_payment_intent_id
     IF NEW.stripe_payment_intent_id IS NULL THEN
       RAISE EXCEPTION 'Cannot confirm booking without payment intent. State: %, Status: %', NEW.state, NEW.status;

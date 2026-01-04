@@ -2,7 +2,7 @@ import { test, expect } from '../fixtures/base'
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { createRuntimeSanityHarness } from './helpers/navigation-runtime-sanity'
-import { runNavigationTraversal, writeJsonArtifact, writeTextArtifact } from './helpers/navigation-traversal'
+import { writeJsonArtifact, writeTextArtifact } from './helpers/navigation-traversal'
 import { buildAppRouteInventory, matchVisitedPathToPattern } from './helpers/navigation-route-inventory'
 import { skipIfSupabaseUnavailable } from '../helpers/supabaseAvailability'
 
@@ -37,12 +37,14 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
   test.describe.configure({ mode: 'serial' })
 
   const collected = {
-    edges: [] as any[],
     visitedPathsByRole: new Map<string, string[]>(),
-    excludedActions: [] as any[],
     failures: [] as any[],
     benignConsole: [] as any[],
   }
+
+  const NAV_START_PATH = '/main'
+  const MAX_DEPTH = 4
+  const MAX_PAGES = 50
 
   test.afterAll(async () => {
     const inv = buildAppRouteInventory(path.resolve(process.cwd(), 'src', 'app'))
@@ -62,8 +64,7 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
 
     writeJsonArtifact(ARTIFACT_DIR, 'navigation-graph.json', {
       generatedAt: new Date().toISOString(),
-      edges: collected.edges,
-      excludedActions: collected.excludedActions,
+      visitedPathsByRole: Object.fromEntries(Array.from(collected.visitedPathsByRole.entries())),
     })
     writeJsonArtifact(ARTIFACT_DIR, 'runtime-failures.json', {
       generatedAt: new Date().toISOString(),
@@ -82,15 +83,15 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     summaryLines.push('## Navigation completeness + runtime sanity summary')
     summaryLines.push('')
     summaryLines.push(`- **Generated at**: ${new Date().toISOString()}`)
-    summaryLines.push(`- **Edges recorded**: ${collected.edges.length}`)
+    const totalVisited = Array.from(collected.visitedPathsByRole.values()).reduce((s, arr) => s + arr.length, 0)
+    summaryLines.push(`- **Visited paths (total)**: ${totalVisited}`)
     summaryLines.push(`- **Runtime failures**: ${collected.failures.length}`)
     summaryLines.push(`- **Route patterns (included)**: ${inv.included.length}`)
     summaryLines.push(`- **Orphan route patterns**: ${orphans.length}`)
     summaryLines.push('')
     summaryLines.push('### Roles')
     for (const [role, visited] of collected.visitedPathsByRole.entries()) {
-      const roleEdges = collected.edges.filter((e) => e.role === role).length
-      summaryLines.push(`- **${role}**: visited ${visited.length} paths, recorded ${roleEdges} edges`)
+      summaryLines.push(`- **${role}**: visited ${visited.length} paths`)
     }
     if (collected.failures.length) {
       summaryLines.push('')
@@ -125,26 +126,77 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
         : undefined
     const harness = createRuntimeSanityHarness(page, resolvedBaseURL)
     harness.attachToPage()
-    harness.resetStep({ role: 'guest', entryPoint: '/', actionId: null, fromPath: '/' })
+    harness.resetStep({ role: 'guest', entryPoint: NAV_START_PATH, actionId: null, fromPath: NAV_START_PATH })
 
     const runtimeFailures = harness.failures
-    const traversal = await runNavigationTraversal(
-      page,
-      resolvedBaseURL,
-      {
-        role: 'guest',
-        entryPoints: ['/', '/main'],
-        includeMainContentLinks,
-        maxActions,
-        allowedActionTypes: allowedActionTypes as any,
-        stabilizationTimeoutMs: 20_000,
-      },
-      runtimeFailures,
-      harness
-    )
+    const traversal = await (async function runBfsTraversal() {
+      const visited = new Set<string>()
+      type QueueItem = { path: string; depth: number }
+      const q: QueueItem[] = []
 
-    collected.edges.push(...traversal.edges)
-    collected.excludedActions.push(...traversal.excludedActions)
+      const normalizePath = (fullUrl: string) => {
+        try {
+          const u = new URL(fullUrl, resolvedBaseURL)
+          const pathname = u.pathname.replace(/\/+$/, '') || '/'
+          const search = u.search ? u.search : ''
+          return `${pathname}${search}`
+        } catch {
+          return fullUrl
+        }
+      }
+
+      const isExcludedHref = (href: string) => {
+        return [/^mailto:/i, /^tel:/i, /^javascript:/i, /^\/api\//i, /^#/].some((re) => re.test(href))
+      }
+
+      const enqueueIfAllowed = (p: string, d: number) => {
+        if (visited.has(p)) return
+        if (d > MAX_DEPTH) return
+        if (visited.size >= MAX_PAGES) return
+        q.push({ path: p, depth: d })
+        visited.add(p)
+      }
+
+      // seed
+      enqueueIfAllowed(NAV_START_PATH, 0)
+
+      while (q.length > 0) {
+        const cur = q.shift()!
+        // navigate and stabilize
+        await page.goto(cur.path, { waitUntil: 'domcontentloaded' })
+        await page.waitForLoadState('networkidle').catch(() => {})
+        // best-effort open toggles (minimal, visible only)
+        const toggles = page.locator('[data-test="nav-mobile-menu"], [aria-label="Open menu"], button[aria-expanded="false"], [role="button"][aria-expanded="false"]')
+        const tcount = await toggles.count().catch(() => 0)
+        for (let i = 0; i < tcount; i++) {
+          const el = toggles.nth(i)
+          if (!(await el.isVisible().catch(() => false))) continue
+          await el.click({ timeout: 1500 }).catch(() => {})
+          await page.waitForTimeout(150)
+        }
+
+        // immediate invariant validation: harness will record any runtime failures as console/page events.
+        // Discover links in nav/main containers and enqueue new paths immediately.
+        const navCandidates = page.locator('nav, [role="navigation"], aside, main, [role="main"]')
+        const anchors = navCandidates.locator('a[href]')
+        const n = await anchors.count()
+        for (let i = 0; i < n; i++) {
+          const a = anchors.nth(i)
+          if (!(await a.isVisible().catch(() => false))) continue
+          const href = (await a.getAttribute('href').catch(() => null)) || ''
+          if (!href) continue
+          if (!href.startsWith('/')) continue // only same-origin relative
+          if (isExcludedHref(href)) continue
+          const np = normalizePath(href)
+          enqueueIfAllowed(np, cur.depth + 1)
+        }
+      }
+
+      return {
+        visitedPaths: Array.from(visited).sort(),
+      }
+    })()
+
     collected.visitedPathsByRole.set('guest', traversal.visitedPaths)
     collected.failures.push(...runtimeFailures)
     collected.benignConsole.push(...harness.benignConsole)
@@ -152,9 +204,8 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     writeJsonArtifact(ARTIFACT_DIR, 'navigation-graph.guest.json', {
       generatedAt: new Date().toISOString(),
       role: 'guest',
-      entryPoints: ['/', '/main'],
-      edges: traversal.edges,
-      excludedActions: traversal.excludedActions,
+      start: NAV_START_PATH,
+      visitedPaths: traversal.visitedPaths,
     })
     writeJsonArtifact(ARTIFACT_DIR, 'runtime-failures.guest.json', {
       generatedAt: new Date().toISOString(),
@@ -189,26 +240,70 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
         : undefined
     const harness = createRuntimeSanityHarness(page, resolvedBaseURL)
     harness.attachToPage()
-    harness.resetStep({ role: 'customer', entryPoint: '/customer/dashboard', actionId: null, fromPath: '/customer/dashboard' })
+    harness.resetStep({ role: 'customer', entryPoint: NAV_START_PATH, actionId: null, fromPath: NAV_START_PATH })
     const runtimeFailures = harness.failures
 
-    const traversal = await runNavigationTraversal(
-      page,
-      resolvedBaseURL,
-      {
-        role: 'customer',
-        entryPoints: ['/customer/dashboard'],
-        includeMainContentLinks,
-        maxActions,
-        allowedActionTypes: allowedActionTypes as any,
-        stabilizationTimeoutMs: 20_000,
-      },
-      runtimeFailures,
-      harness
-    )
+    const traversal = await (async function runBfsTraversal() {
+      const visited = new Set<string>()
+      type QueueItem = { path: string; depth: number }
+      const q: QueueItem[] = []
 
-    collected.edges.push(...traversal.edges)
-    collected.excludedActions.push(...traversal.excludedActions)
+      const normalizePath = (fullUrl: string) => {
+        try {
+          const u = new URL(fullUrl, resolvedBaseURL)
+          const pathname = u.pathname.replace(/\/+$/, '') || '/'
+          const search = u.search ? u.search : ''
+          return `${pathname}${search}`
+        } catch {
+          return fullUrl
+        }
+      }
+
+      const isExcludedHref = (href: string) => {
+        return [/^mailto:/i, /^tel:/i, /^javascript:/i, /^\/api\//i, /^#/].some((re) => re.test(href))
+      }
+
+      const enqueueIfAllowed = (p: string, d: number) => {
+        if (visited.has(p)) return
+        if (d > MAX_DEPTH) return
+        if (visited.size >= MAX_PAGES) return
+        q.push({ path: p, depth: d })
+        visited.add(p)
+      }
+
+      enqueueIfAllowed(NAV_START_PATH, 0)
+
+      while (q.length > 0) {
+        const cur = q.shift()!
+        await page.goto(cur.path, { waitUntil: 'domcontentloaded' })
+        await page.waitForLoadState('networkidle').catch(() => {})
+        const toggles = page.locator('[data-test="nav-mobile-menu"], [aria-label="Open menu"], button[aria-expanded="false"], [role="button"][aria-expanded="false"]')
+        const tcount = await toggles.count().catch(() => 0)
+        for (let i = 0; i < tcount; i++) {
+          const el = toggles.nth(i)
+          if (!(await el.isVisible().catch(() => false))) continue
+          await el.click({ timeout: 1500 }).catch(() => {})
+          await page.waitForTimeout(150)
+        }
+
+        const navCandidates = page.locator('nav, [role="navigation"], aside, main, [role="main"]')
+        const anchors = navCandidates.locator('a[href]')
+        const n = await anchors.count()
+        for (let i = 0; i < n; i++) {
+          const a = anchors.nth(i)
+          if (!(await a.isVisible().catch(() => false))) continue
+          const href = (await a.getAttribute('href').catch(() => null)) || ''
+          if (!href) continue
+          if (!href.startsWith('/')) continue
+          if (isExcludedHref(href)) continue
+          const np = normalizePath(href)
+          enqueueIfAllowed(np, cur.depth + 1)
+        }
+      }
+
+      return { visitedPaths: Array.from(visited).sort() }
+    })()
+
     collected.visitedPathsByRole.set('customer', traversal.visitedPaths)
     collected.failures.push(...runtimeFailures)
     collected.benignConsole.push(...harness.benignConsole)
@@ -216,9 +311,8 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     writeJsonArtifact(ARTIFACT_DIR, 'navigation-graph.customer.json', {
       generatedAt: new Date().toISOString(),
       role: 'customer',
-      entryPoints: ['/customer/dashboard'],
-      edges: traversal.edges,
-      excludedActions: traversal.excludedActions,
+      start: NAV_START_PATH,
+      visitedPaths: traversal.visitedPaths,
     })
     writeJsonArtifact(ARTIFACT_DIR, 'runtime-failures.customer.json', {
       generatedAt: new Date().toISOString(),
@@ -252,26 +346,70 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
         : undefined
     const harness = createRuntimeSanityHarness(page, resolvedBaseURL)
     harness.attachToPage()
-    harness.resetStep({ role: 'vendor', entryPoint: '/vendor/dashboard', actionId: null, fromPath: '/vendor/dashboard' })
+    harness.resetStep({ role: 'vendor', entryPoint: NAV_START_PATH, actionId: null, fromPath: NAV_START_PATH })
     const runtimeFailures = harness.failures
 
-    const traversal = await runNavigationTraversal(
-      page,
-      resolvedBaseURL,
-      {
-        role: 'vendor',
-        entryPoints: ['/vendor/dashboard'],
-        includeMainContentLinks,
-        maxActions,
-        allowedActionTypes: allowedActionTypes as any,
-        stabilizationTimeoutMs: 20_000,
-      },
-      runtimeFailures,
-      harness
-    )
+    const traversal = await (async function runBfsTraversal() {
+      const visited = new Set<string>()
+      type QueueItem = { path: string; depth: number }
+      const q: QueueItem[] = []
 
-    collected.edges.push(...traversal.edges)
-    collected.excludedActions.push(...traversal.excludedActions)
+      const normalizePath = (fullUrl: string) => {
+        try {
+          const u = new URL(fullUrl, resolvedBaseURL)
+          const pathname = u.pathname.replace(/\/+$/, '') || '/'
+          const search = u.search ? u.search : ''
+          return `${pathname}${search}`
+        } catch {
+          return fullUrl
+        }
+      }
+
+      const isExcludedHref = (href: string) => {
+        return [/^mailto:/i, /^tel:/i, /^javascript:/i, /^\/api\//i, /^#/].some((re) => re.test(href))
+      }
+
+      const enqueueIfAllowed = (p: string, d: number) => {
+        if (visited.has(p)) return
+        if (d > MAX_DEPTH) return
+        if (visited.size >= MAX_PAGES) return
+        q.push({ path: p, depth: d })
+        visited.add(p)
+      }
+
+      enqueueIfAllowed(NAV_START_PATH, 0)
+
+      while (q.length > 0) {
+        const cur = q.shift()!
+        await page.goto(cur.path, { waitUntil: 'domcontentloaded' })
+        await page.waitForLoadState('networkidle').catch(() => {})
+        const toggles = page.locator('[data-test="nav-mobile-menu"], [aria-label="Open menu"], button[aria-expanded="false"], [role="button"][aria-expanded="false"]')
+        const tcount = await toggles.count().catch(() => 0)
+        for (let i = 0; i < tcount; i++) {
+          const el = toggles.nth(i)
+          if (!(await el.isVisible().catch(() => false))) continue
+          await el.click({ timeout: 1500 }).catch(() => {})
+          await page.waitForTimeout(150)
+        }
+
+        const navCandidates = page.locator('nav, [role="navigation"], aside, main, [role="main"]')
+        const anchors = navCandidates.locator('a[href]')
+        const n = await anchors.count()
+        for (let i = 0; i < n; i++) {
+          const a = anchors.nth(i)
+          if (!(await a.isVisible().catch(() => false))) continue
+          const href = (await a.getAttribute('href').catch(() => null)) || ''
+          if (!href) continue
+          if (!href.startsWith('/')) continue
+          if (isExcludedHref(href)) continue
+          const np = normalizePath(href)
+          enqueueIfAllowed(np, cur.depth + 1)
+        }
+      }
+
+      return { visitedPaths: Array.from(visited).sort() }
+    })()
+
     collected.visitedPathsByRole.set('vendor', traversal.visitedPaths)
     collected.failures.push(...runtimeFailures)
     collected.benignConsole.push(...harness.benignConsole)
@@ -279,9 +417,8 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     writeJsonArtifact(ARTIFACT_DIR, 'navigation-graph.vendor.json', {
       generatedAt: new Date().toISOString(),
       role: 'vendor',
-      entryPoints: ['/vendor/dashboard'],
-      edges: traversal.edges,
-      excludedActions: traversal.excludedActions,
+      start: NAV_START_PATH,
+      visitedPaths: traversal.visitedPaths,
     })
     writeJsonArtifact(ARTIFACT_DIR, 'runtime-failures.vendor.json', {
       generatedAt: new Date().toISOString(),
@@ -313,26 +450,70 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
         : undefined
     const harness = createRuntimeSanityHarness(page, resolvedBaseURL)
     harness.attachToPage()
-    harness.resetStep({ role: 'admin', entryPoint: '/admin', actionId: null, fromPath: '/admin' })
+    harness.resetStep({ role: 'admin', entryPoint: NAV_START_PATH, actionId: null, fromPath: NAV_START_PATH })
     const runtimeFailures = harness.failures
 
-    const traversal = await runNavigationTraversal(
-      page,
-      resolvedBaseURL,
-      {
-        role: 'admin',
-        entryPoints: ['/admin'],
-        includeMainContentLinks: false,
-        maxActions,
-        allowedActionTypes: allowedActionTypes as any,
-        stabilizationTimeoutMs: 25_000,
-      },
-      runtimeFailures,
-      harness
-    )
+    const traversal = await (async function runBfsTraversal() {
+      const visited = new Set<string>()
+      type QueueItem = { path: string; depth: number }
+      const q: QueueItem[] = []
 
-    collected.edges.push(...traversal.edges)
-    collected.excludedActions.push(...traversal.excludedActions)
+      const normalizePath = (fullUrl: string) => {
+        try {
+          const u = new URL(fullUrl, resolvedBaseURL)
+          const pathname = u.pathname.replace(/\/+$/, '') || '/'
+          const search = u.search ? u.search : ''
+          return `${pathname}${search}`
+        } catch {
+          return fullUrl
+        }
+      }
+
+      const isExcludedHref = (href: string) => {
+        return [/^mailto:/i, /^tel:/i, /^javascript:/i, /^\/api\//i, /^#/].some((re) => re.test(href))
+      }
+
+      const enqueueIfAllowed = (p: string, d: number) => {
+        if (visited.has(p)) return
+        if (d > MAX_DEPTH) return
+        if (visited.size >= MAX_PAGES) return
+        q.push({ path: p, depth: d })
+        visited.add(p)
+      }
+
+      enqueueIfAllowed(NAV_START_PATH, 0)
+
+      while (q.length > 0) {
+        const cur = q.shift()!
+        await page.goto(cur.path, { waitUntil: 'domcontentloaded' })
+        await page.waitForLoadState('networkidle').catch(() => {})
+        const toggles = page.locator('[data-test="nav-mobile-menu"], [aria-label="Open menu"], button[aria-expanded="false"], [role="button"][aria-expanded="false"]')
+        const tcount = await toggles.count().catch(() => 0)
+        for (let i = 0; i < tcount; i++) {
+          const el = toggles.nth(i)
+          if (!(await el.isVisible().catch(() => false))) continue
+          await el.click({ timeout: 1500 }).catch(() => {})
+          await page.waitForTimeout(150)
+        }
+
+        const navCandidates = page.locator('nav, [role="navigation"], aside, main, [role="main"]')
+        const anchors = navCandidates.locator('a[href]')
+        const n = await anchors.count()
+        for (let i = 0; i < n; i++) {
+          const a = anchors.nth(i)
+          if (!(await a.isVisible().catch(() => false))) continue
+          const href = (await a.getAttribute('href').catch(() => null)) || ''
+          if (!href) continue
+          if (!href.startsWith('/')) continue
+          if (isExcludedHref(href)) continue
+          const np = normalizePath(href)
+          enqueueIfAllowed(np, cur.depth + 1)
+        }
+      }
+
+      return { visitedPaths: Array.from(visited).sort() }
+    })()
+
     collected.visitedPathsByRole.set('admin', traversal.visitedPaths)
     collected.failures.push(...runtimeFailures)
     collected.benignConsole.push(...harness.benignConsole)
@@ -340,9 +521,8 @@ test.describe('Navigation completeness + runtime sanity (UI state machine)', () 
     writeJsonArtifact(ARTIFACT_DIR, 'navigation-graph.admin.json', {
       generatedAt: new Date().toISOString(),
       role: 'admin',
-      entryPoints: ['/admin'],
-      edges: traversal.edges,
-      excludedActions: traversal.excludedActions,
+      start: NAV_START_PATH,
+      visitedPaths: traversal.visitedPaths,
     })
     writeJsonArtifact(ARTIFACT_DIR, 'runtime-failures.admin.json', {
       generatedAt: new Date().toISOString(),

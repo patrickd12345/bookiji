@@ -244,13 +244,15 @@ BEGIN
     INSERT INTO bookings (
       id, customer_id, provider_id, service_id,
       start_time, end_time, status, total_amount,
-      notes, created_at, updated_at
+      notes, stripe_payment_intent_id, confirmed_at, created_at, updated_at
     )
     VALUES (
       v_booking_id, v_customer_id, v_vendor_id, v_service_id,
       v_start_time, v_end_time, v_booking_status,
       (50.00 + (random() * 500.00))::DECIMAL(8,2),
       'Booking notes for service ' || i,
+      CASE WHEN v_booking_status = 'confirmed' THEN ('seed_pi_' || v_booking_id::TEXT) ELSE NULL END,
+      CASE WHEN v_booking_status = 'confirmed' THEN v_timestamp ELSE NULL END,
       v_timestamp, v_timestamp
     )
     ON CONFLICT (id) DO NOTHING;
@@ -266,7 +268,9 @@ BEGIN
     
     -- Create 10-20 availability slots per vendor (mix of past and future)
     FOR j IN 1..(10 + (random() * 10)::INTEGER) LOOP
-      v_timestamp := NOW() + (random() * INTERVAL '60 days') - INTERVAL '30 days';
+      -- Deterministic non-overlapping slots (avoid violating availability_slots_no_overlap)
+      -- Slot length is 2 hours, so step by 3 hours to guarantee no overlap per provider.
+      v_timestamp := date_trunc('day', NOW()) - INTERVAL '30 days' + (j * INTERVAL '3 hours');
       
       INSERT INTO availability_slots (
         id, provider_id, start_time, end_time,
