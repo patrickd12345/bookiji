@@ -1,28 +1,47 @@
-# Bookiji Docker-based Deterministic Test Environment
+# Bookiji Scheduling
 
-## 🤖 The Only Supported E2E/Integration Test Flow
+Bookiji Scheduling is a first-to-market booking flow built around commitment: it makes it easy for two parties to agree on a slot, pay a small commitment fee, exchange contact details, and move forward with serious intent.
 
-- **All infrastructure is run via Docker Compose:** Postgres, Supabase Auth (GoTrue), Supabase REST (PostgREST), App. No cloud or host setup required.
-- **Deterministic:** Pin all dependencies. Uses strict seeding for test users/data.
-- **Self-contained:** No connection to Cursor Cloud/Codex/host env required. CI must use exactly this flow, never run tests directly.
+## What Bookiji Is / What It Is Not
 
-### 💡 How to run all tests (locally or in CI)
+**Bookiji is**
+- A scheduling product that confirms a slot and records a committed booking.
+- A commitment mechanism that reduces flakiness by requiring skin in the game.
+- A clean handoff: once both sides have what they need to proceed, Bookiji exits.
+- An integration layer for existing calendars (Google / Outlook) in v1, not a replacement.
 
-```bash
-docker compose -f docker-compose.bookiji.test.yml up --build --abort-on-container-exit --exit-code-from app
-```
+**Bookiji is not**
+- A marketplace or a directory.
+- A long-running intermediary between two parties.
+- A dispute system, a mediator, or an arbiter of what happened after booking.
+- A service quality guarantor.
 
-- This will:
-    1. Bring up all required infra (Postgres, Gotrue, PostgREST)
-    2. Wait for readiness
-    3. The `app` container will:
-        - Run DB migrations with the Supabase CLI
-        - Seed canonical test users/data
-        - Run ALL tests (`vitest` + `playwright`)
-    4. App container exit code signals overall test result
+## How Bookiji Scheduling Works
 
-**Do not run E2E/Integration tests directly from host or CI runner.** Always use this deterministic, containerized workflow for all integration/system tests. All CI (including GitHub Actions) must run through Docker Compose and exit code from the `app` service.
+1. A requester selects a provider and a slot.
+2. Bookiji checks conflicts via connected calendars (Google / Outlook) and verifies the slot can be committed.
+3. The requester pays a commitment fee to lock the booking.
+4. Bookiji confirms the booking and shares contact information between the two parties.
+5. The two parties take it from there; Bookiji exits after the handoff.
 
----
+## Skin in the Game: How Commitment Is Encouraged
 
-**See also:** `Dockerfile.bookiji.test` and `docker-compose.bookiji.test.yml` for details/ENV options.
+The commitment fee exists to align incentives: “you paid for it, you’re more likely to show up”. Bookiji uses that simple mechanic to reduce wasted slots and ghost bookings without building a judgment layer on top.
+
+## Explicit Scope Boundaries
+
+- Bookiji guarantees the booking mechanics (commitment, confirmation, and handoff), not the service result.
+- Bookiji never supports disputes, mediation, arbitration, or post-booking judgment.
+- Bookiji does not evaluate who is right, who is wrong, or what should happen after booking.
+- Bookiji does not stay involved after the booking is committed and contact information is exchanged.
+
+## Who Bookiji Scheduling Is For (v1)
+
+- Builders and early adopters who want a commitment-first scheduling flow with clear boundaries.
+- Providers who lose money when slots are wasted.
+- Requesters who value reliability and want fewer last-minute surprises.
+- Teams that already live in Google Calendar or Outlook and want scheduling that plugs in, not a new calendar to run.
+
+## Canonical positioning statement
+
+Bookiji Scheduling is commitment-first booking: lock the slot with skin in the game, exchange contact details, and exit.
