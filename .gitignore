@@ -118,3 +118,5 @@ start
 scripts/sync-vercel-env.md
 *.credentials.*
 *.secrets.*
+!src/env/
+!scripts/e2e/env.e2e
