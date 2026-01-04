@@ -1,3 +1,4 @@
+// @env-allow-legacy-dotenv
 #!/usr/bin/env tsx
 import 'dotenv/config'
 import fs from 'node:fs'

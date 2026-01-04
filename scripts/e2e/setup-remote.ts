@@ -3,17 +3,16 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { stdin as input, stdout as output } from 'node:process'
-import dotenv from 'dotenv'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
 
-const envPath = path.resolve('.env.e2e')
-
-if (!fs.existsSync(envPath)) {
-  console.error('❌ .env.e2e is missing. Create it from env.template before configuring a remote Supabase project.')
-  process.exit(1)
+// Load exactly one env file according to runtime mode
+// For E2E scripts, default to e2e mode if not explicitly set
+if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+  process.env.RUNTIME_MODE = 'e2e'
 }
-
-const envContents = fs.readFileSync(envPath, 'utf8')
-const currentEnv = dotenv.parse(envContents)
+const mode = getRuntimeMode()
+const { parsed: currentEnv } = loadEnvFile(mode)
 
 const rl = createInterface({ input, output })
 

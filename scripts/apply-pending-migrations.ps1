@@ -76,7 +76,7 @@ Get-Content $envFile | ForEach-Object {
 }
 
 if (-not $databaseUrl) {
-    Write-Host "ERROR: DATABASE_URL not found in .env.local" -ForegroundColor Red
+    Write-Host "ERROR: DATABASE_URL not found in $envFile" -ForegroundColor Red
     exit 1
 }
 

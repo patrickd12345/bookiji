@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// @env-allow-legacy-dotenv
 /**
  * Seed minimal test data for stress tests
  * Creates: 1 partner, 1 partner API key, 1 vendor, 1 requester

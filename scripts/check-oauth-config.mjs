@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @env-allow-legacy-dotenv
 /**
  * Check OAuth Provider Configuration
  * Verifies that OAuth providers (GitHub, Google) are properly configured

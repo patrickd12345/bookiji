@@ -8,7 +8,8 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import dotenv from 'dotenv'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
 
 // Check for .env in common locations
 const envPaths = [
@@ -46,8 +47,36 @@ if (envPath) {
   console.log('📄 Using environment variables from process.env')
 }
 
+// Simple env file parser (for syncing, not loading into process.env)
+const parseEnvFile = (filePath: string): Record<string, string> => {
+  const content = fs.readFileSync(filePath, 'utf8')
+  const parsed: Record<string, string> = {}
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const match = trimmed.match(/^([^=]+)=(.*)$/)
+    if (match) {
+      const key = match[1].trim()
+      let value = match[2].trim()
+      // Remove quotes if present
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1)
+      }
+      parsed[key] = value
+    }
+  }
+  return parsed
+}
+
+// Load script's own environment using runtime mode system
+if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+  process.env.RUNTIME_MODE = 'e2e'
+}
+const mode = getRuntimeMode()
+loadEnvFile(mode)
+
 // Load .env (also check process.env for variables that might already be loaded)
-const loadedEnv = envPath ? dotenv.config({ path: envPath }).parsed || {} : {}
+const loadedEnv = envPath ? parseEnvFile(envPath) : {}
 const envVars = { ...loadedEnv, ...process.env }
 const missingVars = requiredVars.filter(v => !envVars[v])
 
@@ -56,10 +85,10 @@ if (missingVars.length > 0) {
   process.exit(1)
 }
 
-// Load existing .env.e2e if it exists
+// Load existing .env.e2e if it exists (using parser)
 let existingE2E: Record<string, string> = {}
 if (fs.existsSync(envE2EPath)) {
-  existingE2E = dotenv.config({ path: envE2EPath }).parsed || {}
+  existingE2E = parseEnvFile(envE2EPath)
 }
 
 // Determine if we should allow remote Supabase

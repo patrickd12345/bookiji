@@ -1,3 +1,4 @@
+// @env-allow-legacy-dotenv
 #!/usr/bin/env node
 /**
  * Smoke test for Vercel AI Gateway

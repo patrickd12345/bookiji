@@ -6,14 +6,17 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import dotenv from 'dotenv'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
 import { createSupabaseAdminClient } from './createSupabaseAdmin'
 
-// Load .env.local
-const envLocalPath = path.resolve(process.cwd(), '.env.local')
-if (fs.existsSync(envLocalPath)) {
-  dotenv.config({ path: envLocalPath, override: false })
+// Load exactly one env file according to runtime mode
+// For E2E scripts, default to e2e mode if not explicitly set
+if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+  process.env.RUNTIME_MODE = 'e2e'
 }
+const mode = getRuntimeMode()
+loadEnvFile(mode)
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY

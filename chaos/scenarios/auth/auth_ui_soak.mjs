@@ -1,11 +1,18 @@
 import { chromium } from '@playwright/test';
 import crypto from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
 import path from 'path';
 
-// Load environment variables
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+// Load exactly one env file according to runtime mode
+const { getRuntimeMode } = await import('../../src/env/runtimeMode.js');
+const { loadEnvFile } = await import('../../src/env/loadEnv.js');
+
+// For chaos tests, default to e2e mode if not explicitly set
+if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+  process.env.RUNTIME_MODE = 'e2e';
+}
+const mode = getRuntimeMode();
+loadEnvFile(mode);
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SECRET_KEY;

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @env-allow-legacy-dotenv
 /**
  * Add unique constraint on kb_articles.url for crawler idempotency
  */

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @env-allow-legacy-dotenv
 // scripts/ai-test-loop.mjs
 // 
 // ⚠️ EXPERIMENTAL DEVELOPMENT TOOL - NOT FOR PRODUCTION USE ⚠️

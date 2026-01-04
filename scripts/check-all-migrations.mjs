@@ -1,3 +1,4 @@
+// @env-allow-legacy-dotenv
 #!/usr/bin/env node
 /**
  * Check which migrations have been applied to the database

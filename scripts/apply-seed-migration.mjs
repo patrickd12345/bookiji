@@ -1,3 +1,4 @@
+// @env-allow-legacy-dotenv
 #!/usr/bin/env node
 /**
  * Apply the admin console seed migration

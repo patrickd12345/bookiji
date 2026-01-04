@@ -1,3 +1,4 @@
+// @env-allow-legacy-dotenv
 import { config } from 'dotenv';
 import { resolve } from 'path';
 

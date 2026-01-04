@@ -2,7 +2,7 @@
 /**
  * CI helper: validate environment isolation rules.
  * - No .env.local present in repo root
- * - No implicit dotenv.config() without explicit path
+ * - No dotenv usage unless file has @env-allow-legacy-dotenv marker
  * - DOTENV_CONFIG_PATH is used in package.json scripts for e2e/navigation/dev/prod/staging
  */
 import * as fs from 'node:fs'
@@ -17,13 +17,14 @@ if (fs.existsSync(envLocalPath)) {
   process.exit(1)
 }
 
-// 2. Scan for implicit dotenv.config() usages
+// 2. Scan for dotenv usage (config() or import 'dotenv/config')
 const walk = (dir: string): string[] => {
   const out: string[] = []
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name)
     if (entry.isDirectory()) {
-      if (['node_modules', '.git', 'dist', 'build'].includes(entry.name)) continue
+      // Ignore common build/dependency directories
+      if (['node_modules', '.git', 'dist', 'build', '.next'].includes(entry.name)) continue
       out.push(...walk(full))
     } else {
       out.push(full)
@@ -33,21 +34,51 @@ const walk = (dir: string): string[] => {
 }
 
 const files = walk(root).filter((f) => /\.(js|ts|mjs|tsx)$/.test(f))
-const implicit: string[] = []
+const violations: string[] = []
+const exempted: string[] = []
+
 for (const f of files) {
   try {
+    // Skip the loader itself - it legitimately uses dotenv
+    if (f.includes('src/env/loadEnv.ts') || f.includes('src\\env\\loadEnv.ts')) continue
+    // Skip the validator itself
+    if (f.includes('validate-env-isolation.ts')) continue
+    
     const c = fs.readFileSync(f, 'utf8')
-    // detect any dotenv.config(...) usage (with or without args)
-    if (/dotenv\.config\s*\(/.test(c)) implicit.push(f)
+    
+    // Check if file has exemption marker (must be at the very top, first 5 lines)
+    const firstLines = c.split('\n').slice(0, 5).join('\n')
+    const hasExemption = /\/\/\s*@env-allow-legacy-dotenv/.test(firstLines)
+    
+    // Detect dotenv usage (comprehensive patterns)
+    const hasDotenvConfig = /dotenv\.config\s*\(/.test(c)
+    const hasDotenvImportConfig = /import\s+['"]dotenv\/config['"]/.test(c)
+    const hasDotenvRequireConfig = /require\s*\(\s*['"]dotenv\/config['"]\s*\)/.test(c)
+    const hasDotenvImport = /import\s+.*\s+from\s+['"]dotenv['"]/.test(c)
+    const hasDotenvRequire = /require\s*\(\s*['"]dotenv['"]\s*\)/.test(c)
+    
+    if (hasDotenvConfig || hasDotenvImportConfig || hasDotenvRequireConfig || hasDotenvImport || hasDotenvRequire) {
+      if (hasExemption) {
+        exempted.push(f)
+      } else {
+        violations.push(f)
+      }
+    }
   } catch {
-    // ignore
+    // ignore read errors
   }
 }
 
-if (implicit.length) {
-  console.error('FAIL: Found implicit dotenv.config() calls (must use loadEnvFile/getRuntimeMode):')
-  for (const f of implicit) console.error('  - ' + path.relative(root, f))
+if (violations.length) {
+  console.error('FAIL: Found dotenv usage without @env-allow-legacy-dotenv marker:')
+  for (const f of violations) console.error('  - ' + path.relative(root, f))
+  console.error('\nTo exempt a manual script, add this as the FIRST LINE:')
+  console.error('  // @env-allow-legacy-dotenv')
   process.exit(1)
+}
+
+if (exempted.length > 0) {
+  console.log(`OK: ${exempted.length} file(s) exempted with @env-allow-legacy-dotenv marker`)
 }
 
 // 3. Check package.json scripts for DOTENV_CONFIG_PATH usage for key scripts
@@ -64,5 +95,8 @@ if (missing.length) {
 }
 
 console.log('OK: Environment isolation checks passed')
+if (exempted.length > 0) {
+  console.log(`   (${exempted.length} file(s) exempted with @env-allow-legacy-dotenv marker)`)
+}
 process.exit(0)
 

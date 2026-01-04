@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @env-allow-legacy-dotenv
 
 /**
  * Cron job script to refresh resilience metrics materialized views

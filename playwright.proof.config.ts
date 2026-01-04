@@ -3,14 +3,16 @@
 // Runs in headed mode with full video/screenshot/trace recording
 
 import { defineConfig, devices } from '@playwright/test'
-import fs from 'node:fs'
-import path from 'node:path'
-import dotenv from 'dotenv'
+import { getRuntimeMode } from './src/env/runtimeMode'
+import { loadEnvFile } from './src/env/loadEnv'
 
-const envPath = path.resolve(process.cwd(), '.env.e2e')
-if (fs.existsSync(envPath)) {
-  dotenv.config({ path: envPath, override: true })
+// Load exactly one env file according to runtime mode
+// For Playwright, default to e2e mode if not explicitly set
+if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+  process.env.RUNTIME_MODE = 'e2e'
 }
+const mode = getRuntimeMode()
+loadEnvFile(mode)
 
 if (process.env.E2E !== 'true') {
   throw new Error('Refusing to run Playwright without `E2E=true` (use `.env.e2e`).')

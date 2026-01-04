@@ -2,26 +2,20 @@
 import { defineConfig, devices } from '@playwright/test'
 import fs from 'node:fs'
 import path from 'node:path'
-import dotenv from 'dotenv'
+import { getRuntimeMode } from './src/env/runtimeMode'
+import { loadEnvFile } from './src/env/loadEnv'
 
-// Load .env.e2e if it exists, otherwise fall back to .env or .env.local
-const envE2EPath = path.resolve(process.cwd(), '.env.e2e')
-const envPaths = [
-  path.resolve(process.cwd(), '.env.local'),
-  path.resolve(process.cwd(), '.env'),
-]
+// Load exactly one env file according to runtime mode
+// For Playwright, default to e2e mode if not explicitly set
+if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+  process.env.RUNTIME_MODE = 'e2e'
+}
+const mode = getRuntimeMode()
+loadEnvFile(mode)
 
-if (fs.existsSync(envE2EPath)) {
-  // Do not override explicitly provided environment variables (e.g. BASE_URL for remote/prod runs).
-  dotenv.config({ path: envE2EPath, override: false })
-} else {
-  // Fall back to .env.local or .env if .env.e2e doesn't exist
-  const envPath = envPaths.find(p => fs.existsSync(p))
-  if (envPath) {
-    dotenv.config({ path: envPath, override: false })
-    console.warn(`⚠️  Using ${path.basename(envPath)} instead of .env.e2e for E2E tests`)
-    console.warn('   Run `pnpm e2e:sync-env` to create .env.e2e from your .env file')
-  }
+// Automatically set E2E=true when in e2e mode (Playwright should always run in e2e mode)
+if (mode === 'e2e') {
+  process.env.E2E = 'true'
 }
 
 if (process.env.E2E !== 'true') {
@@ -128,10 +122,14 @@ export default defineConfig({
   // The suite should be able to run against an externally-hosted environment.
   webServer: isLocalBaseURL
     ? {
-        command: fs.existsSync(envE2EPath) ? 'npx dotenv-cli -e .env.e2e -- npm run dev' : 'npm run dev',
+        command: 'npm run dev',
         port: 3000,
         reuseExistingServer: true,
         timeout: 120_000,
+        env: {
+          ...process.env,
+          DOTENV_CONFIG_PATH: mode === 'e2e' ? '.env.e2e' : `.env.${mode}`,
+        },
       }
     : undefined,
 })

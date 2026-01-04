@@ -12,7 +12,8 @@
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
-import dotenv from 'dotenv'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
 
 // Helper to wait (for async operations)
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
@@ -65,16 +66,37 @@ const isCloudEnv =
   fs.existsSync('/.gitpod') ||
   (process.env.HOME && process.env.HOME.includes('codespace'))
 
-// Load all potential env sources
+// Load all potential env sources (for syncing purposes only)
 const loadEnvFromFiles = () => {
   const envVars: Record<string, string> = {}
   const foundFiles: string[] = []
+  
+  // Simple env file parser (for syncing, not loading into process.env)
+  const parseEnvFile = (filePath: string): Record<string, string> => {
+    const content = fs.readFileSync(filePath, 'utf8')
+    const parsed: Record<string, string> = {}
+    for (const line of content.split('\n')) {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('#')) continue
+      const match = trimmed.match(/^([^=]+)=(.*)$/)
+      if (match) {
+        const key = match[1].trim()
+        let value = match[2].trim()
+        // Remove quotes if present
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+          value = value.slice(1, -1)
+        }
+        parsed[key] = value
+      }
+    }
+    return parsed
+  }
   
   for (const envPath of envPaths) {
     if (fs.existsSync(envPath)) {
       foundFiles.push(path.basename(envPath))
       try {
-        const loaded = dotenv.config({ path: envPath }).parsed || {}
+        const loaded = parseEnvFile(envPath)
         Object.assign(envVars, loaded)
       } catch (error) {
         console.warn(`⚠️  Failed to load ${path.basename(envPath)}: ${error}`)
@@ -99,8 +121,35 @@ const hasAllRequiredVars = requiredVars.every(v => allEnvVars[v])
 let needsSync = false
 let syncReason = ''
 
+// Load script's own environment using runtime mode system
+if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+  process.env.RUNTIME_MODE = 'e2e'
+}
+const mode = getRuntimeMode()
+loadEnvFile(mode)
+
+// For syncing, parse .env.e2e if it exists (using simple parser)
+const parseEnvFile = (filePath: string): Record<string, string> => {
+  const content = fs.readFileSync(filePath, 'utf8')
+  const parsed: Record<string, string> = {}
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const match = trimmed.match(/^([^=]+)=(.*)$/)
+    if (match) {
+      const key = match[1].trim()
+      let value = match[2].trim()
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1)
+      }
+      parsed[key] = value
+    }
+  }
+  return parsed
+}
+
 if (fs.existsSync(envE2EPath)) {
-  const e2eEnv = dotenv.config({ path: envE2EPath }).parsed || {}
+  const e2eEnv = parseEnvFile(envE2EPath)
   const supabaseUrl = e2eEnv.SUPABASE_URL || e2eEnv.NEXT_PUBLIC_SUPABASE_URL || ''
   const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(supabaseUrl)
   

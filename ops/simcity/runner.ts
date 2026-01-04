@@ -1,15 +1,21 @@
 import { createClient } from '@supabase/supabase-js'
 import { spawn } from 'child_process'
-import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import crypto from 'crypto'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Load env from root
-dotenv.config({ path: path.join(__dirname, '../../.env') })
+// Load exactly one env file according to runtime mode
+// For ops scripts, default to dev mode if not explicitly set
+if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+  process.env.RUNTIME_MODE = 'dev'
+}
+const mode = getRuntimeMode()
+loadEnvFile(mode)
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,

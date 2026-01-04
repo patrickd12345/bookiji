@@ -7,7 +7,8 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import dotenv from 'dotenv'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
 
 console.log('🔍 E2E Environment Diagnostics\n')
 
@@ -47,12 +48,21 @@ for (const file of envFiles) {
   console.log(`  ${file}: ${exists ? '✅ Found' : '❌ Not found'}`)
   
   if (exists && file === '.env.e2e') {
-    const env = dotenv.config({ path: filePath }).parsed || {}
-    const supabaseUrl = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || 'not set'
-    const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(supabaseUrl)
-    console.log(`    Supabase URL: ${supabaseUrl}`)
-    console.log(`    Is localhost: ${isLocalhost ? '⚠️  Yes' : '✅ No (remote)'}`)
-    console.log(`    E2E_ALLOW_REMOTE_SUPABASE: ${env.E2E_ALLOW_REMOTE_SUPABASE || 'not set'}`)
+    // For diagnostics, try to load the file if it's .env.e2e
+    try {
+      if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+        process.env.RUNTIME_MODE = 'e2e'
+      }
+      const mode = getRuntimeMode()
+      const { parsed: env } = loadEnvFile(mode)
+      const supabaseUrl = env?.SUPABASE_URL || env?.NEXT_PUBLIC_SUPABASE_URL || 'not set'
+      const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(supabaseUrl)
+      console.log(`    Supabase URL: ${supabaseUrl}`)
+      console.log(`    Is localhost: ${isLocalhost ? '⚠️  Yes' : '✅ No (remote)'}`)
+      console.log(`    E2E_ALLOW_REMOTE_SUPABASE: ${env?.E2E_ALLOW_REMOTE_SUPABASE || 'not set'}`)
+    } catch {
+      // Skip if can't load
+    }
   }
 }
 console.log('')

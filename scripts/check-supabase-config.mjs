@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @env-allow-legacy-dotenv
 /**
  * Check Supabase configuration
  * Run this to verify your Supabase environment variables are set correctly

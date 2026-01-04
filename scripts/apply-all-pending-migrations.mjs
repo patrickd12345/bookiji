@@ -1,3 +1,4 @@
+// @env-allow-legacy-dotenv
 #!/usr/bin/env node
 /**
  * Apply all pending Supabase migrations using direct PostgreSQL connection

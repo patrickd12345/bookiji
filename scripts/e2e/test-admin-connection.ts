@@ -11,24 +11,17 @@
  * 3. Error diagnostics for connection failures
  */
 
-import dotenv from 'dotenv'
-import path from 'node:path'
-import fs from 'node:fs'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
 import { createSupabaseAdminClient } from './createSupabaseAdmin'
 
-// Load environment variables
-const envPaths = [
-  path.resolve(process.cwd(), '.env.e2e'),
-  path.resolve(process.cwd(), '.env.local'),
-  path.resolve(process.cwd(), '.env'),
-]
-
-for (const envPath of envPaths) {
-  if (fs.existsSync(envPath)) {
-    dotenv.config({ path: envPath })
-    break
-  }
+// Load exactly one env file according to runtime mode
+// For E2E scripts, default to e2e mode if not explicitly set
+if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+  process.env.RUNTIME_MODE = 'e2e'
 }
+const mode = getRuntimeMode()
+loadEnvFile(mode)
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY

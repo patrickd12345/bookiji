@@ -3,14 +3,16 @@
  * Debug helper: prints the FK target for profiles.auth_user_id.
  * Does NOT log secrets.
  */
-import * as dotenv from 'dotenv'
-import * as fs from 'node:fs'
-import * as path from 'node:path'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
 
-const envLocalPath = path.resolve(process.cwd(), '.env.local')
-if (fs.existsSync(envLocalPath)) {
-  dotenv.config({ path: envLocalPath, override: false })
+// Load exactly one env file according to runtime mode
+// For E2E scripts, default to e2e mode if not explicitly set
+if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+  process.env.RUNTIME_MODE = 'e2e'
 }
+const mode = getRuntimeMode()
+loadEnvFile(mode)
 
 const dbUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL
 if (!dbUrl) {

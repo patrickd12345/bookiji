@@ -1,16 +1,16 @@
 #!/usr/bin/env tsx
 import fs from 'node:fs'
 import path from 'node:path'
-import dotenv from 'dotenv'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
 
-const envPath = path.resolve('.env.e2e')
-
-if (!fs.existsSync(envPath)) {
-  console.error('❌ Missing .env.e2e file. Create it before running E2E checks.')
-  process.exit(1)
+// Load exactly one env file according to runtime mode
+// For E2E scripts, default to e2e mode if not explicitly set
+if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+  process.env.RUNTIME_MODE = 'e2e'
 }
-
-const parsed = dotenv.parse(fs.readFileSync(envPath, 'utf8'))
+const mode = getRuntimeMode()
+const { parsed } = loadEnvFile(mode)
 
 const supabaseUrl = parsed.SUPABASE_URL || parsed.NEXT_PUBLIC_SUPABASE_URL
 const serviceRoleKey = parsed.SUPABASE_SECRET_KEY

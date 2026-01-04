@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// @env-allow-legacy-dotenv
 /**
  * 🎯 MASTER PROMPT — CURSOR → SIMCITY TORTURE EXECUTION
  * 

@@ -1,3 +1,4 @@
+// @env-allow-legacy-dotenv
 import { config as dotenvConfig } from 'dotenv';
 import { resolve } from 'path';
 // Load .env.local first, then .env as fallback

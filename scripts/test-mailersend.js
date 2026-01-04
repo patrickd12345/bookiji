@@ -1,3 +1,4 @@
+// @env-allow-legacy-dotenv
 // test-mailersend.js
 // IMPORTANT: This script reads credentials from environment variables
 // Set MAILERSEND_SMTP_USER and MAILERSEND_SMTP_PASS before running

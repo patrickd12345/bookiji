@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// @env-allow-legacy-dotenv
 /**
  * Local Cron Scheduler for Development
  * 

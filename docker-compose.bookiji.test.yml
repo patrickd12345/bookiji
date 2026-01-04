@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   db:
-    image: supabase/postgres:14
+    image: supabase/postgres:15.14.1.067
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @env-allow-legacy-dotenv
 /**
  * Apply KB crawler migration directly via Supabase client
  */

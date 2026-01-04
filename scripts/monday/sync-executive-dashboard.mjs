@@ -1,3 +1,4 @@
+// @env-allow-legacy-dotenv
 import dotenv from 'dotenv';
 
 // Load .env.local explicitly

@@ -1,11 +1,13 @@
-import fs from 'node:fs'
-import path from 'node:path'
-import dotenv from 'dotenv'
+import { getRuntimeMode } from '../../src/env/runtimeMode'
+import { loadEnvFile } from '../../src/env/loadEnv'
 
-const envPath = path.resolve(process.cwd(), '.env.e2e')
-if (fs.existsSync(envPath)) {
-  dotenv.config({ path: envPath, override: false })
+// Load exactly one env file according to runtime mode
+// For E2E scripts, default to e2e mode if not explicitly set
+if (!process.env.RUNTIME_MODE && !process.env.DOTENV_CONFIG_PATH) {
+  process.env.RUNTIME_MODE = 'e2e'
 }
+const mode = getRuntimeMode()
+loadEnvFile(mode)
 
 const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:3000'
 const loginUrl = new URL('/login', baseUrl).toString()
