@@ -6,6 +6,9 @@ test-results
 playwright-report
 dist
 .DS_Store
+# Allow scripts/e2e/env.e2e
+!scripts/e2e/env.e2e
+# Ignore other .env files
 .env*
 supabase/.temp
 supabase/.cache
