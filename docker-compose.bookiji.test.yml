@@ -1,62 +1,76 @@
-version: '3.8'
-
 services:
+  # Postgres image with Supabase-compatible extensions (pgcrypto, pgvector, etc.)
   db:
     image: supabase/postgres:15.14.1.067
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
-      PGDATA: /var/lib/postgresql/data/pgdata
-    restart: unless-stopped
-    ports:
-      - "54322:5432"
+      TZ: UTC
     volumes:
       - db_data:/var/lib/postgresql/data
+      # Must run before GoTrue migrations (auth schema) and before Supabase internal migrate.sh (supabase_admin role).
+      - ./scripts/docker-test-init.sql:/docker-entrypoint-initdb.d/00-bookiji-test-init.sql:ro
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 3s
-      retries: 20
+      # Wait until Supabase's init scripts have completed (auth schema exists).
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U postgres -d postgres && [ \"$(psql -U postgres -d postgres -tAc \"select 1 from pg_namespace where nspname='auth'\")\" = \"1\" ]"
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 120
 
-# --- Minimal Supabase dependencies for Auth + REST ---
   gotrue:
     image: supabase/gotrue:v2.157.0
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
       GOTRUE_DB_DRIVER: "postgres"
-      DB_DATABASE_URL: "postgresql://postgres:postgres@db:5432/postgres"
-      GOTRUE_SITE_URL: "http://localhost:54321"
+      DATABASE_URL: "postgresql://supabase_admin:postgres@db:5432/postgres"
+      GOTRUE_SITE_URL: "http://localhost:3000"
       GOTRUE_JWT_SECRET: "super-secret-dev-key"
       GOTRUE_JWT_EXP: "3600"
-      API_EXTERNAL_URL: "http://localhost:54321"
+      GOTRUE_JWT_ADMIN_ROLES: "service_role"
+      GOTRUE_JWT_AUD: "authenticated"
+      API_EXTERNAL_URL: "http://kong:8000"
       PORT: 9999
-      GOTRUE_OPERATOR_TOKEN: "supase-operator-token"
-    healthcheck:
-      test: ["CMD", "curl", "-fs", "http://localhost:9999/health"]
-      interval: 3s
-      retries: 20
-    ports:
-      - "9999:9999"
 
   postgrest:
     image: postgrest/postgrest:v10.2.0
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
       PGRST_DB_URI: "postgresql://postgres:postgres@db:5432/postgres"
-      PGRST_DB_SCHEMA: "public,storage"
+      PGRST_DB_SCHEMA: "public,graphql_public"
       PGRST_DB_ANON_ROLE: "anon"
       PGRST_JWT_SECRET: "super-secret-dev-key"
       PGRST_SERVER_PORT: "3001"
-    healthcheck:
-      test: ["CMD", "curl", "-fs", "http://localhost:3001/"]
-      interval: 3s
-      retries: 20
-    ports:
-      - "3001:3001"
+
+  kong:
+    image: kong:3.3
+    restart: unless-stopped
+    depends_on:
+      gotrue:
+        condition: service_started
+      postgrest:
+        condition: service_started
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+    volumes:
+      - ./kong.bookiji.test.yml:/var/lib/kong/kong.yml:ro
 
   app:
     build:
@@ -65,30 +79,54 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      gotrue:
-        condition: service_healthy
-      postgrest:
-        condition: service_healthy
+      kong:
+        condition: service_started
     environment:
+      TZ: UTC
       NODE_ENV: test
-      SUPABASE_URL: http://localhost:9999
-      NEXT_PUBLIC_SUPABASE_URL: http://localhost:9999
-      SUPABASE_SERVICE_ROLE_KEY: "super-secret-dev-key"
-      SUPABASE_ANON_KEY: "super-secret-dev-key"
-      DATABASE_URL: "postgresql://postgres:postgres@db:5432/postgres"
+      PGSSLMODE: "disable"
+
+      # Playwright gate in playwright.config.ts
       E2E: "true"
-    command: |
-      sh -c '
-        pnpm dlx supabase@1.105.3 db push && \
-        pnpm e2e:seed && \
-        pnpm test && \
-        pnpm e2e
+      E2E_ALLOW_REMOTE_SUPABASE: "true"
+      RUNTIME_MODE: "e2e"
+
+      # Supabase gateway (Kong) and deterministic JWT keys.
+      SUPABASE_URL: "http://kong:8000"
+      NEXT_PUBLIC_SUPABASE_URL: "http://kong:8000"
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjowLCJleHAiOjIwMDAwMDAwMDAsImF1ZCI6ImF1dGhlbnRpY2F0ZWQifQ.UJ-CkFNAi_ltpievkcuFbpbdZy-4jx6BmoUK89EtG4Q"
+      SUPABASE_SECRET_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjAsImV4cCI6MjAwMDAwMDAwMCwiYXVkIjoiYXV0aGVudGljYXRlZCJ9.u_j55Ti4agQvo6YWvv3bwaVmypC2Tt2R5TDrv3eYvm0"
+
+      # Legacy compatibility (seed script supports these too)
+      SUPABASE_SERVICE_ROLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjAsImV4cCI6MjAwMDAwMDAwMCwiYXVkIjoiYXV0aGVudGljYXRlZCJ9.u_j55Ti4agQvo6YWvv3bwaVmypC2Tt2R5TDrv3eYvm0"
+
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/postgres"
+
+      # Ensure no external services are used in tests
+      CURSOR: "false"
+      CODEX: "false"
+
+    command: >
+      sh -euxc '
+        echo "[app] waiting for db and kong...";
+        sleep 5;
+
+        echo "[app] applying migrations via psql...";
+        for migration in supabase/migrations/*.sql; do
+          if [ -f "$migration" ]; then
+            echo "[app] applying $migration";
+            PGPASSWORD=postgres psql -v ON_ERROR_STOP=1 -h db -U supabase_admin -d postgres -f "$migration";
+          fi
+        done
+
+        echo "[app] seeding users...";
+        NODE_PATH=/app/node_modules DOTENV_CONFIG_PATH=scripts/e2e/env.e2e pnpm exec tsx -r dotenv/config scripts/e2e/seed-users.ts;
+
+        echo "[app] running tests...";
+        pnpm test:run;
+        pnpm e2e;
+        echo "[app] done.";
       '
-    working_dir: /app
-    volumes:
-      - ./:/app
-    ports:
-      - "3000:3000"
 
 volumes:
   db_data:

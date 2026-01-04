@@ -1,0 +1,25 @@
+_format_version: "2.1"
+_transform: true
+
+# Minimal Supabase-compatible API gateway for deterministic tests.
+# Routes:
+# - /auth/v1/*   -> GoTrue
+# - /rest/v1/*   -> PostgREST
+
+services:
+  - name: gotrue
+    url: http://gotrue:9999
+    routes:
+      - name: auth-v1
+        paths:
+          - /auth/v1
+        strip_path: false
+
+  - name: postgrest
+    url: http://postgrest:3001
+    routes:
+      - name: rest-v1
+        paths:
+          - /rest/v1
+        strip_path: false
+
