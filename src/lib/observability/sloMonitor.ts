@@ -215,9 +215,11 @@ export class SLOMonitor {
     // Log critical violations
     console.error(`🚨 CRITICAL SLO VIOLATIONS DETECTED:`, violations)
 
-    // TODO: Implement actual alerting (email, Slack, PagerDuty, etc.)
-    // For now, just log to console and could send to error monitoring service
-    
+    // Slack Alerting
+    if (process.env.SLACK_WEBHOOK_URL) {
+      await this.sendSlackAlert(violations)
+    }
+
     // Example: Send to Sentry or other error monitoring
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof window !== 'undefined' && (window as any).Sentry) {
@@ -238,6 +240,30 @@ export class SLOMonitor {
           }
         })
       })
+    }
+  }
+
+  /**
+   * Send alert to Slack via webhook
+   */
+  private async sendSlackAlert(violations: SLOViolation[]): Promise<void> {
+    try {
+      const text = `🚨 *CRITICAL SLO VIOLATIONS DETECTED*\n\n` +
+        violations.map(v =>
+          `• *${v.metric_name}* (${v.violation_type}): Current: ${v.current_value}, Threshold: ${v.threshold_value}`
+        ).join('\n')
+
+      const response = await fetch(process.env.SLACK_WEBHOOK_URL!, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      })
+
+      if (!response.ok) {
+        console.error('Failed to send Slack alert:', await response.text())
+      }
+    } catch (error) {
+      console.error('Error sending Slack alert:', error)
     }
   }
 
