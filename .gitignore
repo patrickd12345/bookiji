@@ -52,7 +52,6 @@ yarn-error.log*
 
 # env templates allowed
 !.env.example
-!.env.e2e
 !.env.recovery.example
 
 # vercel
