@@ -1,9 +1,15 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  // 🛡️ Security: Require CRON_SECRET for this admin endpoint
+  const authHeader = request.headers.get('authorization')
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     console.warn('🚨 Emergency fix: Removing profiles table recursion...')
     
