@@ -217,6 +217,9 @@ export async function POST(req: NextRequest) {
 
   // For vendor-created bookings, skip payment intent creation
   let intent: { id: string; client_secret: string | null } | null = null
+
+  // Generate booking ID
+  const bookingId = crypto.randomUUID()
   
   if (!vendorCreated) {
     // Regular customer booking - create payment intent
@@ -227,7 +230,8 @@ export async function POST(req: NextRequest) {
           metadata: {
             providerId: String(resolvedProviderId),
             serviceId: String(serviceId),
-            customerId: resolvedCustomerId
+            customerId: resolvedCustomerId,
+            booking_id: bookingId
           }
         })
       : {
@@ -273,9 +277,6 @@ export async function POST(req: NextRequest) {
       'This time slot is no longer available. Please select another time.'
     )
   }
-
-  // Generate booking ID
-  const bookingId = crypto.randomUUID()
 
   // Use atomic function to claim slot and create booking
   const { data: atomicResult, error: atomicError } = await supabase
