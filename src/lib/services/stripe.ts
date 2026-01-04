@@ -1,6 +1,9 @@
 import Stripe from 'stripe';
-import { createSupabaseServerClient } from '@/lib/supabaseServerClient';
+import { supabaseAdmin } from '@/lib/supabaseProxies';
 import { logger, errorToContext } from '@/lib/logger';
+import { findByExternalId, updateStatus } from '@/lib/payments/repository';
+import { assertValidBookingStateTransition, assertSlotReleasedOnCancellation } from '@/lib/guards/invariantAssertions';
+import { sendBookingConfirmation } from '@/utils/sendEmail';
 
 let _stripe: Stripe | null = null;
 let _isMockMode: boolean | null = null;
@@ -324,8 +327,178 @@ export class StripeService {
     
     logger.info('Payment succeeded', { payment_intent_id: paymentIntent.id, amount: paymentIntent.amount, currency: paymentIntent.currency, customer: paymentIntent.customer, metadata: paymentIntent.metadata });
 
-    // TODO: Update booking status, send notifications, etc.
-    // This would integrate with the outbox pattern
+    const supabase = supabaseAdmin;
+
+    try {
+      // Step 1: Resolve PaymentIntent from external provider ID
+      const dbPaymentIntent = await findByExternalId('stripe', paymentIntent.id);
+      if (!dbPaymentIntent) {
+        logger.error('PaymentIntent not found for Stripe payment intent:', { paymentIntentId: paymentIntent.id });
+        return;
+      }
+
+      // Step 2: Verify credit_intent_id exists (enforced by FK, but double-check for safety)
+      if (!dbPaymentIntent.credit_intent_id) {
+        logger.error('PaymentIntent missing credit_intent_id:', { paymentIntentId: dbPaymentIntent.id });
+        return;
+      }
+
+      // Step 3: Update PaymentIntent status to 'captured' (idempotent)
+      const updateResult = await updateStatus(dbPaymentIntent.id, 'captured', {
+        metadata: {
+          stripe_status: paymentIntent.status,
+          captured_at: new Date().toISOString(),
+        },
+      });
+
+      if (!updateResult.success) {
+        // If already captured, that's fine (idempotent)
+        if (!updateResult.error?.includes('Invalid status transition')) {
+          logger.error('Failed to update PaymentIntent status:', { error: updateResult.error });
+        }
+      }
+
+      // Step 4: Find the booking for this payment intent
+      // Use booking_id from metadata if available, otherwise fallback to payment intent lookup
+      let booking;
+      if (paymentIntent.metadata?.booking_id) {
+        const { data: bookingData, error: bookingError } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('id', paymentIntent.metadata.booking_id)
+          .eq('state', 'hold_placed')
+          .single();
+
+        if (!bookingError && bookingData) {
+          booking = bookingData;
+        }
+      }
+
+      if (!booking) {
+        const { data: bookingData, error: bookingError } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('stripe_payment_intent_id', paymentIntent.id)
+          .eq('state', 'hold_placed') // Only updates existing holds, never creates new bookings
+          .single();
+
+        if (bookingError || !bookingData) {
+          logger.error('Booking not found for payment intent:', { paymentIntentId: paymentIntent.id });
+          return;
+        }
+        booking = bookingData;
+      }
+
+      // Check if this payment intent was already processed (idempotency)
+      const { data: existingOutbox } = await supabase
+        .from('payments_outbox')
+        .select('*')
+        .eq('event_data->>payment_intent_id', paymentIntent.id)
+        .eq('status', 'committed')
+        .single();
+
+      if (existingOutbox) {
+        logger.warn(`Payment intent ${paymentIntent.id} already processed, skipping`);
+        return;
+      }
+
+      // RUNTIME ASSERTION: Valid state transition
+      // INV-3: No Direct State Transitions (bookings-lifecycle.md)
+      await assertValidBookingStateTransition(supabase, booking.id, 'hold_placed', 'confirmed');
+
+      // Update booking state to confirmed (only after payment success)
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update({
+          state: 'confirmed',
+          confirmed_at: new Date().toISOString()
+        })
+        .eq('id', booking.id)
+        .eq('state', 'hold_placed'); // Only transition from hold_placed
+
+      if (updateError) {
+        logger.error('Failed to update booking state:', errorToContext(updateError));
+        return;
+      }
+
+      // Mark outbox entry as committed
+      const { error: outboxError } = await supabase
+        .from('payments_outbox')
+        .update({
+          status: 'committed',
+          processed_at: new Date().toISOString()
+        })
+        .eq('event_data->>payment_intent_id', paymentIntent.id)
+        .eq('status', 'pending');
+
+      if (outboxError) {
+        logger.error('Failed to update outbox status:', errorToContext(outboxError));
+      }
+
+      // Log the state transition
+      await supabase
+        .from('booking_audit_log')
+        .insert({
+          booking_id: booking.id,
+          from_state: 'hold_placed',
+          to_state: 'confirmed',
+          action: 'state_change',
+          actor_type: 'webhook',
+          actor_id: 'stripe',
+          metadata: {
+            payment_intent: paymentIntent.id,
+            amount_received: paymentIntent.amount,
+            customer_id: paymentIntent.customer,
+            webhook_event: 'payment_intent.succeeded'
+          }
+        });
+
+      // Send confirmation email
+      if (booking.customer_id) {
+        // Retrieve customer email
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, full_name') // Assuming email/full_name are available via a join or directly on profile if synced.
+          .eq('id', booking.customer_id)
+          .single();
+
+        // If email not found in profile, try to use the one from Stripe metadata or customer object if available
+        let customerEmail = paymentIntent.receipt_email || paymentIntent.metadata?.customer_email;
+        let customerName = profile?.full_name || 'Customer';
+
+        // NOTE: In a real scenario, we should fetch email from auth.users via admin API or ensure it's in profiles.
+        // For now, relying on Stripe metadata (which we populate in createPaymentIntent) is a good fallback.
+
+        if (customerEmail) {
+           // Fetch vendor and service names for email
+           const { data: vendorProfile } = await supabase.from('profiles').select('full_name, business_name').eq('id', booking.provider_id).single();
+           const { data: service } = await supabase.from('services').select('title').eq('id', booking.service_id).single();
+
+           const vendorName = vendorProfile?.business_name || vendorProfile?.full_name || 'Service Provider';
+           const serviceName = service?.title || 'Service';
+           const bookingDate = new Date(booking.start_time).toLocaleDateString();
+           const bookingTime = new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+           await sendBookingConfirmation({
+             customerEmail,
+             customerName,
+             vendorName,
+             serviceName,
+             bookingDate,
+             bookingTime,
+             bookingId: booking.id,
+           });
+           logger.info('Booking confirmation email sent', { booking_id: booking.id, email: customerEmail });
+        } else {
+           logger.warn('Could not send booking confirmation email: missing email', { booking_id: booking.id });
+        }
+      }
+
+      logger.info(`Booking ${booking.id} confirmed via payment success`);
+
+    } catch (error) {
+      logger.error('Error handling payment success:', errorToContext(error));
+    }
   }
 
   /**
@@ -336,7 +509,299 @@ export class StripeService {
     
     logger.warn('Payment failed', { payment_intent_id: paymentIntent.id, last_payment_error: paymentIntent.last_payment_error });
 
-    // TODO: Update booking status, send failure notifications, etc.
+    const supabase = supabaseAdmin;
+
+    try {
+      // Step 1: Resolve PaymentIntent from external provider ID
+      const dbPaymentIntent = await findByExternalId('stripe', paymentIntent.id);
+      if (dbPaymentIntent) {
+        // Update PaymentIntent status to 'failed' (idempotent)
+        await updateStatus(dbPaymentIntent.id, 'failed', {
+          metadata: {
+            stripe_status: paymentIntent.status,
+            failure_reason: paymentIntent.last_payment_error?.message || 'Payment failed',
+            failed_at: new Date().toISOString(),
+          },
+        });
+      }
+
+      // Step 2: Find the booking for this payment intent
+      let booking;
+      if (paymentIntent.metadata?.booking_id) {
+        const { data: bookingData, error: bookingError } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('id', paymentIntent.metadata.booking_id)
+          .eq('state', 'hold_placed')
+          .single();
+
+        if (!bookingError && bookingData) {
+          booking = bookingData;
+        }
+      }
+
+      if (!booking) {
+        const { data: bookingData, error: bookingError } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('stripe_payment_intent_id', paymentIntent.id)
+          .eq('state', 'hold_placed')
+          .single();
+
+        if (bookingError || !bookingData) {
+          logger.error('Booking not found for payment intent:', { paymentIntentId: paymentIntent.id });
+          return;
+        }
+        booking = bookingData;
+      }
+
+      // RUNTIME ASSERTION: Valid state transition
+      // INV-3: No Direct State Transitions (bookings-lifecycle.md)
+      await assertValidBookingStateTransition(supabase, booking.id, 'hold_placed', 'cancelled');
+
+      // Update booking state to cancelled and release slot
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update({
+          state: 'cancelled',
+          cancelled_at: new Date().toISOString(),
+          cancelled_reason: 'Payment failed'
+        })
+        .eq('id', booking.id)
+        .eq('state', 'hold_placed'); // Only transition from hold_placed
+
+      if (updateError) {
+        logger.error('Failed to update booking state:', errorToContext(updateError));
+        return;
+      }
+
+      // Release the slot by making it available again
+      // Get time info from booking or quote
+      let startTime = booking.start_time;
+      let endTime = booking.end_time;
+
+      // If booking uses quote-based model, get time from quote
+      if ((!startTime || !endTime) && booking.quote_id) {
+        const { data: quote } = await supabase
+          .from('quotes')
+          .select('start_time, end_time')
+          .eq('id', booking.quote_id)
+          .single();
+
+        if (quote) {
+          startTime = quote.start_time;
+          endTime = quote.end_time;
+        }
+      }
+
+      if (booking.provider_id && startTime && endTime) {
+        const { error: slotError } = await supabase
+          .from('availability_slots')
+          .update({
+            is_available: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('provider_id', booking.provider_id)
+          .eq('start_time', startTime)
+          .eq('end_time', endTime);
+
+        if (slotError) {
+          logger.error('Failed to release slot on payment failure:', errorToContext(slotError));
+          // Don't fail the webhook - log and continue
+        }
+      }
+
+      // RUNTIME ASSERTION: Slot released on cancellation
+      // INV-4: Slot Release on Cancellation (bookings-lifecycle.md)
+      if (!updateError) {
+        await assertSlotReleasedOnCancellation(supabase, booking.id);
+      }
+
+      // Mark outbox entry as failed
+      const { error: outboxError } = await supabase
+        .from('payments_outbox')
+        .update({
+          status: 'failed',
+          processed_at: new Date().toISOString(),
+          error_message: 'Payment failed'
+        })
+        .eq('event_data->>payment_intent_id', paymentIntent.id)
+        .eq('status', 'pending');
+
+      if (outboxError) {
+        logger.error('Failed to update outbox status:', errorToContext(outboxError));
+      }
+
+      // Log the state transition
+      await supabase
+        .from('booking_audit_log')
+        .insert({
+          booking_id: booking.id,
+          from_state: 'hold_placed',
+          to_state: 'cancelled',
+          action: 'state_change',
+          actor_type: 'webhook',
+          actor_id: 'stripe',
+          metadata: {
+            payment_intent: paymentIntent.id,
+            failure_reason: paymentIntent.last_payment_error?.message || 'Unknown payment failure',
+            webhook_event: 'payment_intent.payment_failed'
+          }
+        });
+
+      logger.info(`Booking ${booking.id} cancelled due to payment failure`);
+
+    } catch (error) {
+      logger.error('Error handling payment failure:', errorToContext(error));
+    }
+  }
+
+  /**
+   * Handle payment canceled webhook
+   */
+  static async handlePaymentCanceled(event: Stripe.Event): Promise<void> {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+    logger.warn('Payment canceled', { payment_intent_id: paymentIntent.id });
+
+    const supabase = supabaseAdmin;
+
+    try {
+      // Step 1: Resolve PaymentIntent from external provider ID
+      const dbPaymentIntent = await findByExternalId('stripe', paymentIntent.id);
+      if (dbPaymentIntent) {
+        // Update PaymentIntent status to 'cancelled' (idempotent)
+        await updateStatus(dbPaymentIntent.id, 'cancelled', {
+          metadata: {
+            stripe_status: paymentIntent.status,
+            cancelled_at: new Date().toISOString(),
+          },
+        });
+      }
+
+      // Step 2: Find the booking for this payment intent
+      let booking;
+      if (paymentIntent.metadata?.booking_id) {
+        const { data: bookingData, error: bookingError } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('id', paymentIntent.metadata.booking_id)
+          .eq('state', 'hold_placed')
+          .single();
+
+        if (!bookingError && bookingData) {
+          booking = bookingData;
+        }
+      }
+
+      if (!booking) {
+        const { data: bookingData, error: bookingError } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('stripe_payment_intent_id', paymentIntent.id)
+          .eq('state', 'hold_placed')
+          .single();
+
+        if (bookingError || !bookingData) {
+          logger.error('Booking not found for payment intent:', { paymentIntentId: paymentIntent.id });
+          return;
+        }
+        booking = bookingData;
+      }
+
+      // RUNTIME ASSERTION: Valid state transition
+      // INV-3: No Direct State Transitions (bookings-lifecycle.md)
+      await assertValidBookingStateTransition(supabase, booking.id, 'hold_placed', 'cancelled');
+
+      // Update booking state to cancelled and release slot
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update({
+          state: 'cancelled',
+          cancelled_at: new Date().toISOString(),
+          cancelled_reason: 'Payment cancelled'
+        })
+        .eq('id', booking.id)
+        .eq('state', 'hold_placed'); // Only transition from hold_placed
+
+      if (updateError) {
+        logger.error('Failed to update booking state:', errorToContext(updateError));
+        return;
+      }
+
+      // Release the slot by making it available again
+      // Get time info from booking or quote
+      let startTime = booking.start_time;
+      let endTime = booking.end_time;
+
+      // If booking uses quote-based model, get time from quote
+      if ((!startTime || !endTime) && booking.quote_id) {
+        const { data: quote } = await supabase
+          .from('quotes')
+          .select('start_time, end_time')
+          .eq('id', booking.quote_id)
+          .single();
+
+        if (quote) {
+          startTime = quote.start_time;
+          endTime = quote.end_time;
+        }
+      }
+
+      if (booking.provider_id && startTime && endTime) {
+        const { error: slotError } = await supabase
+          .from('availability_slots')
+          .update({
+            is_available: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('provider_id', booking.provider_id)
+          .eq('start_time', startTime)
+          .eq('end_time', endTime);
+
+        if (slotError) {
+          logger.error('Failed to release slot on payment cancellation:', errorToContext(slotError));
+          // Don't fail the webhook - log and continue
+        }
+      }
+
+      // Mark outbox entry as failed
+      const { error: outboxError } = await supabase
+        .from('payments_outbox')
+        .update({
+          status: 'failed',
+          processed_at: new Date().toISOString(),
+          error_message: 'Payment cancelled'
+        })
+        .eq('event_data->>payment_intent_id', paymentIntent.id)
+        .eq('status', 'pending');
+
+      if (outboxError) {
+        logger.error('Failed to update outbox status:', errorToContext(outboxError));
+      }
+
+      // Log the state transition
+      await supabase
+        .from('booking_audit_log')
+        .insert({
+          booking_id: booking.id,
+          from_state: 'hold_placed',
+          to_state: 'cancelled',
+          action: 'state_change',
+          actor_type: 'webhook',
+          actor_id: 'stripe',
+          metadata: {
+            payment_intent: paymentIntent.id,
+            cancellation_reason: 'Payment cancelled by customer or system',
+            webhook_event: 'payment_intent.canceled'
+          }
+        });
+
+      logger.info(`Booking ${booking.id} cancelled due to payment cancellation`);
+
+    } catch (error) {
+      logger.error('Error handling payment cancellation:', errorToContext(error));
+    }
   }
 
   /**
@@ -477,7 +942,7 @@ export class StripeService {
           return;
       }
 
-      const supabase = createSupabaseServerClient();
+      const supabase = supabaseAdmin;
       
       // Get subscription details to get status and current_period_end
       let status = 'active';
@@ -541,7 +1006,7 @@ export class StripeService {
    * Handle subscription updated/deleted
    */
   static async handleSubscriptionChange(subscription: Stripe.Subscription): Promise<void> {
-      const supabase = createSupabaseServerClient();
+      const supabase = supabaseAdmin;
       const customerId = subscription.customer as string;
       
       // Find subscription by stripe_customer_id
@@ -563,7 +1028,7 @@ export class StripeService {
       // Try to determine plan type from price ID or metadata
       if (priceId) {
         // Check if we can determine from price ID pattern or query subscription_plans
-        const supabaseForPlan = createSupabaseServerClient()
+        const supabaseForPlan = supabaseAdmin
         const { data: plan } = await supabaseForPlan
           .from('subscription_plans')
           .select('plan_type, billing_cycle')
