@@ -1,9 +1,9 @@
 import { config } from 'dotenv'
 import path from 'path'
 import fs from 'fs'
-import { RuntimeMode } from './types'
+import type { RuntimeMode } from './types'
 
-export { RuntimeMode } from './types'
+export type { RuntimeMode } from './types'
 
 export const loadEnvFile = (mode: RuntimeMode) => {
   const envFiles: Record<RuntimeMode, string[]> = {
