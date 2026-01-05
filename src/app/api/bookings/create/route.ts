@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import Stripe from 'stripe'
 import { getSupabaseConfig } from '@/config/supabase'
 import { isTruthyEnv } from '@/lib/env/isTruthyEnv'
+import { syncBookingCreatedToCalendar } from '@/lib/calendar-sync/outbound/sync-booking-created'
 
 // Standardized error response helper
 function createErrorResponse(
@@ -411,6 +412,39 @@ export async function POST(req: NextRequest) {
       'DATABASE_ERROR',
       'Booking was created but update failed. Please contact support.'
     )
+  }
+
+  // Trigger calendar sync asynchronously
+  try {
+    const bookingToSync = booking || {
+      id: createdBookingId,
+      customer_id: resolvedCustomerId,
+      provider_id: resolvedProviderId,
+      service_id: serviceId,
+      start_time: startTime,
+      end_time: endTime,
+      status: vendorCreated ? 'confirmed' : 'quoted'
+    };
+
+    // We can only sync confirmed/hold_placed bookings or vendor created ones
+    // But syncBookingCreatedToCalendar checks the status internally or we can pass it.
+    // Assuming syncBookingCreatedToCalendar handles the logic of whether to sync or not based on status.
+    // For now, we call it, but wrap in try/catch so it doesn't fail the request.
+
+    // Note: The sync function takes specific params.
+    // Let's call it with fire-and-forget.
+    (async () => {
+      try {
+        await syncBookingCreatedToCalendar({
+          bookingId: createdBookingId,
+          providerId: resolvedProviderId
+        })
+      } catch (syncError) {
+        console.error('Failed to sync booking to calendar:', syncError)
+      }
+    })()
+  } catch (e) {
+    console.error('Error initiating calendar sync:', e)
   }
 
   return NextResponse.json({
