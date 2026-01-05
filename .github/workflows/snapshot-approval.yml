@@ -3,7 +3,7 @@ name: Snapshot Approval Workflow
 
 on:
   pull_request:
-    branches: [ main, bookiji ]
+    branches: [ bookiji ]
     types: [ opened, synchronize, reopened ]
 
 permissions:

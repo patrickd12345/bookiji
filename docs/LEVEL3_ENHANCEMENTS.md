@@ -156,7 +156,7 @@ Create isolated database schemas for PR testing to prevent conflicts and data co
 #### Script: `scripts/prepare-ephemeral-db.ts`
 - Reads `APP_ENV` environment variable
 - For PRs: Creates schema `bookiji_pr_{PR_NUMBER}`
-- For main: Uses default schema
+- For bookiji: Uses default schema
 - Idempotent: Reuses existing schemas
 
 #### Updated: `.github/workflows/ci-e2e.yml`
@@ -164,8 +164,8 @@ Create isolated database schemas for PR testing to prevent conflicts and data co
 **Environment Variables:**
 ```yaml
 env:
-  APP_ENV: ${{ github.event_name == 'pull_request' && format('pr_{0}', github.event.number) || 'main' }}
-  NEXT_PUBLIC_APP_ENV: ${{ github.event_name == 'pull_request' && format('pr_{0}', github.event.number) || 'main' }}
+  APP_ENV: ${{ github.event_name == 'pull_request' && format('pr_{0}', github.event.number) || 'bookiji' }}
+  NEXT_PUBLIC_APP_ENV: ${{ github.event_name == 'pull_request' && format('pr_{0}', github.event.number) || 'bookiji' }}
 ```
 
 **Step:**
@@ -396,8 +396,8 @@ Export CI metrics to JSON files for dashboard ingestion (Grafana, Metabase, etc.
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `APP_ENV` | Ephemeral environment ID | `main` |
-| `NEXT_PUBLIC_APP_ENV` | Client-side env ID | `main` |
+| `APP_ENV` | Ephemeral environment ID | `bookiji` |
+| `NEXT_PUBLIC_APP_ENV` | Client-side env ID | `bookiji` |
 | `CI_JOB_TYPE` | Metrics job type | `unknown` |
 | `GITHUB_SHA` | Commit SHA | Auto-provided |
 | `GITHUB_REF_NAME` | Branch name | Auto-provided |

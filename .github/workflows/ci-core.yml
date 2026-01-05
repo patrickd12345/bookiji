@@ -2,7 +2,7 @@ name: CI – Core (Lint, Types, Tests, Coverage)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ bookiji ]
   pull_request:
 
 concurrency:

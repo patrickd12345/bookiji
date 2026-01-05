@@ -3,9 +3,9 @@ name: E2E Tests with Vercel
 
 on:
   push:
-    branches: [ main, bookiji ]
+    branches: [ bookiji ]
   pull_request:
-    branches: [ main, bookiji ]
+    branches: [ bookiji ]
 
 permissions:
   contents: read
@@ -29,7 +29,7 @@ jobs:
             const branch = ref.startsWith('refs/heads/') ? ref.replace('refs/heads/', '') : '';
 
             // For production branch pushes, avoid protected vercel.app URLs.
-            if (context.eventName === 'push' && (branch === 'bookiji' || branch === 'main')) {
+            if (context.eventName === 'push' && branch === 'bookiji') {
               core.setOutput('base_url', 'https://www.bookiji.com');
               core.info(`Using production base URL for ${branch} push: https://www.bookiji.com`);
               return;

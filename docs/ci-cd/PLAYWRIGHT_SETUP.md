@@ -107,7 +107,7 @@ test('my test', async ({ page, auth, booking, vendor }) => {
 
 ### 1. Main CI Workflow (`ci.yml`)
 
-Runs on every push and pull request to `main` and `bookiji` branches.
+Runs on every push and pull request to `bookiji` branch.
 
 #### Steps:
 1. Typecheck code

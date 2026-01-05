@@ -2,9 +2,9 @@ name: Bookiji Full CI Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [bookiji]
   pull_request:
-    branches: [main]
+    branches: [bookiji]
 
 concurrency:
   group: bookiji-ci-${{ github.ref }}

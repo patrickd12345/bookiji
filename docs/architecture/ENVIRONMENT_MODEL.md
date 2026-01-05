@@ -227,7 +227,7 @@ Local → Staging → Production
 
 ### Production Deployment
 
-1. Merge to main branch
+1. Merge to bookiji branch
 2. Migrations reviewed
 3. Deploy to production
 4. Migrations applied manually or via approved CI

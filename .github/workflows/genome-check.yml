@@ -3,7 +3,7 @@ name: Genome Check
 on:
   pull_request:
   push:
-    branches: [ main, prod, release/** ]
+    branches: [ bookiji, prod, release/** ]
 
 jobs:
   genome-lint:
