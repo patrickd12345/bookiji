@@ -344,11 +344,10 @@ export default function VendorDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h3 className="text-lg font-semibold text-amber-800">
-                  Upgrade to Calendar Integration Required
+                  Calendar Integration Required
                 </h3>
                 <p className="text-amber-700 text-sm mt-1">
-                  Basic availability expires after your first booking. To continue accepting bookings and avoid conflicts,
-                  please connect your calendar.
+                  Basic availability has expired. Connect your calendar to continue accepting bookings.
                 </p>
               </div>
               <Link href="/vendor/schedule">

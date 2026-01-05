@@ -23,8 +23,8 @@ export function AvailabilityMethodStep({ data, onChange, profileId }: Props) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">Choose Availability Method</h2>
-        <p className="text-gray-600">Select how you want to manage your bookings and schedule.</p>
+        <h2 className="text-2xl font-bold text-gray-900">Set Up Your Availability</h2>
+        <p className="text-gray-600">Bookiji works best when it reflects your real calendar.</p>
       </div>
 
       {/* Primary Option: Calendar Integration */}
@@ -37,7 +37,7 @@ export function AvailabilityMethodStep({ data, onChange, profileId }: Props) {
             <div>
               <CardTitle className="text-lg font-bold text-blue-700">Connect your calendar (recommended)</CardTitle>
               <CardDescription>
-                Sync with Google Calendar for automatic availability, conflict detection, and real-time updates.
+                Sync with Google Calendar or Outlook for automatic availability, conflict detection, and real-time updates.
               </CardDescription>
             </div>
             {isCalendar && <CheckCircle className="h-6 w-6 text-blue-500" />}
@@ -79,15 +79,15 @@ export function AvailabilityMethodStep({ data, onChange, profileId }: Props) {
         <CardContent>
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Manually set weekly hours. No automatic conflict detection. Basic availability is disposable and designed only for your first booking.
+              Basic availability is disposable, expires after your first booking, has no editing loop, and requires graduation to calendar integration to continue.
             </p>
 
             {/*
-              NOTE: Basic Availability (subtractive mode) is intentionally positioned as a
-              second-class fallback option. The primary path is calendar sync (additive mode),
-              which provides better UX, automatic conflict detection, and real-time updates.
-              Basic availability requires manual maintenance and is more error-prone.
-              This fallback exists only for vendors who cannot or will not connect a calendar.
+              Basic availability (subtractive mode) is intentionally positioned as a second-class fallback.
+              It exists only to prevent bounce and enable a first try. The fallback is temporary, limited,
+              and expires after the first booking. Bookiji exits after booking handoff; no disputes, no
+              post-booking involvement. Calendar integration (additive mode) is the primary, preferred path
+              because Bookiji works best when it reflects the provider's real calendar.
             */}
 
             <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-md text-xs text-gray-500">
