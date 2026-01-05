@@ -233,6 +233,12 @@ export default function VendorCalendar() {
         </div>
         
         <div className="flex items-center space-x-4">
+          <a
+            href="/vendor/calendar/sync-status"
+            className="text-sm font-medium text-blue-600 hover:text-blue-800"
+          >
+            Manage Sync
+          </a>
           {/* View Toggle */}
           <div className="flex bg-gray-100 rounded-lg p-1">
             {(['month', 'week', 'day'] as const).map((viewType) => (

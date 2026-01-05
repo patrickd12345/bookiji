@@ -10,6 +10,7 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import { supabaseAdmin as supabase } from '@/lib/supabaseProxies';
 import { assertVendorHasActiveSubscription, SubscriptionRequiredError } from '@/lib/guards/subscriptionGuard';
 import { SchedulingDisabledError, assertSchedulingEnabled } from '@/lib/guards/schedulingKillSwitch';
+import { syncBookingCreatedToCalendar } from '@/lib/calendar-sync/outbound/sync-booking-created';
 
 interface BookingConfirmRequest {
   quote_id: string
@@ -246,6 +247,21 @@ async function confirmHandler(req: NextRequest): Promise<NextResponse> {
       console.error('Failed to log audit entry:', auditError)
       // Don't fail the request - the booking was created successfully
     }
+
+    // Trigger calendar sync
+    // This is "created" from the perspective of the calendar (it's now a real booking)
+    // Or we could use "updated" if we consider the hold as an update.
+    // But since it wasn't on the calendar before (unless we sync quotes?), created is appropriate.
+    (async () => {
+      try {
+        await syncBookingCreatedToCalendar({
+          bookingId: booking.id,
+          providerId: body.provider_id
+        })
+      } catch (syncError) {
+        console.error('Failed to sync confirmed booking to calendar:', syncError)
+      }
+    })()
 
     const response: BookingConfirmResponse = {
       booking_id: booking.id,

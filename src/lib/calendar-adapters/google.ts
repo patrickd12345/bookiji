@@ -86,6 +86,41 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
     calendarList: {
       list: () => Promise<GoogleCalendarListResponse>;
     };
+    // Add write operations
+    events: {
+      list: (params: {
+        calendarId: string;
+        timeMin: string;
+        timeMax: string;
+        singleEvents: boolean;
+        orderBy: string;
+      }) => Promise<GoogleCalendarResponse>;
+      insert: (params: {
+        calendarId: string;
+        requestBody: {
+          summary: string;
+          description?: string;
+          location?: string;
+          start: { dateTime: string };
+          end: { dateTime: string };
+        };
+      }) => Promise<{ data: GoogleCalendarEvent }>;
+      update: (params: {
+        calendarId: string;
+        eventId: string;
+        requestBody: {
+          summary: string;
+          description?: string;
+          location?: string;
+          start: { dateTime: string };
+          end: { dateTime: string };
+        };
+      }) => Promise<{ data: GoogleCalendarEvent }>;
+      delete: (params: {
+        calendarId: string;
+        eventId: string;
+      }) => Promise<void>;
+    };
   };
   private credentials: CalendarCredentials | null = null;
   private config: CalendarSystemConfig;
@@ -103,6 +138,8 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       process.env.GOOGLE_CLIENT_SECRET,
       process.env.GOOGLE_REDIRECT_URI
     );
+    // Initialize the calendar client using the OAuth2 client
+    this.calendar = google.calendar({ version: 'v3', auth: this.oauth2Client as any }) as any;
   }
 
   async connect(code: string, email?: string): Promise<ExternalCalendarConfig> {
@@ -296,6 +333,89 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
     } catch (error) {
       console.error('Failed to fetch Google Calendar list:', error);
       throw error;
+    }
+  }
+
+  setCredentials(credentials: CalendarCredentials): void {
+    const oauth2Client = this.oauth2Client as any;
+    oauth2Client.setCredentials({
+        access_token: credentials.access_token,
+        refresh_token: credentials.refresh_token,
+        expiry_date: credentials.token_expiry.getTime(),
+    });
+  }
+
+  async createEvent(event: Omit<CalendarEvent, 'id'>): Promise<CalendarEvent> {
+    try {
+      const response = await this.calendar.events.insert({
+        calendarId: 'primary',
+        requestBody: {
+          summary: event.title,
+          description: event.description,
+          location: event.location,
+          start: { dateTime: event.start.toISOString() },
+          end: { dateTime: event.end.toISOString() },
+        },
+      });
+
+      const newEvent = response.data;
+      return {
+        id: newEvent.id,
+        title: newEvent.summary || 'Busy',
+        start: new Date(newEvent.start.dateTime || newEvent.start.date || new Date()),
+        end: new Date(newEvent.end.dateTime || newEvent.end.date || new Date()),
+        isAllDay: !newEvent.start.dateTime,
+        status: newEvent.transparency === 'transparent' ? 'free' : 'busy',
+        description: newEvent.description,
+        location: newEvent.location
+      };
+    } catch (error) {
+      console.error('Failed to create Google Calendar event:', error);
+      throw error;
+    }
+  }
+
+  async updateEvent(event: CalendarEvent): Promise<CalendarEvent> {
+    try {
+      const response = await this.calendar.events.update({
+        calendarId: 'primary',
+        eventId: event.id,
+        requestBody: {
+          summary: event.title,
+          description: event.description,
+          location: event.location,
+          start: { dateTime: event.start.toISOString() },
+          end: { dateTime: event.end.toISOString() },
+        },
+      });
+
+      const updatedEvent = response.data;
+      return {
+        id: updatedEvent.id,
+        title: updatedEvent.summary || 'Busy',
+        start: new Date(updatedEvent.start.dateTime || updatedEvent.start.date || new Date()),
+        end: new Date(updatedEvent.end.dateTime || updatedEvent.end.date || new Date()),
+        isAllDay: !updatedEvent.start.dateTime,
+        status: updatedEvent.transparency === 'transparent' ? 'free' : 'busy',
+        description: updatedEvent.description,
+        location: updatedEvent.location
+      };
+    } catch (error) {
+      console.error('Failed to update Google Calendar event:', error);
+      throw error;
+    }
+  }
+
+  async deleteEvent(eventId: string): Promise<boolean> {
+    try {
+      await this.calendar.events.delete({
+        calendarId: 'primary',
+        eventId: eventId,
+      });
+      return true;
+    } catch (error) {
+      console.error('Failed to delete Google Calendar event:', error);
+      return false;
     }
   }
 }
