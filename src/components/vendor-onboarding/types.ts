@@ -9,9 +9,10 @@ export type VendorFormData = {
   address: string
   hours: Record<'mon'|'tue'|'wed'|'thu'|'fri'|'sat'|'sun', DayHours>
   specialties: Array<{ id: string; name: string }>
+  availability_method: 'calendar' | 'basic' | null
 }
 
-export type OnboardingStep = 'business_info' | 'specialties' | 'hours' | 'complete'
+export type OnboardingStep = 'business_info' | 'specialties' | 'availability' | 'hours' | 'complete'
 
 export const defaultHours = (): VendorFormData['hours'] => ({
   mon:{open:true,start_time:'09:00',end_time:'17:00'},
@@ -31,5 +32,6 @@ export const initialData: VendorFormData = {
   description:'',
   address:'',
   hours: defaultHours(),
-  specialties: []
+  specialties: [],
+  availability_method: null
 }
