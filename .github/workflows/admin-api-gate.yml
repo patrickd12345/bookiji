@@ -2,7 +2,7 @@ name: Admin API Performance Gate
 
 on:
   pull_request:
-    branches: [ main, bookiji ]
+    branches: [ bookiji ]
     paths:
       - 'src/app/api/admin/**'
       - 'src/app/api/search/**'

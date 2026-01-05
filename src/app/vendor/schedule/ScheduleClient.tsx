@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Clock, PlusCircle, Trash2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
 import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import GoogleCalendarConnection from '@/components/GoogleCalendarConnection'
+import AvailabilityManager from '@/components/vendor/AvailabilityManager'
 
 //
 // Component to manage a single day's schedule
@@ -481,6 +482,17 @@ export default function VendorScheduleClient() {
                 }}
               />
             </div>
+          )}
+
+          {/* Availability Manager (Blocks / Exceptions) */}
+          {providerId && (
+            <AvailabilityManager
+                providerId={providerId}
+                availabilityMode={availabilityMode}
+                onUpdate={() => {
+                   // Refresh availability if needed
+                }}
+            />
           )}
 
           {availabilityMode === 'subtractive' && (

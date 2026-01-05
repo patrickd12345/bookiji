@@ -3,9 +3,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, bookiji ]
+    branches: [ bookiji ]
   pull_request:
-    branches: [ main, bookiji ]
+    branches: [ bookiji ]
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

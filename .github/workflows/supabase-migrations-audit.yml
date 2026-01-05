@@ -6,7 +6,7 @@ on:
     - cron: "0 9 1 * *"
   workflow_dispatch: {}
   push:
-    branches: [main, bookiji]
+    branches: [bookiji]
     paths:
       - "supabase/migrations/**"
 

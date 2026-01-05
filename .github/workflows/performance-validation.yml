@@ -3,7 +3,7 @@ name: Performance Validation
 
 on:
   push:
-    branches: [ main, bookiji ]
+    branches: [ bookiji ]
     paths:
       - 'supabase/migrations/**'
       - 'src/app/api/**'

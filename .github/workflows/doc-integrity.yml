@@ -2,9 +2,9 @@ name: Documentation Integrity Gate
 
 on:
   push:
-    branches: [ main, bookiji ]
+    branches: [ bookiji ]
   pull_request:
-    branches: [ main, bookiji ]
+    branches: [ bookiji ]
 
 jobs:
   doc-integrity:
@@ -50,7 +50,7 @@ jobs:
               MODE_ARGS+=(--base-ref "${{ github.event.pull_request.base.sha }}")
             fi
           fi
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          if [ "${{ github.ref }}" = "refs/heads/bookiji" ]; then
             MODE_ARGS+=(--strict)
           fi
 

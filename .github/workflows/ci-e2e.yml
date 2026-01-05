@@ -4,7 +4,7 @@ name: CI – E2E & Canary
 on:
   pull_request:
   push:
-    branches: [main, bookiji]
+    branches: [bookiji]
 
 concurrency:
   group: ci-e2e-${{ github.ref }}
@@ -30,8 +30,8 @@ jobs:
       MOCK_STRIPE: "true"
       STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY || '' }}
       STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET || '' }}
-      APP_ENV: ${{ github.event_name == 'pull_request' && format('pr_{0}', github.event.number) || 'main' }}
-      NEXT_PUBLIC_APP_ENV: ${{ github.event_name == 'pull_request' && format('pr_{0}', github.event.number) || 'main' }}
+      APP_ENV: ${{ github.event_name == 'pull_request' && format('pr_{0}', github.event.number) || 'bookiji' }}
+      NEXT_PUBLIC_APP_ENV: ${{ github.event_name == 'pull_request' && format('pr_{0}', github.event.number) || 'bookiji' }}
 
     steps:
       - name: Checkout repository
@@ -169,12 +169,11 @@ jobs:
 
       - name: Upload test report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report-${{ matrix.browser }}-shard${{ matrix.shardIndex }}
           path: playwright-report
           retention-days: 7
-          if-no-files-found: ignore
 
       - name: Create deploy metadata
         if: always()
@@ -192,12 +191,11 @@ jobs:
 
       - name: Upload deploy metadata
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: deploy-metadata-${{ github.sha }}
           path: deploy-metadata/
           retention-days: 90
-          if-no-files-found: ignore
 
       - name: Update test history
         if: always()
@@ -213,12 +211,11 @@ jobs:
 
       - name: Upload test history
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-history
           path: ci-history/
           retention-days: 90
-          if-no-files-found: ignore
 
       - name: Export CI metrics
         if: always()
@@ -231,11 +228,10 @@ jobs:
 
       - name: Upload CI metrics
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ci-metrics-e2e-${{ matrix.browser }}-shard${{ matrix.shardIndex }}
           path: ci-metrics/
-          if-no-files-found: ignore
           retention-days: 90
 
   canary-deploy:
@@ -243,7 +239,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: e2e-preview
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/bookiji')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/bookiji'
     # Using 'preview' environment for QA (Preview deployments from bookiji branch)
     environment:
       name: preview
@@ -294,7 +290,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: canary-deploy
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/bookiji')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/bookiji'
 
     steps:
       - name: Checkout repository
@@ -332,11 +328,10 @@ jobs:
 
       - name: Upload canary analysis
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: canary-analysis
           path: .canary-analysis.json
-          if-no-files-found: ignore
           retention-days: 7
 
   canary-promote:
@@ -344,7 +339,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: canary-smoke
-    if: success() && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/bookiji')
+    if: success() && github.event_name == 'push' && github.ref == 'refs/heads/bookiji'
     environment:
       name: preview
 
@@ -367,11 +362,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download canary analysis
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: canary-analysis
           path: .
-          if-no-files-found: warn
 
       - name: Verify canary analysis passed
         run: |
@@ -399,7 +393,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [canary-deploy, canary-smoke]
-    if: failure() && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/bookiji')
+    if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/bookiji'
     environment:
       name: preview
 
@@ -422,12 +416,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download canary analysis
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         continue-on-error: true
         with:
           name: canary-analysis
           path: .
-          if-no-files-found: ignore
 
       - name: Log failure reason
         run: |

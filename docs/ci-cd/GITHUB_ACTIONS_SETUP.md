@@ -15,7 +15,7 @@ The Bookiji project uses GitHub Actions for:
 
 ### 1. Main CI Workflow (`ci.yml`)
 
-**Triggers:** Every push and PR to `main` and `bookiji` branches
+**Triggers:** Every push and PR to `bookiji` branch
 
 **Jobs:**
 - Typecheck TypeScript
@@ -318,7 +318,7 @@ View the test results → [GitHub Actions](link)
 **Problem:** Workflows don't start on PR
 
 **Solutions:**
-1. Check branch is `main` or `bookiji`
+1. Check branch is `bookiji`
 2. Verify workflows are in `.github/workflows/`
 3. Check workflow YAML syntax: `yamllint .github/workflows/`
 4. Ensure branch protection doesn't require specific checks

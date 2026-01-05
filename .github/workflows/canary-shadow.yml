@@ -3,7 +3,7 @@ name: Canary Traffic Shadowing
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [bookiji]
     paths:
       - '.github/workflows/canary-shadow.yml'
       - 'scripts/traffic-shadow.ts'

@@ -63,13 +63,13 @@ jobs:
           find . -type f -path "**/playwright-report/**/attachments/axe-*.json" -exec cp {} axe-artifacts/ \; || true
 
       - name: Upload axe artifacts
-        if: always() && (github.ref == 'refs/heads/main' || failure())
+        if: always() && (github.ref == 'refs/heads/bookiji' || failure())
         uses: actions/upload-artifact@v4
         with:
           name: axe-json-${{ github.run_number }}
           path: axe-artifacts
           if-no-files-found: ignore
-          retention-days: ${{ github.ref == 'refs/heads/main' && 7 || 3 }}
+          retention-days: ${{ github.ref == 'refs/heads/bookiji' && 7 || 3 }}
 
       - name: Upload Playwright report
         if: always()

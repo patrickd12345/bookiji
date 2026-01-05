@@ -1,7 +1,7 @@
 name: deploy-indexnow
 on:
   push:
-    branches: [ main ]
+    branches: [ bookiji ]
   workflow_dispatch: {}
 
 jobs:
