@@ -139,8 +139,33 @@ export default function VendorScheduleClient() {
   const [generationStatus, setGenerationStatus] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
   const [urlMessage, setUrlMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [hasSubscription, setHasSubscription] = useState<boolean | null>(null);
 
   const hasErrors = useMemo(() => Object.values(errors).some(e => e !== null), [errors]);
+
+  // Check subscription status
+  useEffect(() => {
+    const checkSubscription = async () => {
+      // Don't check until we have a providerId, or check independently if providerId depends on profile which depends on auth
+      // Actually, fetching the profile below is good, but we can also check subscription status directly.
+      // The /api/vendor/subscription/status endpoint uses the auth session.
+      try {
+        const response = await fetch(`/api/vendor/subscription/status`);
+        if (response.ok) {
+           const data = await response.json();
+           setHasSubscription(data.isActive || false);
+        } else {
+           console.error('Failed to check subscription status');
+           setHasSubscription(false);
+        }
+      } catch (error) {
+        console.error('Error checking subscription:', error);
+        setHasSubscription(false);
+      }
+    };
+
+    checkSubscription();
+  }, []);
 
   // Validate schedule whenever it changes
   useEffect(() => {
@@ -343,6 +368,28 @@ export default function VendorScheduleClient() {
       setIsGenerating(false);
       setTimeout(() => setGenerationStatus(null), 5000);
     }
+  }
+
+  if (hasSubscription === false) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-8">
+        <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md">
+          <div className="text-center py-12">
+             <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+             <h2 className="text-2xl font-bold text-gray-800 mb-4">Subscription Required</h2>
+             <p className="text-gray-600 mb-8 max-w-md mx-auto">
+               You need an active subscription to manage your schedule and accept bookings.
+             </p>
+             <a
+               href="/vendor/dashboard/subscription"
+               className="bg-purple-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-purple-700 transition-colors inline-block"
+             >
+               View Subscription Plans
+             </a>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
