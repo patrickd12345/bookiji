@@ -24,6 +24,7 @@ import { useI18n } from '@/lib/i18n/useI18n'
 import { useGuidedTour } from '@/components/guided-tours/GuidedTourProvider'
 import { vendorDashboardSteps, vendorDashboardTourId } from '@/tours/dashboardNavigation'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Button } from '@/components/ui/button'
 
 interface VendorStats {
   totalBookings: number
@@ -57,6 +58,7 @@ interface VendorProfile {
   }
   is_verified: boolean
   member_since: string
+  availability_mode?: 'additive' | 'subtractive'
 }
 
 export default function VendorDashboard() {
@@ -87,7 +89,7 @@ export default function VendorDashboard() {
         // Query profiles table directly (user_role_summary view doesn't exist)
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, email, phone, avatar_url, role, specializations, service_area_radius, verified_at, created_at')
+          .select('id, full_name, email, phone, avatar_url, role, specializations, service_area_radius, verified_at, created_at, availability_mode')
           .eq('id', session.user.id)
           .eq('role', 'vendor')
           .maybeSingle()
@@ -106,7 +108,8 @@ export default function VendorDashboard() {
           specialties: data.specializations || [],
           location: { lat: 0, lng: 0 }, // TODO: Get from provider_locations table
           is_verified: !!data.verified_at,
-          member_since: data.created_at || new Date().toISOString()
+          member_since: data.created_at || new Date().toISOString(),
+          availability_mode: data.availability_mode
         }
       })
 
@@ -335,6 +338,28 @@ export default function VendorDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Graduation Logic: Check if user is on basic availability (subtractive) and has at least 1 booking */}
+        {vendorProfile.availability_mode === 'subtractive' && stats && stats.totalBookings >= 1 && (
+          <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-r shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-amber-800">
+                  Upgrade to Calendar Integration Required
+                </h3>
+                <p className="text-amber-700 text-sm mt-1">
+                  Basic availability expires after your first booking. To continue accepting bookings and avoid conflicts,
+                  please connect your calendar.
+                </p>
+              </div>
+              <Link href="/vendor/schedule">
+                <Button className="bg-amber-600 hover:bg-amber-700 text-white whitespace-nowrap">
+                  Connect Calendar
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Status Messages */}
         {statsData.error && (
           <NetworkError 

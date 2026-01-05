@@ -1,11 +1,15 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { supabaseBrowserClient } from '@/lib/supabaseClient'
 import { useVendorOnboarding } from './hooks/useVendorOnboarding'
 import { BusinessInfoStep } from './steps/BusinessInfoStep'
 import { SpecialtiesStep } from './steps/SpecialtiesStep'
 import { HoursStep } from './steps/HoursStep'
+import { AvailabilityMethodStep } from './steps/AvailabilityMethodStep'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
+import { OnboardingStep } from './types'
 
 export function VendorOnboardingWizard() {
   const {
@@ -18,6 +22,14 @@ export function VendorOnboardingWizard() {
     isSaving,
     error
   } = useVendorOnboarding()
+
+  const [profileId, setProfileId] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabaseBrowserClient().auth.getUser().then(({ data }) => {
+      setProfileId(data.user?.id || null)
+    })
+  }, [])
 
   if (isLoading) {
     return (
@@ -33,6 +45,8 @@ export function VendorOnboardingWizard() {
         return <BusinessInfoStep data={data} onChange={updateData} />
       case 'specialties':
         return <SpecialtiesStep data={data} onChange={updateData} />
+      case 'availability':
+        return <AvailabilityMethodStep data={data} onChange={updateData} profileId={profileId} />
       case 'hours':
         return <HoursStep data={data} onChange={updateData} />
       default:
@@ -47,7 +61,54 @@ export function VendorOnboardingWizard() {
     if (currentStep === 'specialties') {
       return data.specialties.length > 0
     }
+    if (currentStep === 'availability') {
+      return !!data.availability_method
+    }
     return true
+  }
+
+  const getNextStep = (): OnboardingStep | null => {
+    if (currentStep === 'business_info') return 'specialties'
+    if (currentStep === 'specialties') return 'availability'
+    if (currentStep === 'availability') {
+        if (data.availability_method === 'calendar') return null // End of flow
+        return 'hours'
+    }
+    return null // End of flow
+  }
+
+  const getPrevStep = (): OnboardingStep | null => {
+      if (currentStep === 'hours') return 'availability'
+      if (currentStep === 'availability') return 'specialties'
+      if (currentStep === 'specialties') return 'business_info'
+      return null
+  }
+
+  const handleNext = () => {
+      const next = getNextStep()
+      if (next) {
+          setStep(next)
+      } else {
+          submit()
+      }
+  }
+
+  const handleBack = () => {
+      const prev = getPrevStep()
+      if (prev) {
+          setStep(prev)
+      }
+  }
+
+  // Calculate progress
+  const getProgress = () => {
+      switch(currentStep) {
+          case 'business_info': return 25
+          case 'specialties': return 50
+          case 'availability': return 75
+          case 'hours': return 100
+          default: return 0
+      }
   }
 
   return (
@@ -57,7 +118,8 @@ export function VendorOnboardingWizard() {
         <p className="text-gray-600">
           {currentStep === 'business_info' && 'Step 1: Business Information'}
           {currentStep === 'specialties' && 'Step 2: Services & Specialties'}
-          {currentStep === 'hours' && 'Step 3: Business Hours'}
+          {currentStep === 'availability' && 'Step 3: Availability Method'}
+          {currentStep === 'hours' && 'Step 4: Business Hours'}
         </p>
       </div>
 
@@ -65,7 +127,7 @@ export function VendorOnboardingWizard() {
       <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-6">
         <div
           className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-in-out"
-          style={{ width: currentStep === 'business_info' ? '33%' : currentStep === 'specialties' ? '66%' : '100%' }}
+          style={{ width: `${getProgress()}%` }}
         ></div>
       </div>
 
@@ -81,7 +143,7 @@ export function VendorOnboardingWizard() {
         {currentStep !== 'business_info' ? (
           <Button
             variant="outline"
-            onClick={() => setStep(currentStep === 'hours' ? 'specialties' : 'business_info')}
+            onClick={handleBack}
             disabled={isSaving}
           >
             Back
@@ -91,22 +153,16 @@ export function VendorOnboardingWizard() {
         <div className="flex items-center gap-4">
           {isSaving && <span className="text-sm text-gray-500 italic">Saving draft...</span>}
 
-          {currentStep !== 'hours' ? (
             <Button
-              onClick={() => setStep(currentStep === 'business_info' ? 'specialties' : 'hours')}
+              onClick={handleNext}
               disabled={!canContinue() || isSaving}
+              className={(!getNextStep()) ? "bg-green-600 hover:bg-green-700" : ""}
             >
-              Next
+              {!getNextStep()
+                ? (isSaving ? 'Completing...' : 'Complete Onboarding')
+                : 'Next'
+              }
             </Button>
-          ) : (
-            <Button
-              onClick={submit}
-              disabled={isSaving}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {isSaving ? 'Completing...' : 'Complete Onboarding'}
-            </Button>
-          )}
         </div>
       </div>
     </div>

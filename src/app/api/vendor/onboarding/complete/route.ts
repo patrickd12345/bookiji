@@ -19,7 +19,8 @@ export async function POST(req: Request) {
       description,
       address,
       hours,
-      specialties
+      specialties,
+      availability_method
     } = body
 
     // Validation
@@ -31,6 +32,9 @@ export async function POST(req: Request) {
     }
 
     // 1. Update Profile
+    // We map availability_method ('calendar' | 'basic') to availability_mode ('additive' | 'subtractive')
+    const availabilityMode = availability_method === 'calendar' ? 'additive' : 'subtractive'
+
     const { error: profileError } = await supabase.from('profiles').update({
       full_name: contact_name,
       email: email,
@@ -40,6 +44,7 @@ export async function POST(req: Request) {
       business_description: description,
       business_address: address,
       business_hours: hours,
+      availability_mode: availabilityMode,
 
       onboarding_step: 'complete',
       onboarding_data: {}, // Clear draft data
@@ -52,7 +57,6 @@ export async function POST(req: Request) {
     // Delete old ones to be safe (re-submission)
     await supabase.from('vendor_specialties').delete().eq('app_user_id', user.id)
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const specialtyInserts = specialties.map((specialty: { id: string, name: string }, index: number) => ({
       app_user_id: user.id,
       specialty_id: specialty.id,
