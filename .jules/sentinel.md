@@ -7,3 +7,8 @@
 **Vulnerability:** The regex-based sanitizer in `src/lib/sanitize.ts` can be bypassed using HTML entity encoding (e.g. `&#106;` for `j`) to execute XSS.
 **Learning:** Custom sanitizers using Regex are almost always vulnerable.
 **Prevention:** Use established libraries like `isomorphic-dompurify`. Note that `jsdom` dependency caused issues in this repo previously, leading to the custom implementation. Future fix should resolve the `jsdom` bundling issue to enable using the library.
+
+## 2026-01-04 - [CRITICAL] Unauthenticated Test Data Generation
+**Vulnerability:** The `/api/setup-test-data` and `/api/check-tables` endpoints were publicly accessible, allowing potential Denial of Service (DoS) via massive data generation and schema leakage.
+**Learning:** Dev-only tools often leak into production builds if not explicitly excluded or secured.
+**Prevention:** Secure all dev/test endpoints with `CRON_SECRET` or other auth mechanisms, or ensure they are excluded from production builds.
