@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useI18n } from '@/lib/i18n/useI18n'
 import { useAuth } from '../../hooks/useAuth'
@@ -15,6 +15,17 @@ interface CalendarEvent {
   service: string
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
   price: number
+}
+
+// Optimization: Moved outside component to prevent recreation on every render
+const getStatusColor = (status: CalendarEvent['status']) => {
+  switch (status) {
+    case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+    case 'confirmed': return 'bg-green-100 text-green-800 border-green-200'
+    case 'completed': return 'bg-blue-100 text-blue-800 border-blue-200'
+    case 'cancelled': return 'bg-red-100 text-red-800 border-red-200'
+    default: return 'bg-gray-100 text-gray-800 border-gray-200'
+  }
 }
 
 interface QuickActionModalProps {
@@ -121,21 +132,19 @@ export default function VendorCalendar() {
   const [view, setView] = useState<'month' | 'week' | 'day'>('week')
   const [isLoading, setIsLoading] = useState(true)
   const i18n = useI18n()
-  const formatDate = i18n.formatDate || ((date: Date) => date.toLocaleDateString('en-US', { 
+  const formatDate = useMemo(() => i18n.formatDate || ((date: Date) => date.toLocaleDateString('en-US', {
     year: 'numeric', 
     month: 'long', 
     day: 'numeric' 
-  }))
-  const formatCurrency = i18n.formatCurrency || ((amount: number) => `$${amount.toFixed(2)}`)
+  })), [i18n.formatDate])
+
+  const formatCurrency = useMemo(() => i18n.formatCurrency || ((amount: number) => `$${amount.toFixed(2)}`), [i18n.formatCurrency])
+
   const [action, setAction] = useState<null | 'availability' | 'block' | 'service'>(null)
   const { user } = useAuth()
   const vendorId = user?.id || ''
 
-  useEffect(() => {
-    loadCalendarData()
-  }, [currentDate, view])
-
-  const loadCalendarData = async () => {
+  const loadCalendarData = useCallback(async () => {
     setIsLoading(true)
     try {
       // Fetch vendor schedule and bookings from API
@@ -162,9 +171,13 @@ export default function VendorCalendar() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
-  const handleBookingStatusChange = async (bookingId: string, newStatus: CalendarEvent['status']) => {
+  useEffect(() => {
+    loadCalendarData()
+  }, [loadCalendarData, currentDate, view])
+
+  const handleBookingStatusChange = useCallback(async (bookingId: string, newStatus: CalendarEvent['status']) => {
     try {
       // Update booking status via API
       const response = await fetch('/api/bookings/update-status', {
@@ -200,19 +213,17 @@ export default function VendorCalendar() {
       console.error('Error updating booking status:', error)
       alert('Failed to update booking status. Please try again.')
     }
-  }
+  }, [])
 
-  const getStatusColor = (status: CalendarEvent['status']) => {
-    switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'confirmed': return 'bg-green-100 text-green-800 border-green-200'
-      case 'completed': return 'bg-blue-100 text-blue-800 border-blue-200'
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+  // Optimization: Memoize summary statistics to avoid recalculation on every render
+  const summaryStats = useMemo(() => {
+    return {
+      total: events.length,
+      confirmed: events.filter(e => e.status === 'confirmed').length,
+      pending: events.filter(e => e.status === 'pending').length,
+      revenue: events.reduce((sum, e) => sum + e.price * 100, 0)
     }
-  }
-
-  // Remove hardcoded currency formatting - using i18n instead
+  }, [events])
 
   if (isLoading) {
     return (
@@ -259,7 +270,11 @@ export default function VendorCalendar() {
           {/* Date Navigation */}
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 7)))}
+              onClick={() => setCurrentDate(prev => {
+                const newDate = new Date(prev);
+                newDate.setDate(newDate.getDate() - 7);
+                return newDate;
+              })}
               className="p-2 hover:bg-gray-100 rounded"
             >
               ←
@@ -268,7 +283,11 @@ export default function VendorCalendar() {
               {formatDate(currentDate)}
             </span>
             <button
-              onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 7)))}
+              onClick={() => setCurrentDate(prev => {
+                const newDate = new Date(prev);
+                newDate.setDate(newDate.getDate() + 7);
+                return newDate;
+              })}
               className="p-2 hover:bg-gray-100 rounded"
             >
               →
@@ -380,24 +399,24 @@ export default function VendorCalendar() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Total Bookings:</span>
-                <span className="font-medium">{events.length}</span>
+                <span className="font-medium">{summaryStats.total}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Confirmed:</span>
                 <span className="font-medium text-green-600">
-                  {events.filter(e => e.status === 'confirmed').length}
+                  {summaryStats.confirmed}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Pending:</span>
                 <span className="font-medium text-yellow-600">
-                  {events.filter(e => e.status === 'pending').length}
+                  {summaryStats.pending}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Revenue:</span>
                 <span className="font-medium">
-                  {formatCurrency(events.reduce((sum, e) => sum + e.price * 100, 0))}
+                  {formatCurrency(summaryStats.revenue)}
                 </span>
               </div>
             </div>
