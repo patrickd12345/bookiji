@@ -1,11 +1,17 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { getServerSupabase } from '@/lib/supabaseServer'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
 import { randomUUID } from 'crypto'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  // 🛡️ Security: Require CRON_SECRET for this admin endpoint
+  const authHeader = request.headers.get('authorization')
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     console.warn('🔧 Generating extensive test data...')
 
