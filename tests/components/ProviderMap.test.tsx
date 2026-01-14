@@ -13,6 +13,7 @@ vi.mock('mapbox-gl', () => ({
       this.off = vi.fn();
       this.queryRenderedFeatures = vi.fn(() => []);
       this.flyTo = vi.fn();
+      this.loaded = vi.fn(() => true);
       this.getSource = vi.fn(() => ({ setData: vi.fn() }));
       this.getLayer = vi.fn();
       this.removeLayer = vi.fn();
