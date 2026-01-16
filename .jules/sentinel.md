@@ -7,3 +7,8 @@
 **Vulnerability:** The regex-based sanitizer in `src/lib/sanitize.ts` can be bypassed using HTML entity encoding (e.g. `&#106;` for `j`) to execute XSS.
 **Learning:** Custom sanitizers using Regex are almost always vulnerable.
 **Prevention:** Use established libraries like `isomorphic-dompurify`. Note that `jsdom` dependency caused issues in this repo previously, leading to the custom implementation. Future fix should resolve the `jsdom` bundling issue to enable using the library.
+
+## 2026-01-05 - [HIGH] Regex Sanitizer Replacement
+**Vulnerability:** Confirmed XSS bypass in regex sanitizer via unit tests.
+**Learning:** Even "paranoid" regex sanitizers can miss encoded vectors.
+**Prevention:** Replaced custom regex sanitizer with `isomorphic-dompurify`. Verified via unit tests that it blocks the exploit.
