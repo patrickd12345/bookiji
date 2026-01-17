@@ -1,0 +1,6 @@
+=== Chaos Soak Test Started ===
+Start time: Mon Dec 22 06:54:09 PM UTC 2025
+[2025-12-22 18:54:09] Checking prerequisites...
+ERROR: PostgREST unreachable at http://localhost:54321/rest/v1/
+ERROR: Supabase not reachable. Please start Supabase first.
+Try: cd /workspace && pnpm supabase:start
