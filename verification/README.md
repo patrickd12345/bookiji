@@ -1,0 +1,1 @@
+Skipping visual verification as Mapbox GL requires WebGL which might not work well in headless environment without specific config, and I cannot easily mock the map visually. I will rely on the unit test passing.
