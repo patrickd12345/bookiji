@@ -1,3 +1,25 @@
 {
-  
+    "version": 2,
+    "rewrites": [
+        {
+            "source": "/process-ai/:path*",
+            "destination": "https://process-jkqkzzdo2-patrick-duchesneaus-projects.vercel.app/:path*"
+        }
+    ],
+    "headers": [
+        {
+            "source": "/api/v1/support/(.*)",
+            "headers": [
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                },
+                {
+                    "key": "Cache-Control",
+                    "value": "no-store"
+                }
+            ]
+        }
+    ]
 }
+  
