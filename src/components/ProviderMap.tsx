@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import mapboxgl from 'mapbox-gl';
 import type * as GeoJSON from 'geojson';
 
@@ -29,10 +29,12 @@ interface Provider {
 }
 
 export default function ProviderMap() {
-  const mapRef = useRef<HTMLDivElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [filters, setFilters] = useState({ category: '', minRating: 0 });
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -60,111 +62,118 @@ export default function ProviderMap() {
     load();
   }, [filters]);
 
+  // Memoize features to prevent unnecessary recalculations
+  const features = useMemo(() => providers.map(p => ({
+    type: 'Feature' as const,
+    geometry: { type: 'Point' as const, coordinates: [p.longitude, p.latitude] },
+    properties: { id: p.id, category: p.category, rating: p.rating },
+  })), [providers]);
+
+  const circleFeatures = useMemo(() => providers.map(p => createCircle(p.longitude, p.latitude, 250)), [providers]);
+
+  // Initialize map once
   useEffect(() => {
-    if (typeof window === 'undefined' || !token || !mapRef.current) return;
+    if (typeof window === 'undefined' || !token || !mapContainerRef.current || mapInstanceRef.current) return;
+
     mapboxgl.accessToken = token;
     const map = new mapboxgl.Map({
-      container: mapRef.current,
+      container: mapContainerRef.current,
       style: 'mapbox://styles/mapbox/streets-v11',
       center: [-73.935242, 40.73061],
       zoom: 9,
     });
 
-    const features = providers.map(p => ({
-      type: 'Feature' as const,
-      geometry: { type: 'Point' as const, coordinates: [p.longitude, p.latitude] },
-      properties: {},
-    }));
+    map.on('load', () => {
+      // Add sources with empty data initially
+      map.addSource('providers', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 50,
+        clusterMinPoints: 3,
+      });
 
-    // Always add clustering for better performance
-    map.addSource('providers', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features },
-      cluster: true,
-      clusterMaxZoom: 14,
-      clusterRadius: 50,
-      clusterMinPoints: 3,
-    });
+      // Add cluster layers
+      map.addLayer({
+        id: 'clusters',
+        type: 'circle',
+        source: 'providers',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': [
+            'step',
+            ['get', 'point_count'],
+            '#51bbd6', 3,
+            '#f1f075', 10,
+            '#f28cb1', 30
+          ],
+          'circle-radius': [
+            'step',
+            ['get', 'point_count'],
+            20, 3,
+            30, 10,
+            40, 30
+          ]
+        },
+      });
 
-    // Add cluster layers
-    map.addLayer({
-      id: 'clusters',
-      type: 'circle',
-      source: 'providers',
-      filter: ['has', 'point_count'],
-      paint: { 
-        'circle-color': [
-          'step',
-          ['get', 'point_count'],
-          '#51bbd6', 3,
-          '#f1f075', 10,
-          '#f28cb1', 30
-        ],
-        'circle-radius': [
-          'step',
-          ['get', 'point_count'],
-          20, 3,
-          30, 10,
-          40, 30
-        ]
-      },
-    });
+      map.addLayer({
+        id: 'cluster-count',
+        type: 'symbol',
+        source: 'providers',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': '{point_count_abbreviated}',
+          'text-size': 12,
+          'text-font': ['Open Sans Semibold']
+        },
+        paint: {
+          'text-color': '#ffffff'
+        }
+      });
 
-    map.addLayer({
-      id: 'cluster-count',
-      type: 'symbol',
-      source: 'providers',
-      filter: ['has', 'point_count'],
-      layout: { 
-        'text-field': '{point_count_abbreviated}', 
-        'text-size': 12,
-        'text-font': ['Open Sans Semibold']
-      },
-      paint: {
-        'text-color': '#ffffff'
-      }
-    });
+      // Add unclustered point layer
+      map.addLayer({
+        id: 'unclustered',
+        type: 'circle',
+        source: 'providers',
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-color': '#11b4da',
+          'circle-radius': 8,
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff'
+        },
+      });
 
-    // Add unclustered point layer
-    map.addLayer({
-      id: 'unclustered',
-      type: 'circle',
-      source: 'providers',
-      filter: ['!', ['has', 'point_count']],
-      paint: { 
-        'circle-color': '#11b4da', 
-        'circle-radius': 8,
-        'circle-stroke-width': 2,
-        'circle-stroke-color': '#ffffff'
-      },
-    });
+      map.addSource('privacy-radius', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
 
-    // Add privacy radius circles for all providers
-    const circles = providers.map(p => createCircle(p.longitude, p.latitude, 250));
-    map.addSource('privacy-radius', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: circles },
-    });
+      map.addLayer({
+        id: 'privacy-fill',
+        type: 'fill',
+        source: 'privacy-radius',
+        paint: {
+          'fill-color': 'rgba(0,0,255,0.05)',
+          'fill-opacity': 0.3
+        },
+      });
 
-    map.addLayer({
-      id: 'privacy-fill',
-      type: 'fill',
-      source: 'privacy-radius',
-      paint: { 
-        'fill-color': 'rgba(0,0,255,0.05)',
-        'fill-opacity': 0.3
-      },
-    });
+      map.addLayer({
+        id: 'privacy-line',
+        type: 'line',
+        source: 'privacy-radius',
+        paint: {
+          'line-color': 'rgba(0,0,255,0.4)',
+          'line-width': 1,
+          'line-dasharray': [2, 2]
+        },
+      });
 
-    map.addLayer({
-      id: 'privacy-line',
-      type: 'line',
-      source: 'privacy-radius',
-      paint: { 
-        'line-color': 'rgba(0,0,255,0.4)', 
-        'line-width': 1,
-        'line-dasharray': [2, 2]
-      },
+      setIsMapLoaded(true);
     });
 
     // Add click handlers for clusters
@@ -178,10 +187,10 @@ export default function ProviderMap() {
             if (err) return;
             const geometry = features[0].geometry as { coordinates?: [number, number] };
             if (geometry.coordinates) {
-                          map.easeTo({
-              center: geometry.coordinates as [number, number],
-              zoom: zoom || 14
-            });
+              map.easeTo({
+                center: geometry.coordinates as [number, number],
+                zoom: zoom || 14
+              });
             }
           });
         }
@@ -205,8 +214,36 @@ export default function ProviderMap() {
       }
     });
 
-    return () => map.remove();
-  }, [token, providers]);
+    mapInstanceRef.current = map;
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, [token]);
+
+  // Update data sources when features change
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !isMapLoaded) return;
+
+    // Use setData for performance optimization instead of recreating the map
+    const providerSource = map.getSource('providers') as mapboxgl.GeoJSONSource;
+    if (providerSource) {
+      providerSource.setData({
+        type: 'FeatureCollection',
+        features,
+      });
+    }
+
+    const radiusSource = map.getSource('privacy-radius') as mapboxgl.GeoJSONSource;
+    if (radiusSource) {
+      radiusSource.setData({
+        type: 'FeatureCollection',
+        features: circleFeatures,
+      });
+    }
+  }, [features, circleFeatures, isMapLoaded]);
 
   if (!token) {
     return <div data-testid="no-map">Map unavailable</div>;
@@ -234,7 +271,7 @@ export default function ProviderMap() {
           <option value="5">5</option>
         </select>
       </div>
-      <div ref={mapRef} className="h-[400px] w-full" data-testid="provider-map">
+      <div ref={mapContainerRef} className="h-[400px] w-full" data-testid="provider-map">
         {providers.map(p => (
           <div key={p.id} data-testid="marker" data-category={p.category} data-rating={p.rating}></div>
         ))}
