@@ -1,525 +1,733 @@
 # BOOKIJI Stress Test Plan
-## Senior SRE / Test Architect / Payments Reliability Engineer
+## Production-Grade Adversarial Testing
 
+**Version:** 1.0  
 **Date:** 2025-01-27  
-**System Under Test:** BOOKIJI Reservation & Booking System  
-**Objective:** Break the system under real-world conditions and document failures
+**Status:** EXECUTABLE  
+**Target:** Production-Ready System Validation
 
 ---
 
 ## Executive Summary
 
-This stress test plan attempts to break the BOOKIJI system through adversarial testing across five critical dimensions:
+This document defines a comprehensive stress test plan designed to **BREAK** the BOOKIJI system under real-world adversarial conditions. The plan assumes:
 
-1. **API & Idempotency Stress** - Concurrent reservations, duplicate requests, retry storms
-2. **Time & Human Latency** - TTL expiry, delayed confirmations, authorization timeouts
-3. **Chaos & Load Testing** - Volume testing, partial failures, worker crashes
-4. **Failure Choreography** - Orchestrated failure scenarios with compensation validation
-5. **Observability** - Can we see what's happening? Can we reconcile state?
+- **Real money** (Stripe test mode)
+- **Real partners** (production-grade API contracts)
+- **Real failures** (network flakiness, timeouts, crashes)
+- **Real humans** (slow responses, delayed actions)
 
-**Testing Philosophy:** Adversarial, assume real money, assume production load.
+**Goal:** Identify failures, gaps, and blockers **BEFORE** production deployment.
 
 ---
 
-## PART 1: POSTMAN/NEWMAN - API & IDEMPOTENCY STRESS
+## PART 0: SANITY / TESTABILITY CHECK
+
+**Purpose:** Verify system is testable before stress testing.
+
+### Prerequisites
+
+Before executing stress tests, verify:
+
+1. ✅ `GET /v1/vendors/{id}/availability` works
+2. ✅ `POST /v1/reservations` works
+3. ✅ `GET /v1/reservations/{id}` works
+4. ✅ Reservation states are observable
+5. ✅ Holds have expiry timestamps
+6. ✅ Idempotency keys are supported
+7. ✅ Partner API authentication works
+
+### Test Script
+
+```bash
+# Run sanity check
+bash stress-tests/sanity-check.sh
+```
+
+**Expected Output:**
+- All endpoints return 200/201
+- Reservation states are readable
+- Expiry timestamps are present
+
+**BLOCKER if:**
+- Any endpoint returns 404/500
+- States are not observable
+- Expiry timestamps missing
+
+---
+
+## PART 1: POSTMAN / NEWMAN
+### API Contract + Idempotency + Concurrency
+
+**Tool:** Postman Collection + Newman CLI  
+**Why:** Postman/Newman provides reliable HTTP contract testing with concurrency support via Node.js wrapper.
 
 ### Test 1.1: Concurrent Reservation Attempts
-**Tool:** Newman (Postman CLI)  
-**Scenario:** Fire 20 concurrent POST /v1/reservations calls with:
-- Same `slot_id` (vendor + time range)
-- Different `partner_booking_ref` values
-- Same `idempotency_key` for some, different for others
+
+**Scenario:** Fire 20 concurrent `POST /v1/reservations` requests:
+- Same `vendorId`, `slotStartTime`, `slotEndTime`
+- Different `idempotencyKey` values
+- Different `requesterId` values
 
 **Expected:**
-- Exactly 1 success (201)
-- 19 failures (409 CONFLICT or SLOT_HELD)
+- Exactly **1** HTTP 201 (success)
+- Exactly **19** HTTP 409 CONFLICT (SLOT_HELD or SLOT_ALREADY_RESERVED)
+- No other status codes
+- No duplicate reservations in database
 
-**Failure Criteria:**
-- More than 1 success → Double booking vulnerability
-- Less than 19 failures → Race condition in slot locking
-- Different error codes → Inconsistent error handling
+**Failure Conditions:**
+- Multiple 201 responses → **BLOCKER** (double booking possible)
+- Wrong error codes → **HIGH** (API contract violation)
+- Duplicate reservations → **BLOCKER** (data integrity broken)
 
-**File:** `stress-tests/postman/concurrent-reservations.postman_collection.json`
-
----
+**Execution:**
+```bash
+bash stress-tests/postman/run-concurrent-reservations.sh
+```
 
 ### Test 1.2: Idempotency Key Replay
-**Tool:** Newman  
-**Scenario:** Replay the SAME POST /v1/reservations request twice:
-- Identical body (including `idempotency_key`)
-- Same authentication headers
-- Sequential execution (not concurrent)
+
+**Scenario:** Replay the **SAME** `POST /v1/reservations` request twice:
+- Identical payload
+- Identical `idempotencyKey`
 
 **Expected:**
-- First request: 201 with `reservation_id`
-- Second request: 200 with SAME `reservation_id` (or 409 if idempotency not fully implemented)
+- Same `reservationId` returned
+- No duplicate holds created
+- No duplicate ledger entries
+- HTTP 201 on first, 200/201 on second (idempotent)
 
-**Failure Criteria:**
-- Different `reservation_id` returned → Idempotency broken
-- Duplicate holds created → Idempotency not enforced
-- Second request creates new reservation → Idempotency key ignored
+**Failure Conditions:**
+- Different `reservationId` → **BLOCKER** (idempotency broken)
+- Duplicate holds → **BLOCKER** (slot locking broken)
+- Duplicate payments → **BLOCKER** (money leakage)
 
-**File:** `stress-tests/postman/idempotency-replay.postman_collection.json`
+**Execution:**
+```bash
+bash stress-tests/postman/idempotency-replay.sh
+```
 
----
+### Test 1.3: Stale Computed Version
 
-### Test 1.3: Retry After Transient Errors
-**Tool:** Newman  
-**Scenario:** 
-1. POST /v1/reservations → Get 412 AVAILABILITY_CHANGED
-2. Retry same request immediately
-3. POST /v1/reservations → Get 409 SLOT_HELD
-4. Retry same request after delay
-
-**Expected:**
-- 412 AVAILABILITY_CHANGED → Retryable (should retry)
-- 409 SLOT_HELD → Non-retryable (should NOT retry)
-
-**Failure Criteria:**
-- Retrying 409 creates duplicate reservation → Retry logic broken
-- Not retrying 412 → Missing retryable flag
-
-**File:** `stress-tests/postman/retry-behavior.postman_collection.json`
-
----
-
-### Test 1.4: Authorization Idempotency
-**Tool:** Newman  
-**Scenario:** 
-1. Create reservation
-2. Trigger vendor authorization with same `idempotency_key` twice
-3. Trigger requester authorization with same `idempotency_key` twice
+**Scenario:**
+1. `GET /v1/vendors/{id}/availability` → Get `computedVersion`
+2. Wait 5 seconds
+3. `POST /v1/reservations` with stale `computedVersion`
 
 **Expected:**
-- Same external payment intent reused
+- HTTP 412 PRECONDITION_FAILED
+- Error code: `AVAILABILITY_CHANGED`
+- `retryable: true`
+- Error includes new `computedVersion`
+
+**Failure Conditions:**
+- Request succeeds → **HIGH** (version check broken)
+- Wrong error code → **MEDIUM** (API contract violation)
+- `retryable: false` → **MEDIUM** (retry logic broken)
+
+**Execution:**
+```bash
+bash stress-tests/postman/stale-version.sh
+```
+
+### Test 1.4: Retry Classification
+
+**Scenario:** Verify error codes are correctly classified as retryable/non-retryable:
+
+| Error Code | HTTP Status | Expected `retryable` |
+|------------|-------------|---------------------|
+| `SLOT_HELD` | 409 | `false` |
+| `AVAILABILITY_CHANGED` | 412 | `true` |
+| `RATE_LIMIT_EXCEEDED` | 429 | `true` |
+| `INTERNAL_ERROR` | 500 | `true` |
+| `INVALID_REQUEST` | 400 | `false` |
+
+**Execution:**
+```bash
+bash stress-tests/postman/retry-classification.sh
+```
+
+### Test 1.5: Authorization Idempotency
+
+**Scenario:** Replay authorization-triggering calls with:
+- Same `idempotencyKey`
+- Simulated client timeout (request sent but client disconnects)
+
+**Expected:**
+- Same external payment object reused
 - No double authorization
-- Idempotency preserved across payment operations
+- No double capture
+- Payment intent reused on retry
 
-**Failure Criteria:**
-- Multiple payment intents created → Idempotency broken
-- Double charge → Payment idempotency broken
+**Failure Conditions:**
+- Double authorization → **BLOCKER** (money leakage)
+- Double capture → **BLOCKER** (money leakage)
+- Payment intent not reused → **HIGH** (idempotency broken)
 
-**File:** `stress-tests/postman/payment-idempotency.postman_collection.json`
+**Execution:**
+```bash
+bash stress-tests/postman/auth-idempotency.sh
+```
 
 ---
 
-## PART 2: PLAYWRIGHT - TIME & HUMAN LATENCY
+## PART 2: PLAYWRIGHT
+### Time, TTL, Human Latency, Race Conditions
 
-### Test 2.1: Vendor Confirmation Near TTL Expiry
-**Tool:** Playwright  
+**Tool:** Playwright (API-first)  
+**Why:** Playwright provides precise time control, waiting, and state observation needed for TTL and timing tests.
+
+### Test 2.1: TTL Boundary Test
+
 **Scenario:**
 1. Create reservation (10-minute TTL)
-2. Wait until 30 seconds before expiry
+2. Wait until ~30 seconds before `expiresAt`
 3. Vendor confirms reservation
-4. Observe TTL extension and state transition
 
 **Expected:**
-- TTL extended after vendor confirmation
-- State transitions correctly (HELD → VENDOR_CONFIRMED)
-- No premature expiry
+- TTL extended (new `expiresAt` > old `expiresAt`)
+- State transitions to `CONFIRMED_BY_VENDOR`
+- Hold not lost
+- Slot remains held
 
-**Failure Criteria:**
-- Reservation expires despite vendor confirmation → TTL extension broken
-- State transition fails → State machine broken
-- Slot released prematurely → Hold release logic broken
+**Failure Conditions:**
+- TTL not extended → **HIGH** (state machine broken)
+- Hold lost → **BLOCKER** (slot released prematurely)
+- Wrong state transition → **HIGH** (state machine broken)
 
-**File:** `stress-tests/playwright/vendor-confirmation-delay.spec.ts`
+**Execution:**
+```bash
+playwright test stress-tests/playwright/vendor-confirmation-delay.spec.ts
+```
 
----
+### Test 2.2: Expiry Test
 
-### Test 2.2: Requester Authorization Near Expiry
-**Tool:** Playwright  
 **Scenario:**
 1. Create reservation
-2. Vendor confirms
-3. Delay requester authorization until just before authorization expiry
-4. Complete authorization
+2. Take no action
+3. Wait past `expiresAt + buffer` (e.g., 1 minute buffer)
+
+**Expected:**
+- Reservation transitions to `EXPIRED`
+- Slot released (`is_available = true`)
+- No funds held
+- Webhook event emitted: `reservation.expired`
+
+**Failure Conditions:**
+- Reservation not expired → **BLOCKER** (TTL enforcement broken)
+- Slot not released → **BLOCKER** (slot permanently blocked)
+- Funds still held → **BLOCKER** (money leakage)
+
+**Execution:**
+```bash
+playwright test stress-tests/playwright/idle-expiry.spec.ts
+```
+
+### Test 2.3: Slow Authorization Test
+
+**Scenario:**
+1. Reach `CONFIRMED_BY_VENDOR` state
+2. Delay requester authorization until just before timeout
+3. Complete authorization
 
 **Expected:**
 - No premature cancellation
 - No early capture
-- Authorization completes successfully
+- Deterministic terminal state
+- Both authorizations complete
 
-**Failure Criteria:**
-- Reservation cancelled before authorization → Expiry logic too aggressive
-- Capture happens before authorization → Race condition
-- Authorization fails due to timing → Time window too narrow
+**Failure Conditions:**
+- Premature cancellation → **HIGH** (timeout logic broken)
+- Early capture → **BLOCKER** (money captured before both auths)
+- Indeterminate state → **BLOCKER** (state machine broken)
 
-**File:** `stress-tests/playwright/requester-auth-delay.spec.ts`
-
----
-
-### Test 2.3: Idle Reservation Expiry
-**Tool:** Playwright  
-**Scenario:**
-1. Create reservation
-2. Let it sit idle past:
-   - Vendor confirmation timeout (10 minutes)
-   - Requester auth timeout (if applicable)
-3. Observe automatic expiry
-
-**Expected:**
-- Automatic expiry occurs
-- Slot released
-- No held funds
-- State transitions to EXPIRED or FAILED
-
-**Failure Criteria:**
-- Reservation never expires → Expiry job broken
-- Slot not released → Cleanup broken
-- Funds still held → Payment cleanup broken
-
-**File:** `stress-tests/playwright/idle-expiry.spec.ts`
+**Execution:**
+```bash
+playwright test stress-tests/playwright/requester-auth-delay.spec.ts
+```
 
 ---
 
 ## PART 3: CHAOS / LOAD TESTING
+### Volume + Entropy
+
+**Tool:** Node.js chaos runner  
+**Why:** Node.js provides fine-grained control over failure injection, seeding, and state observation needed for chaos testing.
 
 ### Test 3.1: Volume Reservation Creation
-**Tool:** Node.js script (k6 alternative)  
-**Scenario:** Create 100 reservations across:
-- 10 vendors
-- 10 partners
-- Random time slots
+
+**Scenario:** Create 100 reservation attempts across:
+- 10 logical vendors
+- 10 logical partners
+- Unique time slots (15-minute intervals)
 
 **Expected:**
 - All reservations created successfully
 - No duplicate slots
 - System remains responsive
+- No data corruption
 
-**Failure Criteria:**
-- Duplicate slots → Slot locking broken
-- System degradation → Performance issues
-- Data corruption → Database consistency broken
+**Failure Conditions:**
+- Duplicate slots → **BLOCKER** (slot locking broken)
+- System degradation → **HIGH** (performance issue)
+- Data corruption → **BLOCKER** (integrity broken)
 
-**File:** `stress-tests/chaos/volume-reservations.mjs`
+**Execution:**
+```bash
+node stress-tests/chaos/volume-reservations.mjs
+```
 
----
+### Test 3.2: Chaos Injection (Seeded)
 
-### Test 3.2: Stripe Failure Injection
-**Tool:** Node.js script  
-**Scenario:** Randomly:
-- Drop Stripe API responses (simulate network failure)
-- Delay webhook deliveries
-- Return error responses from Stripe
+**Scenario:** Inject chaos using seeded RNG (`CHAOS_SEED`):
+- Duplicate requests (same `idempotencyKey`)
+- Dropped client responses (simulate timeout)
+- Delayed webhook delivery (simulate network delay)
+- Out-of-order webhook delivery
+- Process crash mid-run (simulate worker crash)
+- Restart and resume
 
 **Expected:**
-- System handles failures gracefully
-- Compensation executed correctly
+- System handles duplicates gracefully
+- Dropped responses don't corrupt state
+- Delayed webhooks processed correctly
+- Out-of-order webhooks handled
+- Crash recovery works
+- State converges to terminal states
+
+**Failure Conditions:**
+- State corruption → **BLOCKER** (integrity broken)
+- Duplicate processing → **BLOCKER** (idempotency broken)
+- Stuck states → **HIGH** (reconciliation broken)
+
+**Execution:**
+```bash
+CHAOS_SEED=812736 node stress-tests/chaos/chaos-injection.mjs
+```
+
+### Test 3.3: Stripe Failure Simulation
+
+**Scenario:** Simulate Stripe failures:
+- Vendor auth fails (insufficient funds)
+- Requester auth fails (card declined)
+- Capture fails (network timeout)
+- Webhook delivery fails (Stripe outage)
+
+**Expected:**
+- Failures handled gracefully
+- Compensation executed
 - No money leaked
-- No slot permanently blocked
+- State transitions correct
 
-**Failure Criteria:**
-- Money captured without booking → Payment consistency broken
-- Slot permanently blocked → Cleanup broken
-- No compensation → Failure handling broken
+**Failure Conditions:**
+- Money leaked → **BLOCKER** (compensation broken)
+- State incorrect → **HIGH** (state machine broken)
+- No compensation → **BLOCKER** (failure handling broken)
 
-**File:** `stress-tests/chaos/stripe-failures.mjs`
+**Execution:**
+```bash
+node stress-tests/chaos/stripe-failures.mjs
+```
 
----
+### Test 3.4: Worker Crash Simulation
 
-### Test 3.3: Worker Process Crashes
-**Tool:** Node.js script  
 **Scenario:**
-- Kill worker processes mid-commit
-- Restart workers during capture
-- Simulate database connection failures
+1. Create 50 reservations in progress
+2. Simulate worker crash (kill process)
+3. Restart system
+4. Trigger repair/reconciliation loop
 
 **Expected:**
-- System recovers gracefully
-- No partial commits
-- Compensation executed for partial captures
-
-**Failure Criteria:**
-- Partial commits → Atomicity broken
-- No recovery → Resilience broken
-- Data corruption → Consistency broken
-
-**File:** `stress-tests/chaos/worker-crashes.mjs`
-
----
-
-### Test 3.4: Repair Loop Validation
-**Tool:** Node.js script  
-**Scenario:**
-1. Create reservations with injected failures
-2. Allow system to stabilize
-3. Run repair/reconciliation loop
-4. Verify final state
-
-**Expected:**
-- All bookings converge to terminal states
+- All reservations converge to terminal states
 - No stuck reservations
 - No orphaned payments
-- All slots released or confirmed
+- Reconciliation completes
 
-**Failure Criteria:**
-- Stuck reservations → Repair loop broken
-- Orphaned payments → Reconciliation broken
-- Slots not released → Cleanup broken
+**Failure Conditions:**
+- Stuck reservations → **HIGH** (reconciliation broken)
+- Orphaned payments → **BLOCKER** (money leakage)
+- Reconciliation fails → **HIGH** (repair loop broken)
 
-**File:** `stress-tests/chaos/repair-loop.mjs`
+**Execution:**
+```bash
+node stress-tests/chaos/worker-crashes.mjs
+```
+
+### Test 3.5: Repair Loop Validation
+
+**Scenario:**
+1. Create reservations in various states
+2. Manually corrupt some states (via database)
+3. Trigger repair/reconciliation loop
+4. Verify all states converge
+
+**Expected:**
+- All reservations converge to terminal states
+- No unbounded retries
+- Compensation executed where needed
+- System stabilizes
+
+**Failure Conditions:**
+- Unbounded retries → **HIGH** (retry logic broken)
+- No convergence → **BLOCKER** (repair loop broken)
+- Compensation not executed → **BLOCKER** (failure handling broken)
+
+**Execution:**
+```bash
+node stress-tests/chaos/repair-loop.mjs
+```
 
 ---
 
 ## PART 4: FAILURE CHOREOGRAPHY
+### Money-Critical Scenarios
+
+**Tool:** Node.js scripts  
+**Why:** Node.js provides precise control over failure injection and state observation needed for money-critical tests.
 
 ### Test 4.1: Vendor Auth Succeeds → Requester Auth Fails
-**Tool:** Node.js script  
+
 **Scenario:**
-1. Create reservation
-2. Vendor authorization succeeds
-3. Requester authorization fails (simulated)
-4. Observe compensation
+1. Vendor authorization succeeds
+2. Requester authorization fails (simulated)
 
 **Expected:**
-- Vendor authorization released
-- Hold released
-- Reservation marked as FAILED_REQUESTER_AUTH
+- Vendor auth voided (PaymentIntent canceled)
+- Slot released
+- State: `FAILED_REQUESTER_AUTH`
+- Partner notified **ONCE**
 - No money moved
 
-**Failure Criteria:**
-- Vendor auth not released → Compensation broken
-- Money captured → Payment consistency broken
-- Hold not released → Cleanup broken
+**Failure Conditions:**
+- Vendor auth not voided → **BLOCKER** (compensation broken)
+- Slot not released → **BLOCKER** (slot permanently blocked)
+- Double notification → **MEDIUM** (notification idempotency broken)
+- Money moved → **BLOCKER** (money leakage)
 
-**File:** `stress-tests/failure-choreography/vendor-success-requester-fail.mjs`
-
----
+**Execution:**
+```bash
+node stress-tests/failure-choreography/vendor-success-requester-fail.mjs
+```
 
 ### Test 4.2: Requester Capture Succeeds → Vendor Capture Fails
-**Tool:** Node.js script  
+
 **Scenario:**
 1. Both authorizations succeed
 2. Requester capture succeeds
 3. Vendor capture fails (simulated)
-4. Observe compensation
 
 **Expected:**
-- Requester capture refunded
-- Vendor authorization released
-- Reservation marked as FAILED_COMMIT
-- Compensation event emitted
+- Requester refunded
+- Vendor not charged
+- State: `FAILED_COMMIT`
+- Compensation executed
+- Repair loop converges
 
-**Failure Criteria:**
-- Requester not refunded → Compensation broken
-- Vendor auth not released → Cleanup broken
-- No compensation event → Observability broken
+**Failure Conditions:**
+- Requester not refunded → **BLOCKER** (money leakage)
+- Vendor charged → **BLOCKER** (money leakage)
+- No compensation → **BLOCKER** (failure handling broken)
+- Repair loop doesn't converge → **HIGH** (reconciliation broken)
 
-**File:** `stress-tests/failure-choreography/requester-success-vendor-fail.mjs`
-
----
+**Execution:**
+```bash
+node stress-tests/failure-choreography/requester-success-vendor-fail.mjs
+```
 
 ### Test 4.3: Both Auths Succeed → Availability Revalidation Fails
-**Tool:** Node.js script  
+
 **Scenario:**
 1. Both authorizations succeed
-2. Availability revalidation fails (slot booked by another system)
-3. Observe compensation
+2. Availability revalidation fails (slot no longer available)
 
 **Expected:**
-- Both authorizations released
-- Hold released
-- Reservation marked as FAILED_AVAILABILITY_CHANGED
-- No money moved
+- Both auths voided
+- State: `FAILED_AVAILABILITY_CHANGED`
+- No capture
+- Slot released
 
-**Failure Criteria:**
-- Authorizations not released → Compensation broken
-- Money captured → Payment consistency broken
-- Hold not released → Cleanup broken
+**Failure Conditions:**
+- Auths not voided → **BLOCKER** (compensation broken)
+- Capture attempted → **BLOCKER** (money leakage)
+- Slot not released → **BLOCKER** (slot permanently blocked)
 
-**File:** `stress-tests/failure-choreography/availability-revalidation-fail.mjs`
+**Execution:**
+```bash
+node stress-tests/failure-choreography/availability-revalidation-fail.mjs
+```
 
----
+### Test 4.4: Crash Between External Capture and DB Commit
 
-### Test 4.4: System Crash Between External Capture and DB Commit
-**Tool:** Node.js script  
 **Scenario:**
 1. Both captures succeed in Stripe
 2. System crashes before DB commit
 3. System restarts
-4. Observe recovery
+4. Reconciliation runs
 
 **Expected:**
-- Compensation executed (refunds issued)
-- Reservation marked as FAILED_COMMIT
-- No orphaned payments
-- No double booking
+- Reconciliation detects external capture
+- Internal state finalized
+- Booking created
+- No duplicate notifications
+- No duplicate captures
 
-**Failure Criteria:**
-- No compensation → Recovery broken
-- Orphaned payments → Consistency broken
-- Double booking → Atomicity broken
+**Failure Conditions:**
+- Reconciliation doesn't detect capture → **BLOCKER** (reconciliation broken)
+- Booking not created → **BLOCKER** (state inconsistency)
+- Duplicate notifications → **MEDIUM** (idempotency broken)
+- Duplicate captures → **BLOCKER** (money leakage)
 
-**File:** `stress-tests/failure-choreography/crash-between-capture-commit.mjs`
+**Execution:**
+```bash
+node stress-tests/failure-choreography/crash-between-capture-commit.mjs
+```
 
 ---
 
-## PART 5: OBSERVABILITY CHECK
+## PART 5: OBSERVABILITY & FORENSICS
 
-### Test 5.1: List All In-Flight Reservations
-**Tool:** curl / API calls  
-**Question:** Can we list all in-flight reservations?
+**Tool:** Shell scripts + Node.js  
+**Why:** Observability requires direct database queries and API calls to verify system visibility.
+
+### Test 5.1: In-Flight Reservations
+
+**Question:** Can all in-flight reservations be listed?
+
+**Test:**
+```bash
+bash stress-tests/observability/in-flight-reservations.sh
+```
 
 **Expected:**
-- API endpoint exists: GET /api/admin/reservations?state=HELD,VENDOR_CONFIRMED,AUTHORIZED_BOTH
-- Returns list of reservations
-- Includes state, timestamps, expiry times
+- Endpoint exists: `GET /api/admin/reservations/in-flight`
+- Returns list of non-terminal reservations
+- Includes state, expiry, payment state
 
-**Failure Criteria:**
-- No endpoint → Observability gap
-- Incomplete data → Missing fields
-- Performance issues → Not scalable
+**BLOCKER if:**
+- Endpoint missing
+- Incomplete data
+- Cannot query by state
 
-**File:** `stress-tests/observability/in-flight-reservations.sh`
+### Test 5.2: Stuck Authorizations
 
----
+**Question:** Can stuck authorizations be identified?
 
-### Test 5.2: Identify Stuck Authorizations
-**Tool:** curl / API calls  
-**Question:** Can we identify stuck authorizations?
-
-**Expected:**
-- Query for reservations in AUTHORIZED_BOTH state > 1 hour
-- List payment intents that are authorized but not captured
-- Identify reservations past expiry
-
-**Failure Criteria:**
-- No query capability → Observability gap
-- Cannot identify stuck state → Missing metrics
-- No alerting → Operational gap
-
-**File:** `stress-tests/observability/stuck-authorizations.sh`
-
----
-
-### Test 5.3: Reconcile Stripe State vs Bookiji State
-**Tool:** Node.js script  
-**Question:** Can we reconcile Stripe state vs Bookiji state?
+**Test:**
+```bash
+bash stress-tests/observability/stuck-authorizations.sh
+```
 
 **Expected:**
-- Script that queries Stripe for payment intents
-- Compares with Bookiji reservations
-- Identifies discrepancies:
-  - Payment intent exists but no reservation
-  - Reservation exists but no payment intent
-  - Payment intent captured but reservation not confirmed
+- Can query reservations with:
+  - `state IN ('AWAITING_VENDOR_AUTH', 'AWAITING_REQUESTER_AUTH', 'AUTHORIZED_BOTH')`
+  - `expiresAt < NOW() - 1 hour`
+- Includes payment intent IDs
+- Includes last update timestamp
 
-**Failure Criteria:**
-- No reconciliation script → Observability gap
-- Cannot identify discrepancies → Missing tooling
-- Manual process only → Not scalable
+**BLOCKER if:**
+- Cannot identify stuck states
+- Missing payment intent IDs
+- No timestamp data
 
-**File:** `stress-tests/observability/stripe-reconciliation.mjs`
+### Test 5.3: Stripe Reconciliation
 
----
+**Question:** Can Stripe state be reconciled with Bookiji state?
 
-### Test 5.4: Reconstruct Full Lifecycle of a Booking
-**Tool:** Database queries / API calls  
-**Question:** Can we reconstruct the full lifecycle of a booking?
+**Test:**
+```bash
+node stress-tests/observability/stripe-reconciliation.mjs
+```
 
 **Expected:**
-- State transition log available
-- Payment events logged
-- Webhook events logged
-- Timeline reconstruction possible
+- Can query Stripe PaymentIntents
+- Can match PaymentIntents to reservations
+- Can detect:
+  - Orphaned PaymentIntents (no reservation)
+  - Missing PaymentIntents (reservation but no intent)
+  - Mismatched states
 
-**Failure Criteria:**
-- Missing state transitions → Audit trail incomplete
-- Missing payment events → Payment history incomplete
-- Cannot reconstruct timeline → Forensics impossible
+**BLOCKER if:**
+- Cannot reconcile states
+- Missing Stripe API access
+- No reconciliation script
 
-**File:** `stress-tests/observability/lifecycle-reconstruction.sh`
+### Test 5.4: Lifecycle Reconstruction
 
----
+**Question:** Can the full lifecycle of a booking be reconstructed?
 
-## EXECUTION PLAN
+**Test:**
+```bash
+bash stress-tests/observability/lifecycle-reconstruction.sh <reservation-id>
+```
 
-### Prerequisites
-1. **Environment Setup:**
-   ```bash
-   export BASE_URL=http://localhost:3000  # or staging URL
-   export PARTNER_API_KEY=<test-partner-key>
-   export STRIPE_SECRET_KEY=<test-stripe-key>
-   ```
+**Expected:**
+- Can retrieve:
+  - Reservation creation timestamp
+  - All state transitions
+  - Payment events
+  - Webhook events
+  - Final booking state
+- Timeline is complete
+- No gaps in history
 
-2. **Test Data:**
-   - 10 test vendors
-   - 10 test partners
-   - Test payment methods (Stripe test cards)
-
-3. **Tools Installation:**
-   ```bash
-   npm install -g newman  # Postman CLI
-   pnpm install  # Project dependencies
-   ```
-
-### Execution Order
-1. **PART 1** - API & Idempotency (Postman/Newman)
-2. **PART 2** - Time & Latency (Playwright)
-3. **PART 3** - Chaos & Load (Node.js/k6)
-4. **PART 4** - Failure Choreography (Node.js)
-5. **PART 5** - Observability (curl/scripts)
-
-### Expected Duration
-- Part 1: 30 minutes
-- Part 2: 45 minutes
-- Part 3: 60 minutes
-- Part 4: 45 minutes
-- Part 5: 30 minutes
-- **Total: ~3.5 hours**
+**BLOCKER if:**
+- Missing state history
+- Incomplete timeline
+- Cannot reconstruct lifecycle
 
 ---
 
-## OUTPUT FORMAT
+## EXECUTION STRATEGY
 
-### Test Results Summary
-For each test:
-- **Test ID:** e.g., `1.1`
-- **Tool Used:** e.g., `Newman`
-- **Status:** `PASS` | `FAIL` | `ERROR`
-- **Failures Found:** List of specific failures
-- **Severity:** `CRITICAL` | `HIGH` | `MEDIUM` | `LOW`
-- **Evidence:** Screenshots, logs, API responses
+### Phase 1: Sanity Check
+```bash
+bash stress-tests/sanity-check.sh
+```
+**Duration:** 2 minutes  
+**Exit if:** Any blocker found
 
-### Final Verdict
-- **SAFE FOR PILOT** - All tests pass, system ready for limited pilot
-- **SAFE FOR LIMITED PARTNERS** - Minor issues found, acceptable for limited rollout
-- **NOT SAFE** - Critical failures found, system not ready for production
+### Phase 2: API Contract Tests (Postman/Newman)
+```bash
+bash stress-tests/postman/run-all.sh
+```
+**Duration:** 10 minutes  
+**Exit if:** Any blocker found
+
+### Phase 3: Time-Based Tests (Playwright)
+```bash
+playwright test stress-tests/playwright/
+```
+**Duration:** 30 minutes (includes waiting for TTL)  
+**Exit if:** Any blocker found
+
+### Phase 4: Chaos Tests (Node.js)
+```bash
+node stress-tests/chaos/run-all.mjs
+```
+**Duration:** 20 minutes  
+**Exit if:** Any blocker found
+
+### Phase 5: Failure Choreography (Node.js)
+```bash
+node stress-tests/failure-choreography/run-all.mjs
+```
+**Duration:** 15 minutes  
+**Exit if:** Any blocker found
+
+### Phase 6: Observability Validation (Shell/Node.js)
+```bash
+bash stress-tests/observability/run-all.sh
+```
+**Duration:** 5 minutes  
+**Exit if:** Any blocker found
+
+### Phase 7: Generate Report
+```bash
+bash stress-tests/generate-report.sh <results-dir>
+```
+**Duration:** 2 minutes
+
+**Total Duration:** ~84 minutes
 
 ---
 
-## RISK ASSESSMENT
+## SEVERITY CLASSIFICATION
 
-### Critical Risks (Block Launch)
-- Double booking possible
-- Money leakage (captured without booking)
-- Slot permanently blocked
-- Payment idempotency broken
+### BLOCKER
+- **Definition:** System cannot handle real-world conditions safely
+- **Examples:**
+  - Double booking possible
+  - Money leakage (captured without booking)
+  - Slot permanently blocked
+  - Payment idempotency broken
+- **Action:** **DO NOT LAUNCH** until fixed
 
-### High Risks (Require Fix Before Scale)
-- Retry logic broken
-- Compensation not executed
-- Observability gaps
-- Performance degradation under load
+### HIGH
+- **Definition:** System may fail under stress or edge cases
+- **Examples:**
+  - Retry logic broken
+  - Compensation not executed
+  - Performance degradation
+  - State machine errors
+- **Action:** **FIX BEFORE SCALE** (limited partners OK)
 
-### Medium Risks (Monitor Closely)
-- Edge case timing issues
-- Partial failure handling
-- Reconciliation gaps
+### MEDIUM
+- **Definition:** System works but has gaps
+- **Examples:**
+  - API contract violations
+  - Observability gaps
+  - Edge case timing issues
+- **Action:** **MONITOR CLOSELY** (can launch with monitoring)
+
+### LOW
+- **Definition:** Minor issues, non-critical
+- **Examples:**
+  - Documentation gaps
+  - Logging improvements
+  - UX issues
+- **Action:** **FIX IN NEXT RELEASE**
 
 ---
 
-## NEXT STEPS AFTER TESTING
+## FINAL VERDICT
 
-1. **Document all failures** with severity and evidence
-2. **Prioritize fixes** based on severity
-3. **Re-run tests** after fixes
-4. **Update invariants** if new failure modes discovered
-5. **Create runbook** for production incidents based on test findings
+After all tests complete, generate verdict:
+
+### SAFE FOR PILOT
+- ✅ No blockers
+- ✅ < 3 HIGH severity issues
+- ✅ All observability tests pass
+- ✅ All money-critical tests pass
+
+### SAFE FOR LIMITED PARTNERS
+- ✅ No blockers
+- ✅ < 5 HIGH severity issues
+- ✅ Core observability works
+- ✅ Core money-critical tests pass
+
+### NOT SAFE WITHOUT FIXES
+- ❌ Any blocker found
+- ❌ > 5 HIGH severity issues
+- ❌ Critical observability gaps
+- ❌ Money-critical failures
 
 ---
 
-**Document Version:** 1.0  
+## REPORT TEMPLATE
+
+See `stress-tests/REPORT_TEMPLATE.md` for detailed report structure.
+
+---
+
+## ENVIRONMENT VARIABLES
+
+All tests require:
+
+```bash
+export BOOKIJI_BASE_URL="http://localhost:3000"  # or staging URL
+export BOOKIJI_PARTNER_API_KEY="your-partner-api-key"
+export BOOKIJI_VENDOR_TEST_ID="test-vendor-id"
+export BOOKIJI_SLOT_TEST_ID="test-slot-id"  # Optional
+export BOOKIJI_COMPUTED_VERSION=""  # Will be fetched
+export BOOKIJI_PARTNER_ID="test-partner-id"
+export CHAOS_SEED="812736"  # For reproducible chaos
+export STRIPE_SECRET_KEY="sk_test_..."  # For Stripe tests
+export NEXT_PUBLIC_SUPABASE_URL="https://..."  # For DB queries
+export SUPABASE_SECRET_KEY="..."  # For DB queries
+```
+
+---
+
+## NEXT STEPS
+
+1. **Execute all tests** (see Execution Strategy)
+2. **Review failures** (see Severity Classification)
+3. **Generate report** (see Report Template)
+4. **Make verdict** (see Final Verdict)
+5. **Fix blockers** before launch
+6. **Monitor HIGH issues** closely
+
+---
+
 **Last Updated:** 2025-01-27  
-**Author:** Senior SRE / Test Architect / Payments Reliability Engineer
+**Status:** READY FOR EXECUTION

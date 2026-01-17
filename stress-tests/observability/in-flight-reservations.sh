@@ -1,61 +1,86 @@
 #!/bin/bash
-# PART 5.1: List All In-Flight Reservations
+# PART 5.1: In-Flight Reservations
+# Can all in-flight reservations be listed?
 
 set -e
 
-BASE_URL=${BASE_URL:-"http://localhost:3000"}
-PARTNER_API_KEY=${PARTNER_API_KEY:-""}
-ADMIN_TOKEN=${ADMIN_TOKEN:-""}
+BASE_URL="${BOOKIJI_BASE_URL:-http://localhost:3000}"
+PARTNER_API_KEY="${BOOKIJI_PARTNER_API_KEY:-}"
+SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-}"
+SUPABASE_KEY="${SUPABASE_SECRET_KEY:-}"
 
-echo "=== OBSERVABILITY CHECK 5.1 ==="
-echo "List All In-Flight Reservations"
+echo "=== IN-FLIGHT RESERVATIONS TEST ==="
 echo ""
 
-# Try admin endpoint first
-if [ -n "$ADMIN_TOKEN" ]; then
-  echo "Attempting admin endpoint: GET /api/admin/reservations"
-  RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$BASE_URL/api/admin/reservations?state=HELD,VENDOR_CONFIRMED,AUTHORIZED_BOTH" \
-    -H "Authorization: Bearer $ADMIN_TOKEN")
-  
-  HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+# Method 1: Try admin endpoint (if exists)
+echo "Method 1: Checking admin endpoint..."
+RESPONSE=$(curl -s -w "\n%{http_code}" -X GET \
+  "$BASE_URL/api/admin/reservations/in-flight" \
+  -H "Authorization: Bearer $PARTNER_API_KEY" 2>&1 || echo "404")
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+
+if [ "$HTTP_CODE" = "200" ]; then
+  echo "✅ Admin endpoint exists"
   BODY=$(echo "$RESPONSE" | sed '$d')
-  
-  if [ "$HTTP_CODE" = "200" ]; then
-    echo "✅ Admin endpoint available"
-    echo "$BODY" | jq '.' 2>/dev/null || echo "$BODY"
-    exit 0
-  else
-    echo "⚠️  Admin endpoint returned HTTP $HTTP_CODE"
-  fi
+  COUNT=$(echo "$BODY" | jq '. | length' 2>/dev/null || echo "0")
+  echo "  Found $COUNT in-flight reservations"
+else
+  echo "⚠️  Admin endpoint not available (HTTP $HTTP_CODE)"
 fi
 
-# Try partner API endpoint
-if [ -n "$PARTNER_API_KEY" ]; then
-  echo "Attempting partner API endpoint: GET /api/v1/reservations"
-  echo "⚠️  Note: Partner API may only return reservations for that partner"
+echo ""
+
+# Method 2: Query database directly (if Supabase configured)
+if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_KEY" ]; then
+  echo "Method 2: Querying database directly..."
+  
+  # Non-terminal states
+  NON_TERMINAL_STATES=(
+    "INTENT_CREATED"
+    "HELD"
+    "AWAITING_VENDOR_CONFIRMATION"
+    "CONFIRMED_BY_VENDOR"
+    "AWAITING_VENDOR_AUTH"
+    "VENDOR_AUTHORIZED"
+    "AWAITING_REQUESTER_AUTH"
+    "AUTHORIZED_BOTH"
+    "COMMIT_IN_PROGRESS"
+  )
+  
+  # Build query (requires psql or Supabase client)
+  echo "  Querying reservations table for non-terminal states..."
+  echo "  States: ${NON_TERMINAL_STATES[*]}"
   echo ""
-  
-  # This would require listing all reservations, which may not be available
-  # For now, we'll check if the endpoint exists
-  RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$BASE_URL/api/v1/reservations" \
-    -H "X-Partner-API-Key: $PARTNER_API_KEY")
-  
-  HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-  
-  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "404" ]; then
-    echo "✅ Partner API endpoint exists (HTTP $HTTP_CODE)"
-  else
-    echo "⚠️  Partner API endpoint returned HTTP $HTTP_CODE"
-  fi
+  echo "⚠️  NOTE: Direct database query requires psql or Supabase client"
+  echo "   Run this query manually:"
+  echo ""
+  echo "   SELECT id, state, created_at, expires_at"
+  echo "   FROM reservations"
+  echo "   WHERE state IN ("
+  for state in "${NON_TERMINAL_STATES[@]}"; do
+    echo "     '$state',"
+  done | sed '$ s/,$//'
+  echo "   )"
+  echo "   ORDER BY created_at DESC;"
+else
+  echo "⚠️  Supabase not configured, skipping database query"
 fi
 
 echo ""
 echo "=== VALIDATION ==="
-echo "Check if you can:"
-echo "1. List all reservations in HELD state"
-echo "2. List all reservations in VENDOR_CONFIRMED state"
-echo "3. List all reservations in AUTHORIZED_BOTH state"
-echo "4. Filter by time range"
-echo "5. Get count of in-flight reservations"
-echo ""
-echo "If these capabilities are missing, flag as observability gap"
+
+# Check if we can list in-flight reservations
+if [ "$HTTP_CODE" = "200" ]; then
+  echo "✅ Can list in-flight reservations via admin endpoint"
+  echo "✅ TEST PASSED"
+  exit 0
+elif [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_KEY" ]; then
+  echo "⚠️  Admin endpoint missing, but database query possible"
+  echo "⚠️  TEST PARTIAL: Observability gap (missing admin endpoint)"
+  exit 1
+else
+  echo "❌ Cannot list in-flight reservations"
+  echo "❌ TEST FAILED: Observability blocker"
+  exit 1
+fi

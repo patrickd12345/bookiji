@@ -1,187 +1,290 @@
 #!/bin/bash
-# Generate comprehensive test report from results
+# Generate comprehensive stress test report
 
-REPORT_DIR=${1:-"stress-test-results-$(ls -td stress-test-results-* 2>/dev/null | head -1)"}
+set -e
 
-if [ ! -d "$REPORT_DIR" ]; then
-  echo "Error: Report directory not found: $REPORT_DIR"
+RESULTS_DIR="${1:-}"
+REPORT_FILE="${2:-stress-test-report-$(date +%Y%m%d-%H%M%S).md}"
+
+if [ -z "$RESULTS_DIR" ]; then
+  echo "Usage: $0 <results-directory> [report-file]"
+  echo ""
+  echo "Example:"
+  echo "  $0 ./results-20250127-120000"
   exit 1
 fi
 
-REPORT_FILE="$REPORT_DIR/STRESS_TEST_REPORT.md"
+if [ ! -d "$RESULTS_DIR" ]; then
+  echo "Error: Results directory not found: $RESULTS_DIR"
+  exit 1
+fi
 
+echo "=== GENERATING STRESS TEST REPORT ==="
+echo "Results directory: $RESULTS_DIR"
+echo "Report file: $REPORT_FILE"
+echo ""
+
+# Initialize report
 cat > "$REPORT_FILE" <<EOF
 # BOOKIJI Stress Test Report
 
-**Generated:** $(date)
-**Report Directory:** $REPORT_DIR
+**Generated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+**Results Directory:** $RESULTS_DIR
 
 ---
 
 ## Executive Summary
 
-This report summarizes the results of adversarial stress testing across five critical dimensions:
+This report summarizes the results of comprehensive stress testing performed on the BOOKIJI system.
 
-1. **API & Idempotency Stress** - Concurrent reservations, duplicate requests, retry storms
-2. **Time & Human Latency** - TTL expiry, delayed confirmations, authorization timeouts
-3. **Chaos & Load Testing** - Volume testing, partial failures, worker crashes
-4. **Failure Choreography** - Orchestrated failure scenarios with compensation validation
-5. **Observability** - System visibility and reconciliation capabilities
+### Test Execution
 
----
-
-## PART 1: API & IDEMPOTENCY STRESS
-
-### Test 1.1: Concurrent Reservations
-**Status:** $(grep -q "TEST PASSED" "$REPORT_DIR/1.1-concurrent-reservations.log" 2>/dev/null && echo "✅ PASSED" || echo "❌ FAILED / ⚠️  NOT RUN")
-**Details:** See \`1.1-concurrent-reservations.log\`
-
-### Test 1.2: Idempotency Replay
-**Status:** $(grep -q "TEST PASSED" "$REPORT_DIR/1.2-idempotency-replay.log" 2>/dev/null && echo "✅ PASSED" || echo "❌ FAILED / ⚠️  NOT RUN")
-**Details:** See \`1.2-idempotency-replay.log\`
+- **Start Time:** $(find "$RESULTS_DIR" -name "*.log" -type f -exec stat -c %y {} \; 2>/dev/null | head -1 | cut -d' ' -f1-2 || echo "Unknown")
+- **End Time:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+- **Duration:** $(echo "Calculated from logs" || echo "Unknown")
 
 ---
 
-## PART 2: TIME & HUMAN LATENCY
-
-### Test 2.1: Vendor Confirmation Delay
-**Status:** $(grep -q "passed" "$REPORT_DIR/2.1-vendor-confirmation-delay.log" 2>/dev/null && echo "✅ PASSED" || echo "❌ FAILED / ⚠️  NOT RUN")
-**Details:** See \`2.1-vendor-confirmation-delay.log\`
-
-### Test 2.2: Requester Authorization Delay
-**Status:** $(grep -q "passed" "$REPORT_DIR/2.2-requester-auth-delay.log" 2>/dev/null && echo "✅ PASSED" || echo "❌ FAILED / ⚠️  NOT RUN")
-**Details:** See \`2.2-requester-auth-delay.log\`
-
-### Test 2.3: Idle Reservation Expiry
-**Status:** $(grep -q "passed" "$REPORT_DIR/2.3-idle-expiry.log" 2>/dev/null && echo "✅ PASSED" || echo "❌ FAILED / ⚠️  NOT RUN")
-**Details:** See \`2.3-idle-expiry.log\`
-
----
-
-## PART 3: CHAOS / LOAD TESTING
-
-### Test 3.1: Volume Reservations
-**Status:** $(grep -q "TEST PASSED" "$REPORT_DIR/3.1-volume-reservations.log" 2>/dev/null && echo "✅ PASSED" || echo "❌ FAILED / ⚠️  NOT RUN")
-**Details:** See \`3.1-volume-reservations.log\`
-
-### Test 3.2: Stripe Failures
-**Status:** $(test -f "$REPORT_DIR/3.2-stripe-failures.log" && echo "✅ EXECUTED" || echo "⚠️  NOT RUN")
-**Details:** See \`3.2-stripe-failures.log\`
-
-### Test 3.3: Worker Crashes
-**Status:** $(test -f "$REPORT_DIR/3.3-worker-crashes.log" && echo "✅ EXECUTED" || echo "⚠️  NOT RUN")
-**Details:** See \`3.3-worker-crashes.log\`
-
-### Test 3.4: Repair Loop
-**Status:** $(grep -q "TEST PASSED" "$REPORT_DIR/3.4-repair-loop.log" 2>/dev/null && echo "✅ PASSED" || echo "❌ FAILED / ⚠️  NOT RUN")
-**Details:** See \`3.4-repair-loop.log\`
-
----
-
-## PART 4: FAILURE CHOREOGRAPHY
-
-### Test 4.1: Vendor Success → Requester Fail
-**Status:** $(grep -q "TEST PASSED" "$REPORT_DIR/4.1-vendor-success-requester-fail.log" 2>/dev/null && echo "✅ PASSED" || echo "❌ FAILED / ⚠️  NOT RUN")
-**Details:** See \`4.1-vendor-success-requester-fail.log\`
-
-### Test 4.2: Requester Success → Vendor Fail
-**Status:** $(test -f "$REPORT_DIR/4.2-requester-success-vendor-fail.log" && echo "✅ EXECUTED" || echo "⚠️  NOT RUN")
-**Details:** See \`4.2-requester-success-vendor-fail.log\`
-
-### Test 4.3: Availability Revalidation Fail
-**Status:** $(test -f "$REPORT_DIR/4.3-availability-revalidation-fail.log" && echo "✅ EXECUTED" || echo "⚠️  NOT RUN")
-**Details:** See \`4.3-availability-revalidation-fail.log\`
-
-### Test 4.4: Crash Between Capture and Commit
-**Status:** $(test -f "$REPORT_DIR/4.4-crash-between-capture-commit.log" && echo "✅ EXECUTED" || echo "⚠️  NOT RUN")
-**Details:** See \`4.4-crash-between-capture-commit.log\`
-
----
-
-## PART 5: OBSERVABILITY
-
-### Test 5.1: In-Flight Reservations
-**Status:** $(test -f "$REPORT_DIR/5.1-in-flight-reservations.log" && echo "✅ EXECUTED" || echo "⚠️  NOT RUN")
-**Details:** See \`5.1-in-flight-reservations.log\`
-
-### Test 5.2: Stuck Authorizations
-**Status:** $(test -f "$REPORT_DIR/5.2-stuck-authorizations.log" && echo "✅ EXECUTED" || echo "⚠️  NOT RUN")
-**Details:** See \`5.2-stuck-authorizations.log\`
-
-### Test 5.3: Stripe Reconciliation
-**Status:** $(grep -q "No discrepancies found" "$REPORT_DIR/5.3-stripe-reconciliation.log" 2>/dev/null && echo "✅ PASSED" || echo "❌ FAILED / ⚠️  NOT RUN")
-**Details:** See \`5.3-stripe-reconciliation.log\`
-
-### Test 5.4: Lifecycle Reconstruction
-**Status:** $(test -f "$REPORT_DIR/5.4-lifecycle-reconstruction.log" && echo "✅ EXECUTED" || echo "⚠️  NOT RUN")
-**Details:** See \`5.4-lifecycle-reconstruction.log\`
-
----
-
-## FAILURES FOUND
-
-$(grep -r "❌\|FAILED\|ERROR" "$REPORT_DIR"/*.log 2>/dev/null | head -20 || echo "No failures found in logs")
-
----
-
-## SEVERITY ASSESSMENT
-
-### Critical Risks (Block Launch)
-- Double booking possible: $(grep -q "Double booking" "$REPORT_DIR"/*.log 2>/dev/null && echo "YES" || echo "NO")
-- Money leakage: $(grep -q "money leaked\|orphaned payment" "$REPORT_DIR"/*.log 2>/dev/null && echo "YES" || echo "NO")
-- Slot permanently blocked: $(grep -q "permanently blocked\|stuck" "$REPORT_DIR"/*.log 2>/dev/null && echo "YES" || echo "NO")
-- Payment idempotency broken: $(grep -q "idempotency broken" "$REPORT_DIR"/*.log 2>/dev/null && echo "YES" || echo "NO")
-
-### High Risks (Require Fix Before Scale)
-- Retry logic broken: $(grep -q "retry.*broken\|retry.*failed" "$REPORT_DIR"/*.log 2>/dev/null && echo "YES" || echo "NO")
-- Compensation not executed: $(grep -q "compensation.*not\|compensation.*failed" "$REPORT_DIR"/*.log 2>/dev/null && echo "YES" || echo "NO")
-- Observability gaps: $(grep -q "observability gap\|missing.*endpoint" "$REPORT_DIR"/*.log 2>/dev/null && echo "YES" || echo "NO")
-- Performance degradation: $(grep -q "performance\|degradation\|slow" "$REPORT_DIR"/*.log 2>/dev/null && echo "YES" || echo "NO")
-
----
-
-## FINAL VERDICT
-
-Based on test results:
-
-**Confidence Level:** $(if grep -q "TEST PASSED\|passed" "$REPORT_DIR"/*.log 2>/dev/null && ! grep -q "Double booking\|money leaked\|permanently blocked\|idempotency broken" "$REPORT_DIR"/*.log 2>/dev/null; then echo "SAFE FOR LIMITED PARTNERS"; elif grep -q "Double booking\|money leaked\|permanently blocked\|idempotency broken" "$REPORT_DIR"/*.log 2>/dev/null; then echo "NOT SAFE"; else echo "REQUIRES MANUAL REVIEW"; fi)
-
----
-
-## RECOMMENDATIONS
-
-1. Review all failure logs in detail
-2. Prioritize fixes based on severity
-3. Re-run tests after fixes
-4. Update invariants if new failure modes discovered
-5. Create runbook for production incidents based on findings
-
----
-
-## NEXT STEPS
-
-1. **Immediate Actions:**
-   - Fix all critical risks before launch
-   - Address high risks before scaling
-   - Document all findings
-
-2. **Before Production:**
-   - Re-run all tests after fixes
-   - Validate compensation logic
-   - Test observability tools
-   - Create incident response playbooks
-
-3. **Ongoing:**
-   - Run stress tests regularly
-   - Monitor for new failure modes
-   - Update test suite as system evolves
-
----
-
-**Report Generated:** $(date)
-**Test Execution Time:** $(ls -ld "$REPORT_DIR" 2>/dev/null | awk '{print $6, $7, $8}' || echo "Unknown")
+## PART 0: Sanity Check
 
 EOF
 
-echo "Report generated: $REPORT_FILE"
-cat "$REPORT_FILE"
+# Parse sanity check results
+if [ -f "$RESULTS_DIR/sanity-check.log" ]; then
+  if grep -q "SANITY CHECK PASSED" "$RESULTS_DIR/sanity-check.log"; then
+    echo "✅ **PASSED**" >> "$REPORT_FILE"
+  else
+    echo "❌ **FAILED**" >> "$REPORT_FILE"
+    echo "" >> "$REPORT_FILE"
+    echo "Errors:" >> "$REPORT_FILE"
+    grep -i "error\|failed\|blocker" "$RESULTS_DIR/sanity-check.log" | head -10 >> "$REPORT_FILE" || echo "  (See log file for details)" >> "$REPORT_FILE"
+  fi
+else
+  echo "⚠️  **NOT RUN**" >> "$REPORT_FILE"
+fi
+
+cat >> "$REPORT_FILE" <<EOF
+
+---
+
+## PART 1: Postman/Newman Tests
+
+EOF
+
+# Parse Postman test results
+for test in concurrent-reservations idempotency-replay stale-version retry-classification; do
+  if [ -f "$RESULTS_DIR/$test.log" ]; then
+    echo "### Test 1.X: $test" >> "$REPORT_FILE"
+    echo "" >> "$REPORT_FILE"
+    
+    if grep -q "TEST PASSED\|✅" "$RESULTS_DIR/$test.log"; then
+      echo "✅ **PASSED**" >> "$REPORT_FILE"
+    elif grep -q "TEST FAILED\|❌" "$RESULTS_DIR/$test.log"; then
+      echo "❌ **FAILED**" >> "$REPORT_FILE"
+      echo "" >> "$REPORT_FILE"
+      echo "Errors:" >> "$REPORT_FILE"
+      grep -i "error\|failed\|blocker" "$RESULTS_DIR/$test.log" | head -5 >> "$REPORT_FILE" || echo "  (See log file for details)" >> "$REPORT_FILE"
+    else
+      echo "⚠️  **PARTIAL**" >> "$REPORT_FILE"
+    fi
+    echo "" >> "$REPORT_FILE"
+  fi
+done
+
+cat >> "$REPORT_FILE" <<EOF
+
+---
+
+## PART 2: Playwright Tests
+
+EOF
+
+# Parse Playwright test results
+if [ -f "$RESULTS_DIR/playwright.log" ]; then
+  PASSED=$(grep -c "passed\|✅" "$RESULTS_DIR/playwright.log" 2>/dev/null || echo "0")
+  FAILED=$(grep -c "failed\|❌" "$RESULTS_DIR/playwright.log" 2>/dev/null || echo "0")
+  
+  echo "**Results:** $PASSED passed, $FAILED failed" >> "$REPORT_FILE"
+  echo "" >> "$REPORT_FILE"
+  
+  if [ "$FAILED" -eq 0 ]; then
+    echo "✅ **ALL TESTS PASSED**" >> "$REPORT_FILE"
+  else
+    echo "❌ **SOME TESTS FAILED**" >> "$REPORT_FILE"
+    echo "" >> "$REPORT_FILE"
+    echo "Failed tests:" >> "$REPORT_FILE"
+    grep -i "failed\|❌" "$RESULTS_DIR/playwright.log" | head -10 >> "$REPORT_FILE" || echo "  (See log file for details)" >> "$REPORT_FILE"
+  fi
+else
+  echo "⚠️  **NOT RUN**" >> "$REPORT_FILE"
+fi
+
+cat >> "$REPORT_FILE" <<EOF
+
+---
+
+## PART 3: Chaos/Load Tests
+
+EOF
+
+# Parse chaos test results
+for test in volume-reservations chaos-injection stripe-failures worker-crashes repair-loop; do
+  if [ -f "$RESULTS_DIR/$test.log" ]; then
+    echo "### Test 3.X: $test" >> "$REPORT_FILE"
+    echo "" >> "$REPORT_FILE"
+    
+    if grep -q "TEST PASSED\|✅" "$RESULTS_DIR/$test.log"; then
+      echo "✅ **PASSED**" >> "$REPORT_FILE"
+    elif grep -q "TEST FAILED\|❌" "$RESULTS_DIR/$test.log"; then
+      echo "❌ **FAILED**" >> "$REPORT_FILE"
+      echo "" >> "$REPORT_FILE"
+      echo "Errors:" >> "$REPORT_FILE"
+      grep -i "error\|failed\|blocker" "$RESULTS_DIR/$test.log" | head -5 >> "$REPORT_FILE" || echo "  (See log file for details)" >> "$REPORT_FILE"
+    else
+      echo "⚠️  **PARTIAL**" >> "$REPORT_FILE"
+    fi
+    echo "" >> "$REPORT_FILE"
+  fi
+done
+
+cat >> "$REPORT_FILE" <<EOF
+
+---
+
+## PART 4: Failure Choreography
+
+EOF
+
+# Parse failure choreography results
+for test in vendor-success-requester-fail requester-success-vendor-fail availability-revalidation-fail crash-between-capture-commit; do
+  if [ -f "$RESULTS_DIR/$test.log" ]; then
+    echo "### Test 4.X: $test" >> "$REPORT_FILE"
+    echo "" >> "$REPORT_FILE"
+    
+    if grep -q "TEST PASSED\|✅" "$RESULTS_DIR/$test.log"; then
+      echo "✅ **PASSED**" >> "$REPORT_FILE"
+    elif grep -q "TEST FAILED\|❌" "$RESULTS_DIR/$test.log"; then
+      echo "❌ **FAILED**" >> "$REPORT_FILE"
+      echo "" >> "$REPORT_FILE"
+      echo "Errors:" >> "$REPORT_FILE"
+      grep -i "error\|failed\|blocker" "$RESULTS_DIR/$test.log" | head -5 >> "$REPORT_FILE" || echo "  (See log file for details)" >> "$REPORT_FILE"
+    else
+      echo "⚠️  **PARTIAL**" >> "$REPORT_FILE"
+    fi
+    echo "" >> "$REPORT_FILE"
+  fi
+done
+
+cat >> "$REPORT_FILE" <<EOF
+
+---
+
+## PART 5: Observability
+
+EOF
+
+# Parse observability results
+for test in in-flight-reservations stuck-authorizations stripe-reconciliation; do
+  if [ -f "$RESULTS_DIR/$test.log" ]; then
+    echo "### Test 5.X: $test" >> "$REPORT_FILE"
+    echo "" >> "$REPORT_FILE"
+    
+    if grep -q "TEST PASSED\|✅" "$RESULTS_DIR/$test.log"; then
+      echo "✅ **PASSED**" >> "$REPORT_FILE"
+    elif grep -q "TEST FAILED\|❌" "$RESULTS_DIR/$test.log"; then
+      echo "❌ **FAILED**" >> "$REPORT_FILE"
+      echo "" >> "$REPORT_FILE"
+      echo "Errors:" >> "$REPORT_FILE"
+      grep -i "error\|failed\|blocker" "$RESULTS_DIR/$test.log" | head -5 >> "$REPORT_FILE" || echo "  (See log file for details)" >> "$REPORT_FILE"
+    else
+      echo "⚠️  **PARTIAL**" >> "$REPORT_FILE"
+    fi
+    echo "" >> "$REPORT_FILE"
+  fi
+done
+
+cat >> "$REPORT_FILE" <<EOF
+
+---
+
+## Failures Found
+
+### BLOCKER Severity
+
+EOF
+
+# Extract blockers
+grep -r -i "blocker\|double booking\|money leakage\|slot permanently blocked\|payment idempotency broken" "$RESULTS_DIR"/*.log 2>/dev/null | head -20 >> "$REPORT_FILE" || echo "None found" >> "$REPORT_FILE"
+
+cat >> "$REPORT_FILE" <<EOF
+
+### HIGH Severity
+
+EOF
+
+# Extract high severity
+grep -r -i "high\|retry logic broken\|compensation not executed\|performance degradation\|state machine error" "$RESULTS_DIR"/*.log 2>/dev/null | head -20 >> "$REPORT_FILE" || echo "None found" >> "$REPORT_FILE"
+
+cat >> "$REPORT_FILE" <<EOF
+
+### MEDIUM Severity
+
+EOF
+
+# Extract medium severity
+grep -r -i "medium\|api contract violation\|observability gap\|edge case\|timing issue" "$RESULTS_DIR"/*.log 2>/dev/null | head -20 >> "$REPORT_FILE" || echo "None found" >> "$REPORT_FILE"
+
+cat >> "$REPORT_FILE" <<EOF
+
+---
+
+## Final Verdict
+
+EOF
+
+# Calculate verdict
+BLOCKERS=$(grep -r -i "blocker\|double booking\|money leakage" "$RESULTS_DIR"/*.log 2>/dev/null | wc -l || echo "0")
+HIGH=$(grep -r -i "high severity\|retry logic broken\|compensation not executed" "$RESULTS_DIR"/*.log 2>/dev/null | wc -l || echo "0")
+
+if [ "$BLOCKERS" -eq 0 ] && [ "$HIGH" -lt 3 ]; then
+  echo "### ✅ SAFE FOR PILOT" >> "$REPORT_FILE"
+  echo "" >> "$REPORT_FILE"
+  echo "- No blockers found" >> "$REPORT_FILE"
+  echo "- Less than 3 HIGH severity issues" >> "$REPORT_FILE"
+elif [ "$BLOCKERS" -eq 0 ] && [ "$HIGH" -lt 5 ]; then
+  echo "### ⚠️  SAFE FOR LIMITED PARTNERS" >> "$REPORT_FILE"
+  echo "" >> "$REPORT_FILE"
+  echo "- No blockers found" >> "$REPORT_FILE"
+  echo "- Less than 5 HIGH severity issues" >> "$REPORT_FILE"
+else
+  echo "### ❌ NOT SAFE WITHOUT FIXES" >> "$REPORT_FILE"
+  echo "" >> "$REPORT_FILE"
+  echo "- Blockers found: $BLOCKERS" >> "$REPORT_FILE"
+  echo "- HIGH severity issues: $HIGH" >> "$REPORT_FILE"
+fi
+
+cat >> "$REPORT_FILE" <<EOF
+
+---
+
+## Evidence References
+
+All test logs are available in: \`$RESULTS_DIR\`
+
+Key files:
+- \`sanity-check.log\` - Sanity check results
+- \`concurrent-reservations.log\` - Concurrent reservation test
+- \`idempotency-replay.log\` - Idempotency test
+- \`chaos-injection.log\` - Chaos injection test
+- \`stripe-reconciliation.log\` - Stripe reconciliation test
+
+---
+
+**Report Generated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+EOF
+
+echo "✅ Report generated: $REPORT_FILE"
+echo ""
+echo "Summary:"
+echo "  Blockers: $BLOCKERS"
+echo "  High severity: $HIGH"

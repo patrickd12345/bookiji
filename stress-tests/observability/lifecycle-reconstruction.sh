@@ -1,25 +1,32 @@
 #!/bin/bash
-# PART 5.4: Reconstruct Full Lifecycle of a Booking
+# PART 5.4: Lifecycle Reconstruction
+# Can the full lifecycle of a booking be reconstructed?
 
 set -e
 
-BASE_URL=${BASE_URL:-"http://localhost:3000"}
-PARTNER_API_KEY=${PARTNER_API_KEY:-""}
-RESERVATION_ID=${1:-""}
+RESERVATION_ID="${1:-}"
+BASE_URL="${BOOKIJI_BASE_URL:-http://localhost:3000}"
+PARTNER_API_KEY="${BOOKIJI_PARTNER_API_KEY:-}"
+SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-}"
+SUPABASE_KEY="${SUPABASE_SECRET_KEY:-}"
 
 if [ -z "$RESERVATION_ID" ]; then
-  echo "Usage: $0 <reservation_id>"
+  echo "Usage: $0 <reservation-id>"
+  echo ""
+  echo "Example:"
+  echo "  $0 abc123-def456-ghi789"
   exit 1
 fi
 
-echo "=== OBSERVABILITY CHECK 5.4 ==="
-echo "Reconstruct Full Lifecycle of Booking: $RESERVATION_ID"
+echo "=== LIFECYCLE RECONSTRUCTION TEST ==="
+echo "Reservation ID: $RESERVATION_ID"
 echo ""
 
-# Step 1: Get reservation details
-echo "=== STEP 1: Reservation Details ==="
-RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$BASE_URL/api/v1/reservations/$RESERVATION_ID" \
-  -H "X-Partner-API-Key: $PARTNER_API_KEY")
+# Method 1: Get reservation with state history
+echo "Method 1: Getting reservation details..."
+RESPONSE=$(curl -s -w "\n%{http_code}" -X GET \
+  "$BASE_URL/api/v1/reservations/$RESERVATION_ID" \
+  -H "X-Partner-API-Key: $PARTNER_API_KEY" 2>&1)
 
 HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 BODY=$(echo "$RESPONSE" | sed '$d')
@@ -29,92 +36,107 @@ if [ "$HTTP_CODE" != "200" ]; then
   exit 1
 fi
 
-echo "$BODY" | jq '.' 2>/dev/null || echo "$BODY"
+echo "✅ Reservation retrieved"
 echo ""
 
-# Step 2: Check for state transition log
-echo "=== STEP 2: State Transition Log ==="
-echo "Checking for state transition history..."
-
-# Try to get state history from reservation response
+# Extract key fields
+CREATED_AT=$(echo "$BODY" | jq -r '.createdAt // empty' 2>/dev/null || echo "")
+STATE=$(echo "$BODY" | jq -r '.state // empty' 2>/dev/null || echo "")
+EXPIRES_AT=$(echo "$BODY" | jq -r '.expiresAt // empty' 2>/dev/null || echo "")
 STATE_HISTORY=$(echo "$BODY" | jq -r '.stateHistory // []' 2>/dev/null || echo "[]")
+PAYMENT_STATE=$(echo "$BODY" | jq -r '.paymentState // {}' 2>/dev/null || echo "{}")
+BOOKING_ID=$(echo "$BODY" | jq -r '.bookingId // empty' 2>/dev/null || echo "")
 
-if [ "$STATE_HISTORY" != "[]" ] && [ -n "$STATE_HISTORY" ]; then
-  echo "✅ State transition log available:"
-  echo "$STATE_HISTORY" | jq '.' 2>/dev/null || echo "$STATE_HISTORY"
+echo "=== RESERVATION DETAILS ==="
+echo "Created: $CREATED_AT"
+echo "State: $STATE"
+echo "Expires: $EXPIRES_AT"
+echo "Booking ID: $BOOKING_ID"
+echo ""
+
+# Check state history
+HISTORY_COUNT=$(echo "$STATE_HISTORY" | jq '. | length' 2>/dev/null || echo "0")
+echo "State History Entries: $HISTORY_COUNT"
+
+if [ "$HISTORY_COUNT" -gt 0 ]; then
+  echo "✅ State history available"
+  echo ""
+  echo "State Transitions:"
+  echo "$STATE_HISTORY" | jq -r '.[] | "  \(.timestamp): \(.fromState) → \(.toState) (\(.triggeredBy))"' 2>/dev/null || echo "  (Cannot parse)"
 else
-  echo "⚠️  State transition log not available in response"
+  echo "⚠️  No state history found"
 fi
 
 echo ""
 
-# Step 3: Check for payment events
-echo "=== STEP 3: Payment Events ==="
-echo "Checking for payment event history..."
+# Check payment state
+VENDOR_PI=$(echo "$PAYMENT_STATE" | jq -r '.vendorPaymentIntentId // empty' 2>/dev/null || echo "")
+REQUESTER_PI=$(echo "$PAYMENT_STATE" | jq -r '.requesterPaymentIntentId // empty' 2>/dev/null || echo "")
 
-# Try to get payment events (may require admin endpoint)
-if [ -n "$ADMIN_TOKEN" ]; then
-  PAYMENT_RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$BASE_URL/api/admin/reservations/$RESERVATION_ID/payment-events" \
-    -H "Authorization: Bearer $ADMIN_TOKEN" 2>/dev/null || echo "404")
-  
-  PAYMENT_HTTP_CODE=$(echo "$PAYMENT_RESPONSE" | tail -n1)
-  if [ "$PAYMENT_HTTP_CODE" = "200" ]; then
-    echo "✅ Payment events available:"
-    echo "$PAYMENT_RESPONSE" | sed '$d' | jq '.' 2>/dev/null || echo "$PAYMENT_RESPONSE"
-  else
-    echo "⚠️  Payment events endpoint not available"
+if [ -n "$VENDOR_PI" ] || [ -n "$REQUESTER_PI" ]; then
+  echo "Payment State:"
+  if [ -n "$VENDOR_PI" ]; then
+    echo "  Vendor PaymentIntent: $VENDOR_PI"
+  fi
+  if [ -n "$REQUESTER_PI" ]; then
+    echo "  Requester PaymentIntent: $REQUESTER_PI"
   fi
 else
-  echo "⚠️  Admin token not provided, cannot check payment events"
+  echo "⚠️  No payment state found"
 fi
 
 echo ""
 
-# Step 4: Check for webhook events
-echo "=== STEP 4: Webhook Events ==="
-echo "Checking for webhook event history..."
-
-# Try to get webhook events (may require admin endpoint)
-if [ -n "$ADMIN_TOKEN" ]; then
-  WEBHOOK_RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "$BASE_URL/api/admin/reservations/$RESERVATION_ID/webhook-events" \
-    -H "Authorization: Bearer $ADMIN_TOKEN" 2>/dev/null || echo "404")
-  
-  WEBHOOK_HTTP_CODE=$(echo "$WEBHOOK_RESPONSE" | tail -n1)
-  if [ "$WEBHOOK_HTTP_CODE" = "200" ]; then
-    echo "✅ Webhook events available:"
-    echo "$WEBHOOK_RESPONSE" | sed '$d' | jq '.' 2>/dev/null || echo "$WEBHOOK_RESPONSE"
-  else
-    echo "⚠️  Webhook events endpoint not available"
-  fi
+# Method 2: Query database for complete history (if Supabase configured)
+if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_KEY" ]; then
+  echo "Method 2: Querying database for complete history..."
+  echo "⚠️  NOTE: Direct database query requires psql or Supabase client"
+  echo "   Run these queries manually:"
+  echo ""
+  echo "   -- Get reservation"
+  echo "   SELECT * FROM reservations WHERE id = '$RESERVATION_ID';"
+  echo ""
+  echo "   -- Get state transitions"
+  echo "   SELECT * FROM reservation_state_transitions WHERE reservation_id = '$RESERVATION_ID' ORDER BY timestamp;"
+  echo ""
+  echo "   -- Get payment events"
+  echo "   SELECT * FROM payments_outbox WHERE reservation_id = '$RESERVATION_ID' ORDER BY created_at;"
+  echo ""
+  echo "   -- Get webhook events"
+  echo "   SELECT * FROM webhook_events WHERE reservation_id = '$RESERVATION_ID' ORDER BY received_at;"
 else
-  echo "⚠️  Admin token not provided, cannot check webhook events"
+  echo "⚠️  Supabase not configured, skipping database query"
 fi
 
 echo ""
-
-# Step 5: Timeline reconstruction
-echo "=== STEP 5: Timeline Reconstruction ==="
-CREATED_AT=$(echo "$BODY" | jq -r '.createdAt // "N/A"' 2>/dev/null || echo "N/A")
-UPDATED_AT=$(echo "$BODY" | jq -r '.updatedAt // "N/A"' 2>/dev/null || echo "N/A")
-EXPIRES_AT=$(echo "$BODY" | jq -r '.expiresAt // "N/A"' 2>/dev/null || echo "N/A")
-STATE=$(echo "$BODY" | jq -r '.state // "N/A"' 2>/dev/null || echo "N/A")
-
-echo "Timeline:"
-echo "  Created:  $CREATED_AT"
-echo "  Updated:  $UPDATED_AT"
-echo "  Expires:  $EXPIRES_AT"
-echo "  State:    $STATE"
-echo ""
-
 echo "=== VALIDATION ==="
-echo "Check if you can reconstruct:"
-echo "1. ✅ User (requester_id, vendor_id)"
-echo "2. ✅ Slot (slot_start_time, slot_end_time)"
-echo "3. ⚠️  Timeline (created_at, updated_at, expires_at)"
-echo "4. ⚠️  State transitions (state_history)"
-echo "5. ⚠️  Payment events (payment_event_log)"
-echo "6. ⚠️  Webhook events (webhook_event_log)"
-echo "7. ⚠️  Failure cause (failure_reason)"
-echo "8. ⚠️  Resolution path (compensation_actions)"
-echo ""
-echo "Missing items indicate observability gaps"
+
+# Check completeness
+MISSING=0
+
+if [ -z "$CREATED_AT" ]; then
+  echo "❌ Missing: created_at timestamp"
+  ((MISSING++))
+fi
+
+if [ -z "$STATE" ]; then
+  echo "❌ Missing: current state"
+  ((MISSING++))
+fi
+
+if [ "$HISTORY_COUNT" -eq 0 ]; then
+  echo "⚠️  Missing: state history"
+  ((MISSING++))
+fi
+
+if [ -z "$VENDOR_PI" ] && [ -z "$REQUESTER_PI" ] && [ "$STATE" != "HELD" ] && [ "$STATE" != "EXPIRED" ]; then
+  echo "⚠️  Missing: payment state (may be expected for some states)"
+fi
+
+if [ "$MISSING" -eq 0 ]; then
+  echo "✅ TEST PASSED: Lifecycle can be reconstructed"
+  exit 0
+else
+  echo "❌ TEST FAILED: Missing $MISSING critical fields"
+  exit 1
+fi
