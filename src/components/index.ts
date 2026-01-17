@@ -64,7 +64,7 @@ export { default as UserDashboard } from './UserDashboard'
 export { default as VendorAnalytics } from './VendorAnalytics'
 export { default as VendorCalendar } from './VendorCalendar'
 export { default as VendorDashboard } from './VendorDashboard'
-export { default as VendorRegistration } from './VendorRegistration'
+// export { default as VendorRegistration } from './VendorRegistration' // Component not found, commented out
 export { default as VoiceInput } from './VoiceInput'
 export { default as SupportChat } from './SupportChat'
 
