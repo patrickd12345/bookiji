@@ -1,11 +1,15 @@
-import { NextResponse } from 'next/server'
-import { getServerSupabase } from '@/lib/supabaseServer'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const supabase = new Proxy({} as any, { get: (target, prop) => (getServerSupabase() as any)[prop] }) as ReturnType<typeof getServerSupabase>
+import { NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin as supabase } from '@/lib/supabaseProxies'
 import { randomUUID } from 'crypto'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  // 🛡️ Security: Require CRON_SECRET (Fail Safe)
+  const cronSecret = process.env.CRON_SECRET
+  const authHeader = request.headers.get('authorization')
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     console.warn('🔧 Generating extensive test data...')
 
