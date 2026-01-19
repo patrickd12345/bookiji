@@ -133,23 +133,14 @@ export default function VendorCalendar() {
 
   useEffect(() => {
     loadCalendarData()
-  }, [currentDate, view])
+  }, [])
 
   const loadCalendarData = async () => {
     setIsLoading(true)
     try {
-      // Fetch vendor schedule and bookings from API
-      const [scheduleResponse, bookingsResponse] = await Promise.all([
-        fetch('/api/vendor/schedule'),
-        fetch('/api/bookings/vendor')
-      ])
-      
-      if (scheduleResponse.ok) {
-        const scheduleData = await scheduleResponse.json()
-        if (scheduleData.success) {
-          // setAvailability(scheduleData.schedule || []) // This line was removed
-        }
-      }
+      // Fetch vendor bookings from API
+      // Note: /api/bookings/vendor returns all bookings without date filtering
+      const bookingsResponse = await fetch('/api/bookings/vendor')
       
       if (bookingsResponse.ok) {
         const bookingsData = await bookingsResponse.json()
