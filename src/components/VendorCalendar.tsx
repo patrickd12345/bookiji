@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useI18n } from '@/lib/i18n/useI18n'
 import { useAuth } from '../../hooks/useAuth'
@@ -131,25 +131,12 @@ export default function VendorCalendar() {
   const { user } = useAuth()
   const vendorId = user?.id || ''
 
-  useEffect(() => {
-    loadCalendarData()
-  }, [currentDate, view])
-
-  const loadCalendarData = async () => {
+  const loadCalendarData = useCallback(async () => {
     setIsLoading(true)
     try {
-      // Fetch vendor schedule and bookings from API
-      const [scheduleResponse, bookingsResponse] = await Promise.all([
-        fetch('/api/vendor/schedule'),
-        fetch('/api/bookings/vendor')
-      ])
-      
-      if (scheduleResponse.ok) {
-        const scheduleData = await scheduleResponse.json()
-        if (scheduleData.success) {
-          // setAvailability(scheduleData.schedule || []) // This line was removed
-        }
-      }
+      // Fetch bookings from API
+      // Optimization: Removed unused fetch('/api/vendor/schedule')
+      const bookingsResponse = await fetch('/api/bookings/vendor')
       
       if (bookingsResponse.ok) {
         const bookingsData = await bookingsResponse.json()
@@ -162,7 +149,11 @@ export default function VendorCalendar() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadCalendarData()
+  }, [loadCalendarData])
 
   const handleBookingStatusChange = async (bookingId: string, newStatus: CalendarEvent['status']) => {
     try {
