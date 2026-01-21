@@ -12,11 +12,11 @@ import { processExpiredBatches } from '@/lib/notifications/batching'
  */
 export async function POST(request: NextRequest) {
   try {
-    // Optional: Add authentication/authorization here
     const authHeader = request.headers.get('authorization')
-    const cronSecret = process.env.CRON_SECRET
+    const cronSecret = process.env.CRON_SECRET || process.env.VERCEL_CRON_SECRET
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    // 🛡️ Security: Require CRON_SECRET to be configured and match
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -39,9 +39,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-// Allow GET for manual triggering (remove in production or add auth)
-export async function GET() {
-  return POST(new NextRequest('http://localhost/api/notifications/batch/process', { method: 'POST' }))
-}
-
